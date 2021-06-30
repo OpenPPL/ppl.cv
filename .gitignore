@@ -1,0 +1,12 @@
+deps/*
+cuda-build/*
+x64-build/*
+log
+.vscode/ipch/*
+install
+.idea
+src/ppl/cv/cv.h
+docs/Doxyfile
+docs/sphinx/build
+.swp
+__ppl3cv_ocl_source_archive.cc
