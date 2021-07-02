@@ -35,8 +35,14 @@ char randomChar() {
 }
 
 template <typename T>
-void randomImage(cv::Mat& image, int basic_type, int channels)
-{
+void randomImage(cv::Mat& image, int basic_type, int channels) {
+  if (image.data == nullptr || (basic_type != CV_8U && basic_type != CV_8S &&
+      basic_type != CV_32F && basic_type != CV_64F) ||
+      (channels != 1 && channels != 2 && channels != 3 && channels != 4)) {
+    std::cout << "Invalid parameters in randomImage()." << std::endl;
+    return;
+  }
+
   int rows = image.rows;
   int cols = image.cols;
   T *element;
@@ -47,8 +53,10 @@ void randomImage(cv::Mat& image, int basic_type, int channels)
     for (int col = 0; col < cols; ++col) {
       if (basic_type == CV_8U) {
         element[0] = rand() % 256;
-        if (channels >= 3) {
+        if (channels >= 2) {
           element[1] = rand() % 256;
+        }
+        if (channels >= 3) {
           element[2] = rand() % 256;
         }
         if (channels == 4) {
@@ -57,8 +65,10 @@ void randomImage(cv::Mat& image, int basic_type, int channels)
       }
       else if (basic_type == CV_8S) {
         element[0] = randomChar();
-        if (channels >= 3) {
+        if (channels >= 2) {
           element[1] = randomChar();
+        }
+        if (channels >= 3) {
           element[2] = randomChar();
         }
         if (channels == 4) {
@@ -67,8 +77,10 @@ void randomImage(cv::Mat& image, int basic_type, int channels)
       }
       else if (basic_type == CV_32F) {
         element[0] = (float) rand() / RAND_MAX;
-        if (channels >= 3) {
+        if (channels >= 2) {
           element[1] = (float) rand() / RAND_MAX;
+        }
+        if (channels >= 3) {
           element[2] = (float) rand() / RAND_MAX;
         }
         if (channels == 4) {
@@ -77,8 +89,10 @@ void randomImage(cv::Mat& image, int basic_type, int channels)
       }
       else if (basic_type == CV_64F) {
         element[0] = (double) rand() / RAND_MAX;
-        if (channels >= 3) {
+        if (channels >= 2) {
           element[1] = (double) rand() / RAND_MAX;
+        }
+        if (channels >= 3) {
           element[2] = (double) rand() / RAND_MAX;
         }
         if (channels == 4) {
@@ -93,8 +107,7 @@ void randomImage(cv::Mat& image, int basic_type, int channels)
 }
 
 template <typename T>
-T clamp(T value, T begin, T end)
-{
+T clamp(T value, T begin, T end) {
   if (value < begin) {
     return begin;
   }
@@ -108,8 +121,15 @@ T clamp(T value, T begin, T end)
 
 template <typename T>
 void randomImage(cv::Mat& image, int basic_type, int channels, T begin,
-                 T end)
-{
+                 T end) {
+  if (image.data == nullptr || (basic_type != CV_8U && basic_type != CV_8S &&
+      basic_type != CV_32F && basic_type != CV_64F) ||
+      (channels != 1 && channels != 2 && channels != 3 && channels != 4) ||
+      begin > end) {
+    std::cout << "Invalid parameters in randomImage()." << std::endl;
+    return;
+  }
+
   int rows = image.rows;
   int cols = image.cols;
   T *element;
@@ -174,12 +194,24 @@ void randomImage(cv::Mat& image, int basic_type, int channels, T begin,
 }
 
 inline
-cv::Mat createSourceImage(int rows, int cols, int type)
-{
+cv::Mat createSourceImage(int rows, int cols, int type) {
+  if (rows < 1 || cols < 1 ||
+      (type != CV_8UC1 && type != CV_8UC2 &&
+       type != CV_8UC3 && type != CV_8UC4 &&
+       type != CV_8SC1 && type != CV_8SC3 && type != CV_8SC4 &&
+       type != CV_32FC1 && type != CV_32FC3 && type != CV_32FC4 &&
+       type != CV_64FC1 && type != CV_64FC3 && type != CV_64FC4)) {
+    std::cout << "Invalid parameters in createSourceImage()." << std::endl;
+    return cv::Mat(0, 0, type);
+  }
+
   cv::Mat image(rows, cols, type);
 
   if (type == CV_8UC1) {
     randomImage<unsigned char>(image, CV_8U, 1);
+  }
+  else if (type == CV_8UC2) {
+    randomImage<unsigned char>(image, CV_8U, 2);
   }
   else if (type == CV_8UC3) {
     randomImage<unsigned char>(image, CV_8U, 3);
@@ -221,8 +253,21 @@ cv::Mat createSourceImage(int rows, int cols, int type)
 }
 
 inline
-cv::Mat createSourceImage(int rows, int cols, int type, float begin, float end)
-{
+cv::Mat createSourceImage(int rows, int cols, int type, float begin,
+                          float end) {
+  if (rows < 1 || cols < 1 || begin > end ||
+      (type != CV_8UC1 && type != CV_8UC2 &&
+       type != CV_8UC3 && type != CV_8UC4 &&
+       type != CV_8SC1 && type != CV_8SC2 &&
+       type != CV_8SC3 && type != CV_8SC4 &&
+       type != CV_32FC1 && type != CV_32FC2 &&
+       type != CV_32FC3 && type != CV_32FC4 &&
+       type != CV_64FC1 && type != CV_64FC2 &&
+       type != CV_64FC3 && type != CV_64FC4)) {
+    std::cout << "Invalid parameters in createSourceImage()." << std::endl;
+    return cv::Mat(0, 0, type);
+  }
+
   cv::Mat image(rows, cols, type);
 
   if (type == CV_8UC1) {
@@ -280,14 +325,11 @@ cv::Mat createSourceImage(int rows, int cols, int type, float begin, float end)
 }
 
 template <typename T>
-void copyMatToArray(const cv::Mat& image0, T *image1)
-{
-  assert(image0.data != NULL);
-  assert(image0.rows > 0 && image0.cols > 0);
-  assert(image0.step > 0);
-  assert(image0.channels() == 1 || image0.channels() == 2 ||
-         image0.channels() == 3 || image0.channels() == 4);
-  assert(image1 != NULL);
+void copyMatToArray(const cv::Mat& image0, T *image1) {
+  if (image0.data == nullptr || image1 == nullptr) {
+    std::cout << "Invalid parameters in copyMatToArray()." << std::endl;
+    return;
+  }
 
   int rows = image0.rows;
   int cols = image0.cols;
@@ -318,16 +360,14 @@ void copyMatToArray(const cv::Mat& image0, T *image1)
 }
 
 inline
-void findMax(float& max, const float& value)
-{
+void findMax(float& max, const float& value) {
   if (value > max) {
     max = value;
   }
 }
 
 inline
-void findMax(double& max, const double& value)
-{
+void findMax(double& max, const double& value) {
   if (value > max) {
     max = value;
   }
@@ -335,18 +375,13 @@ void findMax(double& max, const double& value)
 
 template <typename T>
 bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
-                           float epsilon, bool display = false)
-{
-  assert(image0.data != NULL);
-  assert(image0.rows > 0 && image0.cols > 0);
-  assert(image0.step > 0);
-  assert(image0.channels() == 1 || image0.channels() == 3 ||
-         image0.channels() == 4);
-  assert(image1.data != NULL);
-  assert(image1.rows > 0 && image1.cols > 0);
-  assert(image1.step > 0);
-  assert(image1.channels() == 1 || image1.channels() == 3 ||
-         image1.channels() == 4);
+                           float epsilon, bool display = false) {
+  if (image0.data == nullptr || image1.data == nullptr ||
+      image0.rows != image1.rows || image0.cols != image1.cols ||
+      image0.channels() != image1.channels() || epsilon < 0) {
+    std::cout << "Invalid parameters in checkMatricesIdentity()." << std::endl;
+    return false;
+  }
 
   int rows = image0.rows;
   int cols = image0.cols;
@@ -427,14 +462,11 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
 
 template <typename T>
 bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
-                           float epsilon, bool display = false)
-{
-  assert(image0.data != NULL);
-  assert(image1 != NULL);
-  assert(image0.rows > 0 && image0.cols > 0);
-  assert(image0.step > 0);
-  assert(image0.channels() == 1 || image0.channels() == 3 ||
-         image0.channels() == 4);
+                           float epsilon, bool display = false) {
+  if (image0.data == nullptr || image1 == nullptr || epsilon < 0) {
+    std::cout << "Invalid parameters in checkMatArrayIdentity()." << std::endl;
+    return false;
+  }
 
   int rows = image0.rows;
   int cols = image0.cols;

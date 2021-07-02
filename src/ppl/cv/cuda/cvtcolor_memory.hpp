@@ -254,8 +254,8 @@ void cvtColor4VecKernel1(const T0* src, int rows, int cols, int src_stride,
 RetCode function(const base_type* src, int rows, int cols, int src_stride,     \
                  base_type* dst, int dst_stride, cudaStream_t stream) {        \
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      src_stride < cols * sizeof(from_type) ||                                 \
-      dst_stride < cols * sizeof(to_type)) {                                   \
+      src_stride < cols * (int)sizeof(from_type) ||                            \
+      dst_stride < cols * (int)sizeof(to_type)) {                              \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -583,8 +583,8 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
       rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * sizeof(from_type) ||                                 \
-      dst_stride < cols * sizeof(uchar)) {                                     \
+      src_stride < cols * (int)sizeof(from_type) ||                            \
+      dst_stride < cols * (int)sizeof(uchar)) {                                \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -616,8 +616,8 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
       rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * sizeof(uchar) ||                                     \
-      dst_stride < cols * sizeof(to_type)) {                                   \
+      src_stride < cols * (int)sizeof(uchar) ||                                \
+      dst_stride < cols * (int)sizeof(to_type)) {                              \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -650,9 +650,9 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  int dst_uv_stride, cudaStream_t stream) {                     \
   if (src == nullptr || dst_y == nullptr || dst_uv == nullptr ||               \
       rows < 1 || cols < 1 || rows % 1 == 1 || cols % 1 == 1 ||                \
-      src_stride < cols * sizeof(from_type) ||                                 \
-      dst_y_stride < cols * sizeof(uchar) ||                                   \
-      dst_uv_stride < cols * sizeof(uchar)) {                                  \
+      src_stride < cols * (int)sizeof(from_type) ||                            \
+      dst_y_stride < cols * (int)sizeof(uchar) ||                              \
+      dst_uv_stride < cols * (int)sizeof(uchar)) {                             \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -686,9 +686,9 @@ RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
                  int dst_stride, cudaStream_t stream) {                        \
   if (src_y == nullptr || src_uv == nullptr || dst == nullptr ||               \
       rows < 1 || cols < 1 || rows % 1 == 1 || cols % 1 == 1 ||                \
-      src_y_stride < cols * sizeof(uchar) ||                                   \
-      src_uv_stride < cols * sizeof(uchar) ||                                  \
-      dst_stride < cols * sizeof(to_type)) {                                   \
+      src_y_stride < cols * (int)sizeof(uchar) ||                              \
+      src_uv_stride < cols * (int)sizeof(uchar) ||                             \
+      dst_stride < cols * (int)sizeof(to_type)) {                              \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -983,8 +983,8 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
       rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * sizeof(from_type) ||                                 \
-      dst_stride < cols * sizeof(uchar)) {                                     \
+      src_stride < cols * (int)sizeof(from_type) ||                            \
+      dst_stride < cols * (int)sizeof(uchar)) {                                \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -1016,8 +1016,8 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
       rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * sizeof(uchar) ||                                     \
-      dst_stride < cols * sizeof(to_type)) {                                   \
+      src_stride < cols * (int)sizeof(uchar) ||                                \
+      dst_stride < cols * (int)sizeof(to_type)) {                              \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -1051,10 +1051,10 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  cudaStream_t stream) {                                        \
   if (src == nullptr || dst_y == nullptr || dst_u == nullptr ||                \
       dst_v == nullptr || rows < 1 || cols < 1 || rows % 1 == 1 ||             \
-      cols % 1 == 1 || src_stride < cols * sizeof(from_type) ||                \
-      dst_y_stride < cols * sizeof(uchar) ||                                   \
-      dst_u_stride < cols / 2* sizeof(uchar) ||                                \
-      dst_v_stride < cols / 2 * sizeof(uchar)) {                               \
+      cols % 1 == 1 || src_stride < cols * (int)sizeof(from_type) ||           \
+      dst_y_stride < cols * (int)sizeof(uchar) ||                              \
+      dst_u_stride < cols / 2* (int)sizeof(uchar) ||                           \
+      dst_v_stride < cols / 2 * (int)sizeof(uchar)) {                          \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -1090,10 +1090,10 @@ RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
                  cudaStream_t stream)  {                                       \
   if (src_y == nullptr || src_u == nullptr || src_v == nullptr ||              \
       dst == nullptr || rows < 1 || cols < 1 || rows % 1 == 1 ||               \
-      cols % 1 == 1 || src_y_stride < cols * sizeof(uchar) ||                  \
-      src_u_stride < cols / 2 * sizeof(uchar) ||                               \
-      src_v_stride < cols / 2 * sizeof(uchar) ||                               \
-      dst_stride < cols * sizeof(to_type)) {                                   \
+      cols % 1 == 1 || src_y_stride < cols * (int)sizeof(uchar) ||             \
+      src_u_stride < cols / 2 * (int)sizeof(uchar) ||                          \
+      src_v_stride < cols / 2 * (int)sizeof(uchar) ||                          \
+      dst_stride < cols * (int)sizeof(to_type)) {                              \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -1174,8 +1174,8 @@ void cvtColorYuyvKernel1(const uchar* src, int rows, int cols, int src_stride,
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      cols & 0x1 != 0 || src_stride < cols / 2 * sizeof(from_type) ||          \
-      dst_stride < cols * sizeof(to_type)) {                                   \
+      cols & 0x1 != 0 || src_stride < cols / 2 * (int)sizeof(from_type) ||     \
+      dst_stride < cols * (int)sizeof(to_type)) {                              \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \
@@ -1203,13 +1203,12 @@ RetCode function<uchar>(cudaStream_t stream, int rows, int cols,               \
   return code;                                                                 \
 }
 
-
 #define CVT_COLOR_YUV422_TO_GRAY_UCHAR_INVOCATION(function, type)              \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      cols & 0x1 != 0 || src_stride < cols * 2 * sizeof(uchar) ||              \
-      dst_stride < cols * sizeof(uchar)) {                                     \
+      cols & 0x1 != 0 || src_stride < cols * 2 * (int)sizeof(uchar) ||         \
+      dst_stride < cols * (int)sizeof(uchar)) {                                \
     return RC_INVALID_VALUE;                                                   \
   }                                                                            \
                                                                                \

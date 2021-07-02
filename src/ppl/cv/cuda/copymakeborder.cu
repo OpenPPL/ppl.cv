@@ -9,8 +9,6 @@
 
 #include "copymakeborder.h"
 
-#include <cassert>
-
 #include "utility.hpp"
 
 using namespace ppl::common;
@@ -276,8 +274,8 @@ RetCode copyMakeBorder(const uchar* src, int rows, int cols, int channels,
                        uchar border_value, cudaStream_t stream) {
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
       (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(uchar) ||
-      dst_stride < cols * channels * sizeof(uchar) ||
+      src_stride < cols * channels * (int)sizeof(uchar) ||
+      dst_stride < cols * channels * (int)sizeof(uchar) ||
       top < 0 || bottom < 0 || left < 0 || right < 0 ||
       (border_type != BORDER_TYPE_CONSTANT &&
        border_type != BORDER_TYPE_REPLICATE &&
@@ -334,8 +332,8 @@ RetCode copyMakeBorder(const float* src, int rows, int cols, int channels,
                        float border_value, cudaStream_t stream) {
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
       (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(float) ||
-      dst_stride < cols * channels * sizeof(float) ||
+      src_stride < cols * channels * (int)sizeof(float) ||
+      dst_stride < cols * channels * (int)sizeof(float) ||
       top < 0 || bottom < 0 || left < 0 || right < 0 ||
       (border_type != BORDER_TYPE_CONSTANT &&
        border_type != BORDER_TYPE_REPLICATE &&
@@ -388,18 +386,18 @@ RetCode copyMakeBorder(const float* src, int rows, int cols, int channels,
 
 template <>
 RetCode CopyMakeBorder<uchar, 1>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outWidthStride,
-                              uchar* outData,
-                              int top,
-                              int bottom,
-                              int left,
-                              int right,
-                              BorderType border_type,
-                              uchar border_value) {
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const uchar* inData,
+                                 int outWidthStride,
+                                 uchar* outData,
+                                 int top,
+                                 int bottom,
+                                 int left,
+                                 int right,
+                                 BorderType border_type,
+                                 uchar border_value) {
   RetCode code = copyMakeBorder(inData, height, width, 1, inWidthStride,
                                 outData, outWidthStride, top, bottom, left,
                                 right, border_type, border_value, stream);
@@ -409,18 +407,18 @@ RetCode CopyMakeBorder<uchar, 1>(cudaStream_t stream,
 
 template <>
 RetCode CopyMakeBorder<uchar, 3>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outWidthStride,
-                              uchar* outData,
-                              int top,
-                              int bottom,
-                              int left,
-                              int right,
-                              BorderType border_type,
-                              uchar border_value) {
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const uchar* inData,
+                                 int outWidthStride,
+                                 uchar* outData,
+                                 int top,
+                                 int bottom,
+                                 int left,
+                                 int right,
+                                 BorderType border_type,
+                                 uchar border_value) {
   RetCode code = copyMakeBorder(inData, height, width, 3, inWidthStride,
                                 outData, outWidthStride, top, bottom, left,
                                 right, border_type, border_value, stream);
@@ -430,18 +428,18 @@ RetCode CopyMakeBorder<uchar, 3>(cudaStream_t stream,
 
 template <>
 RetCode CopyMakeBorder<uchar, 4>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outWidthStride,
-                              uchar* outData,
-                              int top,
-                              int bottom,
-                              int left,
-                              int right,
-                              BorderType border_type,
-                              uchar border_value) {
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const uchar* inData,
+                                 int outWidthStride,
+                                 uchar* outData,
+                                 int top,
+                                 int bottom,
+                                 int left,
+                                 int right,
+                                 BorderType border_type,
+                                 uchar border_value) {
   RetCode code = copyMakeBorder(inData, height, width, 4, inWidthStride,
                                 outData, outWidthStride, top, bottom, left,
                                 right, border_type, border_value, stream);
@@ -451,18 +449,18 @@ RetCode CopyMakeBorder<uchar, 4>(cudaStream_t stream,
 
 template <>
 RetCode CopyMakeBorder<float, 1>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const float* inData,
-                              int outWidthStride,
-                              float* outData,
-                              int top,
-                              int bottom,
-                              int left,
-                              int right,
-                              BorderType border_type,
-                              float border_value) {
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const float* inData,
+                                 int outWidthStride,
+                                 float* outData,
+                                 int top,
+                                 int bottom,
+                                 int left,
+                                 int right,
+                                 BorderType border_type,
+                                 float border_value) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = copyMakeBorder(inData, height, width, 1, inWidthStride,
@@ -474,18 +472,18 @@ RetCode CopyMakeBorder<float, 1>(cudaStream_t stream,
 
 template <>
 RetCode CopyMakeBorder<float, 3>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const float* inData,
-                              int outWidthStride,
-                              float* outData,
-                              int top,
-                              int bottom,
-                              int left,
-                              int right,
-                              BorderType border_type,
-                              float border_value) {
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const float* inData,
+                                 int outWidthStride,
+                                 float* outData,
+                                 int top,
+                                 int bottom,
+                                 int left,
+                                 int right,
+                                 BorderType border_type,
+                                 float border_value) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = copyMakeBorder(inData, height, width, 3, inWidthStride,
@@ -497,18 +495,18 @@ RetCode CopyMakeBorder<float, 3>(cudaStream_t stream,
 
 template <>
 RetCode CopyMakeBorder<float, 4>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const float* inData,
-                              int outWidthStride,
-                              float* outData,
-                              int top,
-                              int bottom,
-                              int left,
-                              int right,
-                              BorderType border_type,
-                              float border_value) {
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const float* inData,
+                                 int outWidthStride,
+                                 float* outData,
+                                 int top,
+                                 int bottom,
+                                 int left,
+                                 int right,
+                                 BorderType border_type,
+                                 float border_value) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = copyMakeBorder(inData, height, width, 4, inWidthStride,

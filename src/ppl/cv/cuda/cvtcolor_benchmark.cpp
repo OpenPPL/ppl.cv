@@ -766,12 +766,12 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
   for (int i = 0; i < iterations; i++) {                                       \
     Function<T>(0, height, width, gpu_src.step / sizeof(T),                    \
                 (const T*)gpu_src.data, gpu_src.step / sizeof(T),              \
-                (const T*)gpu_src.data + height * width,                       \
+                (const T*)gpu_src.data + height * gpu_src.step,                \
                 gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                    \
                 gpu_dst.step / sizeof(T) / 2,                                  \
-                (T*)gpu_dst.data + height * width,                             \
+                (T*)gpu_dst.data + height * gpu_dst.step,                      \
                 gpu_dst.step / sizeof(T) / 2,                                  \
-                (T*)gpu_dst.data + height * width * 5 / 4);                    \
+                (T*)gpu_dst.data + height * gpu_dst.step * 5 / 4);             \
   }                                                                            \
   cudaDeviceSynchronize();                                                     \
                                                                                \
@@ -780,12 +780,12 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
     for (int i = 0; i < iterations; i++) {                                     \
       Function<T>(0, height, width, gpu_src.step / sizeof(T),                  \
                   (const T*)gpu_src.data, gpu_src.step / sizeof(T),            \
-                  (const T*)gpu_src.data + height * width,                     \
+                  (const T*)gpu_src.data + height * gpu_src.step,              \
                   gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                  \
                   gpu_dst.step / sizeof(T) / 2,                                \
-                  (T*)gpu_dst.data + height * width,                           \
+                  (T*)gpu_dst.data + height * gpu_dst.step,                    \
                   gpu_dst.step / sizeof(T) / 2,                                \
-                  (T*)gpu_dst.data + height * width * 5 / 4);                  \
+                  (T*)gpu_dst.data + height * gpu_dst.step * 5 / 4);           \
     }                                                                          \
     cudaDeviceSynchronize();                                                   \
     gettimeofday(&end, NULL);                                                  \
@@ -829,11 +829,12 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
   for (int i = 0; i < iterations; i++) {                                       \
     Function<T>(0, height, width, gpu_src.step / sizeof(T),                    \
                 (const T*)gpu_src.data, gpu_src.step / sizeof(T) / 2,          \
-                (const T*)gpu_src.data + height * width,                       \
-                gpu_dst.step / sizeof(T) / 2,                                  \
-                (T*)gpu_dst.data + height * width * 5 / 4,                     \
+                (const T*)gpu_src.data + height * gpu_src.step,                \
+                gpu_src.step / sizeof(T) / 2,                                  \
+                (T*)gpu_src.data + height * gpu_src.step * 5 / 4,              \
                 gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                    \
-                gpu_dst.step / sizeof(T), (T*)gpu_dst.data + height * width);  \
+                gpu_dst.step / sizeof(T),                                      \
+                (T*)gpu_dst.data + height * gpu_dst.step);                     \
   }                                                                            \
   cudaDeviceSynchronize();                                                     \
                                                                                \
@@ -841,13 +842,13 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
     gettimeofday(&start, NULL);                                                \
     for (int i = 0; i < iterations; i++) {                                     \
       Function<T>(0, height, width, gpu_src.step / sizeof(T),                  \
-                  (const T*)gpu_src.data, gpu_src.step / sizeof(T),            \
-                  (const T*)gpu_src.data + height * width,                     \
-                  gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                  \
-                  gpu_dst.step / sizeof(T) / 2,                                \
-                  (T*)gpu_dst.data + height * width,                           \
-                  gpu_dst.step / sizeof(T) / 2,                                \
-                  (T*)gpu_dst.data + height * width * 5 / 4);                  \
+                (const T*)gpu_src.data, gpu_src.step / sizeof(T) / 2,          \
+                (const T*)gpu_src.data + height * gpu_src.step,                \
+                gpu_src.step / sizeof(T) / 2,                                  \
+                (T*)gpu_src.data + height * gpu_src.step * 5 / 4,              \
+                gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                    \
+                gpu_dst.step / sizeof(T),                                      \
+                (T*)gpu_dst.data + height * gpu_dst.step);                     \
     }                                                                          \
     cudaDeviceSynchronize();                                                   \
     gettimeofday(&end, NULL);                                                  \

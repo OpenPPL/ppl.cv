@@ -5,7 +5,6 @@ endif()
 # --------------------------------------------------------------------------- #
 
 set(_NVCC_FLAGS )
-set(_NVCC_FLAGS "-Wno-sign-compare -Wno-overflow") # TODO will be fixed in next version
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_35,code=sm_35")
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_37,code=sm_37")
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_50,code=sm_50")

@@ -31,7 +31,7 @@ set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable ppl.common tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    v0.1.0)
+    v0.1.1)
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "disable benchmark tests")
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")

@@ -10,7 +10,6 @@
 #include "morphology.hpp"
 
 #include <cfloat>
-#include <cassert>
 
 #include "utility.hpp"
 
@@ -171,8 +170,8 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
                const uchar border_value, cudaStream_t stream) {
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
       (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(uchar) ||
-      dst_stride < cols * channels * sizeof(uchar) ||
+      src_stride < cols * channels * (int)sizeof(uchar) ||
+      dst_stride < cols * channels * (int)sizeof(uchar) ||
       (kernel_y <= 0 || kernel_y >= rows) ||
       (kernel_x <= 0 || kernel_x >= cols) ||
       (kernel_y & 1 == 0 || kernel_x & 1 == 0) ||
@@ -184,9 +183,14 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
     return RC_INVALID_VALUE;
   }
 
+  cudaError_t code;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_stride * rows, cudaMemcpyDeviceToDevice);
+      code = cudaMemcpyAsync(dst, src, src_stride * rows,
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -233,8 +237,11 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
         grid0.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
         if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-          cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar),
-                          rows);
+          code = cudaMallocPitch(&buffer, &pitch,
+                                 cols * channels * sizeof(uchar), rows);
+          if (code != cudaSuccess) {
+            return RC_DEVICE_MEMORY_ERROR;
+          }
           morphRowU8C1Kernel0<MaxSwap><<<grid0, block0, 0, stream>>>(src, rows,
               cols, columns, src_stride, left_threads, aligned_columns,
               diameter_x, buffer, pitch, morphology_swap);
@@ -258,7 +265,11 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
     }
     else if (channels == 3) {
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar), rows);
+        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar),
+                               rows);
+        if (code != cudaSuccess) {
+          return RC_DEVICE_MEMORY_ERROR;
+        }
         morphRowKernel0<uchar3, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<uchar3, uchar, MaxSwap><<<grid, block, 0, stream>>>(
@@ -274,7 +285,11 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
     }
     else {  // channels == 4
       if (rows >= 780 && cols >= 1024 && kernel_y >= 7 && kernel_x >= 7) {
-        cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar), rows);
+        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar),
+                               rows);
+        if (code != cudaSuccess) {
+          return RC_DEVICE_MEMORY_ERROR;
+        }
         morphRowKernel0<uchar4, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<uchar4, uchar, MaxSwap><<<grid, block, 0, stream>>>(
@@ -292,8 +307,16 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
   else {
     uchar* mask;
     int size = kernel_y * kernel_x * sizeof(uchar);
-    cudaMalloc(&mask, size);
-    cudaMemcpy(mask, kernel, size, cudaMemcpyHostToDevice);
+    code = cudaMalloc(&mask, size);
+    if (code != cudaSuccess) {
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+    code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice);
+    if (code != cudaSuccess) {
+      cudaFree(mask);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+
     if (channels == 1) {
       int left_threads = divideUp(diameter_x, 4, 2);
       int remainders = cols & 3;
@@ -345,8 +368,8 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
                const float border_value, cudaStream_t stream) {
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
       (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(float) ||
-      dst_stride < cols * channels * sizeof(float) ||
+      src_stride < cols * channels * (int)sizeof(float) ||
+      dst_stride < cols * channels * (int)sizeof(float) ||
       (kernel_y <= 0 || kernel_y >= rows) ||
       (kernel_x <= 0 || kernel_x >= cols) ||
       (kernel_y & 1 == 0 || kernel_x & 1 == 0) ||
@@ -358,9 +381,14 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
     return RC_INVALID_VALUE;
   }
 
+  cudaError_t code;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_stride * rows, cudaMemcpyDeviceToDevice);
+      code = cudaMemcpyAsync(dst, src, src_stride * rows,
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -393,7 +421,11 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
 
     if (channels == 1) {
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float), rows);
+        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                               rows);
+        if (code != cudaSuccess) {
+          return RC_DEVICE_MEMORY_ERROR;
+        }
         morphRowKernel0<float, float, MaxSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<float, float, MaxSwap><<<grid, block, 0, stream>>>(
@@ -409,7 +441,11 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
     }
     else if (channels == 3) {
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float), rows);
+        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                               rows);
+        if (code != cudaSuccess) {
+          return RC_DEVICE_MEMORY_ERROR;
+        }
         morphRowKernel0<float3, float, MaxSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<float3, float, MaxSwap><<<grid, block, 0, stream>>>(
@@ -425,7 +461,11 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
     }
     else {  // channels == 4
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float), rows);
+        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                               rows);
+        if (code != cudaSuccess) {
+          return RC_DEVICE_MEMORY_ERROR;
+        }
         morphRowKernel0<float4, float, MaxSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<float4, float, MaxSwap><<<grid, block, 0, stream>>>(
@@ -443,8 +483,15 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
   else {
     uchar* mask;
     int size = kernel_y * kernel_x * sizeof(uchar);
-    cudaMalloc(&mask, size);
-    cudaMemcpy(mask, kernel, size, cudaMemcpyHostToDevice);
+    code = cudaMalloc(&mask, size);
+    if (code != cudaSuccess) {
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+    code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice);
+    if (code != cudaSuccess) {
+      cudaFree(mask);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
     if (channels == 1) {
       morph2DKernel1<float, float, MaxSwap><<<grid, block, 0, stream>>>(src,
           rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,

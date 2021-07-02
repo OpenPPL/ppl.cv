@@ -9,8 +9,6 @@
 
 #include "warpaffine.h"
 
-#include <cassert>
-
 #include "utility.hpp"
 
 using namespace ppl::common;

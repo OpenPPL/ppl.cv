@@ -10,8 +10,6 @@
 #include "cvtcolor_compute.hpp"
 #include "cvtcolor_memory.hpp"
 
-#include <cassert>
-
 namespace ppl {
 namespace cv {
 namespace cuda {
@@ -210,8 +208,8 @@ void cvtColorYUV2GRAYKernel1(const uchar* src, int rows, int cols,
 RetCode YUV2GRAY(const uchar* src, int rows, int cols, int src_stride,
                  uchar* dst, int dst_stride, cudaStream_t stream) {
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      src_stride < cols * sizeof(uchar) ||
-      dst_stride < cols * sizeof(uchar)) {
+      src_stride < cols * (int)sizeof(uchar) ||
+      dst_stride < cols * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -298,14 +296,14 @@ RetCode NV122I420(const uchar* src_y, int rows, int cols, int src_y_stride,
                   const uchar* src_uv, int src_uv_stride, uchar* dst_y,
                   int dst_y_stride, uchar* dst_u, int dst_u_stride,
                   uchar* dst_v, int dst_v_stride, cudaStream_t stream) {
-  if (src_y == nullptr || src_uv == nullptr || dst_u == nullptr ||
-      dst_v == nullptr || dst_y == nullptr || rows < 1 || cols < 1 ||
+  if (src_y == nullptr || src_uv == nullptr || dst_y == nullptr ||
+      dst_u == nullptr || dst_v == nullptr || rows < 1 || cols < 1 ||
       rows % 1 == 1 || cols % 1 == 1 ||
-      src_y_stride < cols * sizeof(uchar) ||
-      src_uv_stride < cols * sizeof(uchar) ||
-      dst_y_stride < cols * sizeof(uchar) ||
-      dst_u_stride < cols / 2 * sizeof(uchar) ||
-      dst_v_stride < cols / 2 * sizeof(uchar)) {
+      src_y_stride < cols * (int)sizeof(uchar) ||
+      src_uv_stride < cols * (int)sizeof(uchar) ||
+      dst_y_stride < cols * (int)sizeof(uchar) ||
+      dst_u_stride < cols / 2 * (int)sizeof(uchar) ||
+      dst_v_stride < cols / 2 * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -348,14 +346,14 @@ RetCode NV212I420(const uchar* src_y, int rows, int cols, int src_y_stride,
                   const uchar* src_uv, int src_uv_stride, uchar* dst_y,
                   int dst_y_stride, uchar* dst_u, int dst_u_stride,
                   uchar* dst_v, int dst_v_stride, cudaStream_t stream) {
-  if (src_y == nullptr || src_uv == nullptr || dst_u == nullptr ||
-      dst_v == nullptr || dst_y == nullptr || rows < 1 || cols < 1 ||
+  if (src_y == nullptr || src_uv == nullptr || dst_y == nullptr ||
+      dst_u == nullptr || dst_v == nullptr || rows < 1 || cols < 1 ||
       rows % 1 == 1 || cols % 1 == 1 ||
-      src_y_stride < cols * sizeof(uchar) ||
-      src_uv_stride < cols * sizeof(uchar) ||
-      dst_y_stride < cols * sizeof(uchar) ||
-      dst_u_stride < cols / 2 * sizeof(uchar) ||
-      dst_v_stride < cols / 2 * sizeof(uchar)) {
+      src_y_stride < cols * (int)sizeof(uchar) ||
+      src_uv_stride < cols * (int)sizeof(uchar) ||
+      dst_y_stride < cols * (int)sizeof(uchar) ||
+      dst_u_stride < cols / 2 * (int)sizeof(uchar) ||
+      dst_v_stride < cols / 2 * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -434,6 +432,10 @@ void cvtColorI4202NVKernel(const uchar* src_y, int rows, int cols,
   else {
     output_uv[index_x] = make_uchar2(value_v, value_u);
   }
+
+  // if (index_x == 0 && index_y == 0) {
+  //   printf("in cvtColorI4202NVKernel kernel.\n");
+  // }
 }
 
 RetCode I4202NV12(const uchar* src_y, int rows, int cols, int src_y_stride,
@@ -443,11 +445,11 @@ RetCode I4202NV12(const uchar* src_y, int rows, int cols, int src_y_stride,
   if (src_y == nullptr || src_u == nullptr || src_v == nullptr ||
       dst_y == nullptr || dst_uv == nullptr || rows < 1 || cols < 1 ||
       rows % 1 == 1 || cols % 1 == 1 ||
-      src_y_stride < cols * sizeof(uchar) ||
-      src_u_stride < cols / 2 * sizeof(uchar) ||
-      src_v_stride < cols / 2 * sizeof(uchar) ||
-      dst_y_stride < cols * sizeof(uchar) ||
-      dst_uv_stride < cols * sizeof(uchar)) {
+      src_y_stride < cols * (int)sizeof(uchar) ||
+      src_u_stride < cols / 2 * (int)sizeof(uchar) ||
+      src_v_stride < cols / 2 * (int)sizeof(uchar) ||
+      dst_y_stride < cols * (int)sizeof(uchar) ||
+      dst_uv_stride < cols * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -489,18 +491,16 @@ RetCode I4202NV21(const uchar* src_y, int rows, int cols, int src_y_stride,
                   const uchar* src_u, int src_u_stride, const uchar* src_v,
                   int src_v_stride, uchar* dst_y, int dst_y_stride,
                   uchar* dst_uv, int dst_uv_stride, cudaStream_t stream) {
-  assert(src_y  != NULL);
-  assert(src_u  != NULL);
-  assert(src_v  != NULL);
-  assert(dst_y  != NULL);
-  assert(dst_uv != NULL);
-  assert(rows >= 1 && cols >= 1);
-  assert(rows % 1 == 0 && cols % 1 == 0);
-  assert(src_y_stride >= cols * sizeof(uchar));
-  assert(src_u_stride >= cols / 2 * sizeof(uchar));
-  assert(src_v_stride >= cols / 2 * sizeof(uchar));
-  assert(dst_y_stride >= cols * sizeof(uchar));
-  assert(dst_uv_stride >= cols * sizeof(uchar));
+  if (src_y == nullptr || src_u == nullptr || src_v == nullptr ||
+      dst_y == nullptr || dst_uv == nullptr || rows < 1 || cols < 1 ||
+      rows % 1 == 1 || cols % 1 == 1 ||
+      src_y_stride < cols * (int)sizeof(uchar) ||
+      src_u_stride < cols / 2 * (int)sizeof(uchar) ||
+      src_v_stride < cols / 2 * (int)sizeof(uchar) ||
+      dst_y_stride < cols * (int)sizeof(uchar) ||
+      dst_uv_stride < cols * (int)sizeof(uchar)) {
+    return RC_INVALID_VALUE;
+  }
 
   dim3 block, grid;
   block.x = kBlockDimX0;

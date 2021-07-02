@@ -8,8 +8,6 @@
 
 #include "arithmetic.h"
 
-#include <cassert>
-
 #include "utility.hpp"
 
 using namespace ppl::common;
@@ -263,9 +261,9 @@ RetCode add(const uchar* src0, int rows, int cols, int channels,
             int dst_stride, cudaStream_t stream) {
   if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * sizeof(uchar) ||
-      src1_stride < cols * channels * sizeof(uchar) ||
-      dst_stride  < cols * channels * sizeof(uchar)) {
+      src0_stride < cols * channels * (int)sizeof(uchar) ||
+      src1_stride < cols * channels * (int)sizeof(uchar) ||
+      dst_stride  < cols * channels * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -305,9 +303,9 @@ RetCode add(const float* src0, int rows, int cols, int channels,
             int dst_stride, cudaStream_t stream) {
   if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * sizeof(float) ||
-      src1_stride < cols * channels * sizeof(float) ||
-      dst_stride  < cols * channels * sizeof(float)) {
+      src0_stride < cols * channels * (int)sizeof(float) ||
+      src1_stride < cols * channels * (int)sizeof(float) ||
+      dst_stride  < cols * channels * (int)sizeof(float)) {
     return RC_INVALID_VALUE;
   }
 
@@ -543,9 +541,9 @@ RetCode addWeighted(const uchar* src0, int rows, int cols, int channels,
                     int dst_stride, cudaStream_t stream) {
   if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * sizeof(uchar) ||
-      src1_stride < cols * channels * sizeof(uchar) ||
-      dst_stride  < cols * channels * sizeof(uchar)) {
+      src0_stride < cols * channels * (int)sizeof(uchar) ||
+      src1_stride < cols * channels * (int)sizeof(uchar) ||
+      dst_stride  < cols * channels * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -577,9 +575,9 @@ RetCode addWeighted(const float* src0, int rows, int cols, int channels,
                     int dst_stride, cudaStream_t stream) {
   if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * sizeof(float) ||
-      src1_stride < cols * channels * sizeof(float) ||
-      dst_stride  < cols * channels * sizeof(float)) {
+      src0_stride < cols * channels * (int)sizeof(float) ||
+      src1_stride < cols * channels * (int)sizeof(float) ||
+      dst_stride  < cols * channels * (int)sizeof(float)) {
     return RC_INVALID_VALUE;
   }
 
@@ -1033,8 +1031,8 @@ RetCode subtract(const uchar* src, int rows, int cols, int channels,
                  int dst_stride, cudaStream_t stream) {
   if (src == nullptr || scalar == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(uchar) ||
-      dst_stride < cols * channels * sizeof(uchar)) {
+      src_stride < cols * channels * (int)sizeof(uchar) ||
+      dst_stride < cols * channels * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -1090,8 +1088,8 @@ RetCode subtract(const float* src, int rows, int cols, int channels,
                  int dst_stride, cudaStream_t stream) {
   if (src == nullptr || scalar == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(float) ||
-      dst_stride < cols * channels * sizeof(float)) {
+      src_stride < cols * channels * (int)sizeof(float) ||
+      dst_stride < cols * channels * (int)sizeof(float)) {
     return RC_INVALID_VALUE;
   }
 
@@ -1123,8 +1121,8 @@ RetCode subtract(const float* src, int rows, int cols, int channels,
     subtractKernel0<float, float4><<<grid, block, 0, stream>>>(src, rows, cols,
         channels, src_stride, value0, value1, value2, value3, dst, dst_stride);
   }
-  else if ((unsigned int)src_stride == columns * sizeof(float) &&
-           (unsigned int)dst_stride == columns * sizeof(float)) {
+  else if (src_stride == columns * (int)sizeof(float) &&
+           dst_stride == columns * (int)sizeof(float)) {
     columns *= rows;
     cols = divideUp(columns, 4, 2);
     block.x = 256;
@@ -1462,9 +1460,9 @@ RetCode multiply(const uchar* src0, int rows, int cols, int channels,
                  uchar* dst, int dst_stride, float scale, cudaStream_t stream) {
   if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * sizeof(uchar) ||
-      src1_stride < cols * channels * sizeof(uchar) ||
-      dst_stride  < cols * channels * sizeof(uchar)) {
+      src0_stride < cols * channels * (int)sizeof(uchar) ||
+      src1_stride < cols * channels * (int)sizeof(uchar) ||
+      dst_stride  < cols * channels * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -1506,9 +1504,9 @@ RetCode multiply(const float* src0, int rows, int cols, int channels,
                  float* dst, int dst_stride, float scale, cudaStream_t stream) {
   if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
       cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * sizeof(float) ||
-      src1_stride < cols * channels * sizeof(float) ||
-      dst_stride  < cols * channels * sizeof(float)) {
+      src0_stride < cols * channels * (int)sizeof(float) ||
+      src1_stride < cols * channels * (int)sizeof(float) ||
+      dst_stride  < cols * channels * (int)sizeof(float)) {
     return RC_INVALID_VALUE;
   }
 

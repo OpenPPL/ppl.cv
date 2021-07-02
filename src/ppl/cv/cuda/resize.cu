@@ -9,8 +9,6 @@
 
 #include "resize.h"
 
-#include <cassert>
-
 #include "utility.hpp"
 
 #define MIN(a,b)  ((a) < (b) ? (a) : (b))
@@ -324,8 +322,12 @@ RetCode resizeLinear(const uchar* src, int src_rows, int src_cols, int channels,
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_rows * src_stride * sizeof(uchar),
-                 cudaMemcpyDeviceToDevice);
+      cudaError_t code;
+      code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(uchar),
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -361,8 +363,12 @@ RetCode resizeLinear(const float* src, int src_rows, int src_cols, int channels,
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_rows * src_stride * sizeof(float),
-                 cudaMemcpyDeviceToDevice);
+      cudaError_t code;
+      code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(float),
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -525,8 +531,12 @@ RetCode resizeNearestPoint(const uchar* src, int src_rows, int src_cols,
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_rows * src_stride * sizeof(uchar),
-                 cudaMemcpyDeviceToDevice);
+      cudaError_t code;
+      code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(uchar),
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -575,8 +585,12 @@ RetCode resizeNearestPoint(const float* src, int src_rows, int src_cols,
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_rows * src_stride * sizeof(float),
-                 cudaMemcpyDeviceToDevice);
+      cudaError_t code;
+      code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(float),
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -1420,8 +1434,12 @@ RetCode resizeArea(const uchar* src, int src_rows, int src_cols, int channels,
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_rows * src_stride * sizeof(uchar),
-                 cudaMemcpyDeviceToDevice);
+      cudaError_t code;
+      code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(uchar),
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -1497,8 +1515,12 @@ RetCode resizeArea(const float* src, int src_rows, int src_cols, int channels,
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, src_rows * src_stride * sizeof(float),
-                 cudaMemcpyDeviceToDevice);
+      cudaError_t code;
+      code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(float),
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }

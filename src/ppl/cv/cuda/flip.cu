@@ -8,8 +8,6 @@
 
 #include "flip.h"
 
-#include <cassert>
-
 #include "utility.hpp"
 
 using namespace ppl::common;
@@ -51,8 +49,8 @@ RetCode flip(const uchar* src, int rows, int cols, int channels, int src_stride,
              uchar* dst, int dst_stride, int flip_code, cudaStream_t stream) {
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
       (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(uchar) ||
-      dst_stride < cols * channels * sizeof(uchar)) {
+      src_stride < cols * channels * (int)sizeof(uchar) ||
+      dst_stride < cols * channels * (int)sizeof(uchar)) {
     return RC_INVALID_VALUE;
   }
 
@@ -84,8 +82,8 @@ RetCode flip(const float* src, int rows, int cols, int channels, int src_stride,
              float* dst, int dst_stride, int flip_code, cudaStream_t stream) {
   if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
       (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * sizeof(float) ||
-      dst_stride < cols * channels * sizeof(float)) {
+      src_stride < cols * channels * (int)sizeof(float) ||
+      dst_stride < cols * channels * (int)sizeof(float)) {
     return RC_INVALID_VALUE;
   }
 
@@ -130,13 +128,13 @@ RetCode Flip<uchar, 1>(cudaStream_t stream,
 
 template <>
 RetCode Flip<uchar, 3>(cudaStream_t stream,
-                   int height,
-                   int width,
-                   int inWidthStride,
-                   const uchar* inData,
-                   int outWidthStride,
-                   uchar* outData,
-                   int flipCode) {
+                       int height,
+                       int width,
+                       int inWidthStride,
+                       const uchar* inData,
+                       int outWidthStride,
+                       uchar* outData,
+                       int flipCode) {
   RetCode code = flip(inData, height, width, 3, inWidthStride, outData,
                       outWidthStride, flipCode, stream);
 
@@ -145,13 +143,13 @@ RetCode Flip<uchar, 3>(cudaStream_t stream,
 
 template <>
 RetCode Flip<uchar, 4>(cudaStream_t stream,
-                   int height,
-                   int width,
-                   int inWidthStride,
-                   const uchar* inData,
-                   int outWidthStride,
-                   uchar* outData,
-                   int flipCode) {
+                       int height,
+                       int width,
+                       int inWidthStride,
+                       const uchar* inData,
+                       int outWidthStride,
+                       uchar* outData,
+                       int flipCode) {
   RetCode code = flip(inData, height, width, 4, inWidthStride, outData,
                       outWidthStride, flipCode, stream);
 
@@ -160,13 +158,13 @@ RetCode Flip<uchar, 4>(cudaStream_t stream,
 
 template <>
 RetCode Flip<float, 1>(cudaStream_t stream,
-                    int height,
-                    int width,
-                    int inWidthStride,
-                    const float* inData,
-                    int outWidthStride,
-                    float* outData,
-                    int flipCode) {
+                       int height,
+                       int width,
+                       int inWidthStride,
+                       const float* inData,
+                       int outWidthStride,
+                       float* outData,
+                       int flipCode) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = flip(inData, height, width, 1, inWidthStride, outData,
@@ -177,13 +175,13 @@ RetCode Flip<float, 1>(cudaStream_t stream,
 
 template <>
 RetCode Flip<float, 3>(cudaStream_t stream,
-                    int height,
-                    int width,
-                    int inWidthStride,
-                    const float* inData,
-                    int outWidthStride,
-                    float* outData,
-                    int flipCode) {
+                       int height,
+                       int width,
+                       int inWidthStride,
+                       const float* inData,
+                       int outWidthStride,
+                       float* outData,
+                       int flipCode) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = flip(inData, height, width, 3, inWidthStride, outData,
@@ -194,13 +192,13 @@ RetCode Flip<float, 3>(cudaStream_t stream,
 
 template <>
 RetCode Flip<float, 4>(cudaStream_t stream,
-                    int height,
-                    int width,
-                    int inWidthStride,
-                    const float* inData,
-                    int outWidthStride,
-                    float* outData,
-                    int flipCode) {
+                       int height,
+                       int width,
+                       int inWidthStride,
+                       const float* inData,
+                       int outWidthStride,
+                       float* outData,
+                       int flipCode) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = flip(inData, height, width, 4, inWidthStride, outData,
