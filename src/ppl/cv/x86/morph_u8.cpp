@@ -24,7 +24,7 @@ inline void MorphRow(__m128i &tprev, __m128i &tcurr, __m128i &tnext, const uint8
 {
     morphOp vop;
     __m128i v_border        = _mm_set1_epi8(borderValue);
-    int8_t invalid_byte_len = VLEN % (nc * sizeof(uint8_t));
+    const int8_t invalid_byte_len = VLEN % (nc * sizeof(uint8_t));
     switch (kernel) {
         case 3: {
             __m128i v_up, v_mid, v_down;
@@ -81,8 +81,8 @@ inline void MorphRowLast(__m128i &tprev, __m128i &tcurr, __m128i &tnext, const u
     morphOp vop;
     __m128i v_border        = _mm_set1_epi8(borderValue);
     int32_t kernel_radius   = (kernel - 1) / 2;
-    int8_t invalid_byte_len = VLEN % (nc * sizeof(uint8_t));
-    int32_t v_elem          = VLEN / sizeof(uint8_t) / nc;
+    const int8_t invalid_byte_len = VLEN % (nc * sizeof(uint8_t));
+    const int32_t v_elem          = VLEN / sizeof(uint8_t) / nc;
 
     switch (kernel) {
         case 3: {
