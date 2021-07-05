@@ -348,10 +348,10 @@ int32_t resize_linear_w_oneline_c3_u8_fma(
     int32_t w = 0;
     for (; w <= out_width - 16; w += 16) {
         __m256i m_data[4];
-        m_data[0] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 0)), 1);
-        m_data[1] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 4)), 1);
-        m_data[2] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 8)), 1);
-        m_data[3] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 12)), 1);
+        m_data[0] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 0)), 1);
+        m_data[1] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 4)), 1);
+        m_data[2] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 8)), 1);
+        m_data[3] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 12)), 1);
 
         m_data[0] = _mm256_shuffle_epi8(m_data[0], b0);
         m_data[1] = _mm256_shuffle_epi8(m_data[1], b0);
@@ -423,10 +423,10 @@ int32_t resize_linear_w_oneline_c4_u8_fma(
     int32_t w = 0;
     for (; w <= out_width - 16; w += 16) {
         __m256i m_data[4];
-        m_data[0] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 0)), 1);
-        m_data[1] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 4)), 1);
-        m_data[2] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 8)), 1);
-        m_data[3] = _mm256_i32gather_epi64((const int64_t *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 12)), 1);
+        m_data[0] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 0)), 1);
+        m_data[1] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 4)), 1);
+        m_data[2] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 8)), 1);
+        m_data[3] = _mm256_i32gather_epi64((const long long int *)in_data, _mm_load_si128((const __m128i *)(w_offset + w + 12)), 1);
 
         m_data[0] = _mm256_shuffle_epi8(m_data[0], b0);
         m_data[1] = _mm256_shuffle_epi8(m_data[1], b0);
