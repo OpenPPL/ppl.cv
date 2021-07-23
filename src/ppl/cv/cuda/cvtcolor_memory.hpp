@@ -1,23 +1,17 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   cvtcolor_memory.hpp
- * @brief  Modularizing memory access using function template and macro.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #ifndef _ST_HPC_PPL3_CV_CUDA_CVTCOLOR_MEMORY_HPP_
@@ -267,11 +261,11 @@ void cvtColor4VecKernel1(const T0* src, int rows, int cols, int src_stride,
                                      vectors)                                  \
 RetCode function(const base_type* src, int rows, int cols, int src_stride,     \
                  base_type* dst, int dst_stride, cudaStream_t stream) {        \
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      src_stride < cols * (int)sizeof(from_type) ||                            \
-      dst_stride < cols * (int)sizeof(to_type)) {                              \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(from_type));                     \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(to_type));                       \
                                                                                \
   int padded_stride;                                                           \
   function ## Compute conversion;                                              \
@@ -343,6 +337,12 @@ RetCode function(const base_type* src, int rows, int cols, int src_stride,     \
     cvtColor1VecKernel<base_type, from_type, to_type, function ## Compute><<<  \
         grid, block, 0, stream>>>(src, rows, cols, src_stride, dst, dst_stride,\
                                   conversion);                                 \
+  }                                                                            \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -595,12 +595,12 @@ void cvtColorFromNxKernel(const uchar* src_y, int rows, int cols,
 #define CVT_COLOR_TO_NVXX_INVOCATION(function, from_type)                      \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * (int)sizeof(from_type) ||                            \
-      dst_stride < cols * (int)sizeof(uchar)) {                                \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(from_type));                     \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(uchar));                         \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -611,6 +611,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   function ## Compute conversion;                                              \
   cvtColorToNxKernel<from_type, function ## Compute><<<grid, block, 0, stream  \
       >>>(src, rows, cols, src_stride, dst, dst_stride, conversion);           \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -628,12 +634,12 @@ RetCode function<uchar>(cudaStream_t stream, int rows, int cols,               \
 #define CVT_COLOR_FROM_NVXX_INVOCATION(function, to_type)                      \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * (int)sizeof(uchar) ||                                \
-      dst_stride < cols * (int)sizeof(to_type)) {                              \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(uchar));                         \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(to_type));                       \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -644,6 +650,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   function ## Compute conversion;                                              \
   cvtColorFromNxKernel<to_type, function ## Compute><<<grid, block, 0, stream  \
       >>>(src, rows, cols, src_stride, dst, dst_stride, conversion);           \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -662,13 +674,14 @@ RetCode function<uchar>(cudaStream_t stream, int rows, int cols,               \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst_y, int dst_y_stride, uchar* dst_uv,                \
                  int dst_uv_stride, cudaStream_t stream) {                     \
-  if (src == nullptr || dst_y == nullptr || dst_uv == nullptr ||               \
-      rows < 1 || cols < 1 || rows % 1 == 1 || cols % 1 == 1 ||                \
-      src_stride < cols * (int)sizeof(from_type) ||                            \
-      dst_y_stride < cols * (int)sizeof(uchar) ||                              \
-      dst_uv_stride < cols * (int)sizeof(uchar)) {                             \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst_y != nullptr);                                                \
+  PPL_ASSERT(dst_uv != nullptr);                                               \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(from_type));                     \
+  PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(dst_uv_stride >= cols * (int)sizeof(uchar));                      \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -680,6 +693,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cvtColorToNxKernel<from_type, function ## Compute><<<grid, block, 0, stream  \
       >>>(src, rows, cols, src_stride, dst_y, dst_y_stride, dst_uv,            \
           dst_uv_stride, conversion);                                          \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -698,13 +717,14 @@ RetCode function<uchar>(cudaStream_t stream, int rows, int cols,               \
 RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
                  const uchar* src_uv, int src_uv_stride, uchar* dst,           \
                  int dst_stride, cudaStream_t stream) {                        \
-  if (src_y == nullptr || src_uv == nullptr || dst == nullptr ||               \
-      rows < 1 || cols < 1 || rows % 1 == 1 || cols % 1 == 1 ||                \
-      src_y_stride < cols * (int)sizeof(uchar) ||                              \
-      src_uv_stride < cols * (int)sizeof(uchar) ||                             \
-      dst_stride < cols * (int)sizeof(to_type)) {                              \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src_y != nullptr);                                                \
+  PPL_ASSERT(src_uv != nullptr);                                               \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(src_uv_stride >= cols * (int)sizeof(uchar));                      \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(to_type));                       \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -716,6 +736,12 @@ RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
   cvtColorFromNxKernel<to_type, function ## Compute><<<grid, block, 0, stream  \
       >>>(src_y, rows, cols, src_y_stride, src_uv, src_uv_stride, dst,         \
           dst_stride, conversion);                                             \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -995,12 +1021,12 @@ void cvtColorFromI420Kernel(const uchar* src_y, int rows, int cols,
 #define CVT_COLOR_TO_I420_INVOCATION(function, from_type)                      \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * (int)sizeof(from_type) ||                            \
-      dst_stride < cols * (int)sizeof(uchar)) {                                \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(from_type));                     \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(uchar));                         \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -1011,6 +1037,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   function ## Compute conversion;                                              \
   cvtColorToI420Kernel<from_type, function ## Compute><<<grid, block, 0, stream\
       >>>(src, rows, cols, src_stride, dst, dst_stride, conversion);           \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -1028,12 +1060,12 @@ RetCode function<uchar>(cudaStream_t stream, int rows, int cols,               \
 #define CVT_COLOR_FROM_I420_INVOCATION(function, to_type)                      \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      rows % 1 == 1 || cols % 1 == 1 ||                                        \
-      src_stride < cols * (int)sizeof(uchar) ||                                \
-      dst_stride < cols * (int)sizeof(to_type)) {                              \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(uchar));                         \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(to_type));                       \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -1044,6 +1076,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   function ## Compute conversion;                                              \
   cvtColorFromI420Kernel<to_type, function ## Compute><<<grid, block, 0, stream\
       >>>(src, rows, cols, src_stride, dst, dst_stride, conversion);           \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -1063,14 +1101,16 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst_y, int dst_y_stride, uchar* dst_u,                 \
                  int dst_u_stride, uchar* dst_v, int dst_v_stride,             \
                  cudaStream_t stream) {                                        \
-  if (src == nullptr || dst_y == nullptr || dst_u == nullptr ||                \
-      dst_v == nullptr || rows < 1 || cols < 1 || rows % 1 == 1 ||             \
-      cols % 1 == 1 || src_stride < cols * (int)sizeof(from_type) ||           \
-      dst_y_stride < cols * (int)sizeof(uchar) ||                              \
-      dst_u_stride < cols / 2* (int)sizeof(uchar) ||                           \
-      dst_v_stride < cols / 2 * (int)sizeof(uchar)) {                          \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst_y != nullptr);                                                \
+  PPL_ASSERT(dst_u != nullptr);                                                \
+  PPL_ASSERT(dst_v != nullptr);                                                \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(from_type));                     \
+  PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(dst_u_stride >= cols / 2 * (int)sizeof(uchar));                   \
+  PPL_ASSERT(dst_v_stride >= cols / 2 * (int)sizeof(uchar));                   \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -1082,6 +1122,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cvtColorToI420Kernel<from_type, function ## Compute><<<grid, block, 0, stream\
       >>>(src, rows, cols, src_stride, dst_y, dst_y_stride, dst_u,             \
           dst_u_stride, dst_v, dst_v_stride, conversion);                      \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -1102,14 +1148,16 @@ RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
                  const uchar* src_u, int src_u_stride, const uchar* src_v,     \
                  int src_v_stride, uchar* dst, int dst_stride,                 \
                  cudaStream_t stream)  {                                       \
-  if (src_y == nullptr || src_u == nullptr || src_v == nullptr ||              \
-      dst == nullptr || rows < 1 || cols < 1 || rows % 1 == 1 ||               \
-      cols % 1 == 1 || src_y_stride < cols * (int)sizeof(uchar) ||             \
-      src_u_stride < cols / 2 * (int)sizeof(uchar) ||                          \
-      src_v_stride < cols / 2 * (int)sizeof(uchar) ||                          \
-      dst_stride < cols * (int)sizeof(to_type)) {                              \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src_y != nullptr);                                                \
+  PPL_ASSERT(src_u != nullptr);                                                \
+  PPL_ASSERT(src_v != nullptr);                                                \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(src_u_stride >= cols / 2 * (int)sizeof(uchar));                   \
+  PPL_ASSERT(src_v_stride >= cols / 2 * (int)sizeof(uchar));                   \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(to_type));                       \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -1121,6 +1169,12 @@ RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
   cvtColorFromI420Kernel<to_type, function ## Compute><<<grid, block, 0, stream\
       >>>(src_y, rows, cols, src_y_stride, src_u, src_u_stride, src_v,         \
           src_v_stride, dst, dst_stride, conversion);                          \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -1187,11 +1241,12 @@ void cvtColorYuyvKernel1(const uchar* src, int rows, int cols, int src_stride,
 #define CVT_COLOR_FROM_YUV422_UCHAR_INVOCATION(function, from_type, to_type)   \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      cols & 0x1 != 0 || src_stride < cols / 2 * (int)sizeof(from_type) ||     \
-      dst_stride < cols * (int)sizeof(to_type)) {                              \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT((cols & 0x1) == 0);                                               \
+  PPL_ASSERT(src_stride >= cols / 2 * (int)sizeof(from_type));                 \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(to_type));                       \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -1204,6 +1259,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cvtColorYuyvKernel1<from_type, to_type, function ## Compute0,                \
       function ## Compute1><<<grid, block, 0, stream>>>(src, rows, cols,       \
       src_stride, dst, dst_stride, conversion0, conversion1);                  \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \
@@ -1220,11 +1281,12 @@ RetCode function<uchar>(cudaStream_t stream, int rows, int cols,               \
 #define CVT_COLOR_YUV422_TO_GRAY_UCHAR_INVOCATION(function, type)              \
 RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
                  uchar* dst, int dst_stride, cudaStream_t stream) {            \
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||              \
-      cols & 0x1 != 0 || src_stride < cols * 2 * (int)sizeof(uchar) ||         \
-      dst_stride < cols * (int)sizeof(uchar)) {                                \
-    return RC_INVALID_VALUE;                                                   \
-  }                                                                            \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT((cols & 0x1) == 0);                                               \
+  PPL_ASSERT(src_stride >= cols * 2 * (int)sizeof(uchar));                     \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(uchar));                         \
                                                                                \
   dim3 block, grid;                                                            \
   block.x = kBlockDimX0;                                                       \
@@ -1235,6 +1297,12 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   function ## Compute conversion;                                              \
   cvtColorYuyvKernel0<type, type, function ## Compute><<<grid, block, 0, stream\
       >>>(src, rows, cols, src_stride, dst, dst_stride, conversion);           \
+                                                                               \
+  cudaError_t code = cudaGetLastError();                                       \
+  if (code != cudaSuccess) {                                                   \
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
+    return RC_DEVICE_RUNTIME_ERROR;                                              \
+  }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
 }                                                                              \

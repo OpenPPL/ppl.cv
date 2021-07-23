@@ -1,24 +1,17 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   copymakeborder.cu
- * @brief  The kernel and invocation definitions of forming a border around an
- *         image.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "copymakeborder.h"
@@ -286,24 +279,33 @@ RetCode copyMakeBorder(const uchar* src, int rows, int cols, int channels,
                        int src_stride, uchar* dst, int dst_stride, int top,
                        int bottom, int left, int right, BorderType border_type,
                        uchar border_value, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(uchar) ||
-      dst_stride < cols * channels * (int)sizeof(uchar) ||
-      top < 0 || bottom < 0 || left < 0 || right < 0 ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_REFLECT &&
-       border_type != BORDER_TYPE_WRAP &&
-       border_type != BORDER_TYPE_REFLECT_101 &&
-       border_type != BORDER_TYPE_DEFAULT)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows > 0 && cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(top >= 0);
+  PPL_ASSERT(bottom >= 0);
+  PPL_ASSERT(left >= 0);
+  PPL_ASSERT(right >= 0);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_REFLECT ||
+             border_type == BORDER_TYPE_WRAP ||
+             border_type == BORDER_TYPE_REFLECT_101 ||
+             border_type == BORDER_TYPE_DEFAULT);
 
+  cudaError_t code;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, rows * src_stride, cudaMemcpyDeviceToDevice);
+      code = cudaMemcpyAsync(dst, src, rows * src_stride,
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -329,12 +331,16 @@ RetCode copyMakeBorder(const uchar* src, int rows, int cols, int channels,
         (uchar3*)src, rows, cols, src_stride, (uchar3*)dst, dst_stride, top,
         bottom, left, right, border_type, border_value, small_border);
   }
-  else if (channels == 4) {
+  else {  // channels == 4
     copyMakeBorderKernel<uchar4, uchar><<<grid, block, 0, stream>>>(
         (uchar4*)src, rows, cols, src_stride, (uchar4*)dst, dst_stride, top,
         bottom, left, right, border_type, border_value, small_border);
   }
-  else {
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -344,24 +350,33 @@ RetCode copyMakeBorder(const float* src, int rows, int cols, int channels,
                        int src_stride, float* dst, int dst_stride, int top,
                        int bottom, int left, int right, BorderType border_type,
                        float border_value, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(float) ||
-      dst_stride < cols * channels * (int)sizeof(float) ||
-      top < 0 || bottom < 0 || left < 0 || right < 0 ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_REFLECT &&
-       border_type != BORDER_TYPE_WRAP &&
-       border_type != BORDER_TYPE_REFLECT_101 &&
-       border_type != BORDER_TYPE_DEFAULT)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows > 0 && cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(top >= 0);
+  PPL_ASSERT(bottom >= 0);
+  PPL_ASSERT(left >= 0);
+  PPL_ASSERT(right >= 0);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_REFLECT ||
+             border_type == BORDER_TYPE_WRAP ||
+             border_type == BORDER_TYPE_REFLECT_101 ||
+             border_type == BORDER_TYPE_DEFAULT);
 
+  cudaError_t code;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaMemcpy(dst, src, rows * src_stride, cudaMemcpyDeviceToDevice);
+      code = cudaMemcpyAsync(dst, src, rows * src_stride,
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -387,12 +402,16 @@ RetCode copyMakeBorder(const float* src, int rows, int cols, int channels,
         (float3*)src, rows, cols, src_stride, (float3*)dst, dst_stride, top,
         bottom, left, right, border_type, border_value, small_border);
   }
-  else if (channels == 4) {
+  else {  // channels == 4
     copyMakeBorderKernel<float4, float><<<grid, block, 0, stream>>>(
         (float4*)src, rows, cols, src_stride, (float4*)dst, dst_stride, top,
         bottom, left, right, border_type, border_value, small_border);
   }
-  else {
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;

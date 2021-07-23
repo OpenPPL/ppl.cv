@@ -1,24 +1,17 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   warpaffine.cu
- * @brief  The kernel and invocation definitions of applying an affine
-           transformation to an image.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "warpaffine.h"
@@ -370,7 +363,7 @@ void warpAffineLinearKernel(const float* src, int src_rows, int src_cols,
       output[element_x] = sum;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else {  // border_type == BORDER_TYPE_REPLICATE
     float diff_x1 = src_x - src_x1;
     float diff_x2 = src_x2 - src_x;
     float diff_y1 = src_y - src_y1;
@@ -445,8 +438,6 @@ void warpAffineLinearKernel(const float* src, int src_rows, int src_cols,
       output[element_x] = sum;
     }
   }
-  else {
-  }
 }
 
 RetCode warpAffineLinear(const uchar* src, int src_rows, int src_cols,
@@ -454,15 +445,18 @@ RetCode warpAffineLinear(const uchar* src, int src_rows, int src_cols,
                          int dst_cols, int dst_stride,
                          const float* affine_matrix, BorderType border_type,
                          uchar border_value, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src == dst ||
-      src_rows < 1 || src_cols < 1 || dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels || dst_stride < dst_cols * channels ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_TRANSPARENT)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src != dst);
+  PPL_ASSERT(affine_matrix != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -475,6 +469,12 @@ RetCode warpAffineLinear(const uchar* src, int src_rows, int src_cols,
       affine_matrix[0], affine_matrix[1], affine_matrix[2], affine_matrix[3],
       affine_matrix[4], affine_matrix[5], border_type, border_value);
 
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
@@ -483,15 +483,18 @@ RetCode warpAffineLinear(const float* src, int src_rows, int src_cols,
                          int dst_cols, int dst_stride,
                          const float* affine_matrix, BorderType border_type,
                          float border_value, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src == dst ||
-      src_rows < 1 || src_cols < 1 || dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels || dst_stride < dst_cols * channels ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_TRANSPARENT)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src != dst);
+  PPL_ASSERT(affine_matrix != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -503,6 +506,12 @@ RetCode warpAffineLinear(const float* src, int src_rows, int src_cols,
       channels, src_stride, dst, dst_rows, dst_cols, dst_stride,
       affine_matrix[0], affine_matrix[1], affine_matrix[2], affine_matrix[3],
       affine_matrix[4], affine_matrix[5], border_type, border_value);
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
@@ -681,15 +690,13 @@ void warpAffineNearestPointKernel(const T1* src, int src_rows, int src_cols,
     T0* output = (T0*)(dst + element_y * dst_stride);
     output[element_x] = input[src_x];
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else {  // border_type == BORDER_TYPE_TRANSPARENT
     T0* output = (T0*)(dst + element_y * dst_stride);
 
     if (src_x >= 0 && src_x < src_cols && src_y >= 0 && src_y < src_rows) {
       T0* input  = (T0*)(src + src_y * src_stride);
       output[element_x] = input[src_x];
     }
-  }
-  else {
   }
 }
 
@@ -699,15 +706,18 @@ RetCode warpAffineNearestPoint(const uchar* src, int src_rows, int src_cols,
                                const float* affine_matrix,
                                BorderType border_type, uchar border_value,
                                cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src == dst ||
-      src_rows < 1 || src_cols < 1 || dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels || dst_stride < dst_cols * channels ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_TRANSPARENT)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src != dst);
+  PPL_ASSERT(affine_matrix != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -741,6 +751,12 @@ RetCode warpAffineNearestPoint(const uchar* src, int src_rows, int src_cols,
         border_value1);
   }
 
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
@@ -750,15 +766,18 @@ RetCode warpAffineNearestPoint(const float* src, int src_rows, int src_cols,
                                const float* affine_matrix,
                                BorderType border_type, float border_value,
                                cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src == dst ||
-      src_rows < 1 || src_cols < 1 || dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels || dst_stride < dst_cols * channels ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_TRANSPARENT)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src != dst);
+  PPL_ASSERT(affine_matrix != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -790,6 +809,12 @@ RetCode warpAffineNearestPoint(const float* src, int src_rows, int src_cols,
         dst_stride, affine_matrix[0], affine_matrix[1], affine_matrix[2],
         affine_matrix[3], affine_matrix[4], affine_matrix[5], border_type,
         border_value1);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;

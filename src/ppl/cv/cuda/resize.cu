@@ -1,23 +1,17 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   resize.cu
- * @brief  The kernel and invocation definitions of resizing an image.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "resize.h"
@@ -324,21 +318,22 @@ void resizeLinearKernel(const float* src, int src_rows, int src_cols,
 RetCode resizeLinear(const uchar* src, int src_rows, int src_cols, int channels,
                      int src_stride, uchar* dst, int dst_rows, int dst_cols,
                      int dst_stride, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src_rows < 1 || src_cols < 1 ||
-      dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels ||
-      dst_stride < dst_cols * channels) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
 
+  cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaError_t code;
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(uchar),
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -359,27 +354,34 @@ RetCode resizeLinear(const uchar* src, int src_rows, int src_cols, int channels,
       channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
       row_scale);
 
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
 RetCode resizeLinear(const float* src, int src_rows, int src_cols, int channels,
                      int src_stride, float* dst, int dst_rows, int dst_cols,
                      int dst_stride, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src_rows < 1 || src_cols < 1 ||
-      dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels ||
-      dst_stride < dst_cols * channels) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
 
+  cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaError_t code;
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(float),
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -399,6 +401,12 @@ RetCode resizeLinear(const float* src, int src_rows, int src_cols, int channels,
   resizeLinearKernel<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
       channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
       row_scale);
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
@@ -533,21 +541,22 @@ RetCode resizeNearestPoint(const uchar* src, int src_rows, int src_cols,
                            int channels, int src_stride, uchar* dst,
                            int dst_rows, int dst_cols, int dst_stride,
                            cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src_rows < 1 || src_cols < 1 ||
-      dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels ||
-      dst_stride < dst_cols * channels) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
 
+  cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaError_t code;
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(uchar),
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -580,6 +589,12 @@ RetCode resizeNearestPoint(const uchar* src, int src_rows, int src_cols,
         dst_stride, col_scale, row_scale);
   }
 
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
@@ -587,21 +602,22 @@ RetCode resizeNearestPoint(const float* src, int src_rows, int src_cols,
                            int channels, int src_stride, float* dst,
                            int dst_rows, int dst_cols, int dst_stride,
                            cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src_rows < 1 || src_cols < 1 ||
-      dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels ||
-      dst_stride < dst_cols * channels) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
 
+  cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaError_t code;
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(float),
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -632,6 +648,12 @@ RetCode resizeNearestPoint(const float* src, int src_rows, int src_cols,
     resizeNearestPointKernel<float4, float><<<grid, block, 0, stream>>>(src,
         src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
         dst_stride, col_scale, row_scale);
+  }
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -1436,21 +1458,22 @@ void resizeAreaKernel2(const float* src, int src_rows, int src_cols,
 RetCode resizeArea(const uchar* src, int src_rows, int src_cols, int channels,
                    int src_stride, uchar* dst, int dst_rows, int dst_cols,
                    int dst_stride, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src_rows < 1 || src_cols < 1 ||
-      dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels ||
-      dst_stride < dst_cols * channels) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
 
+  cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaError_t code;
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(uchar),
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -1511,27 +1534,34 @@ RetCode resizeArea(const uchar* src, int src_rows, int src_cols, int channels,
         row_scale, inv_col_scale, inv_row_scale);
   }
 
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
 RetCode resizeArea(const float* src, int src_rows, int src_cols, int channels,
                    int src_stride, float* dst, int dst_rows, int dst_cols,
                    int dst_stride, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || src_rows < 1 || src_cols < 1 ||
-      dst_rows < 1 || dst_cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < src_cols * channels ||
-      dst_stride < dst_cols * channels) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src_rows > 0 && src_cols > 0);
+  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= src_cols * channels);
+  PPL_ASSERT(dst_stride >= dst_cols * channels);
 
+  cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
-      cudaError_t code;
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(float),
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -1590,6 +1620,12 @@ RetCode resizeArea(const float* src, int src_rows, int src_cols, int channels,
     resizeAreaKernel2<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
         channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
         row_scale, inv_col_scale, inv_row_scale);
+  }
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;

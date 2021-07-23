@@ -1,25 +1,22 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   utility.hpp
- * @brief  Definition of macro, typedef, enum, function templates, and inline
- *         functions to facilitate computation.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ *
+ * Definition of macro, typedef, enum, function templates, and inline
+ * functions to facilitate computation.
  */
+
 
 #ifndef _ST_HPC_PPL3_CV_CUDA_UTILITY_HPP_
 #define _ST_HPC_PPL3_CV_CUDA_UTILITY_HPP_
@@ -27,6 +24,9 @@
 #include <cstdlib>
 
 #include "cuda_runtime.h"
+
+#include "ppl/common/log.h"
+#include "ppl/common/retcode.h"
 
 namespace ppl {
 namespace cv {
@@ -38,6 +38,12 @@ namespace cuda {
 #else
 # define __INLINE__ inline
 #endif
+
+#define PPL_ASSERT(expression)                                                 \
+if (!(expression)) {                                                           \
+  LOG(ERROR) << "Assertion failed: " << #expression;                           \
+  return ppl::common::RC_INVALID_VALUE;                                        \
+}
 
 typedef unsigned char uchar;
 

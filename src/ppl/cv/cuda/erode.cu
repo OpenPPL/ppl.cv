@@ -1,23 +1,17 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   erode.cu
- * @brief  The device function and invocation definitions of eroding operation.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "erode.h"
@@ -192,20 +186,20 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
               int src_stride, uchar* dst, int dst_stride, const uchar* kernel,
               int kernel_y, int kernel_x, BorderType border_type,
               const uchar border_value, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(uchar) ||
-      dst_stride < cols * channels * (int)sizeof(uchar) ||
-      (kernel_y <= 0 || kernel_y >= rows) ||
-      (kernel_x <= 0 || kernel_x >= cols) ||
-      (kernel_y & 1 == 0 || kernel_x & 1 == 0) ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_REFLECT &&
-       border_type != BORDER_TYPE_WRAP &&
-       border_type != BORDER_TYPE_REFLECT_101)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows > 0 && cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(kernel_y > 0 && kernel_y < rows);
+  PPL_ASSERT(kernel_x > 0 && kernel_x < cols);
+  PPL_ASSERT(kernel_y & 1 == 1 && kernel_x & 1 == 1);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_REFLECT ||
+             border_type == BORDER_TYPE_WRAP ||
+             border_type == BORDER_TYPE_REFLECT_101);
 
   cudaError_t code;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
@@ -213,6 +207,7 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
       code = cudaMemcpyAsync(dst, src, src_stride * rows,
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -264,6 +259,7 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
           code = cudaMallocPitch(&buffer, &pitch,
                                  cols * channels * sizeof(uchar), rows);
           if (code != cudaSuccess) {
+            LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
             return RC_DEVICE_MEMORY_ERROR;
           }
           morphRowU8C1Kernel0<MinSwap><<<grid0, block0, 0, stream>>>(src, rows,
@@ -292,6 +288,7 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
         code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar),
                                rows);
         if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
           return RC_DEVICE_MEMORY_ERROR;
         }
         morphRowKernel0<uchar3, uchar, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -312,6 +309,7 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
         code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar),
                                rows);
         if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
           return RC_DEVICE_MEMORY_ERROR;
         }
         morphRowKernel0<uchar4, uchar, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -333,11 +331,13 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
     int size = kernel_y * kernel_x * sizeof(uchar);
     code = cudaMalloc(&mask, size);
     if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
     code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
       cudaFree(mask);
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
 
@@ -390,20 +390,19 @@ RetCode erode(const float* src, int rows, int cols, int channels,
               int src_stride, float* dst, int dst_stride, const uchar* kernel,
               int kernel_y, int kernel_x, BorderType border_type,
               const float border_value, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(float) ||
-      dst_stride < cols * channels * (int)sizeof(float) ||
-      (kernel_y <= 0 || kernel_y >= rows) ||
-      (kernel_x <= 0 || kernel_x >= cols) ||
-      (kernel_y & 1 == 0 || kernel_x & 1 == 0) ||
-      (border_type != BORDER_TYPE_CONSTANT &&
-       border_type != BORDER_TYPE_REPLICATE &&
-       border_type != BORDER_TYPE_REFLECT &&
-       border_type != BORDER_TYPE_WRAP &&
-       border_type != BORDER_TYPE_REFLECT_101)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows > 0 && cols > 0);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(kernel_y > 0 && kernel_y < rows);
+  PPL_ASSERT(kernel_x > 0 && kernel_x < cols);
+  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
+             border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_REFLECT ||
+             border_type == BORDER_TYPE_WRAP ||
+             border_type == BORDER_TYPE_REFLECT_101);
 
   cudaError_t code;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
@@ -411,6 +410,7 @@ RetCode erode(const float* src, int rows, int cols, int channels,
       code = cudaMemcpyAsync(dst, src, src_stride * rows,
                              cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
       }
     }
@@ -448,6 +448,7 @@ RetCode erode(const float* src, int rows, int cols, int channels,
         code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
                                rows);
         if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
           return RC_DEVICE_MEMORY_ERROR;
         }
         morphRowKernel0<float, float, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -468,6 +469,7 @@ RetCode erode(const float* src, int rows, int cols, int channels,
         code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
                                rows);
         if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
           return RC_DEVICE_MEMORY_ERROR;
         }
         morphRowKernel0<float3, float, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -488,6 +490,7 @@ RetCode erode(const float* src, int rows, int cols, int channels,
         code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
                                rows);
         if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
           return RC_DEVICE_MEMORY_ERROR;
         }
         morphRowKernel0<float4, float, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -509,11 +512,13 @@ RetCode erode(const float* src, int rows, int cols, int channels,
     int size = kernel_y * kernel_x * sizeof(uchar);
     code = cudaMalloc(&mask, size);
     if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
     code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
       cudaFree(mask);
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
     if (channels == 1) {

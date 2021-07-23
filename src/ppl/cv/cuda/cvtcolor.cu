@@ -1,28 +1,24 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   cvtcolor.cu
- * @brief  Instantiation of kernel invocation using function macro definitions.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "cvtcolor.h"
 #include "cvtcolor_compute.hpp"
 #include "cvtcolor_memory.hpp"
+
+#include "utility.hpp"
 
 namespace ppl {
 namespace cv {
@@ -221,11 +217,11 @@ void cvtColorYUV2GRAYKernel1(const uchar* src, int rows, int cols,
 
 RetCode YUV2GRAY(const uchar* src, int rows, int cols, int src_stride,
                  uchar* dst, int dst_stride, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      src_stride < cols * (int)sizeof(uchar) ||
-      dst_stride < cols * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(uchar));
 
   int columns = divideUp(cols, 4, 2);
   dim3 block, grid;
@@ -242,6 +238,12 @@ RetCode YUV2GRAY(const uchar* src, int rows, int cols, int src_stride,
   else {
     cvtColorYUV2GRAYKernel1<<<grid, block, 0, stream>>>(src, rows, cols,
         src_stride, dst, dst_stride);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -310,16 +312,18 @@ RetCode NV122I420(const uchar* src_y, int rows, int cols, int src_y_stride,
                   const uchar* src_uv, int src_uv_stride, uchar* dst_y,
                   int dst_y_stride, uchar* dst_u, int dst_u_stride,
                   uchar* dst_v, int dst_v_stride, cudaStream_t stream) {
-  if (src_y == nullptr || src_uv == nullptr || dst_y == nullptr ||
-      dst_u == nullptr || dst_v == nullptr || rows < 1 || cols < 1 ||
-      rows % 1 == 1 || cols % 1 == 1 ||
-      src_y_stride < cols * (int)sizeof(uchar) ||
-      src_uv_stride < cols * (int)sizeof(uchar) ||
-      dst_y_stride < cols * (int)sizeof(uchar) ||
-      dst_u_stride < cols / 2 * (int)sizeof(uchar) ||
-      dst_v_stride < cols / 2 * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src_y  != nullptr);
+  PPL_ASSERT(src_uv != nullptr);
+  PPL_ASSERT(dst_u  != nullptr);
+  PPL_ASSERT(dst_v  != nullptr);
+  PPL_ASSERT(dst_y  != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);
+  PPL_ASSERT(src_y_stride  >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(src_uv_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_y_stride  >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_u_stride  >= cols / 2 * (int)sizeof(uchar));
+  PPL_ASSERT(dst_v_stride  >= cols / 2 * (int)sizeof(uchar));
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -330,6 +334,12 @@ RetCode NV122I420(const uchar* src_y, int rows, int cols, int src_y_stride,
   cvtColorNV2I420Kernel<<<grid, block, 0, stream>>>(src_y, rows, cols,
       src_y_stride, src_uv, src_uv_stride, dst_y, dst_y_stride, dst_u,
       dst_u_stride, dst_v, dst_v_stride, true);
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
@@ -360,16 +370,18 @@ RetCode NV212I420(const uchar* src_y, int rows, int cols, int src_y_stride,
                   const uchar* src_uv, int src_uv_stride, uchar* dst_y,
                   int dst_y_stride, uchar* dst_u, int dst_u_stride,
                   uchar* dst_v, int dst_v_stride, cudaStream_t stream) {
-  if (src_y == nullptr || src_uv == nullptr || dst_y == nullptr ||
-      dst_u == nullptr || dst_v == nullptr || rows < 1 || cols < 1 ||
-      rows % 1 == 1 || cols % 1 == 1 ||
-      src_y_stride < cols * (int)sizeof(uchar) ||
-      src_uv_stride < cols * (int)sizeof(uchar) ||
-      dst_y_stride < cols * (int)sizeof(uchar) ||
-      dst_u_stride < cols / 2 * (int)sizeof(uchar) ||
-      dst_v_stride < cols / 2 * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src_y  != nullptr);
+  PPL_ASSERT(src_uv != nullptr);
+  PPL_ASSERT(dst_u  != nullptr);
+  PPL_ASSERT(dst_v  != nullptr);
+  PPL_ASSERT(dst_y  != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);
+  PPL_ASSERT(src_y_stride  >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(src_uv_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_y_stride  >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_u_stride  >= cols / 2 * (int)sizeof(uchar));
+  PPL_ASSERT(dst_v_stride  >= cols / 2 * (int)sizeof(uchar));
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -380,6 +392,12 @@ RetCode NV212I420(const uchar* src_y, int rows, int cols, int src_y_stride,
   cvtColorNV2I420Kernel<<<grid, block, 0, stream>>>(src_y, rows, cols,
       src_y_stride, src_uv, src_uv_stride, dst_y, dst_y_stride, dst_u,
       dst_u_stride, dst_v, dst_v_stride, false);
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
@@ -456,16 +474,18 @@ RetCode I4202NV12(const uchar* src_y, int rows, int cols, int src_y_stride,
                   const uchar* src_u, int src_u_stride, const uchar* src_v,
                   int src_v_stride, uchar* dst_y, int dst_y_stride,
                   uchar* dst_uv, int dst_uv_stride, cudaStream_t stream) {
-  if (src_y == nullptr || src_u == nullptr || src_v == nullptr ||
-      dst_y == nullptr || dst_uv == nullptr || rows < 1 || cols < 1 ||
-      rows % 1 == 1 || cols % 1 == 1 ||
-      src_y_stride < cols * (int)sizeof(uchar) ||
-      src_u_stride < cols / 2 * (int)sizeof(uchar) ||
-      src_v_stride < cols / 2 * (int)sizeof(uchar) ||
-      dst_y_stride < cols * (int)sizeof(uchar) ||
-      dst_uv_stride < cols * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src_y  != nullptr);
+  PPL_ASSERT(src_u  != nullptr);
+  PPL_ASSERT(src_v  != nullptr);
+  PPL_ASSERT(dst_y  != nullptr);
+  PPL_ASSERT(dst_uv != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);
+  PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(src_u_stride >= cols / 2 * (int)sizeof(uchar));
+  PPL_ASSERT(src_v_stride >= cols / 2 * (int)sizeof(uchar));
+  PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_uv_stride >= cols * (int)sizeof(uchar));
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -476,6 +496,12 @@ RetCode I4202NV12(const uchar* src_y, int rows, int cols, int src_y_stride,
   cvtColorI4202NVKernel<<<grid, block, 0, stream>>>(src_y, rows, cols,
       src_y_stride, src_u, src_u_stride, src_v, src_v_stride, dst_y,
       dst_y_stride, dst_uv, dst_uv_stride, true);
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
@@ -505,16 +531,18 @@ RetCode I4202NV21(const uchar* src_y, int rows, int cols, int src_y_stride,
                   const uchar* src_u, int src_u_stride, const uchar* src_v,
                   int src_v_stride, uchar* dst_y, int dst_y_stride,
                   uchar* dst_uv, int dst_uv_stride, cudaStream_t stream) {
-  if (src_y == nullptr || src_u == nullptr || src_v == nullptr ||
-      dst_y == nullptr || dst_uv == nullptr || rows < 1 || cols < 1 ||
-      rows % 1 == 1 || cols % 1 == 1 ||
-      src_y_stride < cols * (int)sizeof(uchar) ||
-      src_u_stride < cols / 2 * (int)sizeof(uchar) ||
-      src_v_stride < cols / 2 * (int)sizeof(uchar) ||
-      dst_y_stride < cols * (int)sizeof(uchar) ||
-      dst_uv_stride < cols * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src_y  != nullptr);
+  PPL_ASSERT(src_u  != nullptr);
+  PPL_ASSERT(src_v  != nullptr);
+  PPL_ASSERT(dst_y  != nullptr);
+  PPL_ASSERT(dst_uv != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);
+  PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(src_u_stride >= cols / 2 * (int)sizeof(uchar));
+  PPL_ASSERT(src_v_stride >= cols / 2 * (int)sizeof(uchar));
+  PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_uv_stride >= cols * (int)sizeof(uchar));
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -525,6 +553,12 @@ RetCode I4202NV21(const uchar* src_y, int rows, int cols, int src_y_stride,
   cvtColorI4202NVKernel<<<grid, block, 0, stream>>>(src_y, rows, cols,
       src_y_stride, src_u, src_u_stride, src_v, src_v_stride, dst_y,
       dst_y_stride, dst_uv, dst_uv_stride, false);
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
