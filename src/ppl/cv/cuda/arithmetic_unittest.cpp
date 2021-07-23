@@ -32,6 +32,7 @@ enum ArithFunctions {
   kADDWEITHTED,
   kSUBTRACT,
   kMUL,
+  kDIV,
 };
 
 using Parameters = std::tuple<ArithFunctions, cv::Size>;
@@ -50,6 +51,9 @@ inline std::string convertToString(const Parameters& parameters) {
   }
   else if (function == kMUL) {
     formatted << "Mul" << "_";
+  }
+  else if (function == kDIV) {
+    formatted << "Div" << "_";
   }
   else {
   }
@@ -109,7 +113,6 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
   cudaMemcpy(gpu_input0, input0, src_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_input1, input1, src_size, cudaMemcpyHostToDevice);
 
-  bool check_result1 = false;
   if (function == kADD) {
     cv::add(src0, src1, cv_dst);
     Add<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
@@ -117,7 +120,6 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
                      gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    check_result1 = true;
     Add<T, channels>(0, size.height, size.width,
                      size.width * channels, gpu_input0,
                      size.width * channels, gpu_input1,
@@ -133,7 +135,6 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
         gpu_src1.step / sizeof(T), (T*)gpu_src1.data, beta, gamma,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    check_result1 = true;
     AddWeighted<T, channels>(0, size.height, size.width, size.width * channels,
         gpu_input0, alpha, size.width * channels, gpu_input1, beta, gamma,
         size.width * channels, gpu_output);
@@ -152,7 +153,6 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
                           (T*)scalars, gpu_dst.step / sizeof(T),
                           (T*)gpu_dst.data);
 
-    check_result1 = true;
     Subtract<T, channels>(0, size.height, size.width, size.width * channels,
                           gpu_input0, (T*)scalars, size.width * channels,
                           gpu_output);
@@ -164,8 +164,19 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
                      gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    check_result1 = true;
     Mul<T, channels>(0, size.height, size.width,
+                     size.width * channels, gpu_input0,
+                     size.width * channels, gpu_input1,
+                     size.width * channels, gpu_output);
+  }
+  else if (function == kDIV) {
+    cv::divide(src0, src1, cv_dst);
+    Div<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+                     gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
+                     gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
+                     gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+
+    Div<T, channels>(0, size.height, size.width,
                      size.width * channels, gpu_input0,
                      size.width * channels, gpu_input1,
                      size.width * channels, gpu_output);
@@ -173,6 +184,7 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
   else {
   }
   gpu_dst.download(dst);
+  cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -182,12 +194,7 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
     epsilon = EPSILON_E6;
   }
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
-
-  bool identity1;
-  if (check_result1) {
-    cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
-    identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
-  }
+  bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
 
   free(input0);
   free(input1);
@@ -196,12 +203,7 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
   cudaFree(gpu_input1);
   cudaFree(gpu_output);
 
-  if (check_result1) {
-    return (identity0 && identity1);
-  }
-  else {
-    return identity0;
-  }
+  return (identity0 && identity1);
 }
 
 #define UNITTEST(T, channels)                                                  \
@@ -214,7 +216,7 @@ TEST_P(PplCvCudaArithmeticTest ## T ## channels, Standard) {                   \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaArithmeticTest ## T ## channels,     \
   ::testing::Combine(                                                          \
-    ::testing::Values(kADD, kADDWEITHTED, kSUBTRACT, kMUL),                    \
+    ::testing::Values(kADD, kADDWEITHTED, kSUBTRACT, kMUL, kDIV),              \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

@@ -37,6 +37,7 @@ enum ArithFunctions {
   kADDWEITHTED,
   kSUBTRACT,
   kMUL,
+  kDIV,
 };
 
 template <typename T, int channels, ArithFunctions function>
@@ -93,6 +94,12 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
                          gpu_src.step / sizeof(T), (T*)gpu_src.data,
                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
+      else if (function == kDIV) {
+        Div<T, channels>(0, gpu_src.rows, gpu_src.cols,
+                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
+                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
+                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+      }
       else {
       }
     }
@@ -144,6 +151,9 @@ static void BM_Arith_opencv_cuda(benchmark::State &state) {
       else if (function == kMUL) {
         cv::cuda::multiply(gpu_src, gpu_src, gpu_dst);
       }
+      else if (function == kDIV) {
+        cv::cuda::divide(gpu_src, gpu_src, gpu_dst);
+      }
       else {
       }
     }
@@ -181,6 +191,9 @@ static void BM_Arith_opencv_x86_cuda(benchmark::State &state) {
     }
     else if (function == kMUL) {
       cv::multiply(src, src, dst);
+    }
+    else if (function == kDIV) {
+      cv::divide(src, src, dst);
     }
     else {
     }
@@ -230,6 +243,14 @@ BENCHMARK_TEMPLATE(BM_Arith_ppl_cuda, float, channels, function)->             \
 // RUN_BENCHMARK(c3, kMUL, 1920, 1080)
 // RUN_BENCHMARK(c4, kMUL, 1920, 1080)
 
+// RUN_BENCHMARK(c1, kDIV, 640, 480)
+// RUN_BENCHMARK(c3, kDIV, 640, 480)
+// RUN_BENCHMARK(c4, kDIV, 640, 480)
+
+// RUN_BENCHMARK(c1, kDIV, 1920, 1080)
+// RUN_BENCHMARK(c3, kDIV, 1920, 1080)
+// RUN_BENCHMARK(c4, kDIV, 1920, 1080)
+
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, function)                              \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_cuda, type, c1, function)->                 \
                    Args({640, 480})->UseManualTime()->Iterations(10);          \
@@ -277,3 +298,8 @@ RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMUL)
 RUN_OPENCV_TYPE_FUNCTIONS(float, kMUL)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMUL)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, kMUL)
+
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, kDIV)
+RUN_OPENCV_TYPE_FUNCTIONS(float, kDIV)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kDIV)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, kDIV)
