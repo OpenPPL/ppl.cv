@@ -1,23 +1,17 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   flip.cu
- * @brief  The kernel and invocation definitions of image flipping operation.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "flip.h"
@@ -61,12 +55,12 @@ void flipKernel(const T1* src, int rows, int cols, int src_stride, T1* dst,
 
 RetCode flip(const uchar* src, int rows, int cols, int channels, int src_stride,
              uchar* dst, int dst_stride, int flip_code, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(uchar) ||
-      dst_stride < cols * channels * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -82,11 +76,15 @@ RetCode flip(const uchar* src, int rows, int cols, int channels, int src_stride,
     flipKernel<uchar3, uchar><<<grid, block, 0, stream>>>(src, rows, cols,
         src_stride, dst, dst_stride, flip_code);
   }
-  else if (channels == 4) {
+  else {  // channels == 4
     flipKernel<uchar4, uchar><<<grid, block, 0, stream>>>(src, rows, cols,
         src_stride, dst, dst_stride, flip_code);
   }
-  else {
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -94,12 +92,12 @@ RetCode flip(const uchar* src, int rows, int cols, int channels, int src_stride,
 
 RetCode flip(const float* src, int rows, int cols, int channels, int src_stride,
              float* dst, int dst_stride, int flip_code, cudaStream_t stream) {
-  if (src == nullptr || dst == nullptr || rows < 1 || cols < 1 ||
-      (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(float) ||
-      dst_stride < cols * channels * (int)sizeof(float)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -115,11 +113,15 @@ RetCode flip(const float* src, int rows, int cols, int channels, int src_stride,
     flipKernel<float3, float><<<grid, block, 0, stream>>>(src, rows, cols,
         src_stride, dst, dst_stride, flip_code);
   }
-  else if (channels == 4) {
+  else {  // channels == 4
     flipKernel<float4, float><<<grid, block, 0, stream>>>(src, rows, cols,
         src_stride, dst, dst_stride, flip_code);
   }
-  else {
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;

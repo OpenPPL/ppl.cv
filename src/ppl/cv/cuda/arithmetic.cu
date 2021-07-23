@@ -1,23 +1,17 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 /**
- * @file   arithmetic.cu
- * @brief  The kernel and invocation definitions of arithmetic operations.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 #include "arithmetic.h"
@@ -273,13 +267,14 @@ void addKernel1(const float* src0, int rows, int cols, int src0_stride,
 RetCode add(const uchar* src0, int rows, int cols, int channels,
             int src0_stride, const uchar* src1, int src1_stride, uchar* dst,
             int dst_stride, cudaStream_t stream) {
-  if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * (int)sizeof(uchar) ||
-      src1_stride < cols * channels * (int)sizeof(uchar) ||
-      dst_stride  < cols * channels * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(uchar));
 
   int columns = cols * channels;
   cols = divideUp(columns, 4, 2);
@@ -309,19 +304,26 @@ RetCode add(const uchar* src0, int rows, int cols, int channels,
                                             src1_stride, dst, dst_stride);
   }
 
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
 RetCode add(const float* src0, int rows, int cols, int channels,
             int src0_stride, const float* src1, int src1_stride, float* dst,
             int dst_stride, cudaStream_t stream) {
-  if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * (int)sizeof(float) ||
-      src1_stride < cols * channels * (int)sizeof(float) ||
-      dst_stride  < cols * channels * (int)sizeof(float)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -339,6 +341,12 @@ RetCode add(const float* src0, int rows, int cols, int channels,
   else {
     addKernel1<<<grid, block, 0, stream>>>(src0, rows, columns, src0_stride,
                                            src1, src1_stride, dst, dst_stride);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -553,13 +561,14 @@ RetCode addWeighted(const uchar* src0, int rows, int cols, int channels,
                     int src0_stride, float alpha, const uchar* src1,
                     int src1_stride, float beta, float gamma, uchar* dst,
                     int dst_stride, cudaStream_t stream) {
-  if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * (int)sizeof(uchar) ||
-      src1_stride < cols * channels * (int)sizeof(uchar) ||
-      dst_stride  < cols * channels * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(uchar));
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -580,6 +589,12 @@ RetCode addWeighted(const uchar* src0, int rows, int cols, int channels,
         src0_stride, alpha, src1, src1_stride, beta, gamma, dst, dst_stride);
   }
 
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
@@ -587,13 +602,14 @@ RetCode addWeighted(const float* src0, int rows, int cols, int channels,
                     int src0_stride, float alpha, const float* src1,
                     int src1_stride, float beta, float gamma, float* dst,
                     int dst_stride, cudaStream_t stream) {
-  if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * (int)sizeof(float) ||
-      src1_stride < cols * channels * (int)sizeof(float) ||
-      dst_stride  < cols * channels * (int)sizeof(float)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -612,6 +628,12 @@ RetCode addWeighted(const float* src0, int rows, int cols, int channels,
   else {
     addWeightedKernel1<float><<<grid, block, 0, stream>>>(src0, rows, columns,
         src0_stride, alpha, src1, src1_stride, beta, gamma, dst, dst_stride);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -1043,12 +1065,13 @@ void subtractKernel11(const T* src, int rows, int cols, int channels,
 RetCode subtract(const uchar* src, int rows, int cols, int channels,
                  int src_stride, const uchar* scalar, uchar* dst,
                  int dst_stride, cudaStream_t stream) {
-  if (src == nullptr || scalar == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(uchar) ||
-      dst_stride < cols * channels * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(scalar != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -1094,18 +1117,25 @@ RetCode subtract(const uchar* src, int rows, int cols, int channels,
         channels, src_stride, value0, value1, value2, value3, dst, dst_stride);
   }
 
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
 RetCode subtract(const float* src, int rows, int cols, int channels,
                  int src_stride, const float* scalar, float* dst,
                  int dst_stride, cudaStream_t stream) {
-  if (src == nullptr || scalar == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src_stride < cols * channels * (int)sizeof(float) ||
-      dst_stride < cols * channels * (int)sizeof(float)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(scalar != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -1150,6 +1180,12 @@ RetCode subtract(const float* src, int rows, int cols, int channels,
     grid.x = divideUp(divideUp(columns, 2, 1), kBlockDimX1, kBlockShiftX1);
     subtractKernel11<float><<<grid, block, 0, stream>>>(src, rows, columns,
         channels, src_stride, value0, value1, value2, value3, dst, dst_stride);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -1472,13 +1508,14 @@ void multiplyKernel0(const float* src0, int rows, int cols, int src0_stride,
 RetCode multiply(const uchar* src0, int rows, int cols, int channels,
                  int src0_stride, const uchar* src1, int src1_stride,
                  uchar* dst, int dst_stride, float scale, cudaStream_t stream) {
-  if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * (int)sizeof(uchar) ||
-      src1_stride < cols * channels * (int)sizeof(uchar) ||
-      dst_stride  < cols * channels * (int)sizeof(uchar)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(uchar));
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -1510,19 +1547,26 @@ RetCode multiply(const uchar* src0, int rows, int cols, int channels,
         src0_stride, src1, src1_stride, dst, dst_stride, scale);
   }
 
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   return RC_SUCCESS;
 }
 
 RetCode multiply(const float* src0, int rows, int cols, int channels,
                  int src0_stride, const float* src1, int src1_stride,
                  float* dst, int dst_stride, float scale, cudaStream_t stream) {
-  if (src0 == nullptr || src1 == nullptr || dst == nullptr || rows < 1 ||
-      cols < 1 || (channels != 1 && channels != 3 && channels != 4) ||
-      src0_stride < cols * channels * (int)sizeof(float) ||
-      src1_stride < cols * channels * (int)sizeof(float) ||
-      dst_stride  < cols * channels * (int)sizeof(float)) {
-    return RC_INVALID_VALUE;
-  }
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -1540,6 +1584,12 @@ RetCode multiply(const float* src0, int rows, int cols, int channels,
   else {
     multiplyKernel11<float><<<grid, block, 0, stream>>>(src0, rows, columns,
         src0_stride, src1, src1_stride, dst, dst_stride, scale);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
