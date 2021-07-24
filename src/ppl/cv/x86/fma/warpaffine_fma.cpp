@@ -155,8 +155,8 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
             __m256 seq_vec  = _mm256_add_ps(base_seq_vec, _mm256_set1_ps(block_j));
             __m256 x_vec    = _mm256_fmadd_ps(m0_vec, seq_vec, baseX_vec);
             __m256 y_vec    = _mm256_fmadd_ps(m3_vec, seq_vec, baseY_vec);
-            __m256i sx0_vec = _mm256_cvtps_epi32(x_vec);
-            __m256i sy0_vec = _mm256_cvtps_epi32(y_vec);
+            __m256i sx0_vec = _mm256_cvttps_epi32(x_vec);
+            __m256i sy0_vec = _mm256_cvttps_epi32(y_vec);
             _mm256_storeu_si256(reinterpret_cast<__m256i *>(sx0_array), sx0_vec);
             _mm256_storeu_si256(reinterpret_cast<__m256i *>(sy0_array), sy0_vec);
             __m256 u_vec     = _mm256_sub_ps(x_vec, _mm256_cvtepi32_ps(sx0_vec));
