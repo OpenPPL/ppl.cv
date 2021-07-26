@@ -75,7 +75,7 @@ inline std::string convertToString(const Parameters& parameters) {
   return formatted.str();
 }
 
-template<typename T, int channels>
+template <typename T, int channels>
 class PplCvCudaDilateTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaDilateTest() {
@@ -98,7 +98,7 @@ class PplCvCudaDilateTest : public ::testing::TestWithParam<Parameters> {
   cv::Size size;
 };
 
-template<typename T, int channels>
+template <typename T, int channels>
 bool PplCvCudaDilateTest<T, channels>::apply() {
   cv::Mat src;
   src = createSourceImage(size.height, size.width,

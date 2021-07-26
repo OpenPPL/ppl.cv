@@ -62,7 +62,7 @@ inline std::string convertToString(const Parameters& parameters) {
   return formatted.str();
 }
 
-template<typename T, int channels>
+template <typename T, int channels>
 class PplCvCudaCopyMakeBorderTest :
   public ::testing::TestWithParam<Parameters> {
  public:
@@ -91,7 +91,7 @@ class PplCvCudaCopyMakeBorderTest :
   cv::Size size;
 };
 
-template<typename T, int channels>
+template <typename T, int channels>
 bool PplCvCudaCopyMakeBorderTest<T, channels>::apply() {
   cv::Mat src;
   src = createSourceImage(size.height, size.width,

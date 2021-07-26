@@ -456,4 +456,4 @@ ppl::common::RetCode Div(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif //! __ST_HPC_PPL3_CV_CUDA_ARITHMETIC_H_
+#endif //! _ST_HPC_PPL3_CV_CUDA_ARITHMETIC_H_

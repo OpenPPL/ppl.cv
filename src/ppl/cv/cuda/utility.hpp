@@ -46,6 +46,7 @@ if (!(expression)) {                                                           \
 }
 
 typedef unsigned char uchar;
+typedef signed char schar;
 
 // configuration of thread block
 enum DimX {

@@ -76,7 +76,7 @@ inline std::string convertToString(const Parameters& parameters) {
   return formatted.str();
 }
 
-template<typename T, int channels>
+template <typename T, int channels>
 class PplCvCudaResizeTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaResizeTest() {
@@ -97,7 +97,7 @@ class PplCvCudaResizeTest : public ::testing::TestWithParam<Parameters> {
   cv::Size size;
 };
 
-template<typename T, int channels>
+template <typename T, int channels>
 bool PplCvCudaResizeTest<T, channels>::apply() {
   float scale_coeff;
   if (scale == kHalfSize) {
