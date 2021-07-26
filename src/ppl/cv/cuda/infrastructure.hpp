@@ -16,23 +16,28 @@
  * Infrastructure functions for the convenience of unittest and benchmark.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_TEST_INFRASTRUCTURE_HPP_
-#define _ST_HPC_PPL3_CV_CUDA_TEST_INFRASTRUCTURE_HPP_
+#ifndef _ST_HPC_PPL3_CV_CUDA_INFRASTRUCTURE_HPP_
+#define _ST_HPC_PPL3_CV_CUDA_INFRASTRUCTURE_HPP_
 
 #include <cstdlib>
-#include <cmath>
 
 #include <iostream>
 
-#include "cuda_runtime.h"
 #include "opencv2/opencv.hpp"
+
+#include "utility.hpp"
 
 #define EPSILON_1F 1.1f
 #define EPSILON_E4 1e-4
 #define EPSILON_E6 1e-6
 
+#define AUX_ASSERT(expression)                                                 \
+if (!(expression)) {                                                           \
+  LOG(ERROR) << "Infrastructure assertion failed: " << #expression;            \
+}
+
 inline
-char randomChar() {
+schar randomChar() {
   int flag   = rand() % 2;
   int number = rand() % 128;
   if (flag) {
@@ -45,12 +50,11 @@ char randomChar() {
 
 template <typename T>
 void randomImage(cv::Mat& image, int basic_type, int channels) {
-  if (image.data == nullptr || (basic_type != CV_8U && basic_type != CV_8S &&
-      basic_type != CV_32F && basic_type != CV_64F) ||
-      (channels != 1 && channels != 2 && channels != 3 && channels != 4)) {
-    std::cout << "Invalid parameters in randomImage()." << std::endl;
-    return;
-  }
+  AUX_ASSERT(image.data != nullptr);
+  AUX_ASSERT(image.rows >= 1 && image.cols >= 1);
+  AUX_ASSERT(basic_type == CV_8U || basic_type == CV_8S ||
+             basic_type == CV_32F || basic_type == CV_64F);
+  AUX_ASSERT(channels == 1 || channels == 2 || channels == 3 || channels == 4);
 
   int rows = image.rows;
   int cols = image.cols;
@@ -129,15 +133,13 @@ T clamp(T value, T begin, T end) {
 }
 
 template <typename T>
-void randomImage(cv::Mat& image, int basic_type, int channels, T begin,
-                 T end) {
-  if (image.data == nullptr || (basic_type != CV_8U && basic_type != CV_8S &&
-      basic_type != CV_32F && basic_type != CV_64F) ||
-      (channels != 1 && channels != 2 && channels != 3 && channels != 4) ||
-      begin > end) {
-    std::cout << "Invalid parameters in randomImage()." << std::endl;
-    return;
-  }
+void randomImage(cv::Mat& image, int basic_type, int channels, T begin, T end) {
+  AUX_ASSERT(image.data != nullptr);
+  AUX_ASSERT(image.rows >= 1 && image.cols >= 1);
+  AUX_ASSERT(basic_type == CV_8U || basic_type == CV_8S ||
+             basic_type == CV_32F || basic_type == CV_64F);
+  AUX_ASSERT(channels == 1 || channels == 2 || channels == 3 || channels == 4);
+  AUX_ASSERT(begin <= end);
 
   int rows = image.rows;
   int cols = image.cols;
@@ -204,15 +206,15 @@ void randomImage(cv::Mat& image, int basic_type, int channels, T begin,
 
 inline
 cv::Mat createSourceImage(int rows, int cols, int type) {
-  if (rows < 1 || cols < 1 ||
-      (type != CV_8UC1 && type != CV_8UC2 &&
-       type != CV_8UC3 && type != CV_8UC4 &&
-       type != CV_8SC1 && type != CV_8SC3 && type != CV_8SC4 &&
-       type != CV_32FC1 && type != CV_32FC3 && type != CV_32FC4 &&
-       type != CV_64FC1 && type != CV_64FC3 && type != CV_64FC4)) {
-    std::cout << "Invalid parameters in createSourceImage()." << std::endl;
-    return cv::Mat(0, 0, type);
-  }
+  AUX_ASSERT(rows >= 1 && cols >= 1);
+  AUX_ASSERT(type == CV_8UC1 || type == CV_8UC2 ||
+             type == CV_8UC3 || type == CV_8UC4 ||
+             type == CV_8SC1 || type == CV_8SC2 ||
+             type == CV_8SC3 || type == CV_8SC4 ||
+             type == CV_32FC1 || type == CV_32FC2 ||
+             type == CV_32FC3 || type == CV_32FC4 ||
+             type == CV_64FC1 || type == CV_64FC2 ||
+             type == CV_64FC3 || type == CV_64FC4);
 
   cv::Mat image(rows, cols, type);
 
@@ -231,6 +233,9 @@ cv::Mat createSourceImage(int rows, int cols, int type) {
   else if (type == CV_8SC1) {
     randomImage<char>(image, CV_8S, 1);
   }
+  else if (type == CV_8SC2) {
+    randomImage<char>(image, CV_8S, 2);
+  }
   else if (type == CV_8SC3) {
     randomImage<char>(image, CV_8S, 3);
   }
@@ -240,6 +245,9 @@ cv::Mat createSourceImage(int rows, int cols, int type) {
   else if (type == CV_32FC1) {
     randomImage<float>(image, CV_32F, 1);
   }
+  else if (type == CV_32FC2) {
+    randomImage<float>(image, CV_32F, 2);
+  }
   else if (type == CV_32FC3) {
     randomImage<float>(image, CV_32F, 3);
   }
@@ -248,6 +256,9 @@ cv::Mat createSourceImage(int rows, int cols, int type) {
   }
   else if (type == CV_64FC1) {
     randomImage<double>(image, CV_64F, 1);
+  }
+  else if (type == CV_64FC2) {
+    randomImage<double>(image, CV_64F, 2);
   }
   else if (type == CV_64FC3) {
     randomImage<double>(image, CV_64F, 3);
@@ -264,18 +275,16 @@ cv::Mat createSourceImage(int rows, int cols, int type) {
 inline
 cv::Mat createSourceImage(int rows, int cols, int type, float begin,
                           float end) {
-  if (rows < 1 || cols < 1 || begin > end ||
-      (type != CV_8UC1 && type != CV_8UC2 &&
-       type != CV_8UC3 && type != CV_8UC4 &&
-       type != CV_8SC1 && type != CV_8SC2 &&
-       type != CV_8SC3 && type != CV_8SC4 &&
-       type != CV_32FC1 && type != CV_32FC2 &&
-       type != CV_32FC3 && type != CV_32FC4 &&
-       type != CV_64FC1 && type != CV_64FC2 &&
-       type != CV_64FC3 && type != CV_64FC4)) {
-    std::cout << "Invalid parameters in createSourceImage()." << std::endl;
-    return cv::Mat(0, 0, type);
-  }
+  AUX_ASSERT(rows >= 1 && cols >= 1);
+  AUX_ASSERT(type == CV_8UC1 || type == CV_8UC2 ||
+             type == CV_8UC3 || type == CV_8UC4 ||
+             type == CV_8SC1 || type == CV_8SC2 ||
+             type == CV_8SC3 || type == CV_8SC4 ||
+             type == CV_32FC1 || type == CV_32FC2 ||
+             type == CV_32FC3 || type == CV_32FC4 ||
+             type == CV_64FC1 || type == CV_64FC2 ||
+             type == CV_64FC3 || type == CV_64FC4);
+  AUX_ASSERT(begin <= end);
 
   cv::Mat image(rows, cols, type);
 
@@ -334,11 +343,13 @@ cv::Mat createSourceImage(int rows, int cols, int type, float begin,
 }
 
 template <typename T>
-void copyMatToArray(const cv::Mat& image0, T *image1) {
-  if (image0.data == nullptr || image1 == nullptr) {
-    std::cout << "Invalid parameters in copyMatToArray()." << std::endl;
-    return;
-  }
+void copyMatToArray(const cv::Mat& image0, T* image1) {
+  AUX_ASSERT(image0.data != nullptr);
+  AUX_ASSERT(image1 != nullptr);
+  AUX_ASSERT(image0.data != (uchar*)image1);
+  AUX_ASSERT(image0.rows >= 1 && image0.cols >= 1);
+  AUX_ASSERT(image0.channels() == 1 || image0.channels() == 2 ||
+             image0.channels() == 3 || image0.channels() == 4);
 
   int rows = image0.rows;
   int cols = image0.cols;
@@ -385,37 +396,30 @@ void findMax(double& max, const double& value) {
 template <typename T>
 bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
                            float epsilon, bool display = false) {
-  if (image0.data == nullptr || image1.data == nullptr ||
-      image0.rows != image1.rows || image0.cols != image1.cols ||
-      image0.channels() != image1.channels() || epsilon < 0) {
-    std::cout << "Invalid parameters in checkMatricesIdentity()." << std::endl;
-    return false;
-  }
+  AUX_ASSERT(image0.data != nullptr);
+  AUX_ASSERT(image1.data != nullptr);
+  AUX_ASSERT(image0.data != image1.data);
+  AUX_ASSERT(image0.rows >= 1 && image0.cols >= 1);
+  AUX_ASSERT(image0.rows == image1.rows && image0.cols == image1.cols);
+  AUX_ASSERT(image0.channels() == 1 || image0.channels() == 2 ||
+             image0.channels() == 3 || image0.channels() == 4);
+  AUX_ASSERT(image0.channels() == image1.channels());
+  AUX_ASSERT(image0.type() == CV_8UC1 || image0.type() == CV_8UC2 ||
+             image0.type() == CV_8UC3 || image0.type() == CV_8UC4 ||
+             image0.type() == CV_8SC1 || image0.type() == CV_8SC2 ||
+             image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
+             image0.type() == CV_32FC1 || image0.type() == CV_32FC2 ||
+             image0.type() == CV_32FC3 || image0.type() == CV_32FC4 ||
+             image0.type() == CV_64FC1 || image0.type() == CV_64FC2 ||
+             image0.type() == CV_64FC3 || image0.type() == CV_64FC4);
+  AUX_ASSERT(image0.type() == image1.type());
+  AUX_ASSERT(epsilon > 0.f);
 
   int rows = image0.rows;
   int cols = image0.cols;
-  int type = image0.type();
   int channels = image0.channels();
   float difference, max = 0.0f;
   const T *element0, *element1;
-
-  if (rows != image1.rows || cols != image1.cols) {
-    std::cout << "checkMatricesIdentity(): two images don't have the same size!"
-              << std::endl;
-    return false;
-  }
-
-  if (type != image1.type()) {
-    std::cout << "checkMatricesIdentity(): two images don't have the same type!"
-              << std::endl;
-    return false;
-  }
-
-  if (channels != image1.channels()) {
-    std::cout << "checkMatricesIdentity(): two images have different channels!"
-              << std::endl;
-    return false;
-  }
 
   std::cout.precision(7);
   for (int row = 0; row < rows; ++row) {
@@ -472,10 +476,21 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
 template <typename T>
 bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
                            float epsilon, bool display = false) {
-  if (image0.data == nullptr || image1 == nullptr || epsilon < 0) {
-    std::cout << "Invalid parameters in checkMatArrayIdentity()." << std::endl;
-    return false;
-  }
+  AUX_ASSERT(image0.data != nullptr);
+  AUX_ASSERT(image1 != nullptr);
+  AUX_ASSERT(image0.data != (uchar*)image1);
+  AUX_ASSERT(image0.rows >= 1 && image0.cols >= 1);
+  AUX_ASSERT(image0.channels() == 1 || image0.channels() == 2 ||
+             image0.channels() == 3 || image0.channels() == 4);
+  AUX_ASSERT(image0.type() == CV_8UC1 || image0.type() == CV_8UC2 ||
+             image0.type() == CV_8UC3 || image0.type() == CV_8UC4 ||
+             image0.type() == CV_8SC1 || image0.type() == CV_8SC2 ||
+             image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
+             image0.type() == CV_32FC1 || image0.type() == CV_32FC2 ||
+             image0.type() == CV_32FC3 || image0.type() == CV_32FC4 ||
+             image0.type() == CV_64FC1 || image0.type() == CV_64FC2 ||
+             image0.type() == CV_64FC3 || image0.type() == CV_64FC4);
+  AUX_ASSERT(epsilon > 0.f);
 
   int rows = image0.rows;
   int cols = image0.cols;
@@ -533,4 +548,4 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
   }
 }
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_TEST_INFRASTRUCTURE_HPP_
+#endif  // _ST_HPC_PPL3_CV_CUDA_INFRASTRUCTURE_HPP_
