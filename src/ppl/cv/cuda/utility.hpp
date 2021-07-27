@@ -21,8 +21,6 @@
 #ifndef _ST_HPC_PPL3_CV_CUDA_UTILITY_HPP_
 #define _ST_HPC_PPL3_CV_CUDA_UTILITY_HPP_
 
-#include <cstdlib>
-
 #include "cuda_runtime.h"
 
 #include "ppl/common/log.h"

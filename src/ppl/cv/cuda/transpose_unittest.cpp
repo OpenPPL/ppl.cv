@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "flip.h"
+#include "transpose.h"
 
 #include <tuple>
 #include <sstream>
@@ -27,30 +27,11 @@
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
-enum FlipFunctions {
-  kFlipX,
-  kFlipY,
-  kFlipXY,
-};
-
-using Parameters = std::tuple<FlipFunctions, cv::Size>;
+using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  FlipFunctions function = std::get<0>(parameters);
-  if (function == kFlipX) {
-    formatted << "FlipX" << "_";
-  }
-  else if (function == kFlipY) {
-    formatted << "FlipY" << "_";
-  }
-  else if (function == kFlipXY) {
-    formatted << "FlipXY" << "_";
-  }
-  else {
-  }
-
-  cv::Size size = std::get<1>(parameters);
+  cv::Size size = std::get<0>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -58,32 +39,30 @@ inline std::string convertToString(const Parameters& parameters) {
 }
 
 template <typename T, int channels>
-class PplCvCudaFlipTest : public ::testing::TestWithParam<Parameters> {
+class PplCvCudaTransposeTest : public ::testing::TestWithParam<Parameters> {
  public:
-  PplCvCudaFlipTest() {
+  PplCvCudaTransposeTest() {
     const Parameters& parameters = GetParam();
-    function = std::get<0>(parameters);
-    size     = std::get<1>(parameters);
+    size = std::get<0>(parameters);
   }
 
-  ~PplCvCudaFlipTest() {
+  ~PplCvCudaTransposeTest() {
   }
 
   bool apply();
 
  private:
-  FlipFunctions function;
   cv::Size size;
 };
 
 template <typename T, int channels>
-bool PplCvCudaFlipTest<T, channels>::apply() {
+bool PplCvCudaTransposeTest<T, channels>::apply() {
   cv::Mat src;
   src = createSourceImage(size.height, size.width,
-                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  cv::Mat dst(src.rows, src.cols,
+                          CV_MAKETYPE(cv::DataType<T>::depth, channels));
+  cv::Mat dst(size.width, size.height,
               CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  cv::Mat cv_dst(src.rows, src.cols,
+  cv::Mat cv_dst(size.width, size.height,
                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
@@ -98,36 +77,15 @@ bool PplCvCudaFlipTest<T, channels>::apply() {
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
-  if (function == kFlipX) {
-    cv::flip(src, cv_dst, 0);
-    Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 0);
-    Flip<T, channels>(0, size.height, size.width,
-                      size.width * channels, gpu_input,
-                      size.width * channels, gpu_output, 0);
-  }
-  else if (function == kFlipY) {
-    cv::flip(src, cv_dst, 1);
-    Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 1);
-    Flip<T, channels>(0, size.height, size.width,
-                      size.width * channels, gpu_input,
-                      size.width * channels, gpu_output, 1);
-  }
-  else if (function == kFlipXY) {
-    cv::flip(src, cv_dst, -1);
-    Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, -1);
-    Flip<T, channels>(0, size.height, size.width,
-                      size.width * channels, gpu_input,
-                      size.width * channels, gpu_output, -1);
-  }
-  else {
-  }
+  cv::transpose(src, cv_dst);
+  Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
+                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
+                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   gpu_dst.download(dst);
+
+  Transpose<T, channels>(0, size.height, size.width,
+                         size.width * channels, gpu_input,
+                         size.height * channels, gpu_output);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -149,22 +107,20 @@ bool PplCvCudaFlipTest<T, channels>::apply() {
 }
 
 #define UNITTEST(T, channels)                                                  \
-using PplCvCudaFlipTest ## T ## channels = PplCvCudaFlipTest<T, channels>;     \
-TEST_P(PplCvCudaFlipTest ## T ## channels, Standard) {                         \
+using PplCvCudaTransposeTest ## T ## channels =                                \
+        PplCvCudaTransposeTest<T, channels>;                                   \
+TEST_P(PplCvCudaTransposeTest ## T ## channels, Standard) {                    \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaFlipTest ## T ## channels,           \
-  ::testing::Combine(                                                          \
-    ::testing::Values(kFlipX, kFlipY, kFlipXY),                                \
-    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
-                      cv::Size{1283, 720}, cv::Size{1976, 1080},               \
-                      cv::Size{320, 240}, cv::Size{640, 480},                  \
-                      cv::Size{1280, 720}, cv::Size{1920, 1080},               \
-                      cv::Size{450, 660}, cv::Size{660, 450})),                \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaTransposeTest ## T ## channels,      \
+  ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                    \
+                    cv::Size{1283, 720}, cv::Size{1976, 1080},                 \
+                    cv::Size{320, 240}, cv::Size{640, 480},                    \
+                    cv::Size{1280, 720}, cv::Size{1920, 1080}),                \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaFlipTest ## T ## channels::ParamType>& info) {                  \
+      PplCvCudaTransposeTest ## T ## channels::ParamType>& info) {             \
     return convertToString(info.param);                                        \
   }                                                                            \
 );

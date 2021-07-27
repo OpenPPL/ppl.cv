@@ -34,6 +34,7 @@
 #define AUX_ASSERT(expression)                                                 \
 if (!(expression)) {                                                           \
   LOG(ERROR) << "Infrastructure assertion failed: " << #expression;            \
+  exit(-1);                                                                    \
 }
 
 inline

@@ -250,15 +250,15 @@ RetCode abs(const schar* src, int rows, int cols, int channels, int src_stride,
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(schar));
-  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(schar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(schar));
 
   int columns = cols * channels;
   cols = divideUp(columns, 4, 2);
   dim3 block, grid;
   block.x = kBlockDimX0;
   block.y = kBlockDimY0;
-  grid.x = divideUp(cols, kBlockDimX0, kBlockShiftX0);
-  grid.y = divideUp(rows, kBlockDimY0, kBlockShiftY0);
+  grid.x  = divideUp(cols, kBlockDimX0, kBlockShiftX0);
+  grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
   if ((src_stride & 3) == 0 && (dst_stride & 3) == 0) {
     absKernel0<<<grid, block, 0, stream>>>(src, rows, cols, src_stride, dst,
@@ -294,7 +294,7 @@ RetCode abs(const float* src, int rows, int cols, int channels, int src_stride,
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
-  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
 
   int columns = cols * channels;
   dim3 block, grid;
