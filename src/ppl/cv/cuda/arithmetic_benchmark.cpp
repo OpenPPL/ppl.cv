@@ -113,7 +113,7 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels, ArithFunctions function>
-static void BM_Arith_opencv_cuda(benchmark::State &state) {
+void BM_Arith_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src, dst;
@@ -167,7 +167,7 @@ static void BM_Arith_opencv_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels, ArithFunctions function>
-static void BM_Arith_opencv_x86_cuda(benchmark::State &state) {
+void BM_Arith_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;

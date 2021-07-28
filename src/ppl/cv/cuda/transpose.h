@@ -77,7 +77,7 @@ namespace cuda {
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
  *   cudaMallocPitch(&dev_output, &output_pitch,
- *                   width * channels * sizeof(float), height);
+ *                   height * channels * sizeof(float), width);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);

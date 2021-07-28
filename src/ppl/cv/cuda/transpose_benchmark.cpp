@@ -66,7 +66,7 @@ void BM_Transpose_ppl_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels>
-static void BM_Transpose_opencv_cuda(benchmark::State &state) {
+void BM_Transpose_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
@@ -99,13 +99,13 @@ static void BM_Transpose_opencv_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels>
-static void BM_Transpose_opencv_x86_cuda(benchmark::State &state) {
+void BM_Transpose_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
-  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+  cv::Mat dst(width, height, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
   for (auto _ : state) {
     cv::transpose(src, dst);

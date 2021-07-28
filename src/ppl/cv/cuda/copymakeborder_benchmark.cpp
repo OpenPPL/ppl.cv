@@ -74,7 +74,7 @@ void BM_CopyMakeBorder_ppl_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels, int top, int left, BorderType border_type>
-static void BM_CopyMakeBorder_opencv_cuda(benchmark::State &state) {
+void BM_CopyMakeBorder_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
@@ -133,7 +133,7 @@ static void BM_CopyMakeBorder_opencv_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels, int top, int left, BorderType border_type>
-static void BM_CopyMakeBorder_opencv_x86_cuda(benchmark::State &state) {
+void BM_CopyMakeBorder_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
