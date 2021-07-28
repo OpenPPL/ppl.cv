@@ -28,6 +28,7 @@
 #include "utility.hpp"
 
 #define EPSILON_1F 1.1f
+#define EPSILON_E3 0.002
 #define EPSILON_E4 1e-4
 #define EPSILON_E6 1e-6
 

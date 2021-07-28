@@ -128,4 +128,4 @@ ppl::common::RetCode Dilate(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif // _ST_HPC_PPL3_CV_CUDA_DILATE_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_DILATE_H_

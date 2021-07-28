@@ -107,4 +107,4 @@ ppl::common::RetCode Abs(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif //! _ST_HPC_PPL3_CV_CUDA_ABS_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_ABS_H_

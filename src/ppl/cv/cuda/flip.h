@@ -112,4 +112,4 @@ ppl::common::RetCode Flip(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif // _ST_HPC_PPL3_CV_CUDA_FLIP_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_FLIP_H_

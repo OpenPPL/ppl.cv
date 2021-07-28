@@ -126,4 +126,4 @@ ppl::common::RetCode CopyMakeBorder(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif // _ST_HPC_PPL3_CV_CUDA_COPY_MAKE_BORDER_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_COPY_MAKE_BORDER_H_
