@@ -24,7 +24,7 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-__INLINE__
+__DEVICE__
 schar abs_device(const schar& src) {
   if (src == -128) {
     return 127;
@@ -34,7 +34,7 @@ schar abs_device(const schar& src) {
   }
 }
 
-__INLINE__
+__DEVICE__
 float abs_device(const float& src) {
   if (src >= 0) {
     return src;

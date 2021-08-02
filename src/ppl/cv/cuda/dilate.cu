@@ -27,13 +27,6 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-#define DEVICE_INLINE
-#if defined(DEVICE_INLINE)
-# define __DEVICE__ __device__ __forceinline__
-#else
-# define __DEVICE__ __device__
-#endif
-
 struct MaxSwap {
   __DEVICE__
   void initialize(uchar &value0, uchar &value1, uchar &value2, uchar &value3) {

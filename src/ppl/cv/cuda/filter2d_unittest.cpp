@@ -27,18 +27,31 @@
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
-using Parameters = std::tuple<int, BorderType, cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+using Parameters = std::tuple<int, int, BorderType, cv::Size>;
+inline std::string convertToStringFilter(const Parameters& parameters) {
   std::ostringstream formatted;
 
   int ksize = std::get<0>(parameters);
   formatted << "Ksize" << ksize << "_";
 
-  BorderType border_type = (BorderType)std::get<1>(parameters);
-  formatted << (border_type == BORDER_TYPE_REPLICATE ? "BORDER_REPLICATE" :
-                              "BORDER_DEFAULT") << "_";
+  int int_delta = std::get<1>(parameters);
+  formatted << "Delta" << int_delta << "_";
 
-  cv::Size size = std::get<2>(parameters);
+  BorderType border_type = (BorderType)std::get<2>(parameters);
+  if (border_type == BORDER_TYPE_REPLICATE) {
+    formatted << "BORDER_REPLICATE" << "_";
+  }
+  else if (border_type == BORDER_TYPE_REFLECT) {
+    formatted << "BORDER_REFLECT" << "_";
+  }
+  else if (border_type == BORDER_TYPE_REFLECT_101) {
+    formatted << "BORDER_REFLECT_101" << "_";
+  }
+  else {  // border_type == BORDER_TYPE_DEFAULT
+    formatted << "BORDER_DEFAULT" << "_";
+  }
+
+  cv::Size size = std::get<3>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -51,8 +64,9 @@ class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
   PplCvCudaFilter2DTest() {
     const Parameters& parameters = GetParam();
     ksize       = std::get<0>(parameters);
-    border_type = std::get<1>(parameters);
-    size        = std::get<2>(parameters);
+    delta       = std::get<1>(parameters) / 10.f;
+    border_type = std::get<2>(parameters);
+    size        = std::get<3>(parameters);
   }
 
   ~PplCvCudaFilter2DTest() {
@@ -62,6 +76,7 @@ class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   int ksize;
+  float delta;
   BorderType border_type;
   cv::Size size;
 };
@@ -97,21 +112,26 @@ bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_kernel, kernel1, kernel_size, cudaMemcpyHostToDevice);
 
-  cv::BorderTypes border;
+  cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_REPLICATE) {
-    border = cv::BORDER_REPLICATE;
+    cv_border = cv::BORDER_REPLICATE;
+  }
+  else if (border_type == BORDER_TYPE_REFLECT) {
+    cv_border = cv::BORDER_REFLECT;
+  }
+  else if (border_type == BORDER_TYPE_REFLECT_101) {
+    cv_border = cv::BORDER_REFLECT_101;
   }
   else {
-    border = cv::BORDER_DEFAULT;
   }
-  cv::filter2D(src, cv_dst, cv_dst.depth(), kernel0, cv::Point(-1,-1), 0,
-               border);
+  cv::filter2D(src, cv_dst, cv_dst.depth(), kernel0, cv::Point(-1,-1), delta,
+               cv_border);
 
   Filter2D<Tsrc, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize, gpu_kernel,
-      gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, border_type);
+      gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta, border_type);
   Filter2D<Tsrc, channels>(0, size.height, size.width, size.width * channels,
-      gpu_input, ksize, gpu_kernel, size.width * channels, gpu_output,
+      gpu_input, ksize, gpu_kernel, size.width * channels, gpu_output, delta,
       border_type);
   gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
@@ -148,14 +168,16 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaFilter2DTest ## Tsrc ## channels,                                   \
   ::testing::Combine(                                                          \
     ::testing::Values(1, 3, 5, 13, 27, 43),                                    \
-    ::testing::Values(BORDER_TYPE_DEFAULT, BORDER_TYPE_REPLICATE),             \
+    ::testing::Values(0, 1, 7, 10, 43),                                        \
+    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
+                      BORDER_TYPE_REFLECT_101),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaFilter2DTest ## Tsrc ## channels::ParamType>& info) {           \
-    return convertToString(info.param);                                        \
+    return convertToStringFilter(info.param);                                  \
   }                                                                            \
 );
 

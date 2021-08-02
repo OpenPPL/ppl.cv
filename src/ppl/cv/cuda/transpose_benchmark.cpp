@@ -36,7 +36,7 @@ void BM_Transpose_ppl_cuda(benchmark::State &state) {
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
   cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(src.cols, src.rows, src.type());
+  cv::cuda::GpuMat gpu_dst(width, height, src.type());
 
   int iterations = 3000;
   struct timeval start, end;
@@ -73,7 +73,7 @@ void BM_Transpose_opencv_cuda(benchmark::State &state) {
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
   cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(src.cols, src.rows, src.type());
+  cv::cuda::GpuMat gpu_dst(width, height, src.type());
 
   int iterations = 3000;
   struct timeval start, end;
@@ -105,7 +105,7 @@ void BM_Transpose_opencv_x86_cuda(benchmark::State &state) {
   cv::Mat src;
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
-  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+  cv::Mat dst(width, height, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
   for (auto _ : state) {
     cv::transpose(src, dst);

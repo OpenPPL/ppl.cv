@@ -27,7 +27,7 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Convolves an image with the kernel.
+ * @brief Convolves an image with the given kernel.
  * @tparam T The data type of input and output image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input&output image, 1, 3 and 4
@@ -45,12 +45,14 @@ namespace cuda {
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
- * @param border_type    ways to deal with border. BORDER_TYPE_DEFAULT and
- *                       BORDER_TYPE_REPLICATE are supported now.
+ * @param delta          optional value added to the filtered pixels.
+ * @param border_type    ways to deal with border. BORDER_TYPE_REPLICATE,
+ *                       BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
+ *                       BORDER_TYPE_DEFAULT are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 kernel must be a single channel 2D matrix.
+ *       2 kernel must be a single channel 1D matrix.
  *       3 The anchor is at the kernel center.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -95,7 +97,7 @@ namespace cuda {
  *   cudaStreamCreate(&stream);
  *   Filter2D<float, 3>(stream, height, width, input_pitch / sizeof(float),
  *                      dev_input, kernel_len, dev_kernel,
- *                      output_pitch / sizeof(float), dev_output,
+ *                      output_pitch / sizeof(float), dev_output, 0.f,
  *                      ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
  *
@@ -108,16 +110,18 @@ namespace cuda {
  * @endcode
  */
 template <typename T, int channels>
-ppl::common::RetCode Filter2D(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const T* inData,
-                              int kernel_len,
-                              const float* kernel,
-                              int outWidthStride,
-                              T* outData,
-                              BorderType border_type);
+ppl::common::RetCode
+Filter2D(cudaStream_t stream,
+         int height,
+         int width,
+         int inWidthStride,
+         const T* inData,
+         int kernel_len,
+         const float* kernel,
+         int outWidthStride,
+         T* outData,
+         float delta = 0.f,
+         BorderType border_type = ppl::cv::BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv

@@ -32,9 +32,9 @@ namespace cuda {
 
 #define DEVICE_INLINE
 #if defined(DEVICE_INLINE)
-# define __INLINE__ __device__ __forceinline__
+# define __DEVICE__ __device__ __forceinline__
 #else
-# define __INLINE__ inline
+# define __DEVICE__ inline
 #endif
 
 #define PPL_ASSERT(expression)                                                 \
@@ -135,7 +135,7 @@ int roundUp(int total, int grain, int shift) {
 }
 
 template <typename T>
-__INLINE__
+__DEVICE__
 T max(const T& value1, const T& value2) {
   if (value1 < value2) {
     return value2;
@@ -146,7 +146,7 @@ T max(const T& value1, const T& value2) {
 }
 
 template <typename T>
-__INLINE__
+__DEVICE__
 T min(const T& value1, const T& value2) {
   if (value1 > value2) {
     return value2;
@@ -157,7 +157,7 @@ T min(const T& value1, const T& value2) {
 }
 
 template <typename T>
-__INLINE__
+__DEVICE__
 T max(const T& value1, const T& value2, const T& value3) {
   if (value1 < value2) {
     return value2 > value3 ? value2 : value3;
@@ -168,7 +168,7 @@ T max(const T& value1, const T& value2, const T& value3) {
 }
 
 template <typename T>
-__INLINE__
+__DEVICE__
 T min(const T& value1, const T& value2, const T& value3) {
   if (value1 > value2) {
     return value2 < value3 ? value2 : value3;
@@ -179,33 +179,33 @@ T min(const T& value1, const T& value2, const T& value3) {
 }
 
 template<typename T>
-__INLINE__
+__DEVICE__
 T clip(const T& value, const T& min_value, const T& max_value) {
     return min(max(value, min_value), max_value);
 }
 
-__INLINE__
+__DEVICE__
 uchar saturate_cast(int value) {
   unsigned int result = 0;
   asm("cvt.sat.u8.s32 %0, %1;" : "=r"(result) : "r"(value));
   return result;
 }
 
-__INLINE__
+__DEVICE__
 uchar saturate_cast(float value) {
   unsigned int result = 0;
   asm("cvt.rni.sat.u8.f32 %0, %1;" : "=r"(result) : "f"(value));
   return result;
 }
 
-__INLINE__
+__DEVICE__
 short saturate_cast_i2s(int value) {
   short result = 0;
   asm("cvt.sat.s16.s32 %0, %1;" : "=h"(result) : "r"(value));
   return result;
 }
 
-__INLINE__
+__DEVICE__
 short saturate_cast_f2s(float value) {
   short result = 0;
   asm("cvt.rni.sat.s16.f32 %0, %1;" : "=h"(result) : "f"(value));
@@ -213,11 +213,11 @@ short saturate_cast_f2s(float value) {
 }
 
 template <typename T0, typename T1>
-__INLINE__
+__DEVICE__
 T0 saturate_cast_vector(T1 value);
 
 template <>
-__INLINE__
+__DEVICE__
 uchar2 saturate_cast_vector(float2 value) {
   uchar2 result;
   result.x = saturate_cast(value.x);
@@ -227,13 +227,13 @@ uchar2 saturate_cast_vector(float2 value) {
 }
 
 template <>
-__INLINE__
+__DEVICE__
 float2 saturate_cast_vector(float2 value) {
   return value;
 }
 
 template <>
-__INLINE__
+__DEVICE__
 uchar3 saturate_cast_vector(float3 value) {
   uchar3 result;
   result.x = saturate_cast(value.x);
@@ -244,13 +244,13 @@ uchar3 saturate_cast_vector(float3 value) {
 }
 
 template <>
-__INLINE__
+__DEVICE__
 float3 saturate_cast_vector(float3 value) {
   return value;
 }
 
 template <>
-__INLINE__
+__DEVICE__
 uchar4 saturate_cast_vector(float4 value) {
   uchar4 result;
   result.x = saturate_cast(value.x);
@@ -262,12 +262,48 @@ uchar4 saturate_cast_vector(float4 value) {
 }
 
 template <>
-__INLINE__
+__DEVICE__
 float4 saturate_cast_vector(float4 value) {
   return value;
 }
 
-__INLINE__
+template <>
+__DEVICE__
+uchar saturate_cast_vector(float4 value) {
+  uchar result = saturate_cast(value.x);
+
+  return result;
+}
+
+template <>
+__DEVICE__
+float saturate_cast_vector(float4 value) {
+  return value.x;
+}
+
+template <>
+__DEVICE__
+uchar3 saturate_cast_vector(float4 value) {
+  uchar3 result;
+  result.x = saturate_cast(value.x);
+  result.y = saturate_cast(value.y);
+  result.z = saturate_cast(value.z);
+
+  return result;
+}
+
+template <>
+__DEVICE__
+float3 saturate_cast_vector(float4 value) {
+  float3 result;
+  result.x = value.x;
+  result.y = value.y;
+  result.z = value.z;
+
+  return result;
+}
+
+__DEVICE__
 float2 operator*(float value0, uchar2 value1) {
   float2 result;
   result.x = value0 * value1.x;
@@ -276,25 +312,25 @@ float2 operator*(float value0, uchar2 value1) {
   return result;
 }
 
-__INLINE__
+__DEVICE__
 void operator+=(float2 &result, uchar2 &value) {
   result.x += value.x;
   result.y += value.y;
 }
 
-__INLINE__
+__DEVICE__
 void operator+=(float2 &result, float2 &value) {
   result.x += value.x;
   result.y += value.y;
 }
 
-__INLINE__
+__DEVICE__
 void operator/=(float2 &result, int value) {
   result.x /= value;
   result.y /= value;
 }
 
-__INLINE__
+__DEVICE__
 float3 operator*(float value0, uchar3 value1) {
   float3 result;
   result.x = value0 * value1.x;
@@ -304,7 +340,7 @@ float3 operator*(float value0, uchar3 value1) {
   return result;
 }
 
-__INLINE__
+__DEVICE__
 float3 operator*(float value0, float3 value1) {
   float3 result;
   result.x = value0 * value1.x;
@@ -314,7 +350,7 @@ float3 operator*(float value0, float3 value1) {
   return result;
 }
 
-__INLINE__
+__DEVICE__
 float3 operator+(float3 &value0, float3 &value1) {
   float3 result;
   result.x = value0.x + value1.x;
@@ -324,35 +360,35 @@ float3 operator+(float3 &value0, float3 &value1) {
   return result;
 }
 
-__INLINE__
+__DEVICE__
 void operator+=(float3 &result, uchar3 &value) {
   result.x += value.x;
   result.y += value.y;
   result.z += value.z;
 }
 
-__INLINE__
+__DEVICE__
 void operator+=(float3 &result, float3 &value) {
   result.x += value.x;
   result.y += value.y;
   result.z += value.z;
 }
 
-__INLINE__
+__DEVICE__
 void operator/=(float3 &result, int value) {
   result.x = result.x / value;
   result.y = result.y / value;
   result.z = result.z / value;
 }
 
-__INLINE__
+__DEVICE__
 void operator/=(float3 &result, float value) {
   result.x = result.x / value;
   result.y = result.y / value;
   result.z = result.z / value;
 }
 
-__INLINE__
+__DEVICE__
 float4 operator*(float value0, uchar4 value1) {
   float4 result;
   result.x = value0 * value1.x;
@@ -363,7 +399,7 @@ float4 operator*(float value0, uchar4 value1) {
   return result;
 }
 
-__INLINE__
+__DEVICE__
 float4 operator*(float value0, float4 value1) {
   float4 result;
   result.x = value0 * value1.x;
@@ -374,7 +410,7 @@ float4 operator*(float value0, float4 value1) {
   return result;
 }
 
-__INLINE__
+__DEVICE__
 float4 operator+(float4 &value0, float4 &value1) {
   float4 result;
   result.x = value0.x + value1.x;
@@ -385,7 +421,7 @@ float4 operator+(float4 &value0, float4 &value1) {
   return result;
 }
 
-__INLINE__
+__DEVICE__
 void operator+=(float4 &result, uchar4 &value) {
   result.x += value.x;
   result.y += value.y;
@@ -393,7 +429,7 @@ void operator+=(float4 &result, uchar4 &value) {
   result.w += value.w;
 }
 
-__INLINE__
+__DEVICE__
 void operator+=(float4 &result, float4 &value) {
   result.x += value.x;
   result.y += value.y;
@@ -401,7 +437,7 @@ void operator+=(float4 &result, float4 &value) {
   result.w += value.w;
 }
 
-__INLINE__
+__DEVICE__
 void operator/=(float4 &result, int value) {
   result.x /= value;
   result.y /= value;
@@ -409,13 +445,156 @@ void operator/=(float4 &result, int value) {
   result.w /= value;
 }
 
-__INLINE__
+__DEVICE__
 void operator/=(float4 &result, float value) {
   result.x /= value;
   result.y /= value;
   result.z /= value;
   result.w /= value;
 }
+
+struct ConstantBorder {
+  __DEVICE__
+  int operator()(int range, int radius, int index) {
+    if (index < 0) {
+      return -1;
+    }
+    else if (index < range) {
+      return index;
+    }
+    else {
+      return -1;
+    }
+  }
+};
+
+struct ReplicateBorder {
+  __DEVICE__
+  int operator()(int range, int radius, int index) {
+    if (index < 0) {
+      return 0;
+    }
+    else if (index < range) {
+      return index;
+    }
+    else {
+      return range - 1;
+    }
+  }
+};
+
+struct ReflectBorder {
+  __DEVICE__
+  int operator()(int range, int radius, int index) {
+    if (range >= radius) {
+      if (index < 0) {
+        return -1 - index;
+      }
+      else if (index < range) {
+        return index;
+      }
+      else {
+        return (range << 1) - index - 1;
+      }
+    }
+    else {
+      if (index >= 0 && index < range) {
+        return index;
+      }
+      else {
+        if (range == 1) {
+          index = 0;
+        }
+        else {
+          do {
+            if (index < 0)
+              index = -1 - index;
+            else
+              index = (range << 1) - index - 1;
+          } while (index >= range || index < 0);
+        }
+
+        return index;
+      }
+    }
+  }
+};
+
+struct WarpBorder {
+  __DEVICE__
+  int operator()(int range, int radius, int index) {
+    if (range >= radius) {
+      if (index < 0) {
+        return index + range;
+      }
+      else if (index < range) {
+        return index;
+      }
+      else {
+        return index - range;
+      }
+    }
+    else {
+      if (index >= 0 && index < range) {
+        return index;
+      }
+      else {
+        if (range == 1) {
+          index = 0;
+        }
+        else {
+          do {
+            if (index < 0)
+              index += range;
+            else
+              index -= range;
+          } while (index >= range || index < 0);
+        }
+
+        return index;
+      }
+    }
+  }
+};
+
+struct Reflect101Border {
+  __DEVICE__
+  int operator()(int range, int radius, int index) {
+    if (range >= radius) {
+      if (index < 0) {
+        return 0 - index;
+      }
+      else if (index < range) {
+        return index;
+      }
+      else {
+        return (range << 1) - index - 2;
+      }
+    }
+    else {
+      if (index >= 0 && index < range) {
+        return index;
+      }
+      else {
+        if (range == 1) {
+          index = 0;
+        }
+        else {
+          do {
+            if (index < 0)
+              index = 0 - index;
+            else
+              index = (range << 1) - index - 2;
+          } while (index >= range || index < 0);
+        }
+
+        return index;
+      }
+    }
+  }
+};
+
+typedef struct Reflect101Border DefaultBorder;
 
 }  // namespace cuda
 }  // namespace cv
