@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_FILTER2D_H_
-#define _ST_HPC_PPL3_CV_CUDA_FILTER2D_H_
+#ifndef _ST_HPC_PPL3_CV_CUDA_SEPFILTER2D_H_
+#define _ST_HPC_PPL3_CV_CUDA_SEPFILTER2D_H_
 
 #include "cuda_runtime.h"
 
@@ -27,7 +27,7 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Convolves an image with the given kernel.
+ * @brief Convolves an image with a separable linear filter.
  * @tparam T The data type of input and output image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input&output image, 1, 3 and 4
@@ -39,8 +39,9 @@ namespace cuda {
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
  * @param inData         input image data.
- * @param kernel_len     the length of kernel.
- * @param kernel         data of the kernel.
+ * @param ksize          the length of kernel in X&Y direction.
+ * @param kernelX        coefficients for filtering each row.
+ * @param kernelY        coefficients for filtering each column.
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
@@ -67,20 +68,20 @@ namespace cuda {
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>CUDA platforms supported<td>CUDA 7.0
- * <tr><td>Header files <td>#include "ppl/cv/cuda/filter2d.h"
+ * <tr><td>Header files <td>#include "ppl/cv/cuda/sepfilter2d.h"
  * <tr><td>Project      <td>ppl.cv
  * </table>
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include "ppl/cv/cuda/filter2d.h"
+ * #include "ppl/cv/cuda/sepfilter2d.h"
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
  *   int width    = 640;
  *   int height   = 480;
  *   int channels = 3;
- *   int kernel_len = 3;
+ *   int ksize = 3;
  *
  *   float* dev_input;
  *   float* dev_kernel;
@@ -88,16 +89,16 @@ namespace cuda {
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMalloc(&dev_kernel, kernel_len * kernel_len * sizeof(float));
+ *   cudaMalloc(&dev_kernel, ksize * sizeof(float));
  *   cudaMallocPitch(&dev_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   Filter2D<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                      dev_input, kernel_len, dev_kernel,
- *                      output_pitch / sizeof(float), dev_output, 0.f,
- *                      ppl::cv::BORDER_TYPE_DEFAULT);
+ *   SepFilter2D<float, 3>(stream, height, width, input_pitch / sizeof(float),
+ *                         dev_input, ksize, dev_kernel, dev_kernel,
+ *                         output_pitch / sizeof(float), dev_output, 0.f,
+ *                         ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -110,20 +111,21 @@ namespace cuda {
  */
 template <typename T, int channels>
 ppl::common::RetCode
-Filter2D(cudaStream_t stream,
-         int height,
-         int width,
-         int inWidthStride,
-         const T* inData,
-         int kernel_len,
-         const float* kernel,
-         int outWidthStride,
-         T* outData,
-         float delta = 0.f,
-         BorderType border_type = ppl::cv::BORDER_TYPE_DEFAULT);
+SepFilter2D(cudaStream_t stream,
+            int height,
+            int width,
+            int inWidthStride,
+            const T* inData,
+            int ksize,
+            const float* kernelX,
+            const float* kernelY,
+            int outWidthStride,
+            T* outData,
+            float delta = 0.f,
+            BorderType border_type = ppl::cv::BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_FILTER2D_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_SEPFILTER2D_H_

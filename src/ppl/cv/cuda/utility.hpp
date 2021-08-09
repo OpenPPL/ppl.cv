@@ -453,6 +453,46 @@ void operator/=(float4 &result, float value) {
   result.w /= value;
 }
 
+__DEVICE__
+void mulAdd(float4 &result, uchar &value0, float value1) {
+  result.x += value0 * value1;
+}
+
+__DEVICE__
+void mulAdd(float4 &result, float &value0, float value1) {
+  result.x += value0 * value1;
+}
+
+__DEVICE__
+void mulAdd(float4 &result, uchar3 &value0, float value1) {
+  result.x += value0.x * value1;
+  result.y += value0.y * value1;
+  result.z += value0.z * value1;
+}
+
+__DEVICE__
+void mulAdd(float4 &result, float3 &value0, float value1) {
+  result.x += value0.x * value1;
+  result.y += value0.y * value1;
+  result.z += value0.z * value1;
+}
+
+__DEVICE__
+void mulAdd(float4 &result, uchar4 &value0, float value1) {
+  result.x += value0.x * value1;
+  result.y += value0.y * value1;
+  result.z += value0.z * value1;
+  result.w += value0.w * value1;
+}
+
+__DEVICE__
+void mulAdd(float4 &result, float4 &value0, float value1) {
+  result.x += value0.x * value1;
+  result.y += value0.y * value1;
+  result.z += value0.z * value1;
+  result.w += value0.w * value1;
+}
+
 struct ConstantBorder {
   __DEVICE__
   int operator()(int range, int radius, int index) {

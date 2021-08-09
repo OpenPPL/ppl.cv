@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "filter2d.h"
+#include "sepfilter2d.h"
 
 #include <tuple>
 #include <sstream>
@@ -59,9 +59,9 @@ inline std::string convertToStringFilter(const Parameters& parameters) {
 }
 
 template <typename Tsrc, typename Tdst, int channels>
-class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
+class PplCvCudaSepFilter2DTest : public ::testing::TestWithParam<Parameters> {
  public:
-  PplCvCudaFilter2DTest() {
+  PplCvCudaSepFilter2DTest() {
     const Parameters& parameters = GetParam();
     ksize       = std::get<0>(parameters);
     delta       = std::get<1>(parameters) / 10.f;
@@ -69,7 +69,7 @@ class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
     size        = std::get<3>(parameters);
   }
 
-  ~PplCvCudaFilter2DTest() {
+  ~PplCvCudaSepFilter2DTest() {
   }
 
   bool apply();
@@ -82,11 +82,11 @@ class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
 };
 
 template <typename Tsrc, typename Tdst, int channels>
-bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
+bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
   cv::Mat src, kernel0;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels));
-  kernel0 = createSourceImage(ksize, ksize,
+  kernel0 = createSourceImage(1, ksize,
                              CV_MAKETYPE(cv::DataType<float>::depth, 1));
   cv::Mat dst(size.height, size.width,
               CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
@@ -97,7 +97,7 @@ bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
 
   int src_size = size.height * size.width * channels * sizeof(Tsrc);
   int dst_size = size.height * size.width * channels * sizeof(Tdst);
-  int kernel_size = ksize * ksize * sizeof(float);
+  int kernel_size = ksize * sizeof(float);
   Tsrc* input  = (Tsrc*)malloc(src_size);
   Tdst* output = (Tdst*)malloc(dst_size);
   float* kernel1 = (float*)malloc(kernel_size);
@@ -124,15 +124,16 @@ bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
   }
   else {
   }
-  cv::filter2D(src, cv_dst, cv_dst.depth(), kernel0, cv::Point(-1, -1), delta,
-               cv_border);
+  cv::sepFilter2D(src, cv_dst, cv_dst.depth(), kernel0, kernel0,
+                  cv::Point(-1, -1), delta, cv_border);
 
-  Filter2D<Tsrc, channels>(0, gpu_src.rows, gpu_src.cols,
+  SepFilter2D<Tsrc, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize, gpu_kernel,
-      gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta, border_type);
-  Filter2D<Tsrc, channels>(0, size.height, size.width, size.width * channels,
-      gpu_input, ksize, gpu_kernel, size.width * channels, gpu_output, delta,
+      gpu_kernel, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta,
       border_type);
+  SepFilter2D<Tsrc, channels>(0, size.height, size.width, size.width * channels,
+      gpu_input, ksize, gpu_kernel, gpu_kernel, size.width * channels,
+      gpu_output, delta, border_type);
   gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
@@ -156,19 +157,19 @@ bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
   return (identity0 && identity1);
 }
 
-#define UNITTEST(Tsrc, Tdst, channels)                                         \
-using PplCvCudaFilter2DTest ## Tsrc ## channels =                              \
-        PplCvCudaFilter2DTest<Tsrc, Tdst, channels>;                           \
-TEST_P(PplCvCudaFilter2DTest ## Tsrc ## channels, Standard) {                  \
+/* #define UNITTEST(Tsrc, Tdst, channels)                                         \
+using PplCvCudaSepFilter2DTest ## Tsrc ## channels =                           \
+        PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>;                        \
+TEST_P(PplCvCudaSepFilter2DTest ## Tsrc ## channels, Standard) {               \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
-  PplCvCudaFilter2DTest ## Tsrc ## channels,                                   \
+  PplCvCudaSepFilter2DTest ## Tsrc ## channels,                                \
   ::testing::Combine(                                                          \
-    ::testing::Values(1, 3, 5, 13, 27, 43),                                    \
-    ::testing::Values(0, 1, 7, 10, 43),                                        \
+    ::testing::Values(1, 4, 5, 13, 28, 43),                                    \
+    ::testing::Values(0, 10, 43),                                              \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
                       BORDER_TYPE_REFLECT_101),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
@@ -176,7 +177,32 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaFilter2DTest ## Tsrc ## channels::ParamType>& info) {           \
+      PplCvCudaSepFilter2DTest ## Tsrc ## channels::ParamType>& info) {        \
+    return convertToStringFilter(info.param);                                  \
+  }                                                                            \
+); */
+
+#define UNITTEST(Tsrc, Tdst, channels)                                         \
+using PplCvCudaSepFilter2DTest ## Tsrc ## channels =                           \
+        PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>;                        \
+TEST_P(PplCvCudaSepFilter2DTest ## Tsrc ## channels, Standard) {               \
+  bool identity = this->apply();                                               \
+  EXPECT_TRUE(identity);                                                       \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
+  PplCvCudaSepFilter2DTest ## Tsrc ## channels,                                \
+  ::testing::Combine(                                                          \
+    ::testing::Values(1, 4, 5, 13, 28, 43),                                    \
+    ::testing::Values(0, 10, 43),                                              \
+    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
+                      BORDER_TYPE_REFLECT_101),                                \
+    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
+                      cv::Size{1283, 720}, cv::Size{1934, 1080},               \
+                      cv::Size{320, 240}, cv::Size{640, 480},                  \
+                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
+  [](const testing::TestParamInfo<                                             \
+      PplCvCudaSepFilter2DTest ## Tsrc ## channels::ParamType>& info) {        \
     return convertToStringFilter(info.param);                                  \
   }                                                                            \
 );

@@ -24,7 +24,7 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-__DEVICE__
+/* __DEVICE__
 void mulAdd(float4 &result, uchar &value0, float value1) {
   result.x += value0 * value1;
 }
@@ -62,7 +62,7 @@ void mulAdd(float4 &result, float4 &value0, float value1) {
   result.y += value0.y * value1;
   result.z += value0.z * value1;
   result.w += value0.w * value1;
-}
+} */
 
 template <typename Tsrc, typename Tsrc4, typename Tdst, typename Tdst4,
           typename BorderInterpolation>
