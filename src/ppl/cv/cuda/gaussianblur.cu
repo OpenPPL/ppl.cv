@@ -85,12 +85,33 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
+  cudaError_t code;
+  if (ksize == 1 && src_stride == dst_stride) {
+    if (src != dst) {
+      code = cudaMemcpyAsync(dst, src, rows * src_stride,
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
+    }
+    return RC_SUCCESS;
+  }
+
   int kernel_size = ksize * sizeof(float);
   float* kernel = (float*)malloc(kernel_size);
   float* gpu_kernel;
-  cudaMalloc((void**)&gpu_kernel, kernel_size);
+  code = cudaMalloc((void**)&gpu_kernel, kernel_size);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
   getGaussianKernel(kernel, sigma, ksize);
-  cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
+  code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
 
   RetCode return_code = RC_SUCCESS;
   return_code = sepfilter2D(src, rows, cols, channels, src_stride, gpu_kernel,
@@ -100,7 +121,7 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
   free(kernel);
   cudaFree(gpu_kernel);
 
-  cudaError_t code = cudaGetLastError();
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
@@ -126,12 +147,33 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
+  cudaError_t code;
+  if (ksize == 1 && src_stride == dst_stride) {
+    if (src != dst) {
+      code = cudaMemcpyAsync(dst, src, rows * src_stride,
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
+    }
+    return RC_SUCCESS;
+  }
+
   int kernel_size = ksize * sizeof(float);
   float* kernel = (float*)malloc(kernel_size);
   float* gpu_kernel;
-  cudaMalloc((void**)&gpu_kernel, kernel_size);
+  code = cudaMalloc((void**)&gpu_kernel, kernel_size);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
   getGaussianKernel(kernel, sigma, ksize);
-  cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
+  code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
 
   RetCode return_code = RC_SUCCESS;
   return_code = sepfilter2D(src, rows, cols, channels, src_stride, gpu_kernel,
@@ -141,7 +183,7 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
   free(kernel);
   cudaFree(gpu_kernel);
 
-  cudaError_t code = cudaGetLastError();
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;

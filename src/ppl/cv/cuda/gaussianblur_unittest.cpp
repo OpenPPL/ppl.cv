@@ -115,7 +115,8 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   }
   else {
   }
-  cv::GaussianBlur(src, cv_dst, size, sigma, sigma, cv_border);
+  cv::GaussianBlur(src, cv_dst, cv::Size(ksize, ksize), sigma, sigma,
+                   cv_border);
 
   GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, sigma,
@@ -127,10 +128,10 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
 
   float epsilon;
   if (sizeof(T) == 1) {
-    epsilon = EPSILON_1F;
+    epsilon = EPSILON_2F;
   }
   else {
-    epsilon = EPSILON_E3;
+    epsilon = EPSILON_E4;
   }
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
@@ -154,7 +155,7 @@ TEST_P(PplCvCudaGaussianBlurTest ## T ## channels, Standard) {                 \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaGaussianBlurTest ## T ## channels,                                  \
   ::testing::Combine(                                                          \
-    ::testing::Values(1, 3, 5, 13, 27, 43),                                    \
+    ::testing::Values(1, 5, 13, 27, 43),                                       \
     ::testing::Values(0, 1, 7, 10, 43),                                        \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
                       BORDER_TYPE_REFLECT_101),                                \
