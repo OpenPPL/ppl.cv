@@ -52,8 +52,7 @@ namespace cuda {
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 kernel must be a single channel 1D matrix.
- *       3 The anchor is at the kernel center.
+ *       2 The anchor is at the kernel center.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>

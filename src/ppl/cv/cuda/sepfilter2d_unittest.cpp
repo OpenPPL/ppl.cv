@@ -28,7 +28,7 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<int, int, BorderType, cv::Size>;
-inline std::string convertToStringFilter(const Parameters& parameters) {
+inline std::string convertToStringFilter2D(const Parameters& parameters) {
   std::ostringstream formatted;
 
   int ksize = std::get<0>(parameters);
@@ -157,31 +157,6 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
   return (identity0 && identity1);
 }
 
-/* #define UNITTEST(Tsrc, Tdst, channels)                                         \
-using PplCvCudaSepFilter2DTest ## Tsrc ## channels =                           \
-        PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>;                        \
-TEST_P(PplCvCudaSepFilter2DTest ## Tsrc ## channels, Standard) {               \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
-}                                                                              \
-                                                                               \
-INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
-  PplCvCudaSepFilter2DTest ## Tsrc ## channels,                                \
-  ::testing::Combine(                                                          \
-    ::testing::Values(1, 4, 5, 13, 28, 43),                                    \
-    ::testing::Values(0, 10, 43),                                              \
-    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
-                      BORDER_TYPE_REFLECT_101),                                \
-    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
-                      cv::Size{1283, 720}, cv::Size{1934, 1080},               \
-                      cv::Size{320, 240}, cv::Size{640, 480},                  \
-                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
-  [](const testing::TestParamInfo<                                             \
-      PplCvCudaSepFilter2DTest ## Tsrc ## channels::ParamType>& info) {        \
-    return convertToStringFilter(info.param);                                  \
-  }                                                                            \
-); */
-
 #define UNITTEST(Tsrc, Tdst, channels)                                         \
 using PplCvCudaSepFilter2DTest ## Tsrc ## channels =                           \
         PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>;                        \
@@ -203,7 +178,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaSepFilter2DTest ## Tsrc ## channels::ParamType>& info) {        \
-    return convertToStringFilter(info.param);                                  \
+    return convertToStringFilter2D(info.param);                                \
   }                                                                            \
 );
 

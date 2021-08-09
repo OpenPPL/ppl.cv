@@ -188,26 +188,27 @@ BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c4, ksize,     \
 // RUN_BENCHMARK0(uchar, uchar, 5, BORDER_TYPE_REFLECT, 640, 480)
 // RUN_BENCHMARK0(uchar, uchar, 5, BORDER_TYPE_REFLECT_101, 640, 480)
 
-// RUN_BENCHMARK0(uchar, uchar, 21, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 21, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 21, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 27, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 27, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 27, BORDER_TYPE_REFLECT_101, 640, 480)
+
+// RUN_BENCHMARK0(uchar, uchar, 31, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 31, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 31, BORDER_TYPE_REFLECT_101, 640, 480)
 
 // RUN_BENCHMARK0(float, float, 5, BORDER_TYPE_REPLICATE, 640, 480)
 // RUN_BENCHMARK0(float, float, 5, BORDER_TYPE_REFLECT, 640, 480)
 // RUN_BENCHMARK0(float, float, 5, BORDER_TYPE_REFLECT_101, 640, 480)
 
-// RUN_BENCHMARK0(float, float, 21, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(float, float, 21, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(float, float, 21, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(float, float, 27, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(float, float, 27, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(float, float, 27, BORDER_TYPE_REFLECT_101, 640, 480)
+
+// RUN_BENCHMARK0(float, float, 31, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(float, float, 31, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(float, float, 31, BORDER_TYPE_REFLECT_101, 640, 480)
 
 #define RUN_BENCHMARK1(src_type, dst_type, ksize, border_type, width, height)  \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c4,         \
-                   ksize, border_type)->Args({width, height})->                \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c4, ksize,     \
-                   border_type)->Args({width, height})->UseManualTime()->      \
-                   Iterations(10);
-/* #define RUN_BENCHMARK1(src_type, dst_type, ksize, border_type, width, height)  \
 BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c1,         \
                    ksize, border_type)->Args({width, height})->                \
                    UseManualTime()->Iterations(10);                            \
@@ -225,57 +226,71 @@ BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c4,         \
                    UseManualTime()->Iterations(10);                            \
 BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c4, ksize,     \
                    border_type)->Args({width, height})->UseManualTime()->      \
-                   Iterations(10); */
+                   Iterations(10);
 
-RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REPLICATE, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REFLECT, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REFLECT_101, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 27, BORDER_TYPE_REPLICATE, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 27, BORDER_TYPE_REFLECT, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 27, BORDER_TYPE_REFLECT_101, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 31, BORDER_TYPE_REPLICATE, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 31, BORDER_TYPE_REFLECT, 640, 480)
-RUN_BENCHMARK1(uchar, uchar, 31, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 27, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 27, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 27, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 31, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 31, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 31, BORDER_TYPE_REFLECT_101, 640, 480)
 
-RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REPLICATE, 640, 480)
-RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REFLECT, 640, 480)
-RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REFLECT_101, 640, 480)
-RUN_BENCHMARK1(float, float, 27, BORDER_TYPE_REPLICATE, 640, 480)
-RUN_BENCHMARK1(float, float, 27, BORDER_TYPE_REFLECT, 640, 480)
-RUN_BENCHMARK1(float, float, 27, BORDER_TYPE_REFLECT_101, 640, 480)
-RUN_BENCHMARK1(float, float, 31, BORDER_TYPE_REPLICATE, 640, 480)
-RUN_BENCHMARK1(float, float, 31, BORDER_TYPE_REFLECT, 640, 480)
-RUN_BENCHMARK1(float, float, 31, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, float, 27, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(float, float, 27, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(float, float, 27, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, float, 31, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(float, float, 31, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(float, float, 31, BORDER_TYPE_REFLECT_101, 640, 480)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(src_type, dst_type, ksize, border_type)      \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_x86_cuda, src_type, dst_type, c1, ksize, \
+BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c1, ksize,  \
                    border_type)->Args({640, 480});                             \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_x86_cuda, src_type, dst_type, c3, ksize, \
+BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c3, ksize,  \
                    border_type)->Args({640, 480});                             \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_x86_cuda, src_type, dst_type, c4, ksize, \
+BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c4, ksize,  \
                    border_type)->Args({640, 480});
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(src_type, dst_type, ksize, border_type)      \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c1, ksize,        \
-                   border_type)->Args({640, 480})->                            \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c3, ksize,        \
-                   border_type)->Args({640, 480})->                            \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c4, ksize,        \
-                   border_type)->Args({640, 480})->                            \
-                   UseManualTime()->Iterations(10);
+BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c1, ksize,     \
+                   border_type)->Args({640, 480})->UseManualTime()->           \
+                   Iterations(10);                                             \
+BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c3, ksize,     \
+                   border_type)->Args({640, 480})->UseManualTime()->           \
+                   Iterations(10);                                             \
+BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c4, ksize,     \
+                   border_type)->Args({640, 480})->UseManualTime()->           \
+                   Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REFLECT_101)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REFLECT_101)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REFLECT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REFLECT_101)
+RUN_OPENCV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REFLECT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REFLECT_101)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 35, BORDER_TYPE_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 35, BORDER_TYPE_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 35, BORDER_TYPE_REFLECT_101)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 35, BORDER_TYPE_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 35, BORDER_TYPE_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 35, BORDER_TYPE_REFLECT_101)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 31, BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 31, BORDER_TYPE_REFLECT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 31, BORDER_TYPE_REFLECT_101)
+RUN_OPENCV_TYPE_FUNCTIONS(float, float, 31, BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(float, float, 31, BORDER_TYPE_REFLECT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, float, 31, BORDER_TYPE_REFLECT_101)
+
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REFLECT)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 5, BORDER_TYPE_REFLECT_101)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REFLECT)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 5, BORDER_TYPE_REFLECT_101)
+
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 31, BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 31, BORDER_TYPE_REFLECT)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 31, BORDER_TYPE_REFLECT_101)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 31, BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 31, BORDER_TYPE_REFLECT)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 31, BORDER_TYPE_REFLECT_101)

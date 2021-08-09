@@ -28,8 +28,7 @@ template <typename Tsrc, typename Tsrc4, typename BorderInterpolation>
 __global__
 void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
                      const float* kernel, int radius, float* dst,
-                     int dst_stride, BorderInterpolation interpolation)
-{
+                     int dst_stride, BorderInterpolation interpolation) {
   int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -102,8 +101,7 @@ template <typename Tsrc, typename Tsrc4, typename Tdst4,
 __global__
 void rowBatch2Kernel(const Tsrc* src, int rows, int cols, int src_stride,
                      const float* kernel, int radius, float* dst,
-                     int dst_stride, BorderInterpolation interpolation)
-{
+                     int dst_stride, BorderInterpolation interpolation) {
   int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -160,8 +158,7 @@ template <typename Tsrc, typename Tsrcn, typename Tdstn,
 __global__
 void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
                      const float* kernel, int radius, float* dst,
-                     int dst_stride, BorderInterpolation interpolation)
-{
+                     int dst_stride, BorderInterpolation interpolation) {
   __shared__ Tsrcn data[kBlockDimY1][(kBlockDimX1 << 1)];
 
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
@@ -228,8 +225,7 @@ template <typename Tsrc, typename Tsrcn, typename Tdstn,
 __global__
 void rowFilterKernel(const Tsrc* src, int rows, int cols, int src_stride,
                      const float* kernel, int radius, float* dst,
-                     int dst_stride, BorderInterpolation interpolation)
-{
+                     int dst_stride, BorderInterpolation interpolation) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -276,8 +272,7 @@ __global__
 void colSharedKernel(const float* src, int rows, int cols4, int cols,
                      int src_stride, const float* kernel, int radius, Tdst* dst,
                      int dst_stride, float delta,
-                     BorderInterpolation interpolation)
-{
+                     BorderInterpolation interpolation) {
   __shared__ float4 data[kDimY0 * 3][kDimX0];
 
   int element_x = (blockIdx.x << kShiftX0) + threadIdx.x;
@@ -396,8 +391,7 @@ template <typename Tsrcn, typename Tdst, typename Tdstn,
 __global__
 void colFilterKernel(const float* src, int rows, int cols, int src_stride,
                      const float* kernel, int radius, Tdst* dst, int dst_stride,
-                     float delta, BorderInterpolation interpolation)
-{
+                     float delta, BorderInterpolation interpolation) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -431,15 +425,69 @@ void colFilterKernel(const float* src, int rows, int cols, int src_stride,
   output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
 }
 
+#define RUN_KERNELS(Interpolation, Tsrc, Tdst)                                 \
+Interpolation interpolation;                                                   \
+if (channels == 1) {                                                           \
+  rowBatch4Kernel<Tsrc, Tsrc ## 4, Interpolation><<<grid1, block, 0, stream    \
+      >>>(src, rows, cols, src_stride, kernel_x, radius, buffer, pitch,        \
+      interpolation);                                                          \
+  if (ksize <= 33) {                                                           \
+    colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(        \
+        buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,         \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+  else {                                                                       \
+    colFilterKernel<float, Tdst, Tdst, Interpolation><<<grid, block, 0,        \
+        stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,            \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+}                                                                              \
+else if (channels == 3) {                                                      \
+  if (ksize <= 33) {                                                           \
+    rowSharedKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block, \
+        0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,    \
+        pitch, interpolation);                                                 \
+    colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(        \
+        buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,         \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+  else {                                                                       \
+    rowFilterKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block, \
+        0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,    \
+        pitch, interpolation);                                                 \
+    colFilterKernel<float ## 3, Tdst, Tdst ## 3, Interpolation><<<grid, block, \
+        0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,         \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+}                                                                              \
+else {                                                                         \
+  if (ksize <= 33) {                                                           \
+    rowSharedKernel<Tsrc, Tsrc ## 4, float ## 4, Interpolation><<<grid, block, \
+        0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,    \
+        pitch, interpolation);                                                 \
+    colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(        \
+        buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,         \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+  else {                                                                       \
+    rowBatch2Kernel<Tsrc, Tsrc ## 4, float ## 4, Interpolation><<<grid2, block,\
+        0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,    \
+        pitch, interpolation);                                                 \
+    colFilterKernel<float ## 4, Tdst, Tdst ## 4, Interpolation><<<grid, block, \
+        0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,         \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+}
+
 RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
                     int src_stride, const float* kernel_x,
                     const float* kernel_y, int ksize, uchar* dst,
                     int dst_stride, float delta, BorderType border_type,
                     cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(kernel_x != nullptr);
   PPL_ASSERT(kernel_y != nullptr);
+  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
@@ -475,174 +523,27 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   unsigned int radius = ksize >> 1;
   float* buffer;
   size_t pitch;
-  cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float), rows);
+  cudaError_t code;
+  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                         rows);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
 
   if (border_type == BORDER_TYPE_REPLICATE) {
-    ReplicateBorder interpolation;
-    if (channels == 1) {
-      rowBatch4Kernel<uchar, uchar4, ReplicateBorder><<<grid1,
-          block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-          buffer, pitch, interpolation);
-      if (ksize <= 33) {
-        colSharedKernel<uchar, ReplicateBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        colFilterKernel<float, uchar, uchar, ReplicateBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else if (channels == 3) {
-      if (ksize <= 33) {
-        rowSharedKernel<uchar, uchar3, float3, ReplicateBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<uchar, ReplicateBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowFilterKernel<uchar, uchar3, float3, ReplicateBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,
-            pitch, interpolation);
-        colFilterKernel<float3, uchar, uchar3, ReplicateBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else {
-      if (ksize <= 33) {
-        rowSharedKernel<uchar, uchar4, float4, ReplicateBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<uchar, ReplicateBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowBatch2Kernel<uchar, uchar4, float4, ReplicateBorder><<<grid2,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colFilterKernel<float4, uchar, uchar4, ReplicateBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
+    RUN_KERNELS(ReplicateBorder, uchar, uchar);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    ReflectBorder interpolation;
-    if (channels == 1) {
-      rowBatch4Kernel<uchar, uchar4, ReflectBorder><<<grid1,
-          block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-          buffer, pitch, interpolation);
-      if (ksize <= 33) {
-        colSharedKernel<uchar, ReflectBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        colFilterKernel<float, uchar, uchar, ReflectBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else if (channels == 3) {
-      if (ksize <= 33) {
-        rowSharedKernel<uchar, uchar3, float3, ReflectBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<uchar, ReflectBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowFilterKernel<uchar, uchar3, float3, ReflectBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,
-            pitch, interpolation);
-        colFilterKernel<float3, uchar, uchar3, ReflectBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else {
-      if (ksize <= 33) {
-        rowSharedKernel<uchar, uchar4, float4, ReflectBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<uchar, ReflectBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowBatch2Kernel<uchar, uchar4, float4, ReflectBorder><<<grid2,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colFilterKernel<float4, uchar, uchar4, ReflectBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
+    RUN_KERNELS(ReflectBorder, uchar, uchar);
   }
   else {
-    Reflect101Border interpolation;
-    if (channels == 1) {
-      rowBatch4Kernel<uchar, uchar4, Reflect101Border><<<grid1,
-          block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-          buffer, pitch, interpolation);
-      if (ksize <= 33) {
-        colSharedKernel<uchar, Reflect101Border><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        colFilterKernel<float, uchar, uchar, Reflect101Border><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else if (channels == 3) {
-      if (ksize <= 33) {
-        rowSharedKernel<uchar, uchar3, float3, Reflect101Border><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<uchar, Reflect101Border><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowFilterKernel<uchar, uchar3, float3, Reflect101Border><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,
-            pitch, interpolation);
-        colFilterKernel<float3, uchar, uchar3, Reflect101Border><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else {
-      if (ksize <= 33) {
-        rowSharedKernel<uchar, uchar4, float4, Reflect101Border><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<uchar, Reflect101Border><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowBatch2Kernel<uchar, uchar4, float4, Reflect101Border><<<grid2,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colFilterKernel<float4, uchar, uchar4, Reflect101Border><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
+    RUN_KERNELS(Reflect101Border, uchar, uchar);
   }
 
   cudaFree(buffer);
 
-  cudaError_t code = cudaGetLastError();
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
@@ -657,9 +558,9 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
                     int dst_stride, float delta, BorderType border_type,
                     cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(kernel_x != nullptr);
   PPL_ASSERT(kernel_y != nullptr);
+  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
@@ -695,174 +596,27 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
   unsigned int radius = ksize >> 1;
   float* buffer;
   size_t pitch;
-  cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float), rows);
+  cudaError_t code;
+  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                         rows);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
 
   if (border_type == BORDER_TYPE_REPLICATE) {
-    ReplicateBorder interpolation;
-    if (channels == 1) {
-      rowBatch4Kernel<float, float4, ReplicateBorder><<<grid1,
-          block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-          buffer, pitch, interpolation);
-      if (ksize <= 33) {
-        colSharedKernel<float, ReplicateBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        colFilterKernel<float, float, float, ReplicateBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else if (channels == 3) {
-      if (ksize <= 33) {
-        rowSharedKernel<float, float3, float3, ReplicateBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<float, ReplicateBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowFilterKernel<float, float3, float3, ReplicateBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,
-            pitch, interpolation);
-        colFilterKernel<float3, float, float3, ReplicateBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else {
-      if (ksize <= 33) {
-        rowSharedKernel<float, float4, float4, ReplicateBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<float, ReplicateBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowBatch2Kernel<float, float4, float4, ReplicateBorder><<<grid2,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colFilterKernel<float4, float, float4, ReplicateBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
+    RUN_KERNELS(ReplicateBorder, float, float);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    ReflectBorder interpolation;
-    if (channels == 1) {
-      rowBatch4Kernel<float, float4, ReflectBorder><<<grid1,
-          block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-          buffer, pitch, interpolation);
-      if (ksize <= 33) {
-        colSharedKernel<float, ReflectBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        colFilterKernel<float, float, float, ReflectBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else if (channels == 3) {
-      if (ksize <= 33) {
-        rowSharedKernel<float, float3, float3, ReflectBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<float, ReflectBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowFilterKernel<float, float3, float3, ReflectBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,
-            pitch, interpolation);
-        colFilterKernel<float3, float, float3, ReflectBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else {
-      if (ksize <= 33) {
-        rowSharedKernel<float, float4, float4, ReflectBorder><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<float, ReflectBorder><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowBatch2Kernel<float, float4, float4, ReflectBorder><<<grid2,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colFilterKernel<float4, float, float4, ReflectBorder><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
+    RUN_KERNELS(ReflectBorder, float, float);
   }
   else {
-    Reflect101Border interpolation;
-    if (channels == 1) {
-      rowBatch4Kernel<float, float4, Reflect101Border><<<grid1,
-          block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-          buffer, pitch, interpolation);
-      if (ksize <= 33) {
-        colSharedKernel<float, Reflect101Border><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        colFilterKernel<float, float, float, Reflect101Border><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else if (channels == 3) {
-      if (ksize <= 33) {
-        rowSharedKernel<float, float3, float3, Reflect101Border><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<float, Reflect101Border><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowFilterKernel<float, float3, float3, Reflect101Border><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius, buffer,
-            pitch, interpolation);
-        colFilterKernel<float3, float, float3, Reflect101Border><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
-    else {
-      if (ksize <= 33) {
-        rowSharedKernel<float, float4, float4, Reflect101Border><<<grid,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colSharedKernel<float, Reflect101Border><<<grid3, block3, 0, stream>>>(
-            buffer, rows, columns4, columns, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-      else {
-        rowBatch2Kernel<float, float4, float4, Reflect101Border><<<grid2,
-            block, 0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,
-            buffer, pitch, interpolation);
-        colFilterKernel<float4, float, float4, Reflect101Border><<<grid,
-            block, 0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, dst,
-            dst_stride, delta, interpolation);
-      }
-    }
+    RUN_KERNELS(Reflect101Border, float, float);
   }
 
   cudaFree(buffer);
 
-  cudaError_t code = cudaGetLastError();
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
