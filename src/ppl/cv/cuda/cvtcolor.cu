@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "cvtcolor.h"
+#include "ppl/cv/cuda/cvtcolor.h"
 #include "cvtcolor_compute.hpp"
 #include "cvtcolor_memory.hpp"
 

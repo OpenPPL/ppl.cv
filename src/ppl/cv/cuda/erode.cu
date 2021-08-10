@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "erode.h"
+#include "ppl/cv/cuda/erode.h"
 #include "morphology.hpp"
 
 #include <cfloat>

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "dilate.h"
+#include "ppl/cv/cuda/dilate.h"
 #include "morphology.hpp"
 
 #include <cfloat>
