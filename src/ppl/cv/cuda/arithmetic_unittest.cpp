@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "arithmetic.h"
+#include "ppl/cv/cuda/arithmetic.h"
 
 #include <tuple>
 #include <sstream>
