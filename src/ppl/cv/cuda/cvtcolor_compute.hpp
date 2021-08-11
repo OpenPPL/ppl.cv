@@ -1621,13 +1621,13 @@ struct BGR2LABCompute {
     G = c_sRGBGammaTab_b[G];
     R = c_sRGBGammaTab_b[R];
 
-    int fX = labCbrt_b(divideUp(B * 778 + G * 1541 + R * 1777, kLabShift));
-    int fY = labCbrt_b(divideUp(B * 296 + G * 2929 + R * 871, kLabShift));
-    int fZ = labCbrt_b(divideUp(B * 3575 + G * 448 + R * 73, kLabShift));
+    int fX = labCbrt_b(divideUp1(B * 778 + G * 1541 + R * 1777, kLabShift));
+    int fY = labCbrt_b(divideUp1(B * 296 + G * 2929 + R * 871, kLabShift));
+    int fZ = labCbrt_b(divideUp1(B * 3575 + G * 448 + R * 73, kLabShift));
 
-    int L = divideUp(Lscale * fY + Lshift, kLabShift2);
-    int a = divideUp(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
-    int b = divideUp(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
+    int L = divideUp1(Lscale * fY + Lshift, kLabShift2);
+    int a = divideUp1(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
+    int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
     dst.x = L; //saturate_cast(L);
@@ -1686,13 +1686,13 @@ struct RGB2LABCompute {
     G = c_sRGBGammaTab_b[G];
     B = c_sRGBGammaTab_b[B];
 
-    int fX = labCbrt_b(divideUp(B * 778 + G * 1541 + R * 1777, kLabShift));
-    int fY = labCbrt_b(divideUp(B * 296 + G * 2929 + R * 871, kLabShift));
-    int fZ = labCbrt_b(divideUp(B * 3575 + G * 448 + R * 73, kLabShift));
+    int fX = labCbrt_b(divideUp1(B * 778 + G * 1541 + R * 1777, kLabShift));
+    int fY = labCbrt_b(divideUp1(B * 296 + G * 2929 + R * 871, kLabShift));
+    int fZ = labCbrt_b(divideUp1(B * 3575 + G * 448 + R * 73, kLabShift));
 
-    int L = divideUp(Lscale * fY + Lshift, kLabShift2);
-    int a = divideUp(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
-    int b = divideUp(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
+    int L = divideUp1(Lscale * fY + Lshift, kLabShift2);
+    int a = divideUp1(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
+    int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
     dst.x = L; //saturate_cast(L);
@@ -1751,13 +1751,13 @@ struct BGRA2LABCompute {
     G = c_sRGBGammaTab_b[G];
     R = c_sRGBGammaTab_b[R];
 
-    int fX = labCbrt_b(divideUp(B * 778 + G * 1541 + R * 1777, kLabShift));
-    int fY = labCbrt_b(divideUp(B * 296 + G * 2929 + R * 871, kLabShift));
-    int fZ = labCbrt_b(divideUp(B * 3575 + G * 448 + R * 73, kLabShift));
+    int fX = labCbrt_b(divideUp1(B * 778 + G * 1541 + R * 1777, kLabShift));
+    int fY = labCbrt_b(divideUp1(B * 296 + G * 2929 + R * 871, kLabShift));
+    int fZ = labCbrt_b(divideUp1(B * 3575 + G * 448 + R * 73, kLabShift));
 
-    int L = divideUp(Lscale * fY + Lshift, kLabShift2);
-    int a = divideUp(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
-    int b = divideUp(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
+    int L = divideUp1(Lscale * fY + Lshift, kLabShift2);
+    int a = divideUp1(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
+    int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
     dst.x = L; //saturate_cast(L);
@@ -1816,13 +1816,13 @@ struct RGBA2LABCompute {
     G = c_sRGBGammaTab_b[G];
     B = c_sRGBGammaTab_b[B];
 
-    int fX = labCbrt_b(divideUp(B * 778 + G * 1541 + R * 1777, kLabShift));
-    int fY = labCbrt_b(divideUp(B * 296 + G * 2929 + R * 871, kLabShift));
-    int fZ = labCbrt_b(divideUp(B * 3575 + G * 448 + R * 73, kLabShift));
+    int fX = labCbrt_b(divideUp1(B * 778 + G * 1541 + R * 1777, kLabShift));
+    int fY = labCbrt_b(divideUp1(B * 296 + G * 2929 + R * 871, kLabShift));
+    int fZ = labCbrt_b(divideUp1(B * 3575 + G * 448 + R * 73, kLabShift));
 
-    int L = divideUp(Lscale * fY + Lshift, kLabShift2);
-    int a = divideUp(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
-    int b = divideUp(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
+    int L = divideUp1(Lscale * fY + Lshift, kLabShift2);
+    int a = divideUp1(500 * (fX - fY) + 128 * (1 << kLabShift2), kLabShift2);
+    int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
     dst.x = L; //saturate_cast(L);

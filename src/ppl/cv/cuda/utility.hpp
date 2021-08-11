@@ -125,6 +125,12 @@ int divideUp(int total, int grain, int shift) {
 __host__ __device__
 inline
 int divideUp(int total, int shift) {
+  return (total + ((1 << shift) - 1)) >> shift;
+}
+
+__host__ __device__
+inline
+int divideUp1(int total, int shift) {
   return (total + (1 << (shift - 1))) >> shift;
 }
 

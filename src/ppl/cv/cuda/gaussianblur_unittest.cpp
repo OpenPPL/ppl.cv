@@ -121,9 +121,10 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, sigma,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
+  gpu_dst.download(dst);
+
   GaussianBlur<T, channels>(0, size.height, size.width, size.width * channels,
       gpu_input, ksize, sigma, size.width * channels, gpu_output, border_type);
-  gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -144,7 +145,7 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   return (identity0 && identity1);
 }
 
-#define UNITTEST(T, channels)                                                  \
+/* #define UNITTEST(T, channels)                                                  \
 using PplCvCudaGaussianBlurTest ## T ## channels =                             \
         PplCvCudaGaussianBlurTest<T, channels>;                                \
 TEST_P(PplCvCudaGaussianBlurTest ## T ## channels, Standard) {                 \
@@ -167,11 +168,32 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
       PplCvCudaGaussianBlurTest ## T ## channels::ParamType>& info) {          \
     return convertToStringGaussianBlur(info.param);                            \
   }                                                                            \
+); */
+#define UNITTEST(T, channels)                                                  \
+using PplCvCudaGaussianBlurTest ## T ## channels =                             \
+        PplCvCudaGaussianBlurTest<T, channels>;                                \
+TEST_P(PplCvCudaGaussianBlurTest ## T ## channels, Standard) {                 \
+  bool identity = this->apply();                                               \
+  EXPECT_TRUE(identity);                                                       \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
+  PplCvCudaGaussianBlurTest ## T ## channels,                                  \
+  ::testing::Combine(                                                          \
+    ::testing::Values(3),                                       \
+    ::testing::Values(0),                                        \
+    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
+                      BORDER_TYPE_REFLECT_101),                                \
+    ::testing::Values(cv::Size{4, 4})),             \
+  [](const testing::TestParamInfo<                                             \
+      PplCvCudaGaussianBlurTest ## T ## channels::ParamType>& info) {          \
+    return convertToStringGaussianBlur(info.param);                            \
+  }                                                                            \
 );
 
 UNITTEST(uchar, 1)
-UNITTEST(uchar, 3)
-UNITTEST(uchar, 4)
-UNITTEST(float, 1)
-UNITTEST(float, 3)
-UNITTEST(float, 4)
+// UNITTEST(uchar, 3)
+// UNITTEST(uchar, 4)
+// UNITTEST(float, 1)
+// UNITTEST(float, 3)
+// UNITTEST(float, 4)

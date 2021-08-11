@@ -28,7 +28,7 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<int, int, BorderType, cv::Size>;
-inline std::string convertToStringFilter(const Parameters& parameters) {
+inline std::string convertToStringFilter2D(const Parameters& parameters) {
   std::ostringstream formatted;
 
   int ksize = std::get<0>(parameters);
@@ -130,10 +130,11 @@ bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
   Filter2D<Tsrc, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize, gpu_kernel,
       gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta, border_type);
+  gpu_dst.download(dst);
+
   Filter2D<Tsrc, channels>(0, size.height, size.width, size.width * channels,
       gpu_input, ksize, gpu_kernel, size.width * channels, gpu_output, delta,
       border_type);
-  gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -164,8 +165,7 @@ TEST_P(PplCvCudaFilter2DTest ## Tsrc ## channels, Standard) {                  \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
-  PplCvCudaFilter2DTest ## Tsrc ## channels,                                   \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaFilter2DTest ## Tsrc ## channels,    \
   ::testing::Combine(                                                          \
     ::testing::Values(1, 3, 5, 13, 27, 43),                                    \
     ::testing::Values(0, 1, 7, 10, 43),                                        \
@@ -177,7 +177,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaFilter2DTest ## Tsrc ## channels::ParamType>& info) {           \
-    return convertToStringFilter(info.param);                                  \
+    return convertToStringFilter2D(info.param);                                \
   }                                                                            \
 );
 

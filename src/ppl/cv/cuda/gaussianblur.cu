@@ -107,7 +107,7 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
     return RC_DEVICE_MEMORY_ERROR;
   }
   getGaussianKernel(kernel, sigma, ksize);
-  code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
+  code = cudaMemcpyAsync(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_MEMORY_ERROR;
@@ -169,7 +169,7 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
     return RC_DEVICE_MEMORY_ERROR;
   }
   getGaussianKernel(kernel, sigma, ksize);
-  code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
+  code = cudaMemcpyAsync(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_MEMORY_ERROR;

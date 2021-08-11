@@ -131,10 +131,11 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize, gpu_kernel,
       gpu_kernel, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta,
       border_type);
+  gpu_dst.download(dst);
+
   SepFilter2D<Tsrc, channels>(0, size.height, size.width, size.width * channels,
       gpu_input, ksize, gpu_kernel, gpu_kernel, size.width * channels,
       gpu_output, delta, border_type);
-  gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;

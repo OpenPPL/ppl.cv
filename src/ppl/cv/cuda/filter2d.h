@@ -39,7 +39,7 @@ namespace cuda {
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
  * @param inData         input image data.
- * @param kernel_len     the length of kernel.
+ * @param ksize          the length of kernel in X&Y direction.
  * @param kernel         data of the kernel.
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
@@ -80,7 +80,7 @@ namespace cuda {
  *   int width    = 640;
  *   int height   = 480;
  *   int channels = 3;
- *   int kernel_len = 3;
+ *   int ksize    = 3;
  *
  *   float* dev_input;
  *   float* dev_kernel;
@@ -88,14 +88,14 @@ namespace cuda {
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMalloc(&dev_kernel, kernel_len * kernel_len * sizeof(float));
+ *   cudaMalloc(&dev_kernel, ksize * ksize * sizeof(float));
  *   cudaMallocPitch(&dev_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Filter2D<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                      dev_input, kernel_len, dev_kernel,
+ *                      dev_input, ksize, dev_kernel,
  *                      output_pitch / sizeof(float), dev_output, 0.f,
  *                      ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
@@ -115,7 +115,7 @@ Filter2D(cudaStream_t stream,
          int width,
          int inWidthStride,
          const T* inData,
-         int kernel_len,
+         int ksize,
          const float* kernel,
          int outWidthStride,
          T* outData,

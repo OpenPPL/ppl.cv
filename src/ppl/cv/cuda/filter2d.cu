@@ -24,52 +24,12 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-/* __DEVICE__
-void mulAdd(float4 &result, uchar &value0, float value1) {
-  result.x += value0 * value1;
-}
-
-__DEVICE__
-void mulAdd(float4 &result, float &value0, float value1) {
-  result.x += value0 * value1;
-}
-
-__DEVICE__
-void mulAdd(float4 &result, uchar3 &value0, float value1) {
-  result.x += value0.x * value1;
-  result.y += value0.y * value1;
-  result.z += value0.z * value1;
-}
-
-__DEVICE__
-void mulAdd(float4 &result, float3 &value0, float value1) {
-  result.x += value0.x * value1;
-  result.y += value0.y * value1;
-  result.z += value0.z * value1;
-}
-
-__DEVICE__
-void mulAdd(float4 &result, uchar4 &value0, float value1) {
-  result.x += value0.x * value1;
-  result.y += value0.y * value1;
-  result.z += value0.z * value1;
-  result.w += value0.w * value1;
-}
-
-__DEVICE__
-void mulAdd(float4 &result, float4 &value0, float value1) {
-  result.x += value0.x * value1;
-  result.y += value0.y * value1;
-  result.z += value0.z * value1;
-  result.w += value0.w * value1;
-} */
-
 template <typename Tsrc, typename Tsrc4, typename Tdst, typename Tdst4,
           typename BorderInterpolation>
 __global__
-void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int channels,
-                      int src_stride, Tdst* dst, int dst_stride,
-                      const float* kernel, int radius, float delta,
+void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
+                      const float* kernel, int radius, Tdst* dst,
+                      int dst_stride, float delta,
                       BorderInterpolation interpolation) {
   int element_x, element_y;
   if (sizeof(Tsrc) == 1) {
@@ -191,13 +151,101 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int channels,
   }
 }
 
+template <typename Tsrc, typename Tsrcn, typename Tdst, typename Tdstn,
+          typename BorderInterpolation>
+__global__
+void filterSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
+                        const float* kernel, int radius, Tdst* dst,
+                        int dst_stride, float delta,
+                        BorderInterpolation interpolation) {
+  __shared__ Tsrcn data[kBlockDimY1][(kBlockDimX1 << 1)];
+
+  int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+
+  int origin_y = element_y - radius;
+  int top_y    = element_y + radius;
+  int index, row_index, pre_index = -2, kernel_index = 0;
+  Tsrcn* input;
+  Tsrcn value;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+  for (int i = origin_y; i <= top_y; i++) {
+    if (element_y < rows) {
+      row_index = interpolation(rows, radius, i);
+      if (row_index != pre_index) {
+        input = (Tsrcn*)((uchar*)src + row_index * src_stride);
+        if (threadIdx.x < radius) {
+          if (blockIdx.x == 0) {
+            index = interpolation(cols, radius, element_x - radius);
+          }
+          else {
+            index = element_x - radius;
+          }
+          value = input[index];
+          data[threadIdx.y][threadIdx.x] = value;
+        }
+
+        if (element_x < cols) {
+          value = input[element_x];
+          data[threadIdx.y][radius + threadIdx.x] = value;
+        }
+
+        if (threadIdx.x < radius) {
+          index = (cols - radius) >> kBlockShiftX1;
+          if (blockIdx.x >= index) {
+            if (blockIdx.x != gridDim.x - 1) {
+              index = interpolation(cols, radius, element_x + kBlockDimX1);
+              value = input[index];
+              data[threadIdx.y][radius + kBlockDimX1 + threadIdx.x] = value;
+            }
+            else {
+              index = interpolation(cols, radius, cols + threadIdx.x);
+              value = input[index];
+              index = cols - (blockIdx.x << kBlockShiftX1);
+              data[threadIdx.y][radius + index + threadIdx.x] = value;
+            }
+          }
+          else {
+            index = element_x + kBlockDimX1;
+            value = input[index];
+            data[threadIdx.y][radius + kBlockDimX1 + threadIdx.x] = value;
+          }
+        }
+
+        pre_index = row_index;
+      }
+    }
+    __syncthreads();
+
+    if (element_x < cols && element_y < rows) {
+      for (index = 0; index < (radius << 1) + 1; index++) {
+        mulAdd(sum, data[threadIdx.y][threadIdx.x + index],
+               kernel[kernel_index]);
+        kernel_index++;
+      }
+    }
+  }
+
+  if (element_x < cols && element_y < rows) {
+    if (delta != 0.f) {
+      sum.x += delta;
+      sum.y += delta;
+      sum.z += delta;
+      sum.w += delta;
+    }
+
+    Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
+    output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+  }
+}
+
 template <typename Tsrc, typename Tsrc4, typename Tdst, typename Tdst4,
           typename BorderInterpolation>
 __global__
-void filter2DKernel(const Tsrc* src, int rows, int cols, int channels,
-                    int src_stride, Tdst* dst, int dst_stride,
-                    const float* kernel, int radius, float delta,
-                    BorderInterpolation interpolation) {
+void filter2DKernel(const Tsrc* src, int rows, int cols, int src_stride,
+                    const float* kernel, int radius, Tdst* dst, int dst_stride,
+                    float delta, BorderInterpolation interpolation) {
   int element_x, element_y;
   if (sizeof(Tsrc) == 1) {
     element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
@@ -270,13 +318,46 @@ void filter2DKernel(const Tsrc* src, int rows, int cols, int channels,
   output[element_x] = saturate_cast_vector<Tdst4, float4>(sum);
 }
 
+#define RUN_KERNELS(Interpolation, T, grid_x)                                  \
+Interpolation interpolation;                                                   \
+if (channels == 1) {                                                           \
+  grid.x = grid_x;                                                             \
+  filter2DC1Kernel<T, T ## 4, T, T ## 4, Interpolation><<<grid, block, 0,      \
+      stream>>>(src, rows, cols, src_stride, kernel, radius, dst, dst_stride,  \
+      delta, interpolation);                                                   \
+}                                                                              \
+else if (channels == 3) {                                                      \
+  if (ksize <= 33) {                                                           \
+    filterSharedKernel<T, T ## 3, T, T ## 3, Interpolation><<<grid1, block1,   \
+        0, stream>>>(src, rows, cols, src_stride, kernel, radius, dst,         \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+  else {                                                                       \
+    filter2DKernel<T, T ## 3, T, T ## 3, Interpolation><<<grid, block, 0,      \
+        stream>>>(src, rows, cols, src_stride, kernel, radius, dst, dst_stride,\
+        delta, interpolation);                                                 \
+  }                                                                            \
+}                                                                              \
+else {                                                                         \
+  if (ksize <= 33) {                                                           \
+    filterSharedKernel<T, T ## 4, T, T ## 4, Interpolation><<<grid1, block1,   \
+        0, stream>>>(src, rows, cols, src_stride, kernel, radius, dst,         \
+        dst_stride, delta, interpolation);                                     \
+  }                                                                            \
+  else {                                                                       \
+    filter2DKernel<T, T ## 4, T, T ## 4, Interpolation><<<grid, block, 0,      \
+        stream>>>(src, rows, cols, src_stride, kernel, radius, dst, dst_stride,\
+        delta, interpolation);                                                 \
+  }                                                                            \
+}
+
 RetCode filter2D(const uchar* src, int rows, int cols, int channels,
-                 int src_stride, uchar* dst, int dst_stride,
-                 const float* kernel, int ksize, float delta,
-                 BorderType border_type, cudaStream_t stream) {
+                 int src_stride, const float* kernel, int ksize, uchar* dst,
+                 int dst_stride, float delta, BorderType border_type,
+                 cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(kernel != nullptr);
+  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
@@ -294,64 +375,23 @@ RetCode filter2D(const uchar* src, int rows, int cols, int channels,
   grid.x  = divideUp(cols, kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
+  dim3 block1, grid1;
+  block1.x = kBlockDimX1;
+  block1.y = kBlockDimY1;
+  grid1.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
+  grid1.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+
   unsigned int radius = ksize >> 1;
+  int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX0, kBlockShiftX0);
 
   if (border_type == BORDER_TYPE_REPLICATE) {
-    ReplicateBorder interpolation;
-    if (channels == 1) {
-      grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX0, kBlockShiftX0);
-      filter2DC1Kernel<uchar, uchar4, uchar, uchar4, ReplicateBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else if (channels == 3) {
-      filter2DKernel<uchar, uchar3, uchar, uchar3, ReplicateBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else {
-      filter2DKernel<uchar, uchar4, uchar, uchar4, ReplicateBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
+    RUN_KERNELS(ReplicateBorder, uchar, grid_x);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    ReflectBorder interpolation;
-    if (channels == 1) {
-      grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX0, kBlockShiftX0);
-      filter2DC1Kernel<uchar, uchar4, uchar, uchar4, ReflectBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else if (channels == 3) {
-      filter2DKernel<uchar, uchar3, uchar, uchar3, ReflectBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else {
-      filter2DKernel<uchar, uchar4, uchar, uchar4, ReflectBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
+    RUN_KERNELS(ReflectBorder, uchar, grid_x);
   }
   else {
-    Reflect101Border interpolation;
-    if (channels == 1) {
-      grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX0, kBlockShiftX0);
-      filter2DC1Kernel<uchar, uchar4, uchar, uchar4, Reflect101Border><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else if (channels == 3) {
-      filter2DKernel<uchar, uchar3, uchar, uchar3, Reflect101Border><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else {
-      filter2DKernel<uchar, uchar4, uchar, uchar4, Reflect101Border><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
+    RUN_KERNELS(Reflect101Border, uchar, grid_x);
   }
 
   cudaError_t code = cudaGetLastError();
@@ -364,12 +404,12 @@ RetCode filter2D(const uchar* src, int rows, int cols, int channels,
 }
 
 RetCode filter2D(const float* src, int rows, int cols, int channels,
-                 int src_stride, float* dst, int dst_stride,
-                 const float* kernel, int ksize, float delta,
-                 BorderType border_type, cudaStream_t stream) {
+                 int src_stride, const float* kernel, int ksize, float* dst,
+                 int dst_stride, float delta, BorderType border_type,
+                 cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(kernel != nullptr);
+  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
@@ -386,65 +426,20 @@ RetCode filter2D(const float* src, int rows, int cols, int channels,
   block.y = kBlockDimY1;
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+  dim3 block1 = block;
+  dim3 grid1 = grid;
 
   unsigned int radius = ksize >> 1;
+  int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
 
   if (border_type == BORDER_TYPE_REPLICATE) {
-    ReplicateBorder interpolation;
-    if (channels == 1) {
-      grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
-      filter2DC1Kernel<float, float4, float, float4, ReplicateBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else if (channels == 3) {
-      filter2DKernel<float, float3, float, float3, ReplicateBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else {
-      filter2DKernel<float, float4, float, float4, ReplicateBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
+    RUN_KERNELS(ReplicateBorder, float, grid_x);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    ReflectBorder interpolation;
-    if (channels == 1) {
-      grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
-      filter2DC1Kernel<float, float4, float, float4, ReflectBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else if (channels == 3) {
-      filter2DKernel<float, float3, float, float3, ReflectBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else {
-      filter2DKernel<float, float4, float, float4, ReflectBorder><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
+    RUN_KERNELS(ReflectBorder, float, grid_x);
   }
   else {
-    Reflect101Border interpolation;
-    if (channels == 1) {
-      grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
-      filter2DC1Kernel<float, float4, float, float4, Reflect101Border><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else if (channels == 3) {
-      filter2DKernel<float, float3, float, float3, Reflect101Border><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
-    else {
-      filter2DKernel<float, float4, float, float4, Reflect101Border><<<grid,
-          block, 0, stream>>>(src, rows, cols, channels, src_stride, dst,
-          dst_stride, kernel, radius, delta, interpolation);
-    }
+    RUN_KERNELS(Reflect101Border, float, grid_x);
   }
 
   cudaError_t code = cudaGetLastError();
@@ -462,15 +457,15 @@ RetCode Filter2D<uchar, 1>(cudaStream_t stream,
                            int width,
                            int inWidthStride,
                            const uchar* inData,
-                           int kernel_len,
+                           int ksize,
                            const float* kernel,
                            int outWidthStride,
                            uchar* outData,
                            float delta,
                            BorderType border_type) {
-  RetCode code = filter2D(inData, height, width, 1, inWidthStride, outData,
-                          outWidthStride, kernel, kernel_len, delta,
-                          border_type, stream);
+  RetCode code = filter2D(inData, height, width, 1, inWidthStride, kernel,
+                          ksize, outData, outWidthStride, delta, border_type,
+                          stream);
 
   return code;
 }
@@ -481,15 +476,15 @@ RetCode Filter2D<uchar, 3>(cudaStream_t stream,
                            int width,
                            int inWidthStride,
                            const uchar* inData,
-                           int kernel_len,
+                           int ksize,
                            const float* kernel,
                            int outWidthStride,
                            uchar* outData,
                            float delta,
                            BorderType border_type) {
-  RetCode code = filter2D(inData, height, width, 3, inWidthStride, outData,
-                          outWidthStride, kernel, kernel_len, delta,
-                          border_type, stream);
+  RetCode code = filter2D(inData, height, width, 3, inWidthStride, kernel,
+                          ksize, outData, outWidthStride, delta, border_type,
+                          stream);
 
   return code;
 }
@@ -500,15 +495,15 @@ RetCode Filter2D<uchar, 4>(cudaStream_t stream,
                            int width,
                            int inWidthStride,
                            const uchar* inData,
-                           int kernel_len,
+                           int ksize,
                            const float* kernel,
                            int outWidthStride,
                            uchar* outData,
                            float delta,
                            BorderType border_type) {
-  RetCode code = filter2D(inData, height, width, 4, inWidthStride, outData,
-                          outWidthStride, kernel, kernel_len, delta,
-                          border_type, stream);
+  RetCode code = filter2D(inData, height, width, 4, inWidthStride, kernel,
+                          ksize, outData, outWidthStride, delta, border_type,
+                          stream);
 
   return code;
 }
@@ -519,7 +514,7 @@ RetCode Filter2D<float, 1>(cudaStream_t stream,
                            int width,
                            int inWidthStride,
                            const float* inData,
-                           int kernel_len,
+                           int ksize,
                            const float* kernel,
                            int outWidthStride,
                            float* outData,
@@ -527,9 +522,9 @@ RetCode Filter2D<float, 1>(cudaStream_t stream,
                            BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code = filter2D(inData, height, width, 1, inWidthStride, outData,
-                          outWidthStride, kernel, kernel_len, delta,
-                          border_type, stream);
+  RetCode code = filter2D(inData, height, width, 1, inWidthStride, kernel,
+                          ksize, outData, outWidthStride, delta, border_type,
+                          stream);
 
   return code;
 }
@@ -540,7 +535,7 @@ RetCode Filter2D<float, 3>(cudaStream_t stream,
                            int width,
                            int inWidthStride,
                            const float* inData,
-                           int kernel_len,
+                           int ksize,
                            const float* kernel,
                            int outWidthStride,
                            float* outData,
@@ -548,9 +543,9 @@ RetCode Filter2D<float, 3>(cudaStream_t stream,
                            BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code = filter2D(inData, height, width, 3, inWidthStride, outData,
-                          outWidthStride, kernel, kernel_len, delta,
-                          border_type, stream);
+  RetCode code = filter2D(inData, height, width, 3, inWidthStride, kernel,
+                          ksize, outData, outWidthStride, delta, border_type,
+                          stream);
 
   return code;
 }
@@ -561,7 +556,7 @@ RetCode Filter2D<float, 4>(cudaStream_t stream,
                            int width,
                            int inWidthStride,
                            const float* inData,
-                           int kernel_len,
+                           int ksize,
                            const float* kernel,
                            int outWidthStride,
                            float* outData,
@@ -569,9 +564,9 @@ RetCode Filter2D<float, 4>(cudaStream_t stream,
                            BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code = filter2D(inData, height, width, 4, inWidthStride, outData,
-                          outWidthStride, kernel, kernel_len, delta,
-                          border_type, stream);
+  RetCode code = filter2D(inData, height, width, 4, inWidthStride, kernel,
+                          ksize, outData, outWidthStride, delta, border_type,
+                          stream);
 
   return code;
 }

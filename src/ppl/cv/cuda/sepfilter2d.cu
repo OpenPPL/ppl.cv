@@ -163,6 +163,9 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
 
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_y >= rows) {
+    return;
+  }
 
   Tsrcn* input = (Tsrcn*)((uchar*)src + element_y * src_stride);
   Tsrcn value;
@@ -207,7 +210,7 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
   __syncthreads();
 
-  if (element_x >= cols || element_y >= rows) {
+  if (element_x >= cols) {
     return;
   }
 
@@ -277,6 +280,9 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
 
   int element_x = (blockIdx.x << kShiftX0) + threadIdx.x;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
+  if (element_x >= cols4) {
+    return;
+  }
 
   float4* input;
   float4 value;
@@ -326,7 +332,7 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
   __syncthreads();
 
-  if (element_x >= cols4 || element_y >= rows) {
+  if (element_y >= rows) {
     return;
   }
 
