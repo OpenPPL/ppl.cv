@@ -6,6 +6,7 @@ set(BUILD_LIST "core,imgproc" CACHE INTERNAL "")
 # --------------------------------------------------------------------------- #
 
 if(PPLCV_USE_CUDA)
+    set(WITH_CUDA ON)
     FetchContent_GetProperties(opencv_contrib)
     if(NOT opencv_contrib_POPULATED)
         FetchContent_Populate(opencv_contrib)

@@ -12,7 +12,7 @@ options='-DCMAKE_BUILD_TYPE=Release'
 function BuildCuda() {
     mkdir ${cuda_build_dir}
     cd ${cuda_build_dir}
-    cmd="cmake $options -DWITH_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && make -j${cpu_num} && make install"
+    cmd="cmake $options -DHPCC_USE_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && make -j${cpu_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
@@ -20,7 +20,7 @@ function BuildCuda() {
 function BuildX64() {
     mkdir ${x64_build_dir}
     cd ${x64_build_dir}
-    cmd="cmake $options -DCMAKE_INSTALL_PREFIX=${x64_build_dir}/install .. && make -j${cpu_num} && make install"
+    cmd="cmake $options -DHPCC_USE_X86=ON -DCMAKE_INSTALL_PREFIX=${x64_build_dir}/install .. && make -j${cpu_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }

@@ -9,7 +9,7 @@ set(FETCHCONTENT_QUIET OFF)
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG v0.1.0
+    GIT_TAG v0.1.2
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${HPCC_DEPS_DIR}/hpcc-build
     SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild
@@ -31,7 +31,7 @@ set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable ppl.common tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    master)
+    v0.2.3)
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "disable benchmark tests")
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")

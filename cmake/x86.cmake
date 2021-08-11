@@ -7,10 +7,7 @@ option(WITH_X86 "Build pplcv with x86 support" ON)
 option(PPLCV_USE_X86 "Build unittest & benchmark with x86 support" ON)
 option(USE_X86_OMP "Build x86 kernel with openmp support" OFF)
 
-if(NOT IS_X86 OR NOT WITH_X86)
-    return()
-endif()
-if(WITH_OMP)
+if(HPCC_USE_OPENMP)
     set(USE_X86_OMP ON)
 endif()
 
