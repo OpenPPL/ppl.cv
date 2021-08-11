@@ -19,8 +19,13 @@ set(PPLCV_COMPILE_DEFINITIONS )
 
 # --------------------------------------------------------------------------- #
 
-include(cmake/x86.cmake)
-include(cmake/cuda.cmake)
+if(HPCC_USE_X86)
+    include(cmake/x86.cmake)
+endif()
+
+if(HPCC_USE_CUDA)
+    include(cmake/cuda.cmake)
+endif()
 
 hpcc_populate_dep(ppl.common)
 
