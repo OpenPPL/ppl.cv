@@ -1,7 +1,7 @@
 #!/bin/bash
 
 workdir=`pwd`
-x86_build_dir="${workdir}/x86-build"
+x86_64_build_dir="${workdir}/x86-64-build"
 cuda_build_dir="${workdir}/cuda-build"
 aarch64_build_dir="${workdir}/aarch64-build"
 deps_dir="${workdir}/deps"
@@ -19,10 +19,10 @@ function BuildCuda() {
     eval "$cmd"
 }
 
-function BuildX86() {
-    mkdir ${x86_build_dir}
-    cd ${x86_build_dir}
-    cmd="cmake $options -DHPCC_USE_X86=ON -DCMAKE_INSTALL_PREFIX=${x86_build_dir}/install .. && make -j${processor_num} && make install"
+function BuildX86_64() {
+    mkdir ${x86_64_build_dir}
+    cd ${x86_64_build_dir}
+    cmd="cmake $options -DHPCC_USE_X86_64=ON -DCMAKE_INSTALL_PREFIX=${x86_64_build_dir}/install .. && make -j${processor_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
@@ -50,7 +50,7 @@ function BuildAarch64() {
 
 declare -A engine2func=(
     ["cuda"]=BuildCuda
-    ["x86"]=BuildX86
+    ["x86_64"]=BuildX86_64
     ["aarch64"]=BuildAarch64
 )
 
