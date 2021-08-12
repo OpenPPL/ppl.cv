@@ -9,7 +9,7 @@ set(FETCHCONTENT_QUIET OFF)
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG v0.1.2
+    GIT_TAG v0.1.3
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${HPCC_DEPS_DIR}/hpcc-build
     SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild
