@@ -19,7 +19,7 @@ set(PPLCV_COMPILE_DEFINITIONS )
 
 # --------------------------------------------------------------------------- #
 
-if(HPCC_USE_X86)
+if(HPCC_USE_X86_64)
     include(cmake/x86.cmake)
 endif()
 
