@@ -24,6 +24,7 @@ endif()
 # --------------------------------------------------------------------------- #
 
 set(INSTALL_GTEST OFF CACHE BOOL "")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 
 hpcc_declare_git_dep(googletest
     https://github.com/google/googletest.git
