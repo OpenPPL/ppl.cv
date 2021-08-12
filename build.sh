@@ -4,7 +4,6 @@ workdir=`pwd`
 x86_64_build_dir="${workdir}/x86-64-build"
 cuda_build_dir="${workdir}/cuda-build"
 aarch64_build_dir="${workdir}/aarch64-build"
-deps_dir="${workdir}/deps"
 processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
 
 options='-DCMAKE_BUILD_TYPE=Release'
@@ -31,7 +30,7 @@ function BuildAarch64() {
     arch=$(uname -m)
     case "$arch" in
         "x86_64")
-            extra_options="-DCMAKE_TOOLCHAIN_FILE=${deps_dir}/hpcc/cmake/toolchains/aarch64-linux-gnu.cmake"
+            extra_options="-DCMAKE_TOOLCHAIN_FILE=${workdir}/cmake/toolchains/aarch64-linux-gnu.cmake"
             ;;
         "aarch64")
             ;;
