@@ -13,7 +13,7 @@ FetchContent_Declare(hpcc
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${HPCC_DEPS_DIR}/hpcc-build
     SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild
-    UPDATE_COMMAND "")
+    UPDATE_DISCONNECTED True)
 
 FetchContent_GetProperties(hpcc)
 if(NOT hpcc_POPULATED)
@@ -23,26 +23,37 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
+set(INSTALL_GTEST OFF CACHE BOOL "")
+
 hpcc_declare_git_dep(googletest
     https://github.com/google/googletest.git
     release-1.8.1)
 
+# --------------------------------------------------------------------------- #
+
 set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable ppl.common tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
+
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
     v0.2.3)
 
+# --------------------------------------------------------------------------- #
+
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "disable benchmark tests")
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")
+
 hpcc_declare_git_dep(benchmark
     https://github.com/google/benchmark.git
     v1.5.5)
+
+# --------------------------------------------------------------------------- #
 
 set(BUILD_TESTS OFF CACHE BOOL "")
 set(BUILD_PERF_TESTS OFF CACHE BOOL "")
 set(BUILD_EXAMPLES OFF CACHE BOOL "")
 set(BUILD_opencv_apps OFF CACHE BOOL "")
+
 hpcc_declare_git_dep(opencv
     https://github.com/opencv/opencv.git
     4.2.0)

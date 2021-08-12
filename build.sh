@@ -5,7 +5,7 @@ x86_build_dir="${workdir}/x86-build"
 cuda_build_dir="${workdir}/cuda-build"
 aarch64_build_dir="${workdir}/aarch64-build"
 deps_dir="${workdir}/deps"
-cpu_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
+processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
 
 options='-DCMAKE_BUILD_TYPE=Release'
 
@@ -14,7 +14,7 @@ options='-DCMAKE_BUILD_TYPE=Release'
 function BuildCuda() {
     mkdir ${cuda_build_dir}
     cd ${cuda_build_dir}
-    cmd="cmake $options -DHPCC_USE_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && make -j${cpu_num} && make install"
+    cmd="cmake $options -DHPCC_USE_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && make -j${processor_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
@@ -22,7 +22,7 @@ function BuildCuda() {
 function BuildX86() {
     mkdir ${x86_build_dir}
     cd ${x86_build_dir}
-    cmd="cmake $options -DHPCC_USE_X86=ON -DCMAKE_INSTALL_PREFIX=${x86_build_dir}/install .. && make -j${cpu_num} && make install"
+    cmd="cmake $options -DHPCC_USE_X86=ON -DCMAKE_INSTALL_PREFIX=${x86_build_dir}/install .. && make -j${processor_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
@@ -43,7 +43,7 @@ function BuildAarch64() {
 
     mkdir ${aarch64_build_dir}
     cd ${aarch64_build_dir}
-    cmd="cmake $options ${extra_options} -DHPCC_USE_AARCH64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install .. && make -j${cpu_num} && make install"
+    cmd="cmake $options ${extra_options} -DHPCC_USE_AARCH64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install .. && make -j${processor_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
