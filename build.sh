@@ -3,6 +3,8 @@
 workdir=`pwd`
 x86_build_dir="${workdir}/x86-build"
 cuda_build_dir="${workdir}/cuda-build"
+aarch64_build_dir="${workdir}/aarch64-build"
+deps_dir="${workdir}/deps"
 cpu_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
 
 options='-DCMAKE_BUILD_TYPE=Release'
@@ -25,9 +27,31 @@ function BuildX86() {
     eval "$cmd"
 }
 
+function BuildAarch64() {
+    arch=$(uname -m)
+    case "$arch" in
+        "x86_64")
+            extra_options="-DCMAKE_TOOLCHAIN_FILE=${deps_dir}/hpcc/cmake/toolchains/aarch64-linux-gnu.cmake"
+            ;;
+        "aarch64")
+            ;;
+        *)
+            echo "unsupported arch -> $arch"
+            exit 1
+            ;;
+    esac
+
+    mkdir ${aarch64_build_dir}
+    cd ${aarch64_build_dir}
+    cmd="cmake $options ${extra_options} -DHPCC_USE_AARCH64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install .. && make -j${cpu_num} && make install"
+    echo "cmd -> $cmd"
+    eval "$cmd"
+}
+
 declare -A engine2func=(
     ["cuda"]=BuildCuda
     ["x86"]=BuildX86
+    ["aarch64"]=BuildAarch64
 )
 
 # --------------------------------------------------------------------------- #
