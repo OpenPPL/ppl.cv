@@ -460,6 +460,16 @@ void operator/=(float4 &result, float value) {
 }
 
 __DEVICE__
+void mulAdd(float &result, uchar &value0, float value1) {
+  result += value0 * value1;
+}
+
+__DEVICE__
+void mulAdd(float &result, float &value0, float value1) {
+  result += value0 * value1;
+}
+
+__DEVICE__
 void mulAdd(float4 &result, uchar &value0, float value1) {
   result.x += value0 * value1;
 }
