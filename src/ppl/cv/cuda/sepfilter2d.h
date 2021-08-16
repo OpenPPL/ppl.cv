@@ -27,7 +27,7 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Convolves an image with a separable linear filter.
+ * @brief Convolves an image with separable linear filters.
  * @tparam T The data type of input and output image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input&output image, 1, 3 and 4

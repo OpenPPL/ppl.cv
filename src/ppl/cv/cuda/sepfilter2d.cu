@@ -24,6 +24,314 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
+#define RADIUS 8
+#define SMALL_KSIZE RADIUS * 2 + 1
+
+template <typename T>
+__DEVICE__
+T transform(float4 &src);
+
+template <>
+__DEVICE__
+float3 transform(float4 &src) {
+  float3 dst;
+  dst.x = src.x;
+  dst.y = src.y;
+  dst.z = src.z;
+
+  return dst;
+}
+
+template <>
+__DEVICE__
+float4 transform(float4 &src) {
+  return src;
+}
+
+template <typename Tsrc, typename Tdst, typename BorderInterpolation>
+__global__
+void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
+                    const float* kernel_x, const float* kernel_y, int radius,
+                    Tdst* dst, int dst_stride, float delta,
+                    BorderInterpolation interpolation) {
+  __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
+
+  int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
+  int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
+
+  int bottom = element_x - radius;
+  int top    = element_x + radius;
+
+  int data_index, row_index, kernel_index = 0;
+  Tsrc* input;
+  float4 value;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+  bool isnt_border_block = true;
+  data_index = radius >> (kShiftX0 + 2);
+  if (blockIdx.x <= data_index) isnt_border_block = false;
+  data_index = (cols - radius) >> (kShiftX0 + 2);
+  if (blockIdx.x >= data_index) isnt_border_block = false;
+
+  if (threadIdx.y < radius && element_x < cols) {
+    row_index = interpolation(rows, radius, element_y - radius);
+    input = (Tsrc*)((uchar*)src + row_index * src_stride);
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        mulAdd(sum, value, kernel_x[kernel_index]);
+        kernel_index++;
+      }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius, i + 3);
+        value.w = input[data_index];
+        mulAdd(sum, value, kernel_x[kernel_index]);
+        kernel_index++;
+      }
+    }
+    data_index = threadIdx.x << 2;
+    data[threadIdx.y][data_index] = sum.x;
+    data[threadIdx.y][data_index + 1] = sum.y;
+    data[threadIdx.y][data_index + 2] = sum.z;
+    data[threadIdx.y][data_index + 3] = sum.w;
+  }
+
+  if (element_y < rows && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    input = (Tsrc*)((uchar*)src + element_y * src_stride);
+    kernel_index = 0;
+
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        mulAdd(sum, value, kernel_x[kernel_index]);
+        kernel_index++;
+      }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius, i + 3);
+        value.w = input[data_index];
+        mulAdd(sum, value, kernel_x[kernel_index]);
+        kernel_index++;
+      }
+    }
+    data_index = threadIdx.x << 2;
+    data[radius + threadIdx.y][data_index] = sum.x;
+    data[radius + threadIdx.y][data_index + 1] = sum.y;
+    data[radius + threadIdx.y][data_index + 2] = sum.z;
+    data[radius + threadIdx.y][data_index + 3] = sum.w;
+  }
+
+  if (threadIdx.y < radius && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    if (blockIdx.y != gridDim.y - 1) {
+      row_index = interpolation(rows, radius,
+                                ((blockIdx.y + 1) << kShiftY0) + threadIdx.y);
+    }
+    else {
+      row_index = interpolation(rows, radius, rows + threadIdx.y);
+    }
+    input = (Tsrc*)((uchar*)src + row_index * src_stride);
+    kernel_index = 0;
+
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        mulAdd(sum, value, kernel_x[kernel_index]);
+        kernel_index++;
+      }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius, i + 3);
+        value.w = input[data_index];
+        mulAdd(sum, value, kernel_x[kernel_index]);
+        kernel_index++;
+      }
+    }
+
+    data_index = threadIdx.x << 2;
+    if (blockIdx.y != gridDim.y - 1) {
+      row_index = radius + kDimY0 + threadIdx.y;
+    }
+    else {
+      row_index = radius + (rows - (blockIdx.y << kShiftY0)) + threadIdx.y;
+    }
+    data[row_index][data_index] = sum.x;
+    data[row_index][data_index + 1] = sum.y;
+    data[row_index][data_index + 2] = sum.z;
+    data[row_index][data_index + 3] = sum.w;
+  }
+  __syncthreads();
+
+  if (element_y < rows && element_x < cols) {
+    top = (radius << 1) + 1;
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    kernel_index = 0;
+
+    for (int i = 0; i < top; i++) {
+      data_index = threadIdx.x << 2;
+      value.x = data[i + threadIdx.y][data_index];
+      value.y = data[i + threadIdx.y][data_index + 1];
+      value.z = data[i + threadIdx.y][data_index + 2];
+      value.w = data[i + threadIdx.y][data_index + 3];
+      mulAdd(sum, value, kernel_y[kernel_index]);
+      kernel_index++;
+    }
+
+    if (delta != 0.f) {
+      sum.x += delta;
+      sum.y += delta;
+      sum.z += delta;
+      sum.w += delta;
+    }
+
+    Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
+    if (sizeof(Tdst) == 1) {
+      if (element_x < cols - 4) {
+        output[element_x]     = saturate_cast(sum.x);
+        output[element_x + 1] = saturate_cast(sum.y);
+        output[element_x + 2] = saturate_cast(sum.z);
+        output[element_x + 3] = saturate_cast(sum.w);
+      }
+      else {
+        output[element_x] = saturate_cast(sum.x);
+        if (element_x < cols - 1) {
+          output[element_x + 1] = saturate_cast(sum.y);
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = saturate_cast(sum.z);
+        }
+        if (element_x < cols - 3) {
+          output[element_x + 3] = saturate_cast(sum.w);
+        }
+      }
+    }
+    else {
+      if (element_x < cols - 4) {
+        output[element_x]     = sum.x;
+        output[element_x + 1] = sum.y;
+        output[element_x + 2] = sum.z;
+        output[element_x + 3] = sum.w;
+      }
+      else {
+        output[element_x] = sum.x;
+        if (element_x < cols - 1) {
+          output[element_x + 1] = sum.y;
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = sum.z;
+        }
+        if (element_x < cols - 3) {
+          output[element_x + 3] = sum.w;
+        }
+      }
+    }
+  }
+}
+
+template <typename Tsrc, typename Tsrcn, typename Tbufn, typename Tdst,
+          typename Tdstn, typename BorderInterpolation>
+__global__
+void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
+                    const float* kernel_x, const float* kernel_y, int radius,
+                    Tdst* dst, int dst_stride, float delta,
+                    BorderInterpolation interpolation) {
+  __shared__ Tsrcn row_data[kDimY0 + RADIUS * 2][kDimX0 + RADIUS * 2];
+  __shared__ Tbufn col_data[kDimY0 + RADIUS * 2][kDimX0];
+
+  int element_x = (blockIdx.x << kShiftX0) + threadIdx.x;
+  int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
+
+  int index, y_index, row_index;
+  Tsrcn* input;
+  float4 sum;
+
+  y_index   = threadIdx.y;
+  row_index = element_y - radius;
+  while (row_index < (int)(((blockIdx.y + 1) << kShiftY0) + radius) &&
+         row_index < rows + radius) {
+    index = interpolation(rows, radius, row_index);
+    input = (Tsrcn*)((uchar*)src + index * src_stride);
+
+    int x_index   = threadIdx.x;
+    int col_index = element_x - radius;
+    while (col_index < (int)(((blockIdx.x + 1) << kShiftX0) + radius) &&
+           col_index < cols + radius) {
+      index = interpolation(cols, radius, col_index);
+      row_data[y_index][x_index] = input[index];
+      x_index    += kDimX0;
+      col_index += kDimX0;
+    }
+
+    y_index   += kDimY0;
+    row_index += kDimY0;
+  }
+  __syncthreads();
+
+  y_index   = threadIdx.y;
+  row_index = element_y - radius;
+  while (row_index < (int)(((blockIdx.y + 1) << kShiftY0) + radius) &&
+         row_index < rows + radius && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    for (index = 0; index < (radius << 1) + 1; index++) {
+      mulAdd(sum, row_data[y_index][threadIdx.x + index], kernel_x[index]);
+    }
+
+    col_data[y_index][threadIdx.x] = transform<Tbufn>(sum);
+    y_index   += kDimY0;
+    row_index += kDimY0;
+  }
+  __syncthreads();
+
+  if (element_y < rows && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    for (index = 0; index < (radius << 1) + 1; index++) {
+      mulAdd(sum, col_data[threadIdx.y + index][threadIdx.x], kernel_y[index]);
+    }
+
+    if (delta != 0.f) {
+      sum.x += delta;
+      sum.y += delta;
+      sum.z += delta;
+      sum.w += delta;
+    }
+
+    Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
+    output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+  }
+}
+
 template <typename Tsrc, typename Tsrc4, typename BorderInterpolation>
 __global__
 void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
@@ -169,16 +477,16 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
 
   Tsrcn* input = (Tsrcn*)((uchar*)src + element_y * src_stride);
   Tsrcn value;
-  int index0, index1;
+  int index;
 
   if (threadIdx.x < radius) {
     if (blockIdx.x == 0) {
-      index0 = interpolation(cols, radius, element_x - radius);
+      index = interpolation(cols, radius, element_x - radius);
     }
     else {
-      index0 = element_x - radius;
+      index = element_x - radius;
     }
-    value = input[index0];
+    value = input[index];
     data[threadIdx.y][threadIdx.x] = value;
   }
 
@@ -188,23 +496,23 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   if (threadIdx.x < radius) {
-    index0 = (cols - radius) >> kBlockShiftX1;
-    if (blockIdx.x >= index0) {
+    index = (cols - radius) >> kBlockShiftX1;
+    if (blockIdx.x >= index) {
       if (blockIdx.x != gridDim.x - 1) {
-        index0 = interpolation(cols, radius, element_x + kBlockDimX1);
-        value = input[index0];
+        index = interpolation(cols, radius, element_x + kBlockDimX1);
+        value = input[index];
         data[threadIdx.y][radius + kBlockDimX1 + threadIdx.x] = value;
       }
       else {
-        index0 = interpolation(cols, radius, cols + threadIdx.x);
-        value = input[index0];
-        index1 = cols - (blockIdx.x << kBlockShiftX1);
-        data[threadIdx.y][radius + index1 + threadIdx.x] = value;
+        index = interpolation(cols, radius, cols + threadIdx.x);
+        value = input[index];
+        index = cols - (blockIdx.x << kBlockShiftX1);
+        data[threadIdx.y][radius + index + threadIdx.x] = value;
       }
     }
     else {
-      index0 = element_x + kBlockDimX1;
-      value = input[index0];
+      index = element_x + kBlockDimX1;
+      value = input[index];
       data[threadIdx.y][radius + kBlockDimX1 + threadIdx.x] = value;
     }
   }
@@ -215,8 +523,8 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
-  for (index1 = 0; index1 < (radius << 1) + 1; index1++) {
-    mulAdd(sum, data[threadIdx.y][threadIdx.x + index1], kernel[index1]);
+  for (index = 0; index < (radius << 1) + 1; index++) {
+    mulAdd(sum, data[threadIdx.y][threadIdx.x + index], kernel[index]);
   }
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
@@ -286,16 +594,16 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
 
   float4* input;
   float4 value;
-  int index0, index1;
+  int index;
 
   if (threadIdx.y < radius) {
     if (blockIdx.y == 0) {
-      index0 = interpolation(rows, radius, element_y - radius);
+      index = interpolation(rows, radius, element_y - radius);
     }
     else {
-      index0 = element_y - radius;
+      index = element_y - radius;
     }
-    input = (float4*)((uchar*)src + index0 * src_stride);
+    input = (float4*)((uchar*)src + index * src_stride);
     value = input[element_x];
     data[threadIdx.y][threadIdx.x] = value;
   }
@@ -307,25 +615,25 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
 
   if (threadIdx.y < radius) {
-    index0 = (rows - radius) >> kShiftY0;
-    if (blockIdx.y >= index0) {
+    index = (rows - radius) >> kShiftY0;
+    if (blockIdx.y >= index) {
       if (blockIdx.y != gridDim.y - 1) {
-        index0 = interpolation(rows, radius, element_y + kDimY0);
-        input = (float4*)((uchar*)src + index0 * src_stride);
+        index = interpolation(rows, radius, element_y + kDimY0);
+        input = (float4*)((uchar*)src + index * src_stride);
         value = input[element_x];
         data[radius + kDimY0 + threadIdx.y][threadIdx.x] = value;
       }
       else {
-        index0 = interpolation(rows, radius, rows + threadIdx.y);
-        input = (float4*)((uchar*)src + index0 * src_stride);
+        index = interpolation(rows, radius, rows + threadIdx.y);
+        input = (float4*)((uchar*)src + index * src_stride);
         value = input[element_x];
-        index1 = rows - (blockIdx.y << kShiftY0);
-        data[radius + index1 + threadIdx.y][threadIdx.x] = value;
+        index = rows - (blockIdx.y << kShiftY0);
+        data[radius + index + threadIdx.y][threadIdx.x] = value;
       }
     }
     else {
-      index0 = element_y + kDimY0;
-      input = (float4*)((uchar*)src + index0 * src_stride);
+      index = element_y + kDimY0;
+      input = (float4*)((uchar*)src + index * src_stride);
       value = input[element_x];
       data[radius + kDimY0 + threadIdx.y][threadIdx.x] = value;
     }
@@ -337,8 +645,8 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
 
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
-  for (index1 = 0; index1 < (radius << 1) + 1; index1++) {
-    mulAdd(sum, data[threadIdx.y + index1][threadIdx.x], kernel[index1]);
+  for (index = 0; index < (radius << 1) + 1; index++) {
+    mulAdd(sum, data[threadIdx.y + index][threadIdx.x], kernel[index]);
   }
 
   if (delta != 0.f) {
@@ -349,44 +657,44 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
 
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
-  index0 = element_x << 2;
+  index = element_x << 2;
   if (element_x < cols4 - 1) {
     if (sizeof(Tdst) == 1) {
-      output[index0] = saturate_cast(sum.x);
-      output[index0 + 1] = saturate_cast(sum.y);
-      output[index0 + 2] = saturate_cast(sum.z);
-      output[index0 + 3] = saturate_cast(sum.w);
+      output[index] = saturate_cast(sum.x);
+      output[index + 1] = saturate_cast(sum.y);
+      output[index + 2] = saturate_cast(sum.z);
+      output[index + 3] = saturate_cast(sum.w);
     }
     else {
-      output[index0] = sum.x;
-      output[index0 + 1] = sum.y;
-      output[index0 + 2] = sum.z;
-      output[index0 + 3] = sum.w;
+      output[index] = sum.x;
+      output[index + 1] = sum.y;
+      output[index + 2] = sum.z;
+      output[index + 3] = sum.w;
     }
   }
   else {
     if (sizeof(Tdst) == 1) {
-      output[index0] = saturate_cast(sum.x);
-      if (index0 < cols - 1) {
-        output[index0 + 1] = saturate_cast(sum.y);
+      output[index] = saturate_cast(sum.x);
+      if (index < cols - 1) {
+        output[index + 1] = saturate_cast(sum.y);
       }
-      if (index0 < cols - 2) {
-        output[index0 + 2] = saturate_cast(sum.z);
+      if (index < cols - 2) {
+        output[index + 2] = saturate_cast(sum.z);
       }
-      if (index0 < cols - 3) {
-        output[index0 + 3] = saturate_cast(sum.w);
+      if (index < cols - 3) {
+        output[index + 3] = saturate_cast(sum.w);
       }
     }
     else {
-      output[index0] = sum.x;
-      if (index0 < cols - 1) {
-        output[index0 + 1] = sum.y;
+      output[index] = sum.x;
+      if (index < cols - 1) {
+        output[index + 1] = sum.y;
       }
-      if (index0 < cols - 2) {
-        output[index0 + 2] = sum.z;
+      if (index < cols - 2) {
+        output[index + 2] = sum.z;
       }
-      if (index0 < cols - 3) {
-        output[index0 + 3] = sum.w;
+      if (index < cols - 3) {
+        output[index + 3] = sum.w;
       }
     }
   }
@@ -429,6 +737,25 @@ void colFilterKernel(const float* src, int rows, int cols, int src_stride,
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+}
+
+#define RUN_CHANNEL1_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
+Interpolation interpolation;                                                   \
+rowColC1Kernel<Tsrc, Tdst, Interpolation><<<grid, block, 0, stream>>>(src,     \
+    rows, cols, src_stride, kernel_x, kernel_y, radius, dst, dst_stride, delta,\
+    interpolation);
+
+#define RUN_CHANNELN_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
+Interpolation interpolation;                                                   \
+if (channels == 3) {                                                           \
+  rowColCnKernel<Tsrc, Tsrc ## 3, float ## 3, Tdst, Tdst ## 3, Interpolation>  \
+      <<<grid, block, 0, stream>>>(src, rows, cols, src_stride, kernel_x,      \
+      kernel_y, radius, dst, dst_stride, delta, interpolation);                \
+}                                                                              \
+else {                                                                         \
+  rowColCnKernel<Tsrc, Tsrc ## 4, float ## 4, Tdst, Tdst ## 4, Interpolation>  \
+      <<<grid, block, 0, stream>>>(src, rows, cols, src_stride, kernel_x,      \
+      kernel_y, radius, dst, dst_stride, delta, interpolation);                \
 }
 
 #define RUN_KERNELS(Interpolation, Tsrc, Tdst)                                 \
@@ -504,6 +831,60 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
+  unsigned int radius = ksize >> 1;
+  cudaError_t code;
+  if (ksize <= 31 && channels == 1) {
+    dim3 block, grid;
+    block.x = kDimX0;
+    block.y = kDimY0;
+    grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
+    grid.y = divideUp(rows, kDimY0, kShiftY0);
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, uchar, uchar);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, uchar, uchar);
+    }
+    else {
+      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, uchar, uchar);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
+  if (ksize <= SMALL_KSIZE && (channels == 3 || channels == 4)) {
+    dim3 block, grid;
+    block.x = kDimX0;
+    block.y = kDimY0;
+    grid.x = divideUp(cols, kDimX0, kShiftX0);
+    grid.y = divideUp(rows, kDimY0, kShiftY0);
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder, uchar, uchar);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder, uchar, uchar);
+    }
+    else {
+      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border, uchar, uchar);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
   dim3 block, grid;
   block.x = kBlockDimX1;
   block.y = kBlockDimY1;
@@ -526,10 +907,8 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   grid3.x = divideUp(columns4, kDimX0, kShiftX0);
   grid3.y = divideUp(rows, kDimY0, kShiftY0);
 
-  unsigned int radius = ksize >> 1;
   float* buffer;
   size_t pitch;
-  cudaError_t code;
   code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
                          rows);
   if (code != cudaSuccess) {
@@ -577,6 +956,60 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
+  unsigned int radius = ksize >> 1;
+  cudaError_t code;
+  if (ksize <= 25 && channels == 1) {
+    dim3 block, grid;
+    block.x = kDimX0;
+    block.y = kDimY0;
+    grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
+    grid.y = divideUp(rows, kDimY0, kShiftY0);
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, float, float);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, float, float);
+    }
+    else {
+      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, float, float);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
+  if (ksize <= SMALL_KSIZE && (channels == 3 || channels == 4)) {
+    dim3 block, grid;
+    block.x = kDimX0;
+    block.y = kDimY0;
+    grid.x = divideUp(cols, kDimX0, kShiftX0);
+    grid.y = divideUp(rows, kDimY0, kShiftY0);
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder, float, float);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder, float, float);
+    }
+    else {
+      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border, float, float);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
   dim3 block, grid;
   block.x = kBlockDimX1;
   block.y = kBlockDimY1;
@@ -599,10 +1032,8 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
   grid3.x = divideUp(columns4, kDimX0, kShiftX0);
   grid3.y = divideUp(rows, kDimY0, kShiftY0);
 
-  unsigned int radius = ksize >> 1;
   float* buffer;
   size_t pitch;
-  cudaError_t code;
   code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
                          rows);
   if (code != cudaSuccess) {
