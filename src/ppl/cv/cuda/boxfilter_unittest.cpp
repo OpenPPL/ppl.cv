@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "filter2d.h"
+/* #include "boxfilter.h"
 
 #include <tuple>
 #include <sstream>
@@ -28,7 +28,7 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<int, int, BorderType, cv::Size>;
-inline std::string convertToStringFilter2D(const Parameters& parameters) {
+inline std::string convertToStringBoxFilter(const Parameters& parameters) {
   std::ostringstream formatted;
 
   int ksize = std::get<0>(parameters);
@@ -59,9 +59,9 @@ inline std::string convertToStringFilter2D(const Parameters& parameters) {
 }
 
 template <typename Tsrc, typename Tdst, int channels>
-class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
+class PplCvCudaBoxFilterTest : public ::testing::TestWithParam<Parameters> {
  public:
-  PplCvCudaFilter2DTest() {
+  PplCvCudaBoxFilterTest() {
     const Parameters& parameters = GetParam();
     ksize       = std::get<0>(parameters);
     delta       = std::get<1>(parameters) / 10.f;
@@ -69,7 +69,7 @@ class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
     size        = std::get<3>(parameters);
   }
 
-  ~PplCvCudaFilter2DTest() {
+  ~PplCvCudaBoxFilterTest() {
   }
 
   bool apply();
@@ -82,7 +82,7 @@ class PplCvCudaFilter2DTest : public ::testing::TestWithParam<Parameters> {
 };
 
 template <typename Tsrc, typename Tdst, int channels>
-bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
+bool PplCvCudaBoxFilterTest<Tsrc, Tdst, channels>::apply() {
   cv::Mat src, kernel0;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels));
@@ -158,17 +158,17 @@ bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
 }
 
 #define UNITTEST(Tsrc, Tdst, channels)                                         \
-using PplCvCudaFilter2DTest ## Tsrc ## channels =                              \
-        PplCvCudaFilter2DTest<Tsrc, Tdst, channels>;                           \
-TEST_P(PplCvCudaFilter2DTest ## Tsrc ## channels, Standard) {                  \
+using PplCvCudaBoxFilterTest ## Tsrc ## channels =                              \
+        PplCvCudaBoxFilterTest<Tsrc, Tdst, channels>;                           \
+TEST_P(PplCvCudaBoxFilterTest ## Tsrc ## channels, Standard) {                  \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaFilter2DTest ## Tsrc ## channels,    \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaBoxFilterTest ## Tsrc ## channels,    \
   ::testing::Combine(                                                          \
-    ::testing::Values(1, 5, 17, 25, 31, 43),                                   \
-    ::testing::Values(0, 1, 10, 43),                                           \
+    ::testing::Values(1, 3, 5, 13, 27, 43),                                    \
+    ::testing::Values(0, 1, 7, 10, 43),                                        \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
                       BORDER_TYPE_REFLECT_101),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
@@ -176,8 +176,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaFilter2DTest ## Tsrc ## channels,    \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaFilter2DTest ## Tsrc ## channels::ParamType>& info) {           \
-    return convertToStringFilter2D(info.param);                                \
+      PplCvCudaBoxFilterTest ## Tsrc ## channels::ParamType>& info) {           \
+    return convertToStringBoxFilter(info.param);                                \
   }                                                                            \
 );
 
@@ -187,3 +187,4 @@ UNITTEST(uchar, uchar, 4)
 UNITTEST(float, float, 1)
 UNITTEST(float, float, 3)
 UNITTEST(float, float, 4)
+ */

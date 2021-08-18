@@ -300,7 +300,7 @@ void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
            col_index < cols + radius) {
       index = interpolation(cols, radius, col_index);
       row_data[y_index][x_index] = input[index];
-      x_index    += kDimX0;
+      x_index   += kDimX0;
       col_index += kDimX0;
     }
 
