@@ -710,6 +710,96 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
 }
 
+template <typename Tdst, typename BorderInterpolation>
+__global__
+void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
+                     const float* kernel, int radius, bool is_symmetric,
+                     Tdst* dst, int dst_stride, float delta,
+                     BorderInterpolation interpolation) {
+  __shared__ Tdst data[kBlockDimY1][kBlockDimX1 << 2];
+
+  int element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_x >= cols || element_y >= rows) {
+    return;
+  }
+
+  int origin_y = element_y - radius;
+  int top_y    = element_y + radius;
+  if (!is_symmetric) {
+    top_y -= 1;
+  }
+
+  int data_index, kernel_index = 0;
+  float* input;
+  float value;
+  float sum = 0.f;
+
+  bool isnt_border_block = true;
+  data_index = radius >> kBlockShiftY1;
+  if (blockIdx.y <= data_index) isnt_border_block = false;
+  data_index = (rows - radius) >> kBlockShiftY1;
+  if (blockIdx.y >= data_index) isnt_border_block = false;
+
+  if (isnt_border_block) {
+    for (int i = origin_y; i <= top_y; i++) {
+      input = (float*)((uchar*)src + i * src_stride);
+      value = input[element_x];
+      sum += value * kernel[kernel_index];
+      kernel_index++;
+    }
+  }
+  else {
+    for (int i = origin_y; i <= top_y; i++) {
+      data_index = interpolation(rows, radius, i);
+      input = (float*)((uchar*)src + data_index * src_stride);
+      value = input[element_x];
+      sum += value * kernel[kernel_index];
+      kernel_index++;
+    }
+  }
+
+  if (delta != 0.f) {
+    sum += delta;
+  }
+
+  if (sizeof(Tdst) == 1) {
+    data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
+  }
+  __syncthreads();
+
+  Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
+  if (sizeof(Tdst) == 1) {
+    if (threadIdx.x < kBlockDimX1) {
+      element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+      data_index = threadIdx.x << 2;
+      if (element_x <= cols - 4) {
+        output[element_x]     = data[threadIdx.y][data_index];
+        output[element_x + 1] = data[threadIdx.y][data_index + 1];
+        output[element_x + 2] = data[threadIdx.y][data_index + 2];
+        output[element_x + 3] = data[threadIdx.y][data_index + 3];
+      }
+      else if (element_x < cols) {
+        output[element_x] = data[threadIdx.y][data_index];
+        if (element_x < cols - 1) {
+          output[element_x + 1] = data[threadIdx.y][data_index + 1];
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = data[threadIdx.y][data_index + 2];
+        }
+        if (element_x < cols - 3) {
+          output[element_x + 3] = data[threadIdx.y][data_index + 3];
+        }
+      }
+      else {
+      }
+    }
+  }
+  else {
+    output[element_x] = sum;
+  }
+}
+
 template <typename Tsrcn, typename Tdst, typename Tdstn,
           typename BorderInterpolation>
 __global__
@@ -784,9 +874,9 @@ if (channels == 1) {                                                           \
         dst, dst_stride, delta, interpolation);                                \
   }                                                                            \
   else {                                                                       \
-    colFilterKernel<float, Tdst, Tdst, Interpolation><<<grid, block, 0,        \
-        stream>>>(buffer, rows, cols, pitch, kernel_y, radius, is_symmetric,   \
-        dst, dst_stride, delta, interpolation);                                \
+    colBatch4Kernel<Tdst, Interpolation><<<grid4, block4, 0, stream>>>(buffer, \
+        rows, columns, pitch, kernel_y, radius, is_symmetric, dst, dst_stride, \
+        delta, interpolation);                                                 \
   }                                                                            \
 }                                                                              \
 else if (channels == 3) {                                                      \
@@ -802,9 +892,9 @@ else if (channels == 3) {                                                      \
     rowFilterKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block, \
         0, stream>>>(src, rows, cols, src_stride, kernel_x, radius,            \
         is_symmetric, buffer, pitch, interpolation);                           \
-    colFilterKernel<float ## 3, Tdst, Tdst ## 3, Interpolation><<<grid, block, \
-        0, stream>>>(buffer, rows, cols, pitch, kernel_y, radius, is_symmetric,\
-        dst, dst_stride, delta, interpolation);                                \
+    colBatch4Kernel<Tdst, Interpolation><<<grid4, block4, 0, stream>>>(buffer, \
+        rows, columns, pitch, kernel_y, radius, is_symmetric, dst, dst_stride, \
+        delta, interpolation);                                                 \
   }                                                                            \
 }                                                                              \
 else {                                                                         \
@@ -922,6 +1012,12 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   int columns4 = divideUp(columns, 4, 2);
   grid3.x = divideUp(columns4, kDimX0, kShiftX0);
   grid3.y = divideUp(rows, kDimY0, kShiftY0);
+
+  dim3 block4, grid4;
+  block4.x = (kBlockDimX1 << 2);
+  block4.y = kBlockDimY1;
+  grid4.x  = divideUp(columns, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
+  grid4.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
   float* buffer;
   size_t pitch;
@@ -1049,6 +1145,12 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
   int columns4 = divideUp(columns, 4, 2);
   grid3.x = divideUp(columns4, kDimX0, kShiftX0);
   grid3.y = divideUp(rows, kDimY0, kShiftY0);
+
+  dim3 block4, grid4;
+  block4.x = (kBlockDimX1 << 2);
+  block4.y = kBlockDimY1;
+  grid4.x  = divideUp(columns, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
+  grid4.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
   float* buffer;
   size_t pitch;

@@ -169,6 +169,36 @@ TEST_P(PplCvCudaSepFilter2DTest ## Tsrc ## channels, Standard) {               \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaSepFilter2DTest ## Tsrc ## channels,                                \
   ::testing::Combine(                                                          \
+    ::testing::Values(34, 38, 43),                                    \
+    ::testing::Values(0, 10, 43),                                              \
+    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
+                      BORDER_TYPE_REFLECT_101),                                \
+    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
+                      cv::Size{1283, 720}, cv::Size{1934, 1080},               \
+                      cv::Size{320, 240}, cv::Size{640, 480},                  \
+                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
+  [](const testing::TestParamInfo<                                             \
+      PplCvCudaSepFilter2DTest ## Tsrc ## channels::ParamType>& info) {        \
+    return convertToStringFilter2D(info.param);                                \
+  }                                                                            \
+);
+
+UNITTEST(uchar, uchar, 1)
+UNITTEST(uchar, uchar, 3)
+UNITTEST(float, float, 1)
+UNITTEST(float, float, 3)
+/*
+#define UNITTEST(Tsrc, Tdst, channels)                                         \
+using PplCvCudaSepFilter2DTest ## Tsrc ## channels =                           \
+        PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>;                        \
+TEST_P(PplCvCudaSepFilter2DTest ## Tsrc ## channels, Standard) {               \
+  bool identity = this->apply();                                               \
+  EXPECT_TRUE(identity);                                                       \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
+  PplCvCudaSepFilter2DTest ## Tsrc ## channels,                                \
+  ::testing::Combine(                                                          \
     ::testing::Values(1, 4, 5, 13, 28, 43),                                    \
     ::testing::Values(0, 10, 43),                                              \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
@@ -188,4 +218,4 @@ UNITTEST(uchar, uchar, 3)
 UNITTEST(uchar, uchar, 4)
 UNITTEST(float, float, 1)
 UNITTEST(float, float, 3)
-UNITTEST(float, float, 4)
+UNITTEST(float, float, 4) */

@@ -826,7 +826,6 @@ void colFilterKernel(const float* src, int rows, int cols, int src_stride,
   output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
 }
 
-
 #define RUN_CHANNEL1_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
 Interpolation interpolation;                                                   \
 rowColC1Kernel<Tsrc, Tdst, Interpolation><<<grid, block, 0, stream>>>(src,     \
