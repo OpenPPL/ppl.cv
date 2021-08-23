@@ -381,6 +381,30 @@ void operator+=(float3 &result, float3 &value) {
 }
 
 __DEVICE__
+void operator+=(float4 &result, uchar value) {
+  result.x += value;
+}
+
+__DEVICE__
+void operator+=(float4 &result, float value) {
+  result.x += value;
+}
+
+__DEVICE__
+void operator+=(float4 &result, uchar3 &value) {
+  result.x += value.x;
+  result.y += value.y;
+  result.z += value.z;
+}
+
+__DEVICE__
+void operator+=(float4 &result, float3 &value) {
+  result.x += value.x;
+  result.y += value.y;
+  result.z += value.z;
+}
+
+__DEVICE__
 void operator/=(float3 &result, int value) {
   result.x = result.x / value;
   result.y = result.y / value;
@@ -507,6 +531,27 @@ void mulAdd(float4 &result, float4 &value0, float value1) {
   result.y += value0.y * value1;
   result.z += value0.z * value1;
   result.w += value0.w * value1;
+}
+
+template <typename T>
+__DEVICE__
+T transform(float4 &src);
+
+template <>
+__DEVICE__
+float3 transform(float4 &src) {
+  float3 dst;
+  dst.x = src.x;
+  dst.y = src.y;
+  dst.z = src.z;
+
+  return dst;
+}
+
+template <>
+__DEVICE__
+float4 transform(float4 &src) {
+  return src;
 }
 
 struct ConstantBorder {

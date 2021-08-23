@@ -607,7 +607,7 @@ RetCode filter2D(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  unsigned int radius = ksize >> 1;
+  int radius = ksize >> 1;
 
   cudaError_t code;
   if (ksize <= SMALL_KSIZE0 && channels == 1) {
@@ -713,7 +713,7 @@ RetCode filter2D(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  unsigned int radius = ksize >> 1;
+  int radius = ksize >> 1;
 
   cudaError_t code;
   if (ksize <= SMALL_KSIZE0 && channels == 1) {

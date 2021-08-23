@@ -41,13 +41,13 @@ namespace cuda {
  * @param inData         input image data.
  * @param ksize_x        the length of kernel in X direction.
  * @param ksize_y        the length of kernel in Y direction.
- * @param normalize      whether the kernel is normalized by its area or not
+ * @param normalize      whether the kernel is normalized by its area or not.
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
- * @param border_type    ways to deal with border. Only BORDER_TYPE_REFLECT,
- *                       BORDER_TYPE_REFLECT_101 or BORDER_TYPE_DEFAULT are
- *                       supported now.
+ * @param border_type    ways to deal with border. BORDER_TYPE_REPLICATE,
+ *                       BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
+ *                       BORDER_TYPE_DEFAULT are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.

@@ -27,27 +27,6 @@ namespace cuda {
 #define RADIUS 8
 #define SMALL_KSIZE RADIUS * 2 + 1
 
-template <typename T>
-__DEVICE__
-T transform(float4 &src);
-
-template <>
-__DEVICE__
-float3 transform(float4 &src) {
-  float3 dst;
-  dst.x = src.x;
-  dst.y = src.y;
-  dst.z = src.z;
-
-  return dst;
-}
-
-template <>
-__DEVICE__
-float4 transform(float4 &src) {
-  return src;
-}
-
 template <typename Tsrc, typename Tdst, typename BorderInterpolation>
 __global__
 void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
@@ -866,7 +845,7 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  unsigned int radius = ksize >> 1;
+  int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
   cudaError_t code;
@@ -993,7 +972,7 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  unsigned int radius = ksize >> 1;
+  int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
   cudaError_t code;
