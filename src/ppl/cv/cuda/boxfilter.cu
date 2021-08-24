@@ -904,8 +904,7 @@ else {                                                                         \
 RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
                   int src_stride, int ksize_x, int ksize_y, bool normalize,
                   uchar* dst, int dst_stride, BorderType border_type,
-                  cudaStream_t stream)
-{
+                  cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
@@ -1052,8 +1051,7 @@ RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
 RetCode boxFilter(const float* src, int rows, int cols, int channels,
                   int src_stride, int ksize_x, int ksize_y, bool normalize,
                   float* dst, int dst_stride, BorderType border_type,
-                  cudaStream_t stream)
-{
+                  cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);

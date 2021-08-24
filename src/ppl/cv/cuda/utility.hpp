@@ -310,30 +310,33 @@ float3 saturate_cast_vector(float4 value) {
 }
 
 __DEVICE__
+float3 operator+(float3 &value0, float3 &value1) {
+  float3 result;
+  result.x = value0.x + value1.x;
+  result.y = value0.y + value1.y;
+  result.z = value0.z + value1.z;
+
+  return result;
+}
+
+__DEVICE__
+float4 operator+(float4 &value0, float4 &value1) {
+  float4 result;
+  result.x = value0.x + value1.x;
+  result.y = value0.y + value1.y;
+  result.z = value0.z + value1.z;
+  result.w = value0.w + value1.w;
+
+  return result;
+}
+
+__DEVICE__
 float2 operator*(float value0, uchar2 value1) {
   float2 result;
   result.x = value0 * value1.x;
   result.y = value0 * value1.y;
 
   return result;
-}
-
-__DEVICE__
-void operator+=(float2 &result, uchar2 &value) {
-  result.x += value.x;
-  result.y += value.y;
-}
-
-__DEVICE__
-void operator+=(float2 &result, float2 &value) {
-  result.x += value.x;
-  result.y += value.y;
-}
-
-__DEVICE__
-void operator/=(float2 &result, int value) {
-  result.x /= value;
-  result.y /= value;
 }
 
 __DEVICE__
@@ -357,13 +360,37 @@ float3 operator*(float value0, float3 value1) {
 }
 
 __DEVICE__
-float3 operator+(float3 &value0, float3 &value1) {
-  float3 result;
-  result.x = value0.x + value1.x;
-  result.y = value0.y + value1.y;
-  result.z = value0.z + value1.z;
+float4 operator*(float value0, uchar4 value1) {
+  float4 result;
+  result.x = value0 * value1.x;
+  result.y = value0 * value1.y;
+  result.z = value0 * value1.z;
+  result.w = value0 * value1.w;
 
   return result;
+}
+
+__DEVICE__
+float4 operator*(float value0, float4 value1) {
+  float4 result;
+  result.x = value0 * value1.x;
+  result.y = value0 * value1.y;
+  result.z = value0 * value1.z;
+  result.w = value0 * value1.w;
+
+  return result;
+}
+
+__DEVICE__
+void operator+=(float2 &result, uchar2 &value) {
+  result.x += value.x;
+  result.y += value.y;
+}
+
+__DEVICE__
+void operator+=(float2 &result, float2 &value) {
+  result.x += value.x;
+  result.y += value.y;
 }
 
 __DEVICE__
@@ -405,53 +432,6 @@ void operator+=(float4 &result, float3 &value) {
 }
 
 __DEVICE__
-void operator/=(float3 &result, int value) {
-  result.x = result.x / value;
-  result.y = result.y / value;
-  result.z = result.z / value;
-}
-
-__DEVICE__
-void operator/=(float3 &result, float value) {
-  result.x = result.x / value;
-  result.y = result.y / value;
-  result.z = result.z / value;
-}
-
-__DEVICE__
-float4 operator*(float value0, uchar4 value1) {
-  float4 result;
-  result.x = value0 * value1.x;
-  result.y = value0 * value1.y;
-  result.z = value0 * value1.z;
-  result.w = value0 * value1.w;
-
-  return result;
-}
-
-__DEVICE__
-float4 operator*(float value0, float4 value1) {
-  float4 result;
-  result.x = value0 * value1.x;
-  result.y = value0 * value1.y;
-  result.z = value0 * value1.z;
-  result.w = value0 * value1.w;
-
-  return result;
-}
-
-__DEVICE__
-float4 operator+(float4 &value0, float4 &value1) {
-  float4 result;
-  result.x = value0.x + value1.x;
-  result.y = value0.y + value1.y;
-  result.z = value0.z + value1.z;
-  result.w = value0.w + value1.w;
-
-  return result;
-}
-
-__DEVICE__
 void operator+=(float4 &result, uchar4 &value) {
   result.x += value.x;
   result.y += value.y;
@@ -465,6 +445,26 @@ void operator+=(float4 &result, float4 &value) {
   result.y += value.y;
   result.z += value.z;
   result.w += value.w;
+}
+
+__DEVICE__
+void operator/=(float2 &result, int value) {
+  result.x /= value;
+  result.y /= value;
+}
+
+__DEVICE__
+void operator/=(float3 &result, int value) {
+  result.x = result.x / value;
+  result.y = result.y / value;
+  result.z = result.z / value;
+}
+
+__DEVICE__
+void operator/=(float3 &result, float value) {
+  result.x = result.x / value;
+  result.y = result.y / value;
+  result.z = result.z / value;
 }
 
 __DEVICE__

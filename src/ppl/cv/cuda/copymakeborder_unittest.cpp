@@ -28,8 +28,9 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<int, int, BorderType, cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+inline std::string convertToStringBorder(const Parameters& parameters) {
   std::ostringstream formatted;
+
   int top = std::get<0>(parameters);
   formatted << "TopBottom" << top << "_";
 
@@ -103,6 +104,18 @@ bool PplCvCudaCopyMakeBorderTest<T, channels>::apply() {
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
 
+  int src_size = size.height * size.width * channels * sizeof(T);
+  int dst_size = (size.height + top + bottom) * (size.width + left + right) *
+                 channels * sizeof(T);
+  T* input  = (T*)malloc(src_size);
+  T* output = (T*)malloc(dst_size);
+  T* gpu_input;
+  T* gpu_output;
+  cudaMalloc((void**)&gpu_input, src_size);
+  cudaMalloc((void**)&gpu_output, dst_size);
+  copyMatToArray(src, input);
+  cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
+
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
@@ -121,25 +134,14 @@ bool PplCvCudaCopyMakeBorderTest<T, channels>::apply() {
   }
   else {
   }
-
   cv::copyMakeBorder(src, cv_dst, top, bottom, left, right, cv_border);
+
   CopyMakeBorder<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
                               (T*)gpu_src.data, gpu_dst.step / sizeof(T),
                               (T*)gpu_dst.data, top, bottom, left, right,
                               border_type);
   gpu_dst.download(dst);
 
-  int src_size = size.height * size.width * channels * sizeof(T);
-  int dst_size = (size.height + top + bottom) * (size.width + left + right) *
-                 channels * sizeof(T);
-  T* input  = (T*)malloc(src_size);
-  T* output = (T*)malloc(dst_size);
-  T* gpu_input;
-  T* gpu_output;
-  cudaMalloc((void**)&gpu_input, src_size);
-  cudaMalloc((void**)&gpu_output, dst_size);
-  copyMatToArray(src, input);
-  cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
   CopyMakeBorder<T, channels>(0, src.rows, src.cols, src.cols * channels,
                               gpu_input, dst.cols * channels,
                               gpu_output, top, bottom, left, right,
@@ -184,7 +186,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaCopyMakeBorderTest ## T ## channels, \
                       cv::Size{1283, 720}, cv::Size{1976, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaCopyMakeBorderTest ## T ## channels::ParamType>& info) {        \
-    return convertToString(info.param);                                        \
+    return convertToStringBorder(info.param);                                  \
   }                                                                            \
 );
 

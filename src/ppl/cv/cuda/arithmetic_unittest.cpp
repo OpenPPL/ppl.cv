@@ -36,7 +36,7 @@ enum ArithFunctions {
 };
 
 using Parameters = std::tuple<ArithFunctions, cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+inline std::string convertToStringArith(const Parameters& parameters) {
   std::ostringstream formatted;
 
   ArithFunctions function = std::get<0>(parameters);
@@ -223,7 +223,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaArithmeticTest ## T ## channels,     \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaArithmeticTest ## T ## channels::ParamType>& info) {            \
-    return convertToString(info.param);                                        \
+    return convertToStringArith(info.param);                                   \
   }                                                                            \
 );
 

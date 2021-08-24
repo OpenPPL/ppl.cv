@@ -27,9 +27,9 @@ namespace cuda {
 
 /**
  * @brief Transposes a 2D matrix.
- * @tparam T The data type, used for both source matrix and destination matrix,
+ * @tparam T The data type, used for both source image and destination image,
  *         currently only uint8_t(uchar) and float are supported.
- * @tparam numChannels The number of channels of input image, 1, 3 and 4 are
+ * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream         cuda stream object.
  * @param inHeight       input image's height.
@@ -92,7 +92,7 @@ namespace cuda {
  * }
  * @endcode
  */
-template <typename T, int numChannels>
+template <typename T, int channels>
 ppl::common::RetCode Transpose(cudaStream_t stream,
                                int inHeight,
                                int inWidth,

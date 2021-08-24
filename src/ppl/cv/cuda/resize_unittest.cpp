@@ -40,7 +40,7 @@ enum InterpolationTypes {
 };
 
 using Parameters = std::tuple<InterpolationTypes, Scaling, cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+inline std::string convertToStringResize(const Parameters& parameters) {
   std::ostringstream formatted;
 
   InterpolationTypes inter_type = (InterpolationTypes)std::get<0>(parameters);
@@ -204,7 +204,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaResizeTest ## T ## channels,         \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
        PplCvCudaResizeTest ## T ## channels::ParamType>& info) {               \
-    return convertToString(info.param);                                        \
+    return convertToStringResize(info.param);                                  \
   }                                                                            \
 );
 

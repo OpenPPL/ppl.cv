@@ -27,13 +27,13 @@ namespace cuda {
 
 /**
  * @brief Flips a 2D image around vertical, horizontal, or both axes.
- * @tparam T The data type, used for both source matrix and destination matrix,
+ * @tparam T The data type, used for both source image and destination image,
  *         currently only uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream         cuda stream object.
- * @param inHeight       input image's height.
- * @param inWidth        input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -100,8 +100,8 @@ namespace cuda {
  */
 template <typename T, int channels>
 ppl::common::RetCode Flip(cudaStream_t stream,
-                          int inHeight,
-                          int inWidth,
+                          int height,
+                          int width,
                           int inWidthStride,
                           const T* inData,
                           int outWidthStride,

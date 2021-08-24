@@ -32,8 +32,8 @@ namespace cuda {
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -105,8 +105,8 @@ ppl::common::RetCode BGR2BGRA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -178,8 +178,8 @@ ppl::common::RetCode RGB2RGBA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -251,8 +251,8 @@ ppl::common::RetCode BGRA2BGR(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -324,8 +324,8 @@ ppl::common::RetCode RGBA2RGB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -397,8 +397,8 @@ ppl::common::RetCode BGR2RGBA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -470,8 +470,8 @@ ppl::common::RetCode RGB2BGRA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -543,8 +543,8 @@ ppl::common::RetCode RGBA2BGR(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -618,8 +618,8 @@ ppl::common::RetCode BGRA2RGB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -691,8 +691,8 @@ ppl::common::RetCode BGR2RGB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -766,8 +766,8 @@ ppl::common::RetCode RGB2BGR(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -839,8 +839,8 @@ ppl::common::RetCode BGRA2RGBA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -914,8 +914,8 @@ ppl::common::RetCode RGBA2BGRA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -987,8 +987,8 @@ ppl::common::RetCode BGR2GRAY(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1060,8 +1060,8 @@ ppl::common::RetCode RGB2GRAY(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1133,8 +1133,8 @@ ppl::common::RetCode BGRA2GRAY(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1206,8 +1206,8 @@ ppl::common::RetCode RGBA2GRAY(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1279,8 +1279,8 @@ ppl::common::RetCode GRAY2BGR(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1352,8 +1352,8 @@ ppl::common::RetCode GRAY2RGB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1425,8 +1425,8 @@ ppl::common::RetCode GRAY2BGRA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1500,8 +1500,8 @@ ppl::common::RetCode GRAY2RGBA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1573,8 +1573,8 @@ ppl::common::RetCode BGR2YCrCb(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1646,8 +1646,8 @@ ppl::common::RetCode RGB2YCrCb(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1719,8 +1719,8 @@ ppl::common::RetCode BGRA2YCrCb(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1792,8 +1792,8 @@ ppl::common::RetCode RGBA2YCrCb(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1865,8 +1865,8 @@ ppl::common::RetCode YCrCb2BGR(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -1938,8 +1938,8 @@ ppl::common::RetCode YCrCb2RGB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2011,8 +2011,8 @@ ppl::common::RetCode YCrCb2BGRA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2086,8 +2086,8 @@ ppl::common::RetCode YCrCb2RGBA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2160,8 +2160,8 @@ ppl::common::RetCode BGR2HSV(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2234,8 +2234,8 @@ ppl::common::RetCode RGB2HSV(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2308,8 +2308,8 @@ ppl::common::RetCode BGRA2HSV(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2382,8 +2382,8 @@ ppl::common::RetCode RGBA2HSV(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2456,8 +2456,8 @@ ppl::common::RetCode HSV2BGR(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2530,8 +2530,8 @@ ppl::common::RetCode HSV2RGB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2604,8 +2604,8 @@ ppl::common::RetCode HSV2BGRA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2680,8 +2680,8 @@ ppl::common::RetCode HSV2RGBA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2753,8 +2753,8 @@ ppl::common::RetCode BGR2LAB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2826,8 +2826,8 @@ ppl::common::RetCode RGB2LAB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2899,8 +2899,8 @@ ppl::common::RetCode BGRA2LAB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -2972,8 +2972,8 @@ ppl::common::RetCode RGBA2LAB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3045,8 +3045,8 @@ ppl::common::RetCode LAB2BGR(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3118,8 +3118,8 @@ ppl::common::RetCode LAB2RGB(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3191,8 +3191,8 @@ ppl::common::RetCode LAB2BGRA(cudaStream_t stream,
  * @tparam T The data type, used for both input image and output image,
  *           currently only \a uint8_t(uchar) and \a float are supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3265,8 +3265,8 @@ ppl::common::RetCode LAB2RGBA(cudaStream_t stream,
  * @brief Convert BGR images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3345,8 +3345,8 @@ ppl::common::RetCode BGR2NV12(cudaStream_t stream,
  * @brief Convert BGR images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3427,8 +3427,8 @@ ppl::common::RetCode BGR2NV12(cudaStream_t stream,
  * @brief Convert RGB images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3507,8 +3507,8 @@ ppl::common::RetCode RGB2NV12(cudaStream_t stream,
  * @brief Convert RGB images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3589,8 +3589,8 @@ ppl::common::RetCode RGB2NV12(cudaStream_t stream,
  * @brief Convert BGRA images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3669,8 +3669,8 @@ ppl::common::RetCode BGRA2NV12(cudaStream_t stream,
  * @brief Convert BGRA images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3751,8 +3751,8 @@ ppl::common::RetCode BGRA2NV12(cudaStream_t stream,
  * @brief Convert RGBA images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3831,8 +3831,8 @@ ppl::common::RetCode RGBA2NV12(cudaStream_t stream,
  * @brief Convert RGBA images to NV12 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3913,8 +3913,8 @@ ppl::common::RetCode RGBA2NV12(cudaStream_t stream,
  * @brief Convert NV12 images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -3993,8 +3993,8 @@ ppl::common::RetCode NV122BGR(cudaStream_t stream,
  * @brief Convert NV12 images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -4074,8 +4074,8 @@ ppl::common::RetCode NV122BGR(cudaStream_t stream,
  * @brief Convert NV12 images to RGB images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4154,8 +4154,8 @@ ppl::common::RetCode NV122RGB(cudaStream_t stream,
  * @brief Convert NV12 images to RGB images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -4235,8 +4235,8 @@ ppl::common::RetCode NV122RGB(cudaStream_t stream,
  * @brief Convert NV12 images to BGRA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4315,8 +4315,8 @@ ppl::common::RetCode NV122BGRA(cudaStream_t stream,
  * @brief Convert NV12 images to BGRA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -4396,8 +4396,8 @@ ppl::common::RetCode NV122BGRA(cudaStream_t stream,
  * @brief Convert NV12 images to RGBA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4476,8 +4476,8 @@ ppl::common::RetCode NV122RGBA(cudaStream_t stream,
  * @brief Convert NV12 images to RGBA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -4559,8 +4559,8 @@ ppl::common::RetCode NV122RGBA(cudaStream_t stream,
  * @brief Convert BGR images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4639,8 +4639,8 @@ ppl::common::RetCode BGR2NV21(cudaStream_t stream,
  * @brief Convert BGR images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4721,8 +4721,8 @@ ppl::common::RetCode BGR2NV21(cudaStream_t stream,
  * @brief Convert RGB images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4801,8 +4801,8 @@ ppl::common::RetCode RGB2NV21(cudaStream_t stream,
  * @brief Convert RGB images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4883,8 +4883,8 @@ ppl::common::RetCode RGB2NV21(cudaStream_t stream,
  * @brief Convert BGRA images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -4963,8 +4963,8 @@ ppl::common::RetCode BGRA2NV21(cudaStream_t stream,
  * @brief Convert BGRA images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5045,8 +5045,8 @@ ppl::common::RetCode BGRA2NV21(cudaStream_t stream,
  * @brief Convert RGBA images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5125,8 +5125,8 @@ ppl::common::RetCode RGBA2NV21(cudaStream_t stream,
  * @brief Convert RGBA images to NV21 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5207,8 +5207,8 @@ ppl::common::RetCode RGBA2NV21(cudaStream_t stream,
  * @brief Convert NV21 images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5287,8 +5287,8 @@ ppl::common::RetCode NV212BGR(cudaStream_t stream,
  * @brief Convert NV21 images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -5368,8 +5368,8 @@ ppl::common::RetCode NV212BGR(cudaStream_t stream,
  * @brief Convert NV21 images to RGB images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5448,8 +5448,8 @@ ppl::common::RetCode NV212RGB(cudaStream_t stream,
  * @brief Convert NV21 images to RGB images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -5529,8 +5529,8 @@ ppl::common::RetCode NV212RGB(cudaStream_t stream,
  * @brief Convert NV21 images to BGRA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5609,8 +5609,8 @@ ppl::common::RetCode NV212BGRA(cudaStream_t stream,
  * @brief Convert NV21 images to BGRA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -5690,8 +5690,8 @@ ppl::common::RetCode NV212BGRA(cudaStream_t stream,
  * @brief Convert NV21 images to RGBA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5770,8 +5770,8 @@ ppl::common::RetCode NV212RGBA(cudaStream_t stream,
  * @brief Convert NV21 images to RGBA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -5853,8 +5853,8 @@ ppl::common::RetCode NV212RGBA(cudaStream_t stream,
  * @brief Convert RGB images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -5933,8 +5933,8 @@ ppl::common::RetCode RGB2I420(cudaStream_t stream,
  * @brief Convert RGB images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6025,8 +6025,8 @@ ppl::common::RetCode RGB2I420(cudaStream_t stream,
  * @brief Convert BGR images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6105,8 +6105,8 @@ ppl::common::RetCode BGR2I420(cudaStream_t stream,
  * @brief Convert BGR images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6197,8 +6197,8 @@ ppl::common::RetCode BGR2I420(cudaStream_t stream,
  * @brief Convert BGRA images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6276,8 +6276,8 @@ ppl::common::RetCode BGRA2I420(cudaStream_t stream,
  * @brief Convert BGRA images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6368,8 +6368,8 @@ ppl::common::RetCode BGRA2I420(cudaStream_t stream,
  * @brief Convert RGBA images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6447,8 +6447,8 @@ ppl::common::RetCode RGBA2I420(cudaStream_t stream,
  * @brief Convert RGBA images to I420 images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6539,8 +6539,8 @@ ppl::common::RetCode RGBA2I420(cudaStream_t stream,
  * @brief Convert I420 images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6619,8 +6619,8 @@ ppl::common::RetCode I4202BGR(cudaStream_t stream,
  * @brief Convert I420 images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      Y-channel width stride of input image, it is `width`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6711,8 +6711,8 @@ ppl::common::RetCode I4202BGR(cudaStream_t stream,
  * @brief Convert I420 images to RGB images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6791,8 +6791,8 @@ ppl::common::RetCode I4202RGB(cudaStream_t stream,
  * @brief Convert I420 images to RGB images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      Y-channel width stride of input image, it is `width`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6883,8 +6883,8 @@ ppl::common::RetCode I4202RGB(cudaStream_t stream,
  * @brief Convert I420 images to BGRA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -6963,8 +6963,8 @@ ppl::common::RetCode I4202BGRA(cudaStream_t stream,
  * @brief Convert I420 images to BGRA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      Y-channel width stride of input image, it is `width`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7055,8 +7055,8 @@ ppl::common::RetCode I4202BGRA(cudaStream_t stream,
  * @brief Convert I420 images to RGBA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7135,8 +7135,8 @@ ppl::common::RetCode I4202RGBA(cudaStream_t stream,
  * @brief Convert I420 images to RGBA images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      Y-channel width stride of input image, it is `width`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7229,8 +7229,8 @@ ppl::common::RetCode I4202RGBA(cudaStream_t stream,
  * @brief Convert YUV images to GRAY images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7301,8 +7301,8 @@ ppl::common::RetCode YUV2GRAY(cudaStream_t stream,
  * @brief Convert BGR images to UYVY images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7373,8 +7373,8 @@ ppl::common::RetCode BGR2UYVY(cudaStream_t stream,
  * @brief Convert UYVY images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7444,8 +7444,8 @@ ppl::common::RetCode UYVY2BGR(cudaStream_t stream,
  * @brief Convert UYVY images to GRAY images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7515,8 +7515,8 @@ ppl::common::RetCode UYVY2GRAY(cudaStream_t stream,
  * @brief Convert YUYV images to BGR images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7586,8 +7586,8 @@ ppl::common::RetCode YUYV2BGR(cudaStream_t stream,
  * @brief Convert YUYV images to GRAY images.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7657,8 +7657,8 @@ ppl::common::RetCode YUYV2GRAY(cudaStream_t stream,
  * @brief Convert NV21 images to I420 images,format: YYYYUVUVUVUV -> YYYYUUUUVVVV.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -7755,8 +7755,8 @@ ppl::common::RetCode NV122I420(cudaStream_t stream,
  * @brief Convert NV21 images to I420 images,format: YYYYVUVUVUVU -> YYYYUUUUVVVV.
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      input image's width stride, it is `width` for
  *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
  *                       2D cudaMallocPitch() allocated data.
@@ -7851,8 +7851,8 @@ ppl::common::RetCode NV212I420(cudaStream_t stream,
  * @brief Convert I420 images to NV12 images,format: YYYYUUUUVVVV -> YYYYUVUVUVUV
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
  * @param stream         cuda stream object.
- * @param height         input image's height.
- * @param width          input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      Y-channel width stride of input image, it is `width`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -7948,9 +7948,9 @@ ppl::common::RetCode I4202NV12(cudaStream_t stream,
 /**
  * @brief Convert I420 images to NV21 images,format: YYYYUUUUVVVV -> YYYYVUVUVUVU
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t(uchar) is supported.
- * @param stream            cuda stream object
- * @param height            input image's height
- * @param width             input image's width need to be processed
+ * @param stream         cuda stream object.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inYStride      Y-channel width stride of input image, it is `width`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.

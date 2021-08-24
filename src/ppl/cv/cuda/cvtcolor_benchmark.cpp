@@ -66,22 +66,6 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
   state.SetItemsProcessed(state.iterations() * 1);                             \
 }
 
-#define BENCHMARK_OPENCV_X86(Function)                                         \
-template<typename T, int src_channel, int dst_channel>                         \
-void BM_CvtColor ## Function ## opencv_x86_cuda(benchmark::State &state) {     \
-  int width  = state.range(0);                                                 \
-  int height = state.range(1);                                                 \
-  cv::Mat src;                                                                 \
-  src = createSourceImage(height, width,                                       \
-                          CV_MAKETYPE(cv::DataType<T>::depth, src_channel));   \
-  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, dst_channel));\
-                                                                               \
-  for (auto _ : state) {                                                       \
-    cv::cvtColor(src, dst, cv::COLOR_ ## Function);                            \
-  }                                                                            \
-  state.SetItemsProcessed(state.iterations() * 1);                             \
-}
-
 #define BENCHMARK_OPENCV_CUDA(Function)                                        \
 template<typename T, int src_channel, int dst_channel>                         \
 void BM_CvtColor ## Function ## _opencv_cuda(benchmark::State &state) {        \
@@ -112,6 +96,22 @@ void BM_CvtColor ## Function ## _opencv_cuda(benchmark::State &state) {        \
     int time = ((end.tv_sec * 1000000 + end.tv_usec) -                         \
                 (start.tv_sec * 1000000 + start.tv_usec)) / iterations;        \
     state.SetIterationTime(time * 1e-6);                                       \
+  }                                                                            \
+  state.SetItemsProcessed(state.iterations() * 1);                             \
+}
+
+#define BENCHMARK_OPENCV_X86(Function)                                         \
+template<typename T, int src_channel, int dst_channel>                         \
+void BM_CvtColor ## Function ## opencv_x86_cuda(benchmark::State &state) {     \
+  int width  = state.range(0);                                                 \
+  int height = state.range(1);                                                 \
+  cv::Mat src;                                                                 \
+  src = createSourceImage(height, width,                                       \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channel));   \
+  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, dst_channel));\
+                                                                               \
+  for (auto _ : state) {                                                       \
+    cv::cvtColor(src, dst, cv::COLOR_ ## Function);                            \
   }                                                                            \
   state.SetItemsProcessed(state.iterations() * 1);                             \
 }

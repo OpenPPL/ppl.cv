@@ -45,10 +45,10 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_kernel(kernel);
   cv::cuda::GpuMat gpu_dst(dst);
 
+  float delta = 0.f;
+
   int iterations = 1000;
   struct timeval start, end;
-
-  float delta = 0.f;
 
   // warm up the GPU
   for (int i = 0; i < iterations; i++) {
