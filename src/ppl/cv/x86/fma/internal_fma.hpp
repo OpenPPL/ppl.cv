@@ -198,5 +198,14 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
     const double *M,
     T delta);
 
-} } } } // namespace ppl::cv::x86::fma
+template <typename T, int nc>
+::ppl::common::RetCode splitAOS2SOA(
+    int height,
+    int width,
+    int inWidthStride,
+    const T *in,
+    int outWidthStride,
+    T **out);
+
+}}}} // namespace ppl::cv::x86::fma
 #endif //! PPL_CV_X86_INTERNAL_FMA_H_
