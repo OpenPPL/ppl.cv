@@ -1,2 +1,0 @@
-/usr/bin/ar qc libpplcommon_static.a CMakeFiles/pplcommon_static.dir/src/ppl/common/compact_memory_manager.cc.o CMakeFiles/pplcommon_static.dir/src/ppl/common/file_mapping.cc.o CMakeFiles/pplcommon_static.dir/src/ppl/common/half.cc.o CMakeFiles/pplcommon_static.dir/src/ppl/common/half_soft.cc.o CMakeFiles/pplcommon_static.dir/src/ppl/common/log.cc.o CMakeFiles/pplcommon_static.dir/src/ppl/common/sys.cc.o CMakeFiles/pplcommon_static.dir/src/ppl/common/x86/sysinfo.cc.o CMakeFiles/pplcommon_static.dir/src/ppl/common/x86/cpuid_x86_64.S.o
-/usr/bin/ranlib libpplcommon_static.a

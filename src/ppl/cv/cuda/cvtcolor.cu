@@ -464,10 +464,6 @@ void cvtColorI4202NVKernel(const uchar* src_y, int rows, int cols,
   else {
     output_uv[index_x] = make_uchar2(value_v, value_u);
   }
-
-  // if (index_x == 0 && index_y == 0) {
-  //   printf("in cvtColorI4202NVKernel kernel.\n");
-  // }
 }
 
 RetCode I4202NV12(const uchar* src_y, int rows, int cols, int src_y_stride,

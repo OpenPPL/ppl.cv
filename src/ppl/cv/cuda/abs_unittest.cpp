@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "abs.h"
+#include "ppl/cv/cuda/abs.h"
 
 #include <tuple>
 #include <sstream>

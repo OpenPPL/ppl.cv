@@ -40,7 +40,7 @@ enum InterpolationTypes {
 
 using Parameters = std::tuple<InterpolationTypes, BorderType, Scaling,
                               cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+inline std::string convertToStringWarpAffine(const Parameters& parameters) {
   std::ostringstream formatted;
 
   InterpolationTypes inter_type = (InterpolationTypes)std::get<0>(parameters);
@@ -228,7 +228,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaWarpAffineTest ## T ## channels,     \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
        PplCvCudaWarpAffineTest ## T ## channels::ParamType>& info) {           \
-    return convertToString(info.param);                                        \
+    return convertToStringWarpAffine(info.param);                              \
   }                                                                            \
 );
 

@@ -52,7 +52,7 @@ void BM_WarpAffine_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     WarpAffineNearestPoint<T, channels>(0, src.rows, src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
@@ -119,7 +119,7 @@ void BM_WarpAffine_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::cuda::warpAffine(gpu_src, gpu_dst, M, cv::Size(dst_width, dst_height),
                          cv::WARP_INVERSE_MAP | cv::INTER_LINEAR, cv_border);
@@ -357,17 +357,12 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, c4, inter_type,              \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_TRANSPARENT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_TRANSPARENT)
-
 RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_CONSTANT)
 RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_TRANSPARENT)
 RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_CONSTANT)
 RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_TRANSPARENT)
 
 RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_CONSTANT)
 RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_REPLICATE)

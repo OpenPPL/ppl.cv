@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "transpose.h"
+#include "ppl/cv/cuda/transpose.h"
 
 #include "utility.hpp"
 
@@ -30,8 +30,7 @@ namespace cuda {
 template <typename T>
 __global__
 void transposeKernel(const T* src, int rows, int cols, int src_stride, T* dst,
-                     int dst_stride)
-{
+                     int dst_stride) {
   __shared__ T data[LENGTH][LENGTH + 1];
   int element_x = (blockIdx.x << SHIFT) + threadIdx.x;
   int element_y = (blockIdx.y << SHIFT) + threadIdx.y;
@@ -71,8 +70,7 @@ void transposeKernel(const T* src, int rows, int cols, int src_stride, T* dst,
 
 RetCode transpose(const uchar* src, int rows, int cols, int channels,
                   int src_stride, uchar* dst, int dst_stride,
-                  cudaStream_t stream)
-{
+                  cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
@@ -110,8 +108,7 @@ RetCode transpose(const uchar* src, int rows, int cols, int channels,
 
 RetCode transpose(const float* src, int rows, int cols, int channels,
                   int src_stride, float* dst, int dst_stride,
-                  cudaStream_t stream)
-{
+                  cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
@@ -154,8 +151,7 @@ RetCode Transpose<uchar, 1>(cudaStream_t stream,
                             int inWidthStride,
                             const uchar* inData,
                             int outWidthStride,
-                            uchar* outData)
-{
+                            uchar* outData) {
   RetCode code = transpose(inData, height, width, 1, inWidthStride, outData,
                            outWidthStride, stream);
 
@@ -169,8 +165,7 @@ RetCode Transpose<uchar, 3>(cudaStream_t stream,
                             int inWidthStride,
                             const uchar* inData,
                             int outWidthStride,
-                            uchar* outData)
-{
+                            uchar* outData) {
   RetCode code = transpose(inData, height, width, 3, inWidthStride, outData,
                            outWidthStride, stream);
 
@@ -184,8 +179,7 @@ RetCode Transpose<uchar, 4>(cudaStream_t stream,
                             int inWidthStride,
                             const uchar* inData,
                             int outWidthStride,
-                            uchar* outData)
-{
+                            uchar* outData) {
   RetCode code = transpose(inData, height, width, 4, inWidthStride, outData,
                            outWidthStride, stream);
 
@@ -199,8 +193,7 @@ RetCode Transpose<float, 1>(cudaStream_t stream,
                             int inWidthStride,
                             const float* inData,
                             int outWidthStride,
-                            float* outData)
-{
+                            float* outData) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = transpose(inData, height, width, 1, inWidthStride, outData,
@@ -216,8 +209,7 @@ RetCode Transpose<float, 3>(cudaStream_t stream,
                             int inWidthStride,
                             const float* inData,
                             int outWidthStride,
-                            float* outData)
-{
+                            float* outData) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = transpose(inData, height, width, 3, inWidthStride, outData,
@@ -233,8 +225,7 @@ RetCode Transpose<float, 4>(cudaStream_t stream,
                             int inWidthStride,
                             const float* inData,
                             int outWidthStride,
-                            float* outData)
-{
+                            float* outData) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = transpose(inData, height, width, 4, inWidthStride, outData,

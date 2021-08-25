@@ -50,7 +50,7 @@ void BM_Resize_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     ResizeLinear<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
                               (T*)gpu_src.data, dst_height, dst_width,
@@ -107,7 +107,7 @@ void BM_Resize_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::cuda::resize(gpu_src, gpu_dst, cv::Size(dst_width, dst_height), 0, 0,
                      cv::INTER_LINEAR);

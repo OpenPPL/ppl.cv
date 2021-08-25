@@ -36,7 +36,7 @@ enum Functions {
 };
 
 using Parameters = std::tuple<Functions, BorderType, int, cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+inline std::string convertToStringDilate(const Parameters& parameters) {
   std::ostringstream formatted;
 
   Functions function = std::get<0>(parameters);
@@ -204,7 +204,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaDilateTest ## T ## channels,         \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaDilateTest ## T ## channels::ParamType>& info) {                \
-    return convertToString(info.param);                                        \
+    return convertToStringDilate(info.param);                                  \
   }                                                                            \
 );
 

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "transpose.h"
+#include "ppl/cv/cuda/transpose.h"
 
 #include <tuple>
 #include <sstream>

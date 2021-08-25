@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "transpose.h"
+#include "ppl/cv/cuda/transpose.h"
 
 #include <time.h>
 #include <sys/time.h>
@@ -36,12 +36,12 @@ void BM_Transpose_ppl_cuda(benchmark::State &state) {
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
   cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(src.cols, src.rows, src.type());
+  cv::cuda::GpuMat gpu_dst(width, height, src.type());
 
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
@@ -73,12 +73,12 @@ void BM_Transpose_opencv_cuda(benchmark::State &state) {
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
   cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(src.cols, src.rows, src.type());
+  cv::cuda::GpuMat gpu_dst(width, height, src.type());
 
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::cuda::transpose(gpu_src, gpu_dst);
   }

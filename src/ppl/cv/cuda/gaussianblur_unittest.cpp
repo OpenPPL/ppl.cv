@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/copymakeborder.h"
+#include "ppl/cv/cuda/gaussianblur.h"
 
 #include <tuple>
 #include <sstream>
@@ -28,32 +28,27 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<int, int, BorderType, cv::Size>;
-inline std::string convertToStringBorder(const Parameters& parameters) {
+inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int top = std::get<0>(parameters);
-  formatted << "TopBottom" << top << "_";
+  int ksize = std::get<0>(parameters);
+  formatted << "Ksize" << ksize << "_";
 
-  int left = std::get<1>(parameters);
-  formatted << "LeftRight" << left << "_";
+  int int_sigma = std::get<1>(parameters);
+  formatted << "Sigma" << int_sigma << "_";
 
   BorderType border_type = (BorderType)std::get<2>(parameters);
-  if (border_type == BORDER_TYPE_CONSTANT) {
-    formatted << "BORDER_CONSTANT" << "_";
-  }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_TYPE_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_TYPE_WRAP) {
-    formatted << "BORDER_WRAP" << "_";
-  }
   else if (border_type == BORDER_TYPE_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {
+  else {  // border_type == BORDER_TYPE_DEFAULT
+    formatted << "BORDER_DEFAULT" << "_";
   }
 
   cv::Size size = std::get<3>(parameters);
@@ -64,96 +59,80 @@ inline std::string convertToStringBorder(const Parameters& parameters) {
 }
 
 template <typename T, int channels>
-class PplCvCudaCopyMakeBorderTest :
-  public ::testing::TestWithParam<Parameters> {
+class PplCvCudaGaussianBlurTest : public ::testing::TestWithParam<Parameters> {
  public:
-  PplCvCudaCopyMakeBorderTest() {
+  PplCvCudaGaussianBlurTest() {
     const Parameters& parameters = GetParam();
-    top         = std::get<0>(parameters);
-    left        = std::get<1>(parameters);
+    ksize       = std::get<0>(parameters);
+    sigma       = std::get<1>(parameters) / 10.f;
     border_type = std::get<2>(parameters);
     size        = std::get<3>(parameters);
-
-    bottom = top;
-    right  = left;
   }
 
-  ~PplCvCudaCopyMakeBorderTest() {
+  ~PplCvCudaGaussianBlurTest() {
   }
 
   bool apply();
 
  private:
-  int top;
-  int bottom;
-  int left;
-  int right;
+  int ksize;
+  float sigma;
   BorderType border_type;
   cv::Size size;
 };
 
 template <typename T, int channels>
-bool PplCvCudaCopyMakeBorderTest<T, channels>::apply() {
+bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   cv::Mat src;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  cv::Mat dst((size.height + top + bottom), (size.width + left + right),
+  cv::Mat dst(size.height, size.width,
               CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  cv::Mat cv_dst((size.height + top + bottom), (size.width + left + right),
+  cv::Mat cv_dst(size.height, size.width,
                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
 
   int src_size = size.height * size.width * channels * sizeof(T);
-  int dst_size = (size.height + top + bottom) * (size.width + left + right) *
-                 channels * sizeof(T);
   T* input  = (T*)malloc(src_size);
-  T* output = (T*)malloc(dst_size);
+  T* output = (T*)malloc(src_size);
   T* gpu_input;
   T* gpu_output;
   cudaMalloc((void**)&gpu_input, src_size);
-  cudaMalloc((void**)&gpu_output, dst_size);
+  cudaMalloc((void**)&gpu_output, src_size);
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_TYPE_CONSTANT) {
-    cv_border = cv::BORDER_CONSTANT;
-  }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_TYPE_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
-  }
-  else if (border_type == BORDER_TYPE_WRAP) {
-    cv_border = cv::BORDER_WRAP;
   }
   else if (border_type == BORDER_TYPE_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
   }
-  cv::copyMakeBorder(src, cv_dst, top, bottom, left, right, cv_border);
+  cv::GaussianBlur(src, cv_dst, cv::Size(ksize, ksize), sigma, sigma,
+                   cv_border);
 
-  CopyMakeBorder<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-                              (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-                              (T*)gpu_dst.data, top, bottom, left, right,
-                              border_type);
+  GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, sigma,
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  CopyMakeBorder<T, channels>(0, src.rows, src.cols, src.cols * channels,
-                              gpu_input, dst.cols * channels,
-                              gpu_output, top, bottom, left, right,
-                              border_type);
-  cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
+  GaussianBlur<T, channels>(0, size.height, size.width, size.width * channels,
+      gpu_input, ksize, sigma, size.width * channels, gpu_output, border_type);
+  cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
   if (sizeof(T) == 1) {
-    epsilon = EPSILON_1F;
+    epsilon = EPSILON_2F;
   }
   else {
-    epsilon = EPSILON_E6;
+    epsilon = EPSILON_E4;
   }
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
@@ -167,26 +146,27 @@ bool PplCvCudaCopyMakeBorderTest<T, channels>::apply() {
 }
 
 #define UNITTEST(T, channels)                                                  \
-using PplCvCudaCopyMakeBorderTest ## T ## channels =                           \
-        PplCvCudaCopyMakeBorderTest<T, channels>;                              \
-TEST_P(PplCvCudaCopyMakeBorderTest ## T ## channels, Standard) {               \
+using PplCvCudaGaussianBlurTest ## T ## channels =                             \
+        PplCvCudaGaussianBlurTest<T, channels>;                                \
+TEST_P(PplCvCudaGaussianBlurTest ## T ## channels, Standard) {                 \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaCopyMakeBorderTest ## T ## channels, \
+INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
+  PplCvCudaGaussianBlurTest ## T ## channels,                                  \
   ::testing::Combine(                                                          \
-    ::testing::Values(0, 11, 17),                                              \
-    ::testing::Values(0, 11, 17),                                              \
-    ::testing::Values(BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE,             \
-                      BORDER_TYPE_REFLECT, BORDER_TYPE_WRAP,                   \
+    ::testing::Values(1, 5, 13, 27, 43),                                       \
+    ::testing::Values(0, 1, 7, 10, 43),                                        \
+    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
                       BORDER_TYPE_REFLECT_101),                                \
-    ::testing::Values(cv::Size{11, 11}, cv::Size{25, 17},                      \
-                      cv::Size{320, 240}, cv::Size{647, 480},                  \
-                      cv::Size{1283, 720}, cv::Size{1976, 1080})),             \
+    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
+                      cv::Size{1283, 720}, cv::Size{1934, 1080},               \
+                      cv::Size{320, 240}, cv::Size{640, 480},                  \
+                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaCopyMakeBorderTest ## T ## channels::ParamType>& info) {        \
-    return convertToStringBorder(info.param);                                  \
+      PplCvCudaGaussianBlurTest ## T ## channels::ParamType>& info) {          \
+    return convertToStringGaussianBlur(info.param);                            \
   }                                                                            \
 );
 

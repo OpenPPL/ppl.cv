@@ -652,9 +652,9 @@ RetCode AddWeighted<uchar, 1>(cudaStream_t stream,
                               float gamma,
                               int outWidthStride,
                               uchar* outData) {
-  RetCode code =  addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -672,9 +672,9 @@ RetCode AddWeighted<uchar, 3>(cudaStream_t stream,
                               float gamma,
                               int outWidthStride,
                               uchar* outData) {
-  RetCode code =  addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -692,9 +692,9 @@ RetCode AddWeighted<uchar, 4>(cudaStream_t stream,
                               float gamma,
                               int outWidthStride,
                               uchar* outData) {
-  RetCode code =  addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -715,9 +715,9 @@ RetCode AddWeighted<float, 1>(cudaStream_t stream,
   inWidthStride0 *= sizeof(float);
   inWidthStride1 *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code =  addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -738,9 +738,9 @@ RetCode AddWeighted<float, 3>(cudaStream_t stream,
   inWidthStride0 *= sizeof(float);
   inWidthStride1 *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code =  addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -761,9 +761,9 @@ RetCode AddWeighted<float, 4>(cudaStream_t stream,
   inWidthStride0 *= sizeof(float);
   inWidthStride1 *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code =  addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -1089,7 +1089,7 @@ RetCode subtract(const uchar* src, int rows, int cols, int channels,
     value1 = scalar[1];
     value2 = scalar[2];
   }
-  else {  //  channels == 4
+  else {  // channels == 4
     value0 = scalar[0];
     value1 = scalar[1];
     value2 = scalar[2];
@@ -1153,7 +1153,7 @@ RetCode subtract(const float* src, int rows, int cols, int channels,
     value1 = scalar[1];
     value2 = scalar[2];
   }
-  else {  //  channels == 4
+  else {  // channels == 4
     value0 = scalar[0];
     value1 = scalar[1];
     value2 = scalar[2];

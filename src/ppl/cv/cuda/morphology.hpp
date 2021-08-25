@@ -22,13 +22,6 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-#define DEVICE_INLINE
-#if defined(DEVICE_INLINE)
-# define __DEVICE__ __device__ __forceinline__
-#else
-# define __DEVICE__ __device__
-#endif
-
 #define MAX_SIZE 1024
 
 /**************************** row&column filters *****************************/

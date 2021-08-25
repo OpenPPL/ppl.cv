@@ -1,3 +1,0 @@
-#use_cache "/home/sensetime/projects/github_opensource/ppl.cv/deps/opencv/.cache"
-#match_hash_in_cmake_cache "OCV_DOWNLOAD_IPPICV_HASH_opencv_build_3rdparty_ippicv_ippicv_2019_lnx_intel64_general_20180723_tgz"
-#match_hash_in_cmake_cache "OCV_DOWNLOAD_ADE_HASH_opencv_build_3rdparty_ade_v0_1_1f_zip"

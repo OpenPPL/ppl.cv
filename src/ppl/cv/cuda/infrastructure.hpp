@@ -28,7 +28,12 @@
 #include "utility.hpp"
 
 #define EPSILON_1F 1.1f
+#define EPSILON_2F 2.1f
+#define EPSILON_E1 1e-1
+#define EPSILON_E2 1e-2
+#define EPSILON_E3 0.002
 #define EPSILON_E4 1e-4
+#define EPSILON_E5 1e-5
 #define EPSILON_E6 1e-6
 
 #define AUX_ASSERT(expression)                                                 \
