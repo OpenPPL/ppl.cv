@@ -14,10 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_ERODE_H_
-#define _ST_HPC_PPL3_CV_CUDA_ERODE_H_
-
-#include <cfloat>
+#ifndef __ST_HPC_PPL3_CV_CUDA_BOXFILTER_H_
+#define __ST_HPC_PPL3_CV_CUDA_BOXFILTER_H_
 
 #include "cuda_runtime.h"
 
@@ -29,11 +27,11 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Erodes an image by using a specific structuring element.
+ * @brief Blurs an image using the box filter.
  * @tparam T The data type of input and output image, currently only
  *         uint8_t(uchar) and float are supported.
- * @tparam channels The number of channels of input image, 1, 3 and 4 are
- *         supported.
+ * @tparam channels The number of channels of input&output image, 1, 3 and 4
+ *         are supported.
  * @param stream         cuda stream object.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -41,25 +39,19 @@ namespace cuda {
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
  * @param inData         input image data.
- * @param kernelx_len    the length of mask, x direction.
- * @param kernely_len    the length of mask, y direction.
- * @param kernel         the mask used for erosion.
+ * @param ksize_x        the length of kernel in X direction.
+ * @param ksize_y        the length of kernel in Y direction.
+ * @param normalize      whether the kernel is normalized by its area or not.
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
- * @param border_type    ways to deal with border. BORDER_TYPE_CONSTANT,
- *                       BORDER_TYPE_TYPE_REPLICATE, BORDER_TYPE_REFLECT,
- *                       BORDER_TYPE_WRAP and BORDER_TYPE_REFLECT_101 are
- *                       supported now.
- * @param border_value   value for BORDER_TYPE_CONSTANT.
+ * @param border_type    ways to deal with border. BORDER_TYPE_REPLICATE,
+ *                       BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
+ *                       BORDER_TYPE_DEFAULT are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 The destination matrix has the same data type, size, stride, and
- *         channels as the source matrix.
- *       3 kernel must be a single channel matrix and stored in host memory as
- *         an uchar 1D array.
- *       4 The anchor is at the kernel center.
+ *       2 The anchor is at the kernel center.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -74,19 +66,20 @@ namespace cuda {
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>CUDA platforms supported<td>CUDA 7.0
- * <tr><td>Header files <td>#include "ppl/cv/cuda/erode.h"
+ * <tr><td>Header files <td>#include "ppl/cv/cuda/boxfilter.h"
  * <tr><td>Project      <td>ppl.cv
  * </table>
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include "ppl/cv/cuda/erode.h"
+ * #include "ppl/cv/cuda/boxfilter.h"
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
  *   int width    = 640;
  *   int height   = 480;
  *   int channels = 3;
+ *   int ksize    = 3;
  *
  *   float* dev_input;
  *   float* dev_output;
@@ -98,9 +91,10 @@ namespace cuda {
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   Erode<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                   dev_input, 3, 3, NULL, output_pitch / sizeof(float),
- *                   dev_output, ppl::cv::BORDER_TYPE_REPLICATE);
+ *   BoxFilter<float, 3>(stream, height, width, input_pitch / sizeof(float),
+ *                       dev_input, ksize, ksize, true,
+ *                       output_pitch / sizeof(float), dev_output,
+ *                       ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -111,21 +105,21 @@ namespace cuda {
  * @endcode
  */
 template <typename T, int channels>
-ppl::common::RetCode Erode(cudaStream_t stream,
-                           int height,
-                           int width,
-                           int inWidthStride,
-                           const T* inData,
-                           int kernelx_len,
-                           int kernely_len,
-                           const uchar* kernel,
-                           int outWidthStride,
-                           T* outData,
-                           BorderType border_type = BORDER_TYPE_CONSTANT,
-                           const T border_value = FLT_MAX);
+ppl::common::RetCode
+BoxFilter(cudaStream_t stream,
+          int height,
+          int width,
+          int inWidthStride,
+          const T* inData,
+          int ksize_x,
+          int ksize_y,
+          bool normalize,
+          int outWidthStride,
+          T* outData,
+          BorderType border_type = BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_ERODE_H_
+#endif  // __ST_HPC_PPL3_CV_CUDA_BOXFILTER_H_

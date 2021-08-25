@@ -342,7 +342,7 @@ RetCode function(const base_type* src, int rows, int cols, int src_stride,     \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -615,7 +615,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -654,7 +654,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -697,7 +697,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -740,7 +740,7 @@ RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -1041,7 +1041,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -1080,7 +1080,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -1126,7 +1126,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -1173,7 +1173,7 @@ RetCode function(const uchar* src_y, int rows, int cols, int src_y_stride,     \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -1263,7 +1263,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -1301,7 +1301,7 @@ RetCode function(const uchar* src, int rows, int cols, int src_stride,         \
   cudaError_t code = cudaGetLastError();                                       \
   if (code != cudaSuccess) {                                                   \
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);                  \
-    return RC_DEVICE_RUNTIME_ERROR;                                              \
+    return RC_DEVICE_RUNTIME_ERROR;                                            \
   }                                                                            \
                                                                                \
   return RC_SUCCESS;                                                           \

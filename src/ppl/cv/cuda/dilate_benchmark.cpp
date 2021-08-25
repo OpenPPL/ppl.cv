@@ -171,7 +171,7 @@ void BM_Dilate_opencv_cuda(benchmark::State &state) {
 
 template <typename T, int channels, int ksize, Masks mask_type,
           Functions function>
-static void BM_Dilate_opencv_x86_cuda(benchmark::State &state) {
+void BM_Dilate_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;

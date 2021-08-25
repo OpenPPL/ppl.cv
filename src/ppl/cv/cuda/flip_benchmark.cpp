@@ -41,7 +41,7 @@ void BM_Flip_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
                       gpu_src.step / sizeof(T), (T*)gpu_src.data,
@@ -66,7 +66,7 @@ void BM_Flip_ppl_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels, int flip_code>
-static void BM_Flip_opencv_cuda(benchmark::State &state) {
+void BM_Flip_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src, dst;
@@ -78,7 +78,7 @@ static void BM_Flip_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warp up the GPU
+  // warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::cuda::flip(gpu_src, gpu_dst, flip_code);
   }
@@ -99,7 +99,7 @@ static void BM_Flip_opencv_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels, int flip_code>
-static void BM_Flip_opencv_x86_cuda(benchmark::State &state) {
+void BM_Flip_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;

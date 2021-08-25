@@ -24,7 +24,7 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-/******************************** add() *********************************/
+/******************************* add operation *******************************/
 
 __global__
 void addKernel0(const uchar* src0, int rows, int cols, int src0_stride,
@@ -457,7 +457,7 @@ RetCode Add<float, 4>(cudaStream_t stream,
   return code;
 }
 
-/***************************** addWeighted() ******************************/
+/*************************** addWeighted operation ***************************/
 
 template <typename T0, typename T1>
 __global__
@@ -652,9 +652,9 @@ RetCode AddWeighted<uchar, 1>(cudaStream_t stream,
                               float gamma,
                               int outWidthStride,
                               uchar* outData) {
-  RetCode code =  addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -672,9 +672,9 @@ RetCode AddWeighted<uchar, 3>(cudaStream_t stream,
                               float gamma,
                               int outWidthStride,
                               uchar* outData) {
-  RetCode code =  addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -692,9 +692,9 @@ RetCode AddWeighted<uchar, 4>(cudaStream_t stream,
                               float gamma,
                               int outWidthStride,
                               uchar* outData) {
-  RetCode code =  addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -715,9 +715,9 @@ RetCode AddWeighted<float, 1>(cudaStream_t stream,
   inWidthStride0 *= sizeof(float);
   inWidthStride1 *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code =  addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 1, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -738,9 +738,9 @@ RetCode AddWeighted<float, 3>(cudaStream_t stream,
   inWidthStride0 *= sizeof(float);
   inWidthStride1 *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code =  addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 3, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
@@ -761,14 +761,14 @@ RetCode AddWeighted<float, 4>(cudaStream_t stream,
   inWidthStride0 *= sizeof(float);
   inWidthStride1 *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code =  addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
-                              inData1, inWidthStride1, beta, gamma, outData,
-                              outWidthStride, stream);
+  RetCode code = addWeighted(inData0, height, width, 4, inWidthStride0, alpha,
+                             inData1, inWidthStride1, beta, gamma, outData,
+                             outWidthStride, stream);
 
   return code;
 }
 
-/***************************** subtract() ******************************/
+/**************************** subtract operation *****************************/
 
 template <typename T0, typename T1>
 __global__
@@ -1089,7 +1089,7 @@ RetCode subtract(const uchar* src, int rows, int cols, int channels,
     value1 = scalar[1];
     value2 = scalar[2];
   }
-  else {  //  channels == 4
+  else {  // channels == 4
     value0 = scalar[0];
     value1 = scalar[1];
     value2 = scalar[2];
@@ -1153,7 +1153,7 @@ RetCode subtract(const float* src, int rows, int cols, int channels,
     value1 = scalar[1];
     value2 = scalar[2];
   }
-  else {  //  channels == 4
+  else {  // channels == 4
     value0 = scalar[0];
     value1 = scalar[1];
     value2 = scalar[2];
@@ -1287,7 +1287,7 @@ RetCode Subtract<float, 4>(cudaStream_t stream,
   return code;
 }
 
-/***************************** multiply() ******************************/
+/**************************** multiply operation *****************************/
 
 __global__
 void multiplyKernel0(const uchar* src0, int rows, int cols, int src0_stride,
@@ -1305,7 +1305,7 @@ void multiplyKernel0(const uchar* src0, int rows, int cols, int src0_stride,
   uchar4 input_value1 = input1[element_x];
 
   float4 output_value;
-  if (scale == 1) {
+  if (scale == 1.f) {
     output_value.x = input_value0.x * input_value1.x;
     output_value.y = input_value0.y * input_value1.y;
     output_value.z = input_value0.z * input_value1.z;
@@ -1338,7 +1338,7 @@ void multiplyKernel10(const uchar* src0, int cols, const uchar* src1,
 
   float4 output_value;
   if (index_x < cols - 4) {
-    if (scale == 1) {
+    if (scale == 1.f) {
       output_value.x = input_value0.x * input_value1.x;
       output_value.y = input_value0.y * input_value1.y;
       output_value.z = input_value0.z * input_value1.z;
@@ -1355,7 +1355,7 @@ void multiplyKernel10(const uchar* src0, int cols, const uchar* src1,
     output[element_x] = saturate_cast_vector<uchar4, float4>(output_value);
   }
   else {
-    if (scale == 1) {
+    if (scale == 1.f) {
       output_value.x = input_value0.x * input_value1.x;
       if (index_x < cols - 1) {
         output_value.y = input_value0.y * input_value1.y;
@@ -1419,7 +1419,7 @@ void multiplyKernel11(const T* src0, int rows, int cols, int src0_stride,
     input_value10 = input1[element_x];
     input_value11 = input1[element_x + 1];
 
-    if (scale == 1) {
+    if (scale == 1.f) {
       output_value0 = input_value00 * input_value10;
       output_value1 = input_value01 * input_value11;
     }
@@ -1448,7 +1448,7 @@ void multiplyKernel11(const T* src0, int rows, int cols, int src0_stride,
       input_value11 = input1[element_x + 1];
     }
 
-    if (scale == 1) {
+    if (scale == 1.f) {
       output_value0 = input_value00 * input_value10;
       if (element_x != cols - 1) {
         output_value1 = input_value01 * input_value11;
@@ -1492,7 +1492,7 @@ void multiplyKernel0(const float* src0, int rows, int cols, int src0_stride,
   float2 input_value1 = input1[element_x];
 
   float2 output_value;
-  if (scale == 1) {
+  if (scale == 1.f) {
     output_value.x = input_value0.x * input_value1.x;
     output_value.y = input_value0.y * input_value1.y;
   }
@@ -1531,7 +1531,7 @@ RetCode multiply(const uchar* src0, int rows, int cols, int channels,
         src1, src1_stride, dst, dst_stride, scale);
   }
   else if (src0_stride == columns && src1_stride == columns &&
-           dst_stride == columns ) {
+           dst_stride == columns) {
     columns *= rows;
     cols = divideUp(columns, 4, 2);
     block.x = 256;
@@ -1708,6 +1708,451 @@ RetCode Mul<float, 4>(cudaStream_t stream,
   RetCode code = multiply(inData0, height, width, 4, inWidthStride0, inData1,
                           inWidthStride1, outData, outWidthStride, scale,
                           stream);
+
+  return code;
+}
+
+/***************************** divide operation ******************************/
+
+__global__
+void divideKernel0(const uchar* src0, int rows, int cols, int src0_stride,
+                   const uchar* src1, int src1_stride, uchar* dst,
+                   int dst_stride, float scale) {
+  int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  const uchar4* input0 = (uchar4*)(src0 + element_y * src0_stride);
+  const uchar4* input1 = (uchar4*)(src1 + element_y * src1_stride);
+  uchar4 input_value0 = input0[element_x];
+  uchar4 input_value1 = input1[element_x];
+
+  float4 output_value;
+  if (scale == 1.f) {
+    output_value.x = input_value1.x == 0 ? 0 : input_value0.x / input_value1.x;
+    output_value.y = input_value1.y == 0 ? 0 : input_value0.y / input_value1.y;
+    output_value.z = input_value1.z == 0 ? 0 : input_value0.z / input_value1.z;
+    output_value.w = input_value1.w == 0 ? 0 : input_value0.w / input_value1.w;
+  }
+  else {
+    output_value.x = input_value1.x == 0 ? 0 :
+                       scale * input_value0.x / input_value1.x;
+    output_value.y = input_value1.y == 0 ? 0 :
+                       scale * input_value0.y / input_value1.y;
+    output_value.z = input_value1.z == 0 ? 0 :
+                       scale * input_value0.z / input_value1.z;
+    output_value.w = input_value1.w == 0 ? 0 :
+                       scale * input_value0.w / input_value1.w;
+  }
+
+  uchar4* output = (uchar4*)(dst + element_y * dst_stride);
+  output[element_x] = saturate_cast_vector<uchar4, float4>(output_value);
+}
+
+__global__
+void divideKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst,
+                    float scale) {
+  int element_x = (blockIdx.x << 8) + threadIdx.x;
+  int index_x = element_x << 2;
+  if (index_x >= cols) {
+    return;
+  }
+
+  const uchar4* input0 = (uchar4*)src0;
+  const uchar4* input1 = (uchar4*)src1;
+  uchar4 input_value0 = input0[element_x];
+  uchar4 input_value1 = input1[element_x];
+
+  float4 output_value;
+  if (index_x < cols - 4) {
+    if (scale == 1.f) {
+      output_value.x = input_value1.x == 0 ? 0 :
+                         input_value0.x / input_value1.x;
+      output_value.y = input_value1.y == 0 ? 0 :
+                         input_value0.y / input_value1.y;
+      output_value.z = input_value1.z == 0 ? 0 :
+                         input_value0.z / input_value1.z;
+      output_value.w = input_value1.w == 0 ? 0 :
+                         input_value0.w / input_value1.w;
+    }
+    else {
+      output_value.x = input_value1.x == 0 ? 0 :
+                         scale * input_value0.x / input_value1.x;
+      output_value.y = input_value1.y == 0 ? 0 :
+                         scale * input_value0.y / input_value1.y;
+      output_value.z = input_value1.z == 0 ? 0 :
+                         scale * input_value0.z / input_value1.z;
+      output_value.w = input_value1.w == 0 ? 0 :
+                         scale * input_value0.w / input_value1.w;
+    }
+
+    uchar4* output = (uchar4*)dst;
+    output[element_x] = saturate_cast_vector<uchar4, float4>(output_value);
+  }
+  else {
+    if (scale == 1.f) {
+      output_value.x = input_value1.x == 0 ? 0 :
+                         input_value0.x / input_value1.x;
+      if (index_x < cols - 1) {
+        output_value.y = input_value1.y == 0 ? 0 :
+                           input_value0.y / input_value1.y;
+      }
+      if (index_x < cols - 2) {
+        output_value.z = input_value1.z == 0 ? 0 :
+                           input_value0.z / input_value1.z;
+      }
+      if (index_x < cols - 3) {
+        output_value.w = input_value1.w == 0 ? 0 :
+                           input_value0.w / input_value1.w;
+      }
+    }
+    else {
+      output_value.x = input_value1.x == 0 ? 0 :
+                         scale * input_value0.x / input_value1.x;
+      if (index_x < cols - 1) {
+        output_value.y = input_value1.y == 0 ? 0 :
+                           scale * input_value0.y / input_value1.y;
+      }
+      if (index_x < cols - 2) {
+        output_value.z = input_value1.z == 0 ? 0 :
+                           scale * input_value0.z / input_value1.z;
+      }
+      if (index_x < cols - 3) {
+        output_value.w = input_value1.w == 0 ? 0 :
+                           scale * input_value0.w / input_value1.w;
+      }
+    }
+
+    dst[index_x] = saturate_cast(output_value.x);
+    if (index_x < cols - 1) {
+      dst[index_x + 1] = saturate_cast(output_value.y);
+    }
+    if (index_x < cols - 2) {
+      dst[index_x + 2] = saturate_cast(output_value.z);
+    }
+    if (index_x < cols - 3) {
+      dst[index_x + 3] = saturate_cast(output_value.w);
+    }
+  }
+}
+
+template <typename T>
+__global__
+void divideKernel11(const T* src0, int rows, int cols, int src0_stride,
+                    const T* src1, int src1_stride, T* dst, int dst_stride,
+                    float scale) {
+  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
+  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  const T* input0 = (T*)((uchar*)src0 + element_y * src0_stride);
+  const T* input1 = (T*)((uchar*)src1 + element_y * src1_stride);
+  T* output  = (T*)((uchar*)dst + element_y * dst_stride);
+
+  T input_value00, input_value01;
+  T input_value10, input_value11;
+  float output_value0, output_value1;
+
+  if (blockIdx.x < gridDim.x - 1) {
+    input_value00 = input0[element_x];
+    input_value01 = input0[element_x + 1];
+
+    input_value10 = input1[element_x];
+    input_value11 = input1[element_x + 1];
+
+    if (scale == 1.f) {
+      output_value0 = input_value10 == 0 ? 0 : input_value00 / input_value10;
+      output_value1 = input_value11 == 0 ? 0 : input_value01 / input_value11;
+    }
+    else {
+      output_value0 = input_value10 == 0 ? 0 :
+                        scale * input_value00 / input_value10;
+      output_value1 = input_value11 == 0 ? 0 :
+                        scale * input_value01 / input_value11;
+    }
+
+    if (sizeof(T) == 1) {
+      output[element_x]     = saturate_cast(output_value0);
+      output[element_x + 1] = saturate_cast(output_value1);
+    }
+    else {
+      output[element_x]     = output_value0;
+      output[element_x + 1] = output_value1;
+    }
+  }
+  else {
+    input_value00 = input0[element_x];
+    if (element_x != cols - 1) {
+      input_value01 = input0[element_x + 1];
+    }
+
+    input_value10 = input1[element_x];
+    if (element_x != cols - 1) {
+      input_value11 = input1[element_x + 1];
+    }
+
+    if (scale == 1.f) {
+      output_value0 = input_value10 == 0 ? 0 : input_value00 / input_value10;
+      if (element_x != cols - 1) {
+        output_value1 = input_value11 == 0 ? 0 : input_value01 / input_value11;
+      }
+    }
+    else {
+      output_value0 = input_value10 == 0 ? 0 :
+                        scale * input_value00 / input_value10;
+      if (element_x != cols - 1) {
+        output_value1 = input_value11 == 0 ? 0 :
+                          scale * input_value01 / input_value11;
+      }
+    }
+
+    if (sizeof(T) == 1) {
+      output[element_x] = saturate_cast(output_value0);
+      if (element_x != cols - 1) {
+        output[element_x + 1] = saturate_cast(output_value1);
+      }
+    }
+    else {
+      output[element_x] = output_value0;
+      if (element_x != cols - 1) {
+        output[element_x + 1] = output_value1;
+      }
+    }
+  }
+}
+
+__global__
+void divideKernel0(const float* src0, int rows, int cols, int src0_stride,
+                   const float* src1, int src1_stride, float* dst,
+                   int dst_stride, float scale) {
+  int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  const float2* input0 = (float2*)((uchar*)src0 + element_y * src0_stride);
+  const float2* input1 = (float2*)((uchar*)src1 + element_y * src1_stride);
+  float2 input_value0 = input0[element_x];
+  float2 input_value1 = input1[element_x];
+
+  float2 output_value;
+  if (scale == 1.f) {
+    output_value.x = input_value1.x == 0 ? 0 : input_value0.x / input_value1.x;
+    output_value.y = input_value1.y == 0 ? 0 : input_value0.y / input_value1.y;
+  }
+  else {
+    output_value.x = input_value1.x == 0 ? 0 :
+                       scale * input_value0.x / input_value1.x;
+    output_value.y = input_value1.y == 0 ? 0 :
+                       scale * input_value0.y / input_value1.y;
+  }
+
+  float2* output = (float2*)((uchar*)dst + element_y * dst_stride);
+  output[element_x] = output_value;
+}
+
+RetCode divide(const uchar* src0, int rows, int cols, int channels,
+               int src0_stride, const uchar* src1, int src1_stride,
+               uchar* dst, int dst_stride, float scale, cudaStream_t stream) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(uchar));
+
+  int columns = cols * channels;
+  dim3 block, grid;
+  block.x = kBlockDimX0;
+  block.y = kBlockDimY0;
+  grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX0, kBlockShiftX0);
+  grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
+
+  if ((src0_stride & 3) == 0 && (src1_stride & 3) == 0 &&
+      (dst_stride & 3) == 0) {
+    cols = divideUp(columns, 4, 2);
+    divideKernel0<<<grid, block, 0, stream>>>(src0, rows, cols, src0_stride,
+        src1, src1_stride, dst, dst_stride, scale);
+  }
+  else if (src0_stride == columns && src1_stride == columns &&
+           dst_stride == columns) {
+    columns *= rows;
+    cols = divideUp(columns, 4, 2);
+    block.x = 256;
+    block.y = 1;
+    grid.x = divideUp(cols, 256, 8);
+    grid.y = 1;
+    divideKernel10<<<grid, block, 0, stream>>>(src0, columns, src1, dst,
+                                                 scale);
+  }
+  else {
+    grid.x = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
+    divideKernel11<uchar><<<grid, block, 0, stream>>>(src0, rows, columns,
+        src0_stride, src1, src1_stride, dst, dst_stride, scale);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
+}
+
+RetCode divide(const float* src0, int rows, int cols, int channels,
+               int src0_stride, const float* src1, int src1_stride,
+               float* dst, int dst_stride, float scale, cudaStream_t stream) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
+
+  int columns = cols * channels;
+  dim3 block, grid;
+  block.x = kBlockDimX0;
+  block.y = kBlockDimY0;
+  grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
+  grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
+
+  if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
+      (dst_stride & 7) == 0) {
+    cols = divideUp(columns, 2, 1);
+    divideKernel0<<<grid, block, 0, stream>>>(src0, rows, cols, src0_stride,
+        src1, src1_stride, dst, dst_stride, scale);
+  }
+  else {
+    divideKernel11<float><<<grid, block, 0, stream>>>(src0, rows, columns,
+        src0_stride, src1, src1_stride, dst, dst_stride, scale);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
+}
+
+template <>
+RetCode Div<uchar, 1>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const uchar* inData0,
+                      int inWidthStride1,
+                      const uchar* inData1,
+                      int outWidthStride,
+                      uchar* outData,
+                      float scale) {
+  RetCode code = divide(inData0, height, width, 1, inWidthStride0, inData1,
+                        inWidthStride1, outData, outWidthStride, scale, stream);
+
+  return code;
+}
+
+template <>
+RetCode Div<uchar, 3>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const uchar* inData0,
+                      int inWidthStride1,
+                      const uchar* inData1,
+                      int outWidthStride,
+                      uchar* outData,
+                      float scale) {
+  RetCode code = divide(inData0, height, width, 3, inWidthStride0, inData1,
+                        inWidthStride1, outData, outWidthStride, scale, stream);
+
+  return code;
+}
+
+template <>
+RetCode Div<uchar, 4>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const uchar* inData0,
+                      int inWidthStride1,
+                      const uchar* inData1,
+                      int outWidthStride,
+                      uchar* outData,
+                      float scale) {
+  RetCode code = divide(inData0, height, width, 4, inWidthStride0, inData1,
+                        inWidthStride1, outData, outWidthStride, scale, stream);
+
+  return code;
+}
+
+template <>
+RetCode Div<float, 1>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData,
+                      float scale) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = divide(inData0, height, width, 1, inWidthStride0, inData1,
+                        inWidthStride1, outData, outWidthStride, scale, stream);
+
+  return code;
+}
+
+template <>
+RetCode Div<float, 3>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData,
+                      float scale) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = divide(inData0, height, width, 3, inWidthStride0, inData1,
+                        inWidthStride1, outData, outWidthStride, scale, stream);
+
+  return code;
+}
+
+template <>
+RetCode Div<float, 4>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData,
+                      float scale) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = divide(inData0, height, width, 4, inWidthStride0, inData1,
+                        inWidthStride1, outData, outWidthStride, scale, stream);
 
   return code;
 }

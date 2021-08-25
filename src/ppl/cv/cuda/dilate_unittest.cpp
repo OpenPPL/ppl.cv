@@ -36,7 +36,7 @@ enum Functions {
 };
 
 using Parameters = std::tuple<Functions, BorderType, int, cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+inline std::string convertToStringDilate(const Parameters& parameters) {
   std::ostringstream formatted;
 
   Functions function = std::get<0>(parameters);
@@ -75,7 +75,7 @@ inline std::string convertToString(const Parameters& parameters) {
   return formatted.str();
 }
 
-template<typename T, int channels>
+template <typename T, int channels>
 class PplCvCudaDilateTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaDilateTest() {
@@ -98,7 +98,7 @@ class PplCvCudaDilateTest : public ::testing::TestWithParam<Parameters> {
   cv::Size size;
 };
 
-template<typename T, int channels>
+template <typename T, int channels>
 bool PplCvCudaDilateTest<T, channels>::apply() {
   cv::Mat src;
   src = createSourceImage(size.height, size.width,
@@ -204,7 +204,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaDilateTest ## T ## channels,         \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaDilateTest ## T ## channels::ParamType>& info) {                \
-    return convertToString(info.param);                                        \
+    return convertToStringDilate(info.param);                                  \
   }                                                                            \
 );
 

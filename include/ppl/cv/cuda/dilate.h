@@ -35,8 +35,8 @@ namespace cuda {
  * @tparam channels The number of channels of input&output image, 1, 3 and 4
  *         are supported.
  * @param stream         cuda stream object.
- * @param inHeight       input image's height.
- * @param inWidth        input image's width need to be processed.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
  * @param inWidthStride  input image's width stride, it is `width * channels`
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
@@ -112,8 +112,8 @@ namespace cuda {
  */
 template <typename T, int channels>
 ppl::common::RetCode Dilate(cudaStream_t stream,
-                            int inHeight,
-                            int inWidth,
+                            int height,
+                            int width,
                             int inWidthStride,
                             const T* inData,
                             int kernelx_len,
@@ -128,4 +128,4 @@ ppl::common::RetCode Dilate(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif // _ST_HPC_PPL3_CV_CUDA_DILATE_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_DILATE_H_
