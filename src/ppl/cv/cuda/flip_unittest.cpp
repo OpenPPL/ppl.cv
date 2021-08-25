@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "flip.h"
+#include "ppl/cv/cuda/flip.h"
 
 #include <tuple>
 #include <sstream>

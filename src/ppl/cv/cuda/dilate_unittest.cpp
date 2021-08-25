@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#include "dilate.h"
-#include "erode.h"
+#include "ppl/cv/cuda/dilate.h"
+#include "ppl/cv/cuda/erode.h"
 
 #include <tuple>
 #include <sstream>

@@ -1,9 +1,3 @@
-if(NOT HPCC_USE_CUDA AND NOT USE_CUDA AND NOT WITH_CUDA)
-    return()
-endif()
-
-# --------------------------------------------------------------------------- #
-
 set(_NVCC_FLAGS )
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_35,code=sm_35")
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_37,code=sm_37")

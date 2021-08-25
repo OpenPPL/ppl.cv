@@ -1,0 +1,1100 @@
+The system is: Linux - 4.15.0-136-generic - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /usr/bin/cc 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/3.21.0/CompilerIdC/a.out"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /usr/bin/c++ 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is GNU, found in "/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/3.21.0/CompilerIdCXX/a.out"
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_6d140/fast && /usr/bin/make  -f CMakeFiles/cmTC_6d140.dir/build.make CMakeFiles/cmTC_6d140.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o
+/usr/bin/cc   -v -o CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -c /snap/cmake/912/share/cmake-3.21/Modules/CMakeCCompilerABI.c
+Using built-in specs.
+COLLECT_GCC=/usr/bin/cc
+Target: x86_64-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c,c++,java,go,d,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+Thread model: posix
+gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/cc1 -quiet -v -imultiarch x86_64-linux-gnu /snap/cmake/912/share/cmake-3.21/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccv8ivXZ.s
+GNU C (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)
+	compiled by GNU C version 4.9.3, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"
+ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../x86_64-linux-gnu/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/include
+ /usr/local/include
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed
+ /usr/include/x86_64-linux-gnu
+ /usr/include
+End of search list.
+GNU C (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)
+	compiled by GNU C version 4.9.3, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: f14c38613a5bd8e1e32ffadbe0b1c5ec
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64'
+ as -v --64 -o CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o /tmp/ccv8ivXZ.s
+GNU assembler version 2.26.1 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.26.1
+COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/
+LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64'
+Linking C executable cmTC_6d140
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6d140.dir/link.txt --verbose=1
+/usr/bin/cc  -v CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -o cmTC_6d140 
+Using built-in specs.
+COLLECT_GCC=/usr/bin/cc
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper
+Target: x86_64-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c,c++,java,go,d,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+Thread model: posix
+gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) 
+COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/
+LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6d140' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/4.9/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper -plugin-opt=-fresolution=/tmp/ccB4cjS2.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -z relro -o cmTC_6d140 /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../.. CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Parsed C implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/usr/lib/gcc/x86_64-linux-gnu/4.9/include]
+    add: [/usr/local/include]
+    add: [/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed]
+    add: [/usr/include/x86_64-linux-gnu]
+    add: [/usr/include]
+  end of search list found
+  collapse include dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/include] ==> [/usr/lib/gcc/x86_64-linux-gnu/4.9/include]
+  collapse include dir [/usr/local/include] ==> [/usr/local/include]
+  collapse include dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed] ==> [/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed]
+  collapse include dir [/usr/include/x86_64-linux-gnu] ==> [/usr/include/x86_64-linux-gnu]
+  collapse include dir [/usr/include] ==> [/usr/include]
+  implicit include dirs: [/usr/lib/gcc/x86_64-linux-gnu/4.9/include;/usr/local/include;/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed;/usr/include/x86_64-linux-gnu;/usr/include]
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/make -f Makefile cmTC_6d140/fast && /usr/bin/make  -f CMakeFiles/cmTC_6d140.dir/build.make CMakeFiles/cmTC_6d140.dir/build]
+  ignore line: [make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp']
+  ignore line: [Building C object CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -c /snap/cmake/912/share/cmake-3.21/Modules/CMakeCCompilerABI.c]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/cc]
+  ignore line: [Target: x86_64-linux-gnu]
+  ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c c++ java go d fortran objc obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64']
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/cc1 -quiet -v -imultiarch x86_64-linux-gnu /snap/cmake/912/share/cmake-3.21/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccv8ivXZ.s]
+  ignore line: [GNU C (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.9.3  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"]
+  ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../x86_64-linux-gnu/include"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/include]
+  ignore line: [ /usr/local/include]
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed]
+  ignore line: [ /usr/include/x86_64-linux-gnu]
+  ignore line: [ /usr/include]
+  ignore line: [End of search list.]
+  ignore line: [GNU C (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.9.3  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [Compiler executable checksum: f14c38613a5bd8e1e32ffadbe0b1c5ec]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64']
+  ignore line: [ as -v --64 -o CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o /tmp/ccv8ivXZ.s]
+  ignore line: [GNU assembler version 2.26.1 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.26.1]
+  ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64']
+  ignore line: [Linking C executable cmTC_6d140]
+  ignore line: [/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6d140.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/cc  -v CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -o cmTC_6d140 ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/cc]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper]
+  ignore line: [Target: x86_64-linux-gnu]
+  ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c c++ java go d fortran objc obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) ]
+  ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6d140' '-mtune=generic' '-march=x86-64']
+  link line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/4.9/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper -plugin-opt=-fresolution=/tmp/ccB4cjS2.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -z relro -o cmTC_6d140 /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../.. CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccB4cjS2.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [--sysroot=/] ==> ignore
+    arg [--build-id] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [--hash-style=gnu] ==> ignore
+    arg [--as-needed] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-zrelro] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_6d140] ==> ignore
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib]
+    arg [-L/lib/x86_64-linux-gnu] ==> dir [/lib/x86_64-linux-gnu]
+    arg [-L/lib/../lib] ==> dir [/lib/../lib]
+    arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
+    arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../..]
+    arg [CMakeFiles/cmTC_6d140.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [-lc] ==> lib [c]
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o]
+  collapse obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o] ==> [/usr/lib/x86_64-linux-gnu/crt1.o]
+  collapse obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o] ==> [/usr/lib/x86_64-linux-gnu/crti.o]
+  collapse obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o] ==> [/usr/lib/x86_64-linux-gnu/crtn.o]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9] ==> [/usr/lib/gcc/x86_64-linux-gnu/4.9]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib] ==> [/usr/lib]
+  collapse library dir [/lib/x86_64-linux-gnu] ==> [/lib/x86_64-linux-gnu]
+  collapse library dir [/lib/../lib] ==> [/lib]
+  collapse library dir [/usr/lib/x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+  collapse library dir [/usr/lib/../lib] ==> [/usr/lib]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../..] ==> [/usr/lib]
+  implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
+  implicit objs: [/usr/lib/x86_64-linux-gnu/crt1.o;/usr/lib/x86_64-linux-gnu/crti.o;/usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o;/usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o;/usr/lib/x86_64-linux-gnu/crtn.o]
+  implicit dirs: [/usr/lib/gcc/x86_64-linux-gnu/4.9;/usr/lib/x86_64-linux-gnu;/usr/lib;/lib/x86_64-linux-gnu;/lib]
+  implicit fwks: []
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_12e1a/fast && /usr/bin/make  -f CMakeFiles/cmTC_12e1a.dir/build.make CMakeFiles/cmTC_12e1a.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o
+/usr/bin/c++   -v -o CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -c /snap/cmake/912/share/cmake-3.21/Modules/CMakeCXXCompilerABI.cpp
+Using built-in specs.
+COLLECT_GCC=/usr/bin/c++
+Target: x86_64-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c,c++,java,go,d,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+Thread model: posix
+gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /snap/cmake/912/share/cmake-3.21/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccOtCwu5.s
+GNU C++ (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)
+	compiled by GNU C version 4.9.3, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+ignoring duplicate directory "/usr/include/x86_64-linux-gnu/c++/4.9"
+ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"
+ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../x86_64-linux-gnu/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/include/c++/4.9
+ /usr/include/x86_64-linux-gnu/c++/4.9
+ /usr/include/c++/4.9/backward
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/include
+ /usr/local/include
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed
+ /usr/include/x86_64-linux-gnu
+ /usr/include
+End of search list.
+GNU C++ (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)
+	compiled by GNU C version 4.9.3, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 2cd93dc092d0b42e3cf3f22055ee27fd
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ as -v --64 -o CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccOtCwu5.s
+GNU assembler version 2.26.1 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.26.1
+COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/
+LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+Linking CXX executable cmTC_12e1a
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_12e1a.dir/link.txt --verbose=1
+/usr/bin/c++  -v CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_12e1a 
+Using built-in specs.
+COLLECT_GCC=/usr/bin/c++
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper
+Target: x86_64-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c,c++,java,go,d,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+Thread model: posix
+gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) 
+COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/
+LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_12e1a' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-linux-gnu/4.9/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/4.9/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper -plugin-opt=-fresolution=/tmp/ccCGDfu8.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -z relro -o cmTC_12e1a /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../.. CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Parsed CXX implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/usr/include/c++/4.9]
+    add: [/usr/include/x86_64-linux-gnu/c++/4.9]
+    add: [/usr/include/c++/4.9/backward]
+    add: [/usr/lib/gcc/x86_64-linux-gnu/4.9/include]
+    add: [/usr/local/include]
+    add: [/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed]
+    add: [/usr/include/x86_64-linux-gnu]
+    add: [/usr/include]
+  end of search list found
+  collapse include dir [/usr/include/c++/4.9] ==> [/usr/include/c++/4.9]
+  collapse include dir [/usr/include/x86_64-linux-gnu/c++/4.9] ==> [/usr/include/x86_64-linux-gnu/c++/4.9]
+  collapse include dir [/usr/include/c++/4.9/backward] ==> [/usr/include/c++/4.9/backward]
+  collapse include dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/include] ==> [/usr/lib/gcc/x86_64-linux-gnu/4.9/include]
+  collapse include dir [/usr/local/include] ==> [/usr/local/include]
+  collapse include dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed] ==> [/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed]
+  collapse include dir [/usr/include/x86_64-linux-gnu] ==> [/usr/include/x86_64-linux-gnu]
+  collapse include dir [/usr/include] ==> [/usr/include]
+  implicit include dirs: [/usr/include/c++/4.9;/usr/include/x86_64-linux-gnu/c++/4.9;/usr/include/c++/4.9/backward;/usr/lib/gcc/x86_64-linux-gnu/4.9/include;/usr/local/include;/usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed;/usr/include/x86_64-linux-gnu;/usr/include]
+
+
+Parsed CXX implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/make -f Makefile cmTC_12e1a/fast && /usr/bin/make  -f CMakeFiles/cmTC_12e1a.dir/build.make CMakeFiles/cmTC_12e1a.dir/build]
+  ignore line: [make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp']
+  ignore line: [Building CXX object CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/usr/bin/c++   -v -o CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -c /snap/cmake/912/share/cmake-3.21/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/c++]
+  ignore line: [Target: x86_64-linux-gnu]
+  ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c c++ java go d fortran objc obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /snap/cmake/912/share/cmake-3.21/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccOtCwu5.s]
+  ignore line: [GNU C++ (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.9.3  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [ignoring duplicate directory "/usr/include/x86_64-linux-gnu/c++/4.9"]
+  ignore line: [ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"]
+  ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../x86_64-linux-gnu/include"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /usr/include/c++/4.9]
+  ignore line: [ /usr/include/x86_64-linux-gnu/c++/4.9]
+  ignore line: [ /usr/include/c++/4.9/backward]
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/include]
+  ignore line: [ /usr/local/include]
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed]
+  ignore line: [ /usr/include/x86_64-linux-gnu]
+  ignore line: [ /usr/include]
+  ignore line: [End of search list.]
+  ignore line: [GNU C++ (Ubuntu 4.9.3-13ubuntu2) version 4.9.3 (x86_64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.9.3  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [Compiler executable checksum: 2cd93dc092d0b42e3cf3f22055ee27fd]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  ignore line: [ as -v --64 -o CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccOtCwu5.s]
+  ignore line: [GNU assembler version 2.26.1 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.26.1]
+  ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  ignore line: [Linking CXX executable cmTC_12e1a]
+  ignore line: [/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_12e1a.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/c++  -v CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_12e1a ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/c++]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper]
+  ignore line: [Target: x86_64-linux-gnu]
+  ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.9.3-13ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-4.9/README.Bugs --enable-languages=c c++ java go d fortran objc obj-c++ --prefix=/usr --program-suffix=-4.9 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.9 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.9-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.9-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.9.3 (Ubuntu 4.9.3-13ubuntu2) ]
+  ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.9/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_12e1a' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  link line: [ /usr/lib/gcc/x86_64-linux-gnu/4.9/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/4.9/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper -plugin-opt=-fresolution=/tmp/ccCGDfu8.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -z relro -o cmTC_12e1a /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../.. CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/4.9/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccCGDfu8.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [--sysroot=/] ==> ignore
+    arg [--build-id] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [--hash-style=gnu] ==> ignore
+    arg [--as-needed] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-zrelro] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_12e1a] ==> ignore
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib]
+    arg [-L/lib/x86_64-linux-gnu] ==> dir [/lib/x86_64-linux-gnu]
+    arg [-L/lib/../lib] ==> dir [/lib/../lib]
+    arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
+    arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
+    arg [-L/usr/lib/gcc/x86_64-linux-gnu/4.9/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../..]
+    arg [CMakeFiles/cmTC_12e1a.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [-lstdc++] ==> lib [stdc++]
+    arg [-lm] ==> lib [m]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lc] ==> lib [c]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o]
+    arg [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o]
+  collapse obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crt1.o] ==> [/usr/lib/x86_64-linux-gnu/crt1.o]
+  collapse obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crti.o] ==> [/usr/lib/x86_64-linux-gnu/crti.o]
+  collapse obj [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o] ==> [/usr/lib/x86_64-linux-gnu/crtn.o]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9] ==> [/usr/lib/gcc/x86_64-linux-gnu/4.9]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../lib] ==> [/usr/lib]
+  collapse library dir [/lib/x86_64-linux-gnu] ==> [/lib/x86_64-linux-gnu]
+  collapse library dir [/lib/../lib] ==> [/lib]
+  collapse library dir [/usr/lib/x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+  collapse library dir [/usr/lib/../lib] ==> [/usr/lib]
+  collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/4.9/../../..] ==> [/usr/lib]
+  implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
+  implicit objs: [/usr/lib/x86_64-linux-gnu/crt1.o;/usr/lib/x86_64-linux-gnu/crti.o;/usr/lib/gcc/x86_64-linux-gnu/4.9/crtbegin.o;/usr/lib/gcc/x86_64-linux-gnu/4.9/crtend.o;/usr/lib/x86_64-linux-gnu/crtn.o]
+  implicit dirs: [/usr/lib/gcc/x86_64-linux-gnu/4.9;/usr/lib/x86_64-linux-gnu;/usr/lib;/lib/x86_64-linux-gnu;/lib]
+  implicit fwks: []
+
+
+
+
+Detecting CXX [-std=c++14] compiler features compiled with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_34d4f/fast && /usr/bin/make  -f CMakeFiles/cmTC_34d4f.dir/build.make CMakeFiles/cmTC_34d4f.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_34d4f.dir/feature_tests.cxx.o
+/usr/bin/c++   -std=c++14 -o CMakeFiles/cmTC_34d4f.dir/feature_tests.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_34d4f
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_34d4f.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_34d4f.dir/feature_tests.cxx.o -o cmTC_34d4f 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+    Feature record: CXX_FEATURE:1cxx_template_template_parameters
+    Feature record: CXX_FEATURE:1cxx_alias_templates
+    Feature record: CXX_FEATURE:1cxx_alignas
+    Feature record: CXX_FEATURE:1cxx_alignof
+    Feature record: CXX_FEATURE:1cxx_attributes
+    Feature record: CXX_FEATURE:1cxx_auto_type
+    Feature record: CXX_FEATURE:1cxx_constexpr
+    Feature record: CXX_FEATURE:1cxx_decltype
+    Feature record: CXX_FEATURE:1cxx_decltype_incomplete_return_types
+    Feature record: CXX_FEATURE:1cxx_default_function_template_args
+    Feature record: CXX_FEATURE:1cxx_defaulted_functions
+    Feature record: CXX_FEATURE:1cxx_defaulted_move_initializers
+    Feature record: CXX_FEATURE:1cxx_delegating_constructors
+    Feature record: CXX_FEATURE:1cxx_deleted_functions
+    Feature record: CXX_FEATURE:1cxx_enum_forward_declarations
+    Feature record: CXX_FEATURE:1cxx_explicit_conversions
+    Feature record: CXX_FEATURE:1cxx_extended_friend_declarations
+    Feature record: CXX_FEATURE:1cxx_extern_templates
+    Feature record: CXX_FEATURE:1cxx_final
+    Feature record: CXX_FEATURE:1cxx_func_identifier
+    Feature record: CXX_FEATURE:1cxx_generalized_initializers
+    Feature record: CXX_FEATURE:1cxx_inheriting_constructors
+    Feature record: CXX_FEATURE:1cxx_inline_namespaces
+    Feature record: CXX_FEATURE:1cxx_lambdas
+    Feature record: CXX_FEATURE:1cxx_local_type_template_args
+    Feature record: CXX_FEATURE:1cxx_long_long_type
+    Feature record: CXX_FEATURE:1cxx_noexcept
+    Feature record: CXX_FEATURE:1cxx_nonstatic_member_init
+    Feature record: CXX_FEATURE:1cxx_nullptr
+    Feature record: CXX_FEATURE:1cxx_override
+    Feature record: CXX_FEATURE:1cxx_range_for
+    Feature record: CXX_FEATURE:1cxx_raw_string_literals
+    Feature record: CXX_FEATURE:1cxx_reference_qualified_functions
+    Feature record: CXX_FEATURE:1cxx_right_angle_brackets
+    Feature record: CXX_FEATURE:1cxx_rvalue_references
+    Feature record: CXX_FEATURE:1cxx_sizeof_member
+    Feature record: CXX_FEATURE:1cxx_static_assert
+    Feature record: CXX_FEATURE:1cxx_strong_enums
+    Feature record: CXX_FEATURE:1cxx_thread_local
+    Feature record: CXX_FEATURE:1cxx_trailing_return_types
+    Feature record: CXX_FEATURE:1cxx_unicode_literals
+    Feature record: CXX_FEATURE:1cxx_uniform_initialization
+    Feature record: CXX_FEATURE:1cxx_unrestricted_unions
+    Feature record: CXX_FEATURE:1cxx_user_literals
+    Feature record: CXX_FEATURE:1cxx_variadic_macros
+    Feature record: CXX_FEATURE:1cxx_variadic_templates
+    Feature record: CXX_FEATURE:0cxx_aggregate_default_initializers
+    Feature record: CXX_FEATURE:1cxx_attribute_deprecated
+    Feature record: CXX_FEATURE:1cxx_binary_literals
+    Feature record: CXX_FEATURE:1cxx_contextual_conversions
+    Feature record: CXX_FEATURE:1cxx_decltype_auto
+    Feature record: CXX_FEATURE:1cxx_digit_separators
+    Feature record: CXX_FEATURE:1cxx_generic_lambdas
+    Feature record: CXX_FEATURE:1cxx_lambda_init_captures
+    Feature record: CXX_FEATURE:0cxx_relaxed_constexpr
+    Feature record: CXX_FEATURE:1cxx_return_type_deduction
+    Feature record: CXX_FEATURE:0cxx_variable_templates
+Checking whether the ASM compiler is GNU using "--version" matched "(GNU assembler)|(GCC)|(Free Software Foundation)":
+cc (Ubuntu 4.9.3-13ubuntu2) 4.9.3
+Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Performing C++ SOURCE FILE Test HAS_CXX_FLAG_STD_CXX11 succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_24902/fast && /usr/bin/make  -f CMakeFiles/cmTC_24902.dir/build.make CMakeFiles/cmTC_24902.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_24902.dir/src.cxx.o
+/usr/bin/c++ -DHAS_CXX_FLAG_STD_CXX11  -DNDEBUG -O3    '-std=c++11' -o CMakeFiles/cmTC_24902.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_24902
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_24902.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3  CMakeFiles/cmTC_24902.dir/src.cxx.o -o cmTC_24902 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C SOURCE FILE Test HAVE_C_FLAG_FPIC succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_4ea04/fast && /usr/bin/make  -f CMakeFiles/cmTC_4ea04.dir/build.make CMakeFiles/cmTC_4ea04.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_4ea04.dir/src.c.o
+/usr/bin/cc -DHAVE_C_FLAG_FPIC  -DNDEBUG -O3  -fPIC   -fPIC -o CMakeFiles/cmTC_4ea04.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_4ea04
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4ea04.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3  -fPIC CMakeFiles/cmTC_4ea04.dir/src.c.o -o cmTC_4ea04 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HAVE_C_FLAG_FVISIBILITY_HIDDEN succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_c8d4b/fast && /usr/bin/make  -f CMakeFiles/cmTC_c8d4b.dir/build.make CMakeFiles/cmTC_c8d4b.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_c8d4b.dir/src.c.o
+/usr/bin/cc -DHAVE_C_FLAG_FVISIBILITY_HIDDEN  -DNDEBUG -O3 -fPIC  -fvisibility=hidden   -fvisibility=hidden -o CMakeFiles/cmTC_c8d4b.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_c8d4b
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c8d4b.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC  -fvisibility=hidden CMakeFiles/cmTC_c8d4b.dir/src.c.o -o cmTC_c8d4b 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HAVE_C_FLAG_WALL_WNO_ARRAY_BOUNDS succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_fcf59/fast && /usr/bin/make  -f CMakeFiles/cmTC_fcf59.dir/build.make CMakeFiles/cmTC_fcf59.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_fcf59.dir/src.c.o
+/usr/bin/cc -DHAVE_C_FLAG_WALL_WNO_ARRAY_BOUNDS  -DNDEBUG -O3 -fPIC -fvisibility=hidden  -Wall -Wno-array-bounds   -Wall -Wno-array-bounds -o CMakeFiles/cmTC_fcf59.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_fcf59
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_fcf59.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden  -Wall -Wno-array-bounds CMakeFiles/cmTC_fcf59.dir/src.c.o -o cmTC_fcf59 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HAVE_C_FLAG_PTHREAD succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_14581/fast && /usr/bin/make  -f CMakeFiles/cmTC_14581.dir/build.make CMakeFiles/cmTC_14581.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_14581.dir/src.c.o
+/usr/bin/cc -DHAVE_C_FLAG_PTHREAD  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds  -pthread   -pthread -o CMakeFiles/cmTC_14581.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_14581
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_14581.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds  -pthread CMakeFiles/cmTC_14581.dir/src.c.o -o cmTC_14581 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_FPIC succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_92122/fast && /usr/bin/make  -f CMakeFiles/cmTC_92122.dir/build.make CMakeFiles/cmTC_92122.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_92122.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_FPIC  -DNDEBUG -O3 -std=c++11  -fPIC   -fPIC -o CMakeFiles/cmTC_92122.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_92122
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_92122.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11  -fPIC CMakeFiles/cmTC_92122.dir/src.cxx.o -o cmTC_92122 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_FVISIBILITY_HIDDEN succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_ba955/fast && /usr/bin/make  -f CMakeFiles/cmTC_ba955.dir/build.make CMakeFiles/cmTC_ba955.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_ba955.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_FVISIBILITY_HIDDEN  -DNDEBUG -O3 -std=c++11 -fPIC  -fvisibility=hidden   -fvisibility=hidden -o CMakeFiles/cmTC_ba955.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_ba955
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ba955.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC  -fvisibility=hidden CMakeFiles/cmTC_ba955.dir/src.cxx.o -o cmTC_ba955 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WALL_WNO_ARRAY_BOUNDS succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_9df6f/fast && /usr/bin/make  -f CMakeFiles/cmTC_9df6f.dir/build.make CMakeFiles/cmTC_9df6f.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_9df6f.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WALL_WNO_ARRAY_BOUNDS  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden  -Wall -Wno-array-bounds   -Wall -Wno-array-bounds -o CMakeFiles/cmTC_9df6f.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_9df6f
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9df6f.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden  -Wall -Wno-array-bounds CMakeFiles/cmTC_9df6f.dir/src.cxx.o -o cmTC_9df6f 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_PTHREAD succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_11617/fast && /usr/bin/make  -f CMakeFiles/cmTC_11617.dir/build.make CMakeFiles/cmTC_11617.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_11617.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_PTHREAD  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds  -pthread   -pthread -o CMakeFiles/cmTC_11617.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_11617
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_11617.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds  -pthread CMakeFiles/cmTC_11617.dir/src.cxx.o -o cmTC_11617 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C SOURCE FILE Test HAVE_ASM_FLAG_FPIC succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_a8928/fast && /usr/bin/make  -f CMakeFiles/cmTC_a8928.dir/build.make CMakeFiles/cmTC_a8928.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_a8928.dir/src.c.o
+/usr/bin/cc -DHAVE_ASM_FLAG_FPIC  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -fPIC   -fPIC -o CMakeFiles/cmTC_a8928.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_a8928
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a8928.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -fPIC CMakeFiles/cmTC_a8928.dir/src.c.o -o cmTC_a8928 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HAVE_ASM_FLAG_FVISIBILITY_HIDDEN succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_e4a92/fast && /usr/bin/make  -f CMakeFiles/cmTC_e4a92.dir/build.make CMakeFiles/cmTC_e4a92.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_e4a92.dir/src.c.o
+/usr/bin/cc -DHAVE_ASM_FLAG_FVISIBILITY_HIDDEN  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -fvisibility=hidden   -fvisibility=hidden -o CMakeFiles/cmTC_e4a92.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_e4a92
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e4a92.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -fvisibility=hidden CMakeFiles/cmTC_e4a92.dir/src.c.o -o cmTC_e4a92 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HAVE_ASM_FLAG_WALL_WNO_ARRAY_BOUNDS succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_da072/fast && /usr/bin/make  -f CMakeFiles/cmTC_da072.dir/build.make CMakeFiles/cmTC_da072.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_da072.dir/src.c.o
+/usr/bin/cc -DHAVE_ASM_FLAG_WALL_WNO_ARRAY_BOUNDS  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -Wall -Wno-array-bounds   -Wall -Wno-array-bounds -o CMakeFiles/cmTC_da072.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_da072
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_da072.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -Wall -Wno-array-bounds CMakeFiles/cmTC_da072.dir/src.c.o -o cmTC_da072 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HAVE_ASM_FLAG_PTHREAD succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_8db8c/fast && /usr/bin/make  -f CMakeFiles/cmTC_8db8c.dir/build.make CMakeFiles/cmTC_8db8c.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_8db8c.dir/src.c.o
+/usr/bin/cc -DHAVE_ASM_FLAG_PTHREAD  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -pthread   -pthread -o CMakeFiles/cmTC_8db8c.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_8db8c
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8db8c.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -pthread CMakeFiles/cmTC_8db8c.dir/src.c.o -o cmTC_8db8c 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HAVE_C_FLAG_FFUNCTION_SECTIONS_FDATA_SECTIONS succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_59714/fast && /usr/bin/make  -f CMakeFiles/cmTC_59714.dir/build.make CMakeFiles/cmTC_59714.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_59714.dir/src.c.o
+/usr/bin/cc -DHAVE_C_FLAG_FFUNCTION_SECTIONS_FDATA_SECTIONS  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -ffunction-sections -fdata-sections   -ffunction-sections -fdata-sections -o CMakeFiles/cmTC_59714.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_59714
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_59714.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -ffunction-sections -fdata-sections CMakeFiles/cmTC_59714.dir/src.c.o -o cmTC_59714 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_FFUNCTION_SECTIONS_FDATA_SECTIONS succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_e3342/fast && /usr/bin/make  -f CMakeFiles/cmTC_e3342.dir/build.make CMakeFiles/cmTC_e3342.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_e3342.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_FFUNCTION_SECTIONS_FDATA_SECTIONS  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -ffunction-sections -fdata-sections   -ffunction-sections -fdata-sections -o CMakeFiles/cmTC_e3342.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_e3342
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e3342.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread  -ffunction-sections -fdata-sections CMakeFiles/cmTC_e3342.dir/src.cxx.o -o cmTC_e3342 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_FTEMPLATE_DEPTH_2014 succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_58b3c/fast && /usr/bin/make  -f CMakeFiles/cmTC_58b3c.dir/build.make CMakeFiles/cmTC_58b3c.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_58b3c.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_FTEMPLATE_DEPTH_2014  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections  -ftemplate-depth=2014   -ftemplate-depth=2014 -o CMakeFiles/cmTC_58b3c.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_58b3c
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_58b3c.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections  -ftemplate-depth=2014 CMakeFiles/cmTC_58b3c.dir/src.cxx.o -o cmTC_58b3c 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Determining if the include file pthread.h exists passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_ea70a/fast && /usr/bin/make  -f CMakeFiles/cmTC_ea70a.dir/build.make CMakeFiles/cmTC_ea70a.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_ea70a.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_ea70a.dir/CheckIncludeFile.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_ea70a
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ea70a.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_ea70a.dir/CheckIncludeFile.c.o -o cmTC_ea70a 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the posix_memalign exist passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_1a351/fast && /usr/bin/make  -f CMakeFiles/cmTC_1a351.dir/build.make CMakeFiles/cmTC_1a351.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_1a351.dir/CheckSymbolExists.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_1a351.dir/CheckSymbolExists.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_1a351
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1a351.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_1a351.dir/CheckSymbolExists.c.o -o cmTC_1a351 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+File /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <stdlib.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef posix_memalign
+  return ((int*)(&posix_memalign))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the include file malloc.h exists passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_d8d4d/fast && /usr/bin/make  -f CMakeFiles/cmTC_d8d4d.dir/build.make CMakeFiles/cmTC_d8d4d.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_d8d4d.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_d8d4d.dir/CheckIncludeFile.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_d8d4d
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d8d4d.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_d8d4d.dir/CheckIncludeFile.c.o -o cmTC_d8d4d 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the memalign exist passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_442f5/fast && /usr/bin/make  -f CMakeFiles/cmTC_442f5.dir/build.make CMakeFiles/cmTC_442f5.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_442f5.dir/CheckSymbolExists.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_442f5.dir/CheckSymbolExists.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_442f5
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_442f5.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_442f5.dir/CheckSymbolExists.c.o -o cmTC_442f5 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+File /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <malloc.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef memalign
+  return ((int*)(&memalign))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the include file /usr/include/libpng/png.h exists passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_57dc3/fast && /usr/bin/make  -f CMakeFiles/cmTC_57dc3.dir/build.make CMakeFiles/cmTC_57dc3.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_57dc3.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_57dc3.dir/CheckIncludeFile.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_57dc3
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_57dc3.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_57dc3.dir/CheckIncludeFile.c.o -o cmTC_57dc3 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the include file semaphore.h exists passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_cb677/fast && /usr/bin/make  -f CMakeFiles/cmTC_cb677.dir/build.make CMakeFiles/cmTC_cb677.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_cb677.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_cb677.dir/CheckIncludeFile.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_cb677
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cb677.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_cb677.dir/CheckIncludeFile.c.o -o cmTC_cb677 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the include file pthread.h exists passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_d863c/fast && /usr/bin/make  -f CMakeFiles/cmTC_d863c.dir/build.make CMakeFiles/cmTC_d863c.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_d863c.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_d863c.dir/CheckIncludeFile.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_d863c
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d863c.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_d863c.dir/CheckIncludeFile.c.o -o cmTC_d863c 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_b8c9c/fast && /usr/bin/make  -f CMakeFiles/cmTC_b8c9c.dir/build.make CMakeFiles/cmTC_b8c9c.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_b8c9c.dir/src.c.o
+/usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG  -DNDEBUG -fPIE -o CMakeFiles/cmTC_b8c9c.dir/src.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_b8c9c
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b8c9c.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG  -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_b8c9c.dir/src.c.o -o cmTC_b8c9c 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+#include <pthread.h>
+
+static void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_cancel(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+Determining if the function dlerror exists in the dl passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_0ddd6/fast && /usr/bin/make  -f CMakeFiles/cmTC_0ddd6.dir/build.make CMakeFiles/cmTC_0ddd6.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_0ddd6.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3 -DCHECK_FUNCTION_EXISTS=dlerror -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_0ddd6.dir/CheckFunctionExists.c.o -c /snap/cmake/912/share/cmake-3.21/Modules/CheckFunctionExists.c
+Linking C executable cmTC_0ddd6
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0ddd6.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3 -DCHECK_FUNCTION_EXISTS=dlerror -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_0ddd6.dir/CheckFunctionExists.c.o -o cmTC_0ddd6  -ldl 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the include file linux/videodev2.h exists passed with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_9fa25/fast && /usr/bin/make  -f CMakeFiles/cmTC_9fa25.dir/build.make CMakeFiles/cmTC_9fa25.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_9fa25.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG -fPIE -o CMakeFiles/cmTC_9fa25.dir/CheckIncludeFile.c.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_9fa25
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9fa25.dir/link.txt --verbose=1
+/usr/bin/cc  -DNDEBUG -O3 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections   -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Wno-comment -Wno-missing-field-initializers -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3  -O3 -DNDEBUG   -Wl,--gc-sections  CMakeFiles/cmTC_9fa25.dir/CheckIncludeFile.c.o -o cmTC_9fa25 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_STD_CXX11 succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_cbea7/fast && /usr/bin/make  -f CMakeFiles/cmTC_cbea7.dir/build.make CMakeFiles/cmTC_cbea7.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_cbea7.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_STD_CXX11  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11   -std=c++11 -o CMakeFiles/cmTC_cbea7.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_cbea7
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cbea7.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11 CMakeFiles/cmTC_cbea7.dir/src.cxx.o -o cmTC_cbea7 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WALL succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_8f1ad/fast && /usr/bin/make  -f CMakeFiles/cmTC_8f1ad.dir/build.make CMakeFiles/cmTC_8f1ad.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_8f1ad.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WALL  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall   -Wall -o CMakeFiles/cmTC_8f1ad.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_8f1ad
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8f1ad.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall CMakeFiles/cmTC_8f1ad.dir/src.cxx.o -o cmTC_8f1ad 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WEXTRA succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_400b8/fast && /usr/bin/make  -f CMakeFiles/cmTC_400b8.dir/build.make CMakeFiles/cmTC_400b8.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_400b8.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WEXTRA  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra   -Wextra -o CMakeFiles/cmTC_400b8.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_400b8
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_400b8.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra CMakeFiles/cmTC_400b8.dir/src.cxx.o -o cmTC_400b8 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WSHADOW succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_e1041/fast && /usr/bin/make  -f CMakeFiles/cmTC_e1041.dir/build.make CMakeFiles/cmTC_e1041.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_e1041.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WSHADOW  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow   -Wshadow -o CMakeFiles/cmTC_e1041.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_e1041
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e1041.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow CMakeFiles/cmTC_e1041.dir/src.cxx.o -o cmTC_e1041 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WERROR succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_86046/fast && /usr/bin/make  -f CMakeFiles/cmTC_86046.dir/build.make CMakeFiles/cmTC_86046.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_86046.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WERROR  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -Werror   -Werror -o CMakeFiles/cmTC_86046.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_86046
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_86046.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -Werror CMakeFiles/cmTC_86046.dir/src.cxx.o -o cmTC_86046 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_PEDANTIC succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_0245a/fast && /usr/bin/make  -f CMakeFiles/cmTC_0245a.dir/build.make CMakeFiles/cmTC_0245a.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_0245a.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_PEDANTIC  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic   -pedantic -o CMakeFiles/cmTC_0245a.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_0245a
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0245a.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic CMakeFiles/cmTC_0245a.dir/src.cxx.o -o cmTC_0245a 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_PEDANTIC_ERRORS succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_028c8/fast && /usr/bin/make  -f CMakeFiles/cmTC_028c8.dir/build.make CMakeFiles/cmTC_028c8.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_028c8.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_PEDANTIC_ERRORS  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors   -pedantic-errors -o CMakeFiles/cmTC_028c8.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_028c8
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_028c8.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors CMakeFiles/cmTC_028c8.dir/src.cxx.o -o cmTC_028c8 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_FSTRICT_ALIASING succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_155cd/fast && /usr/bin/make  -f CMakeFiles/cmTC_155cd.dir/build.make CMakeFiles/cmTC_155cd.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_155cd.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_FSTRICT_ALIASING  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing   -fstrict-aliasing -o CMakeFiles/cmTC_155cd.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_155cd
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_155cd.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing CMakeFiles/cmTC_155cd.dir/src.cxx.o -o cmTC_155cd 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WNO_DEPRECATED_DECLARATIONS succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_6ad6a/fast && /usr/bin/make  -f CMakeFiles/cmTC_6ad6a.dir/build.make CMakeFiles/cmTC_6ad6a.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_6ad6a.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WNO_DEPRECATED_DECLARATIONS  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations   -Wno-deprecated-declarations -o CMakeFiles/cmTC_6ad6a.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_6ad6a
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6ad6a.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations CMakeFiles/cmTC_6ad6a.dir/src.cxx.o -o cmTC_6ad6a 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WNO_DEPRECATED succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_6569a/fast && /usr/bin/make  -f CMakeFiles/cmTC_6569a.dir/build.make CMakeFiles/cmTC_6569a.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_6569a.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WNO_DEPRECATED  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated   -Wno-deprecated -o CMakeFiles/cmTC_6569a.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_6569a
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6569a.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated CMakeFiles/cmTC_6569a.dir/src.cxx.o -o cmTC_6569a 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WSTRICT_ALIASING succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_72e32/fast && /usr/bin/make  -f CMakeFiles/cmTC_72e32.dir/build.make CMakeFiles/cmTC_72e32.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_72e32.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_WSTRICT_ALIASING  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations  -Wstrict-aliasing   -Wstrict-aliasing -o CMakeFiles/cmTC_72e32.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_72e32
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_72e32.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations  -Wstrict-aliasing CMakeFiles/cmTC_72e32.dir/src.cxx.o -o cmTC_72e32 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_COVERAGE succeeded with the following output:
+Change Dir: /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_895a5/fast && /usr/bin/make  -f CMakeFiles/cmTC_895a5.dir/build.make CMakeFiles/cmTC_895a5.dir/build
+make[1]: Entering directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_895a5.dir/src.cxx.o
+/usr/bin/c++ -DHAVE_CXX_FLAG_COVERAGE  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations  -Wstrict-aliasing  --coverage   --coverage -o CMakeFiles/cmTC_895a5.dir/src.cxx.o -c /home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_895a5
+/snap/cmake/912/bin/cmake -E cmake_link_script CMakeFiles/cmTC_895a5.dir/link.txt --verbose=1
+/usr/bin/c++  -DNDEBUG -O3 -std=c++11 -fPIC -fvisibility=hidden -Wall -Wno-array-bounds -pthread -ffunction-sections -fdata-sections -ftemplate-depth=2014  -std=c++11  -Wall  -Wextra  -Wshadow  -pedantic  -pedantic-errors  -fstrict-aliasing  -Wno-deprecated-declarations  -Wstrict-aliasing  --coverage CMakeFiles/cmTC_895a5.dir/src.cxx.o -o cmTC_895a5 
+make[1]: Leaving directory '/home/sensetime/projects/github_opensource/ppl.cv/x64-build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }

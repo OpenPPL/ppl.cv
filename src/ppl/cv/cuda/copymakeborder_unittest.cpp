@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "copymakeborder.h"
+#include "ppl/cv/cuda/copymakeborder.h"
 
 #include <tuple>
 #include <sstream>

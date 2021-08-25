@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "cvtcolor.h"
+#include "ppl/cv/cuda/cvtcolor.h"
 
 #include <time.h>
 #include <sys/time.h>

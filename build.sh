@@ -1,9 +1,10 @@
 #!/bin/bash
 
 workdir=`pwd`
-x64_build_dir="${workdir}/x64-build"
+x86_64_build_dir="${workdir}/x86-64-build"
 cuda_build_dir="${workdir}/cuda-build"
-cpu_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
+aarch64_build_dir="${workdir}/aarch64-build"
+processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
 
 options='-DCMAKE_BUILD_TYPE=Release'
 
@@ -12,22 +13,44 @@ options='-DCMAKE_BUILD_TYPE=Release'
 function BuildCuda() {
     mkdir ${cuda_build_dir}
     cd ${cuda_build_dir}
-    cmd="cmake $options -DWITH_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && make -j${cpu_num} && make install"
+    cmd="cmake $options -DHPCC_USE_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && make -j${processor_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
 
-function BuildX64() {
-    mkdir ${x64_build_dir}
-    cd ${x64_build_dir}
-    cmd="cmake $options -DCMAKE_INSTALL_PREFIX=${x64_build_dir}/install .. && make -j${cpu_num} && make install"
+function BuildX86_64() {
+    mkdir ${x86_64_build_dir}
+    cd ${x86_64_build_dir}
+    cmd="cmake $options -DHPCC_USE_X86_64=ON -DCMAKE_INSTALL_PREFIX=${x86_64_build_dir}/install .. && make -j${processor_num} && make install"
+    echo "cmd -> $cmd"
+    eval "$cmd"
+}
+
+function BuildAarch64() {
+    arch=$(uname -m)
+    case "$arch" in
+        "x86_64")
+            extra_options="-DCMAKE_TOOLCHAIN_FILE=${workdir}/cmake/toolchains/aarch64-linux-gnu.cmake"
+            ;;
+        "aarch64")
+            ;;
+        *)
+            echo "unsupported arch -> $arch"
+            exit 1
+            ;;
+    esac
+
+    mkdir ${aarch64_build_dir}
+    cd ${aarch64_build_dir}
+    cmd="cmake $options ${extra_options} -DHPCC_USE_AARCH64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install .. && make -j${processor_num} && make install"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
 
 declare -A engine2func=(
     ["cuda"]=BuildCuda
-    ["x64"]=BuildX64
+    ["x86_64"]=BuildX86_64
+    ["aarch64"]=BuildAarch64
 )
 
 # --------------------------------------------------------------------------- #

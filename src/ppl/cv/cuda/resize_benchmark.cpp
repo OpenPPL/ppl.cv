@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "resize.h"
+#include "ppl/cv/cuda/resize.h"
 
 #include <time.h>
 #include <sys/time.h>
