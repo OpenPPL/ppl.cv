@@ -93,11 +93,11 @@ void BM_Split_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst2(dst);
   cv::cuda::GpuMat gpu_dst3(dst);
 
-  int iterations = 3000;
-  struct timeval start, end;
-
   cv::cuda::GpuMat gpu_dsts0[3] = {gpu_dst0, gpu_dst1, gpu_dst2};
   cv::cuda::GpuMat gpu_dsts1[4] = {gpu_dst0, gpu_dst1, gpu_dst2, gpu_dst3};
+
+  int iterations = 3000;
+  struct timeval start, end;
 
   // warm up the GPU
   for (int i = 0; i < iterations; i++) {

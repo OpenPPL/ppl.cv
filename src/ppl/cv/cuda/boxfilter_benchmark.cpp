@@ -84,9 +84,6 @@ void BM_BoxFilter_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
 
-  int iterations = 1000;
-  struct timeval start, end;
-
   cv::BorderTypes border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_REPLICATE) {
     border = cv::BORDER_REPLICATE;
@@ -99,6 +96,9 @@ void BM_BoxFilter_opencv_cuda(benchmark::State &state) {
   }
   else {
   }
+
+  int iterations = 1000;
+  struct timeval start, end;
 
   // warm up the GPU
   for (int i = 0; i < iterations; i++) {

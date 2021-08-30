@@ -109,19 +109,18 @@ namespace cuda {
  * @endcode
  */
 template <typename T, int channels>
-ppl::common::RetCode
-SepFilter2D(cudaStream_t stream,
-            int height,
-            int width,
-            int inWidthStride,
-            const T* inData,
-            int ksize,
-            const float* kernelX,
-            const float* kernelY,
-            int outWidthStride,
-            T* outData,
-            float delta = 0.f,
-            BorderType border_type = ppl::cv::BORDER_TYPE_DEFAULT);
+ppl::common::RetCode SepFilter2D(cudaStream_t stream,
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const T* inData,
+                                 int ksize,
+                                 const float* kernelX,
+                                 const float* kernelY,
+                                 int outWidthStride,
+                                 T* outData,
+                                 float delta = 0.f,
+                                 BorderType border_type = BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv
