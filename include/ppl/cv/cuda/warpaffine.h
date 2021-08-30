@@ -77,11 +77,11 @@ namespace cuda {
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   const int src_width  = 320;
- *   const int src_height = 240;
- *   const int dst_width  = 640;
- *   const int dst_height = 480;
- *   const int channels   = 3;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
+ *   int channels   = 3;
  *
  *   float* dev_input;
  *   float* dev_output;
@@ -174,11 +174,11 @@ WarpAffineLinear(cudaStream_t stream,
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   const int src_width  = 320;
- *   const int src_height = 240;
- *   const int dst_width  = 640;
- *   const int dst_height = 480;
- *   const int channels   = 3;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
+ *   int channels   = 3;
  *
  *   float* dev_input;
  *   float* dev_output;
