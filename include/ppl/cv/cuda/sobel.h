@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_SEPFILTER2D_H_
-#define _ST_HPC_PPL3_CV_CUDA_SEPFILTER2D_H_
+#ifndef _ST_HPC_PPL3_CV_CUDA_SOBEL_H_
+#define _ST_HPC_PPL3_CV_CUDA_SOBEL_H_
 
 #include "cuda_runtime.h"
 
@@ -27,7 +27,8 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Convolves an image with separable linear filters.
+ * @brief Calculates the first, second and third image derivatives using an
+ *        extended Sobel operator.
  * @tparam Tsrc The data type of input image, currently only uint8_t(uchar) and
  *         float are supported.
  * @tparam Tdst The data type of output image, currently uint8_t(uchar), short
@@ -41,12 +42,15 @@ namespace cuda {
  *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                       for 2D cudaMallocPitch() allocated data.
  * @param inData         input image data.
- * @param ksize          the length of kernel in X&Y direction.
- * @param kernelX        coefficients for filtering each row.
- * @param kernelY        coefficients for filtering each column.
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
+ * @param dx             order of the derivative x.
+ * @param dy             order of the derivative y.
+ * @param ksize          the length of laplace kernel in X&Y direction. 1, 3, 5
+ *                       and 7 are supported.
+ * @param scale          optional scale factor for the computed derivative
+ *                       values; by default, no scaling is applied.
  * @param delta          optional value added to the filtered pixels.
  * @param border_type    ways to deal with border. BORDER_TYPE_REPLICATE,
  *                       BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
@@ -54,7 +58,9 @@ namespace cuda {
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 The anchor is at the kernel center.
+ *       2 The output image has the same size and channels as the input image.
+ *       3 When input is uchar, output should be 16 bits signed integer. There
+ *         will be an overflow in the uchar input&output.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -81,13 +87,13 @@ namespace cuda {
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>CUDA platforms supported<td>CUDA 7.0
- * <tr><td>Header files <td>#include "ppl/cv/cuda/sepfilter2d.h"
+ * <tr><td>Header files <td>#include "ppl/cv/cuda/sobel.h"
  * <tr><td>Project      <td>ppl.cv
  * </table>
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include "ppl/cv/cuda/sepfilter2d.h"
+ * #include "ppl/cv/cuda/sobel.h"
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
@@ -95,27 +101,26 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 3;
  *   int ksize = 3;
+ *   int dx = 2;
+ *   int dy = 0;
  *
  *   float* dev_input;
- *   float* dev_kernel;
  *   float* dev_output;
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMalloc(&dev_kernel, ksize * sizeof(float));
  *   cudaMallocPitch(&dev_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   SepFilter2D<float, float, 3>(stream, height, width,
- *       input_pitch / sizeof(float), dev_input, ksize, dev_kernel, dev_kernel,
- *       output_pitch / sizeof(float), dev_output, 0.f,
- *       ppl::cv::BORDER_TYPE_DEFAULT);
+ *   Sobel<float, float, 3>(stream, height, width,
+ *                          input_pitch / sizeof(float), dev_input,
+ *                          output_pitch / sizeof(float), dev_output, dx, dy,
+ *                          ksize, 1.f, 0.f, ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
- *   cudaFree(dev_kernel);
  *   cudaFree(dev_output);
  *
  *   return 0;
@@ -123,21 +128,22 @@ namespace cuda {
  * @endcode
  */
 template <typename Tsrc, typename Tdst, int channels>
-ppl::common::RetCode SepFilter2D(cudaStream_t stream,
-                                 int height,
-                                 int width,
-                                 int inWidthStride,
-                                 const Tsrc* inData,
-                                 int ksize,
-                                 const float* kernelX,
-                                 const float* kernelY,
-                                 int outWidthStride,
-                                 Tdst* outData,
-                                 float delta = 0.f,
-                                 BorderType border_type = BORDER_TYPE_DEFAULT);
+ppl::common::RetCode Sobel(cudaStream_t stream,
+                           int height,
+                           int width,
+                           int inWidthStride,
+                           const Tsrc* inData,
+                           int outWidthStride,
+                           Tdst* outData,
+                           int dx,
+                           int dy,
+                           int ksize = 3,
+                           float scale = 1.f,
+                           float delta = 0.f,
+                           BorderType border_type = BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_SEPFILTER2D_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_SOBEL_H_

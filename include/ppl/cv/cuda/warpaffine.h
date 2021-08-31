@@ -96,9 +96,9 @@ namespace cuda {
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   WarpAffineLinear<float, 3>(stream, src_height, src_width,
- *     input_pitch / sizeof(float), dev_input, dst_height, dst_width,
- *     output_pitch / sizeof(float), dev_output, affine_matrix,
- *     BORDER_TYPE_CONSTANT, 0);
+ *       input_pitch / sizeof(float), dev_input, dst_height, dst_width,
+ *       output_pitch / sizeof(float), dev_output, affine_matrix,
+ *       BORDER_TYPE_CONSTANT, 0);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -193,9 +193,9 @@ WarpAffineLinear(cudaStream_t stream,
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   WarpAffineNearestPoint<float, 3>(stream, src_height, src_width,
- *     input_pitch / sizeof(float), dev_input, dst_height, dst_width,
- *     output_pitch / sizeof(float), dev_output, affine_matrix,
- *     BORDER_TYPE_CONSTANT, 0);
+ *       input_pitch / sizeof(float), dev_input, dst_height, dst_width,
+ *       output_pitch / sizeof(float), dev_output, affine_matrix,
+ *       BORDER_TYPE_CONSTANT, 0);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);

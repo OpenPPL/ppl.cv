@@ -127,19 +127,19 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
   cv::sepFilter2D(src, cv_dst, cv_dst.depth(), kernel0, kernel0,
                   cv::Point(-1, -1), delta, cv_border);
 
-  SepFilter2D<Tsrc, channels>(0, gpu_src.rows, gpu_src.cols,
+  SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize, gpu_kernel,
       gpu_kernel, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta,
       border_type);
   gpu_dst.download(dst);
 
-  SepFilter2D<Tsrc, channels>(0, size.height, size.width, size.width * channels,
-      gpu_input, ksize, gpu_kernel, gpu_kernel, size.width * channels,
-      gpu_output, delta, border_type);
+  SepFilter2D<Tsrc, Tdst, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, ksize, gpu_kernel, gpu_kernel,
+      size.width * channels, gpu_output, delta, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
-  if (sizeof(Tdst) == 1) {
+  if (sizeof(Tdst) <= 2) {
     epsilon = EPSILON_1F;
   }
   else {
@@ -159,15 +159,15 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
 }
 
 #define UNITTEST(Tsrc, Tdst, channels)                                         \
-using PplCvCudaSepFilter2DTest ## Tsrc ## channels =                           \
+using PplCvCudaSepFilter2DTest ## Tdst ## channels =                           \
         PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>;                        \
-TEST_P(PplCvCudaSepFilter2DTest ## Tsrc ## channels, Standard) {               \
+TEST_P(PplCvCudaSepFilter2DTest ## Tdst ## channels, Standard) {               \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
-  PplCvCudaSepFilter2DTest ## Tsrc ## channels,                                \
+  PplCvCudaSepFilter2DTest ## Tdst ## channels,                                \
   ::testing::Combine(                                                          \
     ::testing::Values(1, 4, 5, 13, 28, 43),                                    \
     ::testing::Values(0, 10, 43),                                              \
@@ -178,7 +178,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaSepFilter2DTest ## Tsrc ## channels::ParamType>& info) {        \
+      PplCvCudaSepFilter2DTest ## Tdst ## channels::ParamType>& info) {        \
     return convertToStringFilter2D(info.param);                                \
   }                                                                            \
 );
@@ -186,6 +186,9 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
 UNITTEST(uchar, uchar, 1)
 UNITTEST(uchar, uchar, 3)
 UNITTEST(uchar, uchar, 4)
+UNITTEST(uchar, short, 1)
+UNITTEST(uchar, short, 3)
+UNITTEST(uchar, short, 4)
 UNITTEST(float, float, 1)
 UNITTEST(float, float, 3)
 UNITTEST(float, float, 4)

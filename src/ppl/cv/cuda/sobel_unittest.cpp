@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/laplacian.h"
+#include "ppl/cv/cuda/sobel.h"
 
 #include <tuple>
 #include <sstream>
@@ -27,12 +27,18 @@
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
-using Parameters = std::tuple<int, BorderType, cv::Size>;
-inline std::string convertToStringLaplacian(const Parameters& parameters) {
+struct Kernel {
+  int dxy;
+  int ksize;
+};
+
+using Parameters = std::tuple<Kernel, BorderType, cv::Size>;
+inline std::string convertToStringSobel(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int ksize = std::get<0>(parameters);
-  formatted << "Ksize" << ksize << "_";
+  Kernel kernel = std::get<0>(parameters);
+  formatted << "Dxy" << kernel.dxy << "_";
+  formatted << "Ksize" << kernel.ksize << "_";
 
   BorderType border_type = (BorderType)std::get<1>(parameters);
   if (border_type == BORDER_TYPE_REPLICATE) {
@@ -56,28 +62,28 @@ inline std::string convertToStringLaplacian(const Parameters& parameters) {
 }
 
 template <typename Tsrc, typename Tdst, int channels>
-class PplCvCudaLaplacianTest : public ::testing::TestWithParam<Parameters> {
+class PplCvCudaSobelTest : public ::testing::TestWithParam<Parameters> {
  public:
-  PplCvCudaLaplacianTest() {
+  PplCvCudaSobelTest() {
     const Parameters& parameters = GetParam();
-    ksize       = std::get<0>(parameters);
+    kernel      = std::get<0>(parameters);
     border_type = std::get<1>(parameters);
     size        = std::get<2>(parameters);
   }
 
-  ~PplCvCudaLaplacianTest() {
+  ~PplCvCudaSobelTest() {
   }
 
   bool apply();
 
  private:
-  int ksize;
+  Kernel kernel;
   BorderType border_type;
   cv::Size size;
 };
 
 template <typename Tsrc, typename Tdst, int channels>
-bool PplCvCudaLaplacianTest<Tsrc, Tdst, channels>::apply() {
+bool PplCvCudaSobelTest<Tsrc, Tdst, channels>::apply() {
   cv::Mat src;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels));
@@ -114,21 +120,22 @@ bool PplCvCudaLaplacianTest<Tsrc, Tdst, channels>::apply() {
   }
   else {
   }
-  cv::Laplacian(src, cv_dst, cv_dst.depth(), ksize, scale, delta, cv_border);
+  cv::Sobel(src, cv_dst, cv_dst.depth(), kernel.dxy, 0, kernel.ksize, scale,
+            delta, cv_border);
 
-  Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
+  Sobel<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
-      gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, ksize, scale, delta,
-      border_type);
+      gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, kernel.dxy, 0,
+      kernel.ksize, scale, delta, border_type);
   gpu_dst.download(dst);
 
-  Laplacian<Tsrc, Tdst, channels>(0, size.height, size.width,
+  Sobel<Tsrc, Tdst, channels>(0, size.height, size.width,
       size.width * channels, gpu_input, size.width * channels, gpu_output,
-      ksize, scale, delta, border_type);
+      kernel.dxy, 0, kernel.ksize, scale, delta, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
-  if (sizeof(Tdst) <= 2) {
+  if (sizeof(Tdst) == 1 || sizeof(Tdst) == 2) {
     epsilon = EPSILON_1F;
   }
   else {
@@ -146,16 +153,18 @@ bool PplCvCudaLaplacianTest<Tsrc, Tdst, channels>::apply() {
 }
 
 #define UNITTEST(Tsrc, Tdst, channels)                                         \
-using PplCvCudaLaplacianTest ## Tdst ## channels =                             \
-        PplCvCudaLaplacianTest<Tsrc, Tdst, channels>;                          \
-TEST_P(PplCvCudaLaplacianTest ## Tdst ## channels, Standard) {                 \
+using PplCvCudaSobelTest ## Tdst ## channels =                                 \
+        PplCvCudaSobelTest<Tsrc, Tdst, channels>;                              \
+TEST_P(PplCvCudaSobelTest ## Tdst ## channels, Standard) {                     \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaLaplacianTest ## Tdst ## channels,   \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaSobelTest ## Tdst ## channels,       \
   ::testing::Combine(                                                          \
-    ::testing::Values(1, 3, 5),                                                \
+    ::testing::Values(Kernel{1, 1}, Kernel{2, 1}, Kernel{1, 3},                \
+                      Kernel{2, 3}, Kernel{1, 5}, Kernel{2, 5}, Kernel{3, 5},  \
+                      Kernel{1, 7}, Kernel{2, 7}, Kernel{3, 7}),               \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
                       BORDER_TYPE_REFLECT_101),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
@@ -163,8 +172,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaLaplacianTest ## Tdst ## channels,   \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaLaplacianTest ## Tdst ## channels::ParamType>& info) {          \
-    return convertToStringLaplacian(info.param);                               \
+      PplCvCudaSobelTest ## Tdst ## channels::ParamType>& info) {              \
+    return convertToStringSobel(info.param);                                   \
   }                                                                            \
 );
 
