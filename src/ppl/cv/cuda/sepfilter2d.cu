@@ -222,6 +222,26 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         }
       }
     }
+    else if (sizeof(Tdst) == 2) {
+      if (element_x < cols - 4) {
+        output[element_x]     = saturate_cast_f2s(sum.x);
+        output[element_x + 1] = saturate_cast_f2s(sum.y);
+        output[element_x + 2] = saturate_cast_f2s(sum.z);
+        output[element_x + 3] = saturate_cast_f2s(sum.w);
+      }
+      else {
+        output[element_x] = saturate_cast_f2s(sum.x);
+        if (element_x < cols - 1) {
+          output[element_x + 1] = saturate_cast_f2s(sum.y);
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = saturate_cast_f2s(sum.z);
+        }
+        if (element_x < cols - 3) {
+          output[element_x + 3] = saturate_cast_f2s(sum.w);
+        }
+      }
+    }
     else {
       if (element_x < cols - 4) {
         output[element_x]     = sum.x;
@@ -675,6 +695,12 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
       output[index + 2] = saturate_cast(sum.z);
       output[index + 3] = saturate_cast(sum.w);
     }
+    else if (sizeof(Tdst) == 2) {
+      output[index] = saturate_cast_f2s(sum.x);
+      output[index + 1] = saturate_cast_f2s(sum.y);
+      output[index + 2] = saturate_cast_f2s(sum.z);
+      output[index + 3] = saturate_cast_f2s(sum.w);
+    }
     else {
       output[index] = sum.x;
       output[index + 1] = sum.y;
@@ -693,6 +719,18 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
       }
       if (index < cols - 3) {
         output[index + 3] = saturate_cast(sum.w);
+      }
+    }
+    else if (sizeof(Tdst) == 2) {
+      output[index] = saturate_cast_f2s(sum.x);
+      if (index < cols - 1) {
+        output[index + 1] = saturate_cast_f2s(sum.y);
+      }
+      if (index < cols - 2) {
+        output[index + 2] = saturate_cast_f2s(sum.z);
+      }
+      if (index < cols - 3) {
+        output[index + 3] = saturate_cast_f2s(sum.w);
       }
     }
     else {
@@ -766,10 +804,13 @@ void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
   if (sizeof(Tdst) == 1) {
     data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
   }
+  else if (sizeof(Tdst) == 2) {
+    data[threadIdx.y][threadIdx.x] = saturate_cast_f2s(sum);
+  }
   __syncthreads();
 
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
-  if (sizeof(Tdst) == 1) {
+  if (sizeof(Tdst) <= 2) {
     if (threadIdx.x < kBlockDimX1) {
       element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
       data_index = threadIdx.x << 2;
@@ -1049,6 +1090,139 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   return RC_SUCCESS;
 }
 
+RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
+                    int src_stride, const float* kernel_x,
+                    const float* kernel_y, int ksize, short* dst,
+                    int dst_stride, float delta, BorderType border_type,
+                    cudaStream_t stream) {
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(kernel_x != nullptr);
+  PPL_ASSERT(kernel_y != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(short));
+  PPL_ASSERT(ksize > 0);
+  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_REFLECT ||
+             border_type == BORDER_TYPE_REFLECT_101 ||
+             border_type == BORDER_TYPE_DEFAULT);
+
+  int radius = ksize >> 1;
+  bool is_symmetric = ksize & 1;
+
+  cudaError_t code;
+  if (ksize <= 31 && channels == 1) {
+    dim3 block, grid;
+    block.x = kDimX0;
+    block.y = kDimY0;
+    grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
+    grid.y = divideUp(rows, kDimY0, kShiftY0);
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, uchar, short);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, uchar, short);
+    }
+    else {
+      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, uchar, short);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
+  if (ksize <= SMALL_KSIZE && (channels == 3 || channels == 4)) {
+    dim3 block, grid;
+    block.x = kDimX0;
+    block.y = kDimY0;
+    grid.x = divideUp(cols, kDimX0, kShiftX0);
+    grid.y = divideUp(rows, kDimY0, kShiftY0);
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder, uchar, short);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder, uchar, short);
+    }
+    else {
+      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border, uchar, short);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
+  dim3 block, grid;
+  block.x = kBlockDimX1;
+  block.y = kBlockDimY1;
+  grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
+  grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+
+  dim3 grid1;
+  grid1.x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
+  grid1.y = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+
+  dim3 grid2;
+  grid2.x = divideUp(divideUp(cols, 2, 1), kBlockDimX1, kBlockShiftX1);
+  grid2.y = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+
+  dim3 block3, grid3;
+  block3.x = kDimX0;
+  block3.y = kDimY0;
+  int columns = cols * channels;
+  int columns4 = divideUp(columns, 4, 2);
+  grid3.x = divideUp(columns4, kDimX0, kShiftX0);
+  grid3.y = divideUp(rows, kDimY0, kShiftY0);
+
+  dim3 block4, grid4;
+  block4.x = (kBlockDimX1 << 2);
+  block4.y = kBlockDimY1;
+  grid4.x  = divideUp(columns, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
+  grid4.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+
+  float* buffer;
+  size_t pitch;
+  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                         rows);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
+
+  if (border_type == BORDER_TYPE_REPLICATE) {
+    RUN_KERNELS(ReplicateBorder, uchar, short);
+  }
+  else if (border_type == BORDER_TYPE_REFLECT) {
+    RUN_KERNELS(ReflectBorder, uchar, short);
+  }
+  else {
+    RUN_KERNELS(Reflect101Border, uchar, short);
+  }
+
+  cudaFree(buffer);
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
+}
+
 RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
                     int src_stride, const float* kernel_x,
                     const float* kernel_y, int ksize, float* dst,
@@ -1183,18 +1357,18 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
 }
 
 template <>
-RetCode SepFilter2D<uchar, 1>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int ksize,
-                              const float* kernelX,
-                              const float* kernelY,
-                              int outWidthStride,
-                              uchar* outData,
-                              float delta,
-                              BorderType border_type) {
+RetCode SepFilter2D<uchar, uchar, 1>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const uchar* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     uchar* outData,
+                                     float delta,
+                                     BorderType border_type) {
   RetCode code = sepfilter2D(inData, height, width, 1, inWidthStride, kernelX,
                              kernelY, ksize, outData, outWidthStride, delta,
                              border_type, stream);
@@ -1203,18 +1377,18 @@ RetCode SepFilter2D<uchar, 1>(cudaStream_t stream,
 }
 
 template <>
-RetCode SepFilter2D<uchar, 3>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int ksize,
-                              const float* kernelX,
-                              const float* kernelY,
-                              int outWidthStride,
-                              uchar* outData,
-                              float delta,
-                              BorderType border_type) {
+RetCode SepFilter2D<uchar, uchar, 3>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const uchar* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     uchar* outData,
+                                     float delta,
+                                     BorderType border_type) {
   RetCode code = sepfilter2D(inData, height, width, 3, inWidthStride, kernelX,
                              kernelY, ksize, outData, outWidthStride, delta,
                              border_type, stream);
@@ -1223,18 +1397,18 @@ RetCode SepFilter2D<uchar, 3>(cudaStream_t stream,
 }
 
 template <>
-RetCode SepFilter2D<uchar, 4>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int ksize,
-                              const float* kernelX,
-                              const float* kernelY,
-                              int outWidthStride,
-                              uchar* outData,
-                              float delta,
-                              BorderType border_type) {
+RetCode SepFilter2D<uchar, uchar, 4>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const uchar* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     uchar* outData,
+                                     float delta,
+                                     BorderType border_type) {
   RetCode code = sepfilter2D(inData, height, width, 4, inWidthStride, kernelX,
                              kernelY, ksize, outData, outWidthStride, delta,
                              border_type, stream);
@@ -1243,18 +1417,81 @@ RetCode SepFilter2D<uchar, 4>(cudaStream_t stream,
 }
 
 template <>
-RetCode SepFilter2D<float, 1>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const float* inData,
-                              int ksize,
-                              const float* kernelX,
-                              const float* kernelY,
-                              int outWidthStride,
-                              float* outData,
-                              float delta,
-                              BorderType border_type) {
+RetCode SepFilter2D<uchar, short, 1>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const uchar* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     short* outData,
+                                     float delta,
+                                     BorderType border_type) {
+  outWidthStride *= sizeof(short);
+  RetCode code = sepfilter2D(inData, height, width, 1, inWidthStride, kernelX,
+                             kernelY, ksize, outData, outWidthStride, delta,
+                             border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode SepFilter2D<uchar, short, 3>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const uchar* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     short* outData,
+                                     float delta,
+                                     BorderType border_type) {
+  outWidthStride *= sizeof(short);
+  RetCode code = sepfilter2D(inData, height, width, 3, inWidthStride, kernelX,
+                             kernelY, ksize, outData, outWidthStride, delta,
+                             border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode SepFilter2D<uchar, short, 4>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const uchar* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     short* outData,
+                                     float delta,
+                                     BorderType border_type) {
+  outWidthStride *= sizeof(short);
+  RetCode code = sepfilter2D(inData, height, width, 4, inWidthStride, kernelX,
+                             kernelY, ksize, outData, outWidthStride, delta,
+                             border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode SepFilter2D<float, float, 1>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const float* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     float* outData,
+                                     float delta,
+                                     BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = sepfilter2D(inData, height, width, 1, inWidthStride, kernelX,
@@ -1265,18 +1502,18 @@ RetCode SepFilter2D<float, 1>(cudaStream_t stream,
 }
 
 template <>
-RetCode SepFilter2D<float, 3>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const float* inData,
-                              int ksize,
-                              const float* kernelX,
-                              const float* kernelY,
-                              int outWidthStride,
-                              float* outData,
-                              float delta,
-                              BorderType border_type) {
+RetCode SepFilter2D<float, float, 3>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const float* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     float* outData,
+                                     float delta,
+                                     BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = sepfilter2D(inData, height, width, 3, inWidthStride, kernelX,
@@ -1287,18 +1524,18 @@ RetCode SepFilter2D<float, 3>(cudaStream_t stream,
 }
 
 template <>
-RetCode SepFilter2D<float, 4>(cudaStream_t stream,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const float* inData,
-                              int ksize,
-                              const float* kernelX,
-                              const float* kernelY,
-                              int outWidthStride,
-                              float* outData,
-                              float delta,
-                              BorderType border_type) {
+RetCode SepFilter2D<float, float, 4>(cudaStream_t stream,
+                                     int height,
+                                     int width,
+                                     int inWidthStride,
+                                     const float* inData,
+                                     int ksize,
+                                     const float* kernelX,
+                                     const float* kernelY,
+                                     int outWidthStride,
+                                     float* outData,
+                                     float delta,
+                                     BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = sepfilter2D(inData, height, width, 4, inWidthStride, kernelX,
