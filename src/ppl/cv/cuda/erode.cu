@@ -194,7 +194,7 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_WRAP ||
              border_type == BORDER_TYPE_REFLECT_101);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, src_stride * rows,
@@ -397,7 +397,7 @@ RetCode erode(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_WRAP ||
              border_type == BORDER_TYPE_REFLECT_101);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, src_stride * rows,

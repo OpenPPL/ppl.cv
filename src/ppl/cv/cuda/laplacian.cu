@@ -425,7 +425,7 @@ RetCode laplacian(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= 5 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -493,7 +493,7 @@ RetCode laplacian(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= 5 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -561,7 +561,7 @@ RetCode laplacian(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= 5 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;

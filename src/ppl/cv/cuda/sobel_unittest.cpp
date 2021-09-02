@@ -27,6 +27,8 @@
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
+#define SCHARR 101
+
 struct Kernel {
   int dxy;
   int ksize;
@@ -38,7 +40,7 @@ inline std::string convertToStringSobel(const Parameters& parameters) {
 
   Kernel kernel = std::get<0>(parameters);
   formatted << "Dxy" << kernel.dxy << "_";
-  if (kernel.ksize == 101) {
+  if (kernel.ksize == SCHARR) {
     formatted << "KsizeSCHARR" << "_";
   }
   else {
@@ -112,7 +114,7 @@ bool PplCvCudaSobelTest<Tsrc, Tdst, channels>::apply() {
 
   float scale = 1.5f;
   float delta = 1.5f;
-  if (kernel.ksize == 101) {
+  if (kernel.ksize == SCHARR) {
     kernel.ksize = -1;
   }
 
@@ -170,7 +172,7 @@ TEST_P(PplCvCudaSobelTest ## Tdst ## channels, Standard) {                     \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaSobelTest ## Tdst ## channels,       \
   ::testing::Combine(                                                          \
-    ::testing::Values(Kernel{1, 101}, Kernel{1, 1}, Kernel{1, 3},              \
+    ::testing::Values(Kernel{1, SCHARR}, Kernel{1, 1}, Kernel{1, 3},           \
                       Kernel{2, 3}, Kernel{1, 5}, Kernel{2, 5}, Kernel{3, 5},  \
                       Kernel{1, 7}, Kernel{2, 7}, Kernel{3, 7}),               \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
@@ -194,38 +196,3 @@ UNITTEST(uchar, short, 4)
 UNITTEST(float, float, 1)
 UNITTEST(float, float, 3)
 UNITTEST(float, float, 4)
-/*
-#define UNITTEST(Tsrc, Tdst, channels)                                         \
-using PplCvCudaSobelTest ## Tdst ## channels =                                 \
-        PplCvCudaSobelTest<Tsrc, Tdst, channels>;                              \
-TEST_P(PplCvCudaSobelTest ## Tdst ## channels, Standard) {                     \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
-}                                                                              \
-                                                                               \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaSobelTest ## Tdst ## channels,       \
-  ::testing::Combine(                                                          \
-    ::testing::Values(Kernel{1, 101}, Kernel{1, 1}, Kernel{1, 3},               \
-                      Kernel{2, 3}, Kernel{1, 5}, Kernel{2, 5}, Kernel{3, 5},  \
-                      Kernel{1, 7}, Kernel{2, 7}, Kernel{3, 7}),               \
-    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
-                      BORDER_TYPE_REFLECT_101),                                \
-    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
-                      cv::Size{1283, 720}, cv::Size{1934, 1080},               \
-                      cv::Size{320, 240}, cv::Size{640, 480},                  \
-                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
-  [](const testing::TestParamInfo<                                             \
-      PplCvCudaSobelTest ## Tdst ## channels::ParamType>& info) {              \
-    return convertToStringSobel(info.param);                                   \
-  }                                                                            \
-);
-
-UNITTEST(uchar, uchar, 1)
-UNITTEST(uchar, uchar, 3)
-UNITTEST(uchar, uchar, 4)
-UNITTEST(uchar, short, 1)
-UNITTEST(uchar, short, 3)
-UNITTEST(uchar, short, 4)
-UNITTEST(float, float, 1)
-UNITTEST(float, float, 3)
-UNITTEST(float, float, 4) */

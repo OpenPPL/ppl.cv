@@ -609,7 +609,7 @@ RetCode filter2D(const uchar* src, int rows, int cols, int channels,
 
   int radius = ksize >> 1;
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -715,7 +715,7 @@ RetCode filter2D(const float* src, int rows, int cols, int channels,
 
   int radius = ksize >> 1;
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
