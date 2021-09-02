@@ -979,7 +979,7 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= 31 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -1112,7 +1112,7 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= 31 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -1245,7 +1245,7 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
   int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (ksize <= 25 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;

@@ -31,12 +31,12 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-#define DEVICE_INLINE
-#if defined(DEVICE_INLINE)
-# define __DEVICE__ __device__ __forceinline__
-#else
-# define __DEVICE__ __device__
-#endif
+// #define DEVICE_INLINE
+// #if defined(DEVICE_INLINE)
+// # define __DEVICE__ __device__ __forceinline__
+// #else
+// # define __DEVICE__ __device__
+// #endif
 
 template <typename T>
 __DEVICE__
@@ -326,7 +326,7 @@ RetCode resizeLinear(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -374,7 +374,7 @@ RetCode resizeLinear(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -549,7 +549,7 @@ RetCode resizeNearestPoint(const uchar* src, int src_rows, int src_cols,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -610,7 +610,7 @@ RetCode resizeNearestPoint(const float* src, int src_rows, int src_cols,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -1466,7 +1466,7 @@ RetCode resizeArea(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -1554,7 +1554,7 @@ RetCode resizeArea(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
