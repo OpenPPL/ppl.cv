@@ -47,8 +47,8 @@ namespace cuda {
  * @param outData        output image data.
  * @param dx             order of the derivative x.
  * @param dy             order of the derivative y.
- * @param ksize          the length of laplace kernel in X&Y direction. 1, 3, 5
- *                       and 7 are supported.
+ * @param ksize          the length of laplace kernel in X&Y direction.
+ *                       -1(Scharr), 1, 3, 5and 7 are supported.
  * @param scale          optional scale factor for the computed derivative
  *                       values; by default, no scaling is applied.
  * @param delta          optional value added to the filtered pixels.
@@ -147,3 +147,4 @@ ppl::common::RetCode Sobel(cudaStream_t stream,
 }  // namespace ppl
 
 #endif  // _ST_HPC_PPL3_CV_CUDA_SOBEL_H_
+

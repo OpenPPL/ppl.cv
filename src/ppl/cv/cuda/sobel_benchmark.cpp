@@ -29,7 +29,7 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
-template <typename Tsrc, typename Tdst, int channels, int dxy, int ksize,
+template <typename Tsrc, typename Tdst, int channels, int ksize,
           BorderType border_type>
 void BM_Sobel_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -42,10 +42,11 @@ void BM_Sobel_ppl_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
 
+  int dxy = 1;
   float scale = 1.f;
   float delta = 0.f;
 
-  int iterations = 3000;
+  int iterations = 1000;
   struct timeval start, end;
 
   // warm up the GPU
@@ -74,7 +75,7 @@ void BM_Sobel_ppl_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename Tsrc, typename Tdst, int channels, int dxy, int ksize,
+template <typename Tsrc, typename Tdst, int channels, int ksize,
           BorderType border_type>
 void BM_Sobel_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -100,9 +101,10 @@ void BM_Sobel_opencv_cuda(benchmark::State &state) {
   else {
   }
 
+  int dxy = 1;
   float scale = 1.f;
 
-  int iterations = 3000;
+  int iterations = 1000;
   struct timeval start, end;
 
   // warm up the GPU
@@ -131,7 +133,7 @@ void BM_Sobel_opencv_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename Tsrc, typename Tdst, int channels, int dxy, int ksize,
+template <typename Tsrc, typename Tdst, int channels, int ksize,
           BorderType border_type>
 void BM_Sobel_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -155,6 +157,7 @@ void BM_Sobel_opencv_x86_cuda(benchmark::State &state) {
   else {
   }
 
+  int dxy = 1;
   float scale = 1.f;
   float delta = 0.f;
 
@@ -164,118 +167,183 @@ void BM_Sobel_opencv_x86_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_BENCHMARK0(src_type, dst_type, dxy, ksize, border_type, width, height)  \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c1,       \
-                   dxy, ksize, border_type)->Args({width, height});             \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, dxy, ksize,       \
+#define RUN_BENCHMARK0(src_type, dst_type, ksize, border_type, width, height)  \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c1, ksize,    \
+                   border_type)->Args({width, height});                        \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, ksize,           \
+                   border_type)->Args({width, height})->UseManualTime()->      \
+                   Iterations(10);
+/*
+#define RUN_BENCHMARK0(src_type, dst_type, ksize, border_type, width, height)  \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c1, ksize,    \
+                   border_type)->Args({width, height});                        \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, ksize,           \
                    border_type)->Args({width, height})->UseManualTime()->      \
                    Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c3,       \
-                   dxy, ksize, border_type)->Args({width, height});             \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c3, dxy, ksize,       \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c3, ksize,    \
+                   border_type)->Args({width, height});                        \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c3, ksize,           \
                    border_type)->Args({width, height})->UseManualTime()->      \
                    Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c4,       \
-                   dxy, ksize, border_type)->Args({width, height});             \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, dxy, ksize,       \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c4, ksize,    \
+                   border_type)->Args({width, height});                        \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, ksize,           \
+                   border_type)->Args({width, height})->UseManualTime()->      \
+                   Iterations(10); */
+
+// RUN_BENCHMARK0(uchar, uchar, 1, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 1, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 1, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 3, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 3, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 3, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 7, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 7, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, uchar, 7, BORDER_TYPE_REFLECT_101, 640, 480)
+
+// RUN_BENCHMARK0(uchar, short, 1, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 1, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 1, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 3, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 3, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 3, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 7, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 7, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, short, 7, BORDER_TYPE_REFLECT_101, 640, 480)
+
+RUN_BENCHMARK0(float, float, 3, BORDER_TYPE_REPLICATE, 640, 480)
+RUN_BENCHMARK0(float, float, 3, BORDER_TYPE_REFLECT, 640, 480)
+RUN_BENCHMARK0(float, float, 3, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(float, float, 3, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(float, float, 3, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(float, float, 3, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(float, float, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(float, float, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(float, float, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(float, float, 7, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(float, float, 7, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK0(float, float, 7, BORDER_TYPE_REFLECT_101, 640, 480)
+
+#define RUN_BENCHMARK1(src_type, dst_type, ksize, border_type, width, height)  \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c1, ksize,        \
+                   border_type)->Args({width, height})->                       \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, ksize,           \
+                   border_type)->Args({width, height})->UseManualTime()->      \
+                   Iterations(10);                                             \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c3, ksize,        \
+                   border_type)->Args({width, height})->                       \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c3, ksize,           \
+                   border_type)->Args({width, height})->UseManualTime()->      \
+                   Iterations(10);                                             \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c4, ksize,        \
+                   border_type)->Args({width, height})->                       \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, ksize,           \
                    border_type)->Args({width, height})->UseManualTime()->      \
                    Iterations(10);
 
-// RUN_BENCHMARK0(uchar, uchar, 2, 3, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 5, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 5, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 5, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 7, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 7, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(uchar, uchar, 2, 7, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 1, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 1, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 1, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 3, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 3, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 3, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 7, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 7, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, uchar, 7, BORDER_TYPE_REFLECT_101, 640, 480)
 
-// RUN_BENCHMARK0(uchar, short, 2, 3, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 3, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 3, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 5, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 5, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 5, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 7, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 7, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(uchar, short, 2, 7, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 1, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 1, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 1, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 3, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 3, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 3, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 7, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 7, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(uchar, short, 7, BORDER_TYPE_REFLECT_101, 640, 480)
 
-// RUN_BENCHMARK0(float, float, 2, 3, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 3, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 3, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 5, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 5, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 5, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 7, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 7, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK0(float, float, 2, 7, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, float, 1, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(float, float, 1, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(float, float, 1, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, float, 3, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(float, float, 3, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(float, float, 3, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(float, float, 5, BORDER_TYPE_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, float, 7, BORDER_TYPE_REPLICATE, 640, 480)
+// RUN_BENCHMARK1(float, float, 7, BORDER_TYPE_REFLECT, 640, 480)
+// RUN_BENCHMARK1(float, float, 7, BORDER_TYPE_REFLECT_101, 640, 480)
 
-#define RUN_BENCHMARK1(src_type, dst_type, dxy, ksize, border_type, width, height) \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c1,           \
-                   dxy, ksize, border_type)->Args({width, height})->            \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, dxy, ksize,       \
-                   border_type)->Args({width, height})->UseManualTime()->      \
-                   Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c4,           \
-                   dxy, ksize, border_type)->Args({width, height})->             \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, dxy, ksize,       \
-                   border_type)->Args({width, height})->UseManualTime()->      \
-                   Iterations(10);
-
-// RUN_BENCHMARK1(uchar, uchar, 2, 3, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK1(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK1(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT_101, 640, 480)
-
-// RUN_BENCHMARK1(float, float, 2, 3, BORDER_TYPE_REPLICATE, 640, 480)
-// RUN_BENCHMARK1(float, float, 2, 3, BORDER_TYPE_REFLECT, 640, 480)
-// RUN_BENCHMARK1(float, float, 2, 3, BORDER_TYPE_REFLECT_101, 640, 480)
-
-#define RUN_OPENCV_TYPE_FUNCTIONS(src_type, dst_type, dxy, ksize, border_type)  \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c1, dxy, ksize,\
+#define RUN_OPENCV_TYPE_FUNCTIONS(src_type, dst_type, ksize, border_type)  \
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c1, ksize,    \
                    border_type)->Args({640, 480});                             \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c3, dxy, ksize,\
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c3, ksize,    \
                    border_type)->Args({640, 480});                             \
-BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c4, dxy, ksize,\
+BENCHMARK_TEMPLATE(BM_Sobel_opencv_x86_cuda, src_type, dst_type, c4, ksize,    \
                    border_type)->Args({640, 480});
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(src_type, dst_type, dxy, ksize, border_type)  \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, dxy, ksize,       \
+#define RUN_PPL_CV_TYPE_FUNCTIONS(src_type, dst_type, ksize, border_type)  \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, ksize,           \
                    border_type)->Args({640, 480})->UseManualTime()->           \
                    Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c3, dxy, ksize,       \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c3, ksize,           \
                    border_type)->Args({640, 480})->UseManualTime()->           \
                    Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, dxy, ksize,       \
+BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, ksize,           \
                    border_type)->Args({640, 480})->UseManualTime()->           \
                    Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 2, 3, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT_101)
-RUN_OPENCV_TYPE_FUNCTIONS(float, float, 2, 3, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(float, float, 2, 3, BORDER_TYPE_REFLECT)
-RUN_OPENCV_TYPE_FUNCTIONS(float, float, 2, 3, BORDER_TYPE_REFLECT_101)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 3, BORDER_TYPE_REPLICATE)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 3, BORDER_TYPE_REFLECT)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 3, BORDER_TYPE_REFLECT_101)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, short, 3, BORDER_TYPE_REPLICATE)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, short, 3, BORDER_TYPE_REFLECT)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, short, 3, BORDER_TYPE_REFLECT_101)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 3, BORDER_TYPE_REPLICATE)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 3, BORDER_TYPE_REFLECT)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 3, BORDER_TYPE_REFLECT_101)
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 2, 5, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 2, 5, BORDER_TYPE_REFLECT)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 2, 5, BORDER_TYPE_REFLECT_101)
-RUN_OPENCV_TYPE_FUNCTIONS(float, float, 2, 5, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(float, float, 2, 5, BORDER_TYPE_REFLECT)
-RUN_OPENCV_TYPE_FUNCTIONS(float, float, 2, 5, BORDER_TYPE_REFLECT_101)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 7, BORDER_TYPE_REPLICATE)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 7, BORDER_TYPE_REFLECT)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, uchar, 7, BORDER_TYPE_REFLECT_101)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, short, 7, BORDER_TYPE_REPLICATE)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, short, 7, BORDER_TYPE_REFLECT)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, short, 7, BORDER_TYPE_REFLECT_101)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 7, BORDER_TYPE_REPLICATE)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 7, BORDER_TYPE_REFLECT)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 7, BORDER_TYPE_REFLECT_101)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 2, 3, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 2, 3, BORDER_TYPE_REFLECT_101)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 2, 3, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 2, 3, BORDER_TYPE_REFLECT)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 2, 3, BORDER_TYPE_REFLECT_101)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 3, BORDER_TYPE_REPLICATE)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 3, BORDER_TYPE_REFLECT)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 3, BORDER_TYPE_REFLECT_101)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, short, 3, BORDER_TYPE_REPLICATE)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, short, 3, BORDER_TYPE_REFLECT)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, short, 3, BORDER_TYPE_REFLECT_101)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 3, BORDER_TYPE_REPLICATE)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 3, BORDER_TYPE_REFLECT)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 3, BORDER_TYPE_REFLECT_101)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 2, 5, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 2, 5, BORDER_TYPE_REFLECT)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 2, 5, BORDER_TYPE_REFLECT_101)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 2, 5, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 2, 5, BORDER_TYPE_REFLECT)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 2, 5, BORDER_TYPE_REFLECT_101)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 7, BORDER_TYPE_REPLICATE)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 7, BORDER_TYPE_REFLECT)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, uchar, 7, BORDER_TYPE_REFLECT_101)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, short, 7, BORDER_TYPE_REPLICATE)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, short, 7, BORDER_TYPE_REFLECT)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, short, 7, BORDER_TYPE_REFLECT_101)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 7, BORDER_TYPE_REPLICATE)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 7, BORDER_TYPE_REFLECT)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 7, BORDER_TYPE_REFLECT_101)
