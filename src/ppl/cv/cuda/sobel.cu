@@ -31,8 +31,8 @@ namespace cuda {
 #define SMALL_KSIZE RADIUS * 2 + 1
 
 __DEVICE__
-void getScharrKernels(float* kernel_x, float* kernel_y, int dx, int dy,
-                      float scale) {
+void createScharrKernels(float* kernel_x, float* kernel_y, int dx, int dy,
+                         float scale) {
   if (dx < 0 || dy < 0 || dx + dy != 1) {
     return;
   }
@@ -60,8 +60,8 @@ void getScharrKernels(float* kernel_x, float* kernel_y, int dx, int dy,
 }
 
 __DEVICE__
-void getSobelKernels(float* kernel_x, float* kernel_y, int dx, int dy,
-                     int ksize, float scale) {
+void createSobelKernels(float* kernel_x, float* kernel_y, int dx, int dy,
+                        int ksize, float scale) {
   if (ksize > 31 || (ksize & 1) == 0) {
     return;
   }
@@ -146,10 +146,10 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 
   if (threadIdx.y == 0 && threadIdx.x == 0) {
     if (ksize == SCHARR_SIZE0) {
-      getScharrKernels(kernel_x, kernel_y, dx, dy, scale);
+      createScharrKernels(kernel_x, kernel_y, dx, dy, scale);
     }
     else {
-      getSobelKernels(kernel_x, kernel_y, dx, dy, ksize, scale);
+      createSobelKernels(kernel_x, kernel_y, dx, dy, ksize, scale);
     }
   }
   __syncthreads();
@@ -395,10 +395,10 @@ void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
 
   if (threadIdx.y == 0 && threadIdx.x == 0) {
     if (ksize == SCHARR_SIZE0) {
-      getScharrKernels(kernel_x, kernel_y, dx, dy, scale);
+      createScharrKernels(kernel_x, kernel_y, dx, dy, scale);
     }
     else {
-      getSobelKernels(kernel_x, kernel_y, dx, dy, ksize, scale);
+      createSobelKernels(kernel_x, kernel_y, dx, dy, ksize, scale);
     }
   }
   __syncthreads();

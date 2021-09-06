@@ -156,7 +156,7 @@ TEST_P(PplCvCudaGaussianBlurTest ## T ## channels, Standard) {                 \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaGaussianBlurTest ## T ## channels,                                  \
   ::testing::Combine(                                                          \
-    ::testing::Values(1, 5, 13, 27, 43),                                       \
+    ::testing::Values(1, 5, 13, 31, 43),                                       \
     ::testing::Values(0, 1, 7, 10, 43),                                        \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
                       BORDER_TYPE_REFLECT_101),                                \
