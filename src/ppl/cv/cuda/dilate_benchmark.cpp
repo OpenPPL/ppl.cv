@@ -62,7 +62,7 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
   int index = 0;
   for (int i = 0; i < ksize; i++) {
     const uchar* data = kernel.ptr<const uchar>(i);
-    for (int j = 0; j < ksize; j++)  {
+    for (int j = 0; j < ksize; j++) {
       mask[index++] = data[j];
     }
   }

@@ -507,6 +507,14 @@ void operator/=(float4 &result, float value) {
 }
 
 __DEVICE__
+void operator/=(float4 &result, float4 value) {
+  result.x /= value.x;
+  result.y /= value.y;
+  result.z /= value.z;
+  result.w /= value.w;
+}
+
+__DEVICE__
 void mulAdd(float &result, uchar &value0, float value1) {
   result += value0 * value1;
 }
