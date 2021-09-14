@@ -85,13 +85,12 @@ namespace cuda {
  *
  *   float* dev_input;
  *   float* dev_output;
- *   float* affine_matrix;
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
  *   cudaMallocPitch(&dev_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
- *   std::unique_ptr<float[]> affine_matrix(new float[6]);
+ *   float affine_matrix[6] = {0.05f, 0.33f, 0.9f, 0.25f, 0.2f, 0.7f};
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
@@ -182,13 +181,12 @@ WarpAffineLinear(cudaStream_t stream,
  *
  *   float* dev_input;
  *   float* dev_output;
- *   float* affine_matrix;
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
  *   cudaMallocPitch(&dev_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
- *   std::unique_ptr<float[]> affine_matrix(new float[6]);
+ *   float affine_matrix[6] = {0.05f, 0.33f, 0.9f, 0.25f, 0.2f, 0.7f};
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);

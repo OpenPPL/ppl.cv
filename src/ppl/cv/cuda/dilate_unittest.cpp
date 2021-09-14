@@ -117,7 +117,7 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
   int index = 0;
   for (int i = 0; i < ksize; i++) {
     const uchar* data = kernel1.ptr<const uchar>(i);
-    for (int j = 0; j < ksize; j++)  {
+    for (int j = 0; j < ksize; j++) {
       mask[index++] = data[j];
     }
   }
