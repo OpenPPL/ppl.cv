@@ -77,28 +77,27 @@ namespace cuda {
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   const int src_width  = 320;
- *   const int src_height = 240;
- *   const int dst_width  = 640;
- *   const int dst_height = 480;
- *   const int channels   = 3;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
+ *   int channels   = 3;
  *
  *   float* dev_input;
  *   float* dev_output;
- *   float* affine_matrix;
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
  *   cudaMallocPitch(&dev_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
- *   std::unique_ptr<float[]> affine_matrix(new float[6]);
+ *   float affine_matrix[6] = {0.05f, 0.33f, 0.9f, 0.25f, 0.2f, 0.7f};
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   WarpAffineLinear<float, 3>(stream, src_height, src_width,
- *     input_pitch / sizeof(float), dev_input, dst_height, dst_width,
- *     output_pitch / sizeof(float), dev_output, affine_matrix,
- *     BORDER_TYPE_CONSTANT, 0);
+ *       input_pitch / sizeof(float), dev_input, dst_height, dst_width,
+ *       output_pitch / sizeof(float), dev_output, affine_matrix,
+ *       BORDER_TYPE_CONSTANT, 0);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -174,28 +173,27 @@ WarpAffineLinear(cudaStream_t stream,
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   const int src_width  = 320;
- *   const int src_height = 240;
- *   const int dst_width  = 640;
- *   const int dst_height = 480;
- *   const int channels   = 3;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
+ *   int channels   = 3;
  *
  *   float* dev_input;
  *   float* dev_output;
- *   float* affine_matrix;
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
  *   cudaMallocPitch(&dev_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
- *   std::unique_ptr<float[]> affine_matrix(new float[6]);
+ *   float affine_matrix[6] = {0.05f, 0.33f, 0.9f, 0.25f, 0.2f, 0.7f};
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   WarpAffineNearestPoint<float, 3>(stream, src_height, src_width,
- *     input_pitch / sizeof(float), dev_input, dst_height, dst_width,
- *     output_pitch / sizeof(float), dev_output, affine_matrix,
- *     BORDER_TYPE_CONSTANT, 0);
+ *       input_pitch / sizeof(float), dev_input, dst_height, dst_width,
+ *       output_pitch / sizeof(float), dev_output, affine_matrix,
+ *       BORDER_TYPE_CONSTANT, 0);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);

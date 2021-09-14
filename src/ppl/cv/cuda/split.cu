@@ -26,8 +26,8 @@ namespace cuda {
 
 template <typename T>
 __global__
-void split3_kernel(const T* src, int rows, int cols, int src_stride, T* dst0,
-                   T* dst1, T* dst2, int dst_stride) {
+void split3Kernel(const T* src, int rows, int cols, int src_stride, T* dst0,
+                  T* dst1, T* dst2, int dst_stride) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -67,9 +67,8 @@ RetCode split3Channels(const uchar* src, int rows, int cols, int src_stride,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  split3_kernel<uchar><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-                                                   dst0, dst1, dst2,
-                                                   dst_stride);
+  split3Kernel<uchar><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+                                                  dst0, dst1, dst2, dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -97,9 +96,8 @@ RetCode split3Channels(const float* src, int rows, int cols, int src_stride,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  split3_kernel<float><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-                                                   dst0, dst1, dst2,
-                                                   dst_stride);
+  split3Kernel<float><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+                                                  dst0, dst1, dst2, dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -146,8 +144,8 @@ RetCode Split3Channels<float>(cudaStream_t stream,
 
 template <typename T>
 __global__
-void split4_kernel(const T* src, int rows, int cols, int src_stride, T* dst0,
-                   T* dst1, T* dst2, T* dst3, int dst_stride) {
+void split4Kernel(const T* src, int rows, int cols, int src_stride, T* dst0,
+                  T* dst1, T* dst2, T* dst3, int dst_stride) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -191,9 +189,9 @@ RetCode split4Channels(const uchar* src, int rows, int cols, int src_stride,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  split4_kernel<uchar><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-                                                   dst0, dst1, dst2, dst3,
-                                                   dst_stride);
+  split4Kernel<uchar><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+                                                  dst0, dst1, dst2, dst3,
+                                                  dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -222,9 +220,9 @@ RetCode split4Channels(const float* src, int rows, int cols, int src_stride,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  split4_kernel<float><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-                                                   dst0, dst1, dst2, dst3,
-                                                   dst_stride);
+  split4Kernel<float><<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+                                                  dst0, dst1, dst2, dst3,
+                                                  dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {

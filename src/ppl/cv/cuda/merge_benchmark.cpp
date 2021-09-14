@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/split.h"
+#include "ppl/cv/cuda/merge.h"
 
 #include <time.h>
 #include <sys/time.h>
@@ -29,27 +29,28 @@ using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels>
-void BM_Split_ppl_cuda(benchmark::State &state) {
+void BM_Merge_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
-  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
-  cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst0(dst);
-  cv::cuda::GpuMat gpu_dst1(dst);
-  cv::cuda::GpuMat gpu_dst2(dst);
-  cv::cuda::GpuMat gpu_dst3(dst);
+                          1));
+  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+  cv::cuda::GpuMat gpu_src0(src);
+  cv::cuda::GpuMat gpu_src1(src);
+  cv::cuda::GpuMat gpu_src2(src);
+  cv::cuda::GpuMat gpu_src3(src);
+  cv::cuda::GpuMat gpu_dst(dst);
 
   int iterations = 3000;
   struct timeval start, end;
 
   // warm up the GPU
   for (int i = 0; i < iterations; i++) {
-    Split3Channels<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, gpu_dst0.step / sizeof(T),
-                      (T*)gpu_dst0.data, (T*)gpu_dst1.data, (T*)gpu_dst2.data);
+    Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+                      gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
+                      (T*)gpu_src1.data, (T*)gpu_src2.data,
+                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
@@ -57,17 +58,17 @@ void BM_Split_ppl_cuda(benchmark::State &state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
       if (channels == 3) {
-        Split3Channels<T>(0, gpu_src.rows, gpu_src.cols,
-                          gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                          gpu_dst0.step / sizeof(T), (T*)gpu_dst0.data,
-                          (T*)gpu_dst1.data, (T*)gpu_dst2.data);
+        Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+                          gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
+                          (T*)gpu_src1.data, (T*)gpu_src2.data,
+                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {  // channels == 4
-        Split4Channels<T>(0, gpu_src.rows, gpu_src.cols,
-                          gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                          gpu_dst0.step / sizeof(T), (T*)gpu_dst0.data,
-                          (T*)gpu_dst1.data, (T*)gpu_dst2.data,
-                          (T*)gpu_dst3.data);
+        Merge4Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+                          gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
+                          (T*)gpu_src1.data, (T*)gpu_src2.data,
+                          (T*)gpu_src3.data, gpu_dst.step / sizeof(T),
+                          (T*)gpu_dst.data);
       }
     }
     cudaDeviceSynchronize();
@@ -80,28 +81,30 @@ void BM_Split_ppl_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels>
-void BM_Split_opencv_cuda(benchmark::State &state) {
+void BM_Merge_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
-  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
-  cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst0(dst);
-  cv::cuda::GpuMat gpu_dst1(dst);
-  cv::cuda::GpuMat gpu_dst2(dst);
-  cv::cuda::GpuMat gpu_dst3(dst);
+                          1));
+  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+  cv::cuda::GpuMat gpu_src0(src);
+  cv::cuda::GpuMat gpu_src1(src);
+  cv::cuda::GpuMat gpu_src2(src);
+  cv::cuda::GpuMat gpu_src3(src);
+  cv::cuda::GpuMat gpu_dst(dst);
 
-  cv::cuda::GpuMat gpu_dsts0[3] = {gpu_dst0, gpu_dst1, gpu_dst2};
-  cv::cuda::GpuMat gpu_dsts1[4] = {gpu_dst0, gpu_dst1, gpu_dst2, gpu_dst3};
+  cv::cuda::GpuMat gpu_srcs0[3] = {gpu_src0, gpu_src1, gpu_src2};
+  cv::cuda::GpuMat gpu_srcs1[4] = {gpu_src0, gpu_src1, gpu_src2, gpu_src3};
 
   int iterations = 3000;
   struct timeval start, end;
 
   // warm up the GPU
   for (int i = 0; i < iterations; i++) {
-    cv::cuda::split(gpu_src, gpu_dsts0);
+    for (auto _ : state) {
+      cv::cuda::merge(gpu_srcs0, 3, gpu_dst);
+    }
   }
   cudaDeviceSynchronize();
 
@@ -109,10 +112,14 @@ void BM_Split_opencv_cuda(benchmark::State &state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
       if (channels == 3) {
-        cv::cuda::split(gpu_src, gpu_dsts0);
+        for (auto _ : state) {
+          cv::cuda::merge(gpu_srcs0, 3, gpu_dst);
+        }
       }
       else {  // channels == 4
-        cv::cuda::split(gpu_src, gpu_dsts1);
+        for (auto _ : state) {
+          cv::cuda::merge(gpu_srcs1, 4, gpu_dst);
+        }
       }
     }
     cudaDeviceSynchronize();
@@ -125,39 +132,42 @@ void BM_Split_opencv_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels>
-void BM_Split_opencv_x86_cuda(benchmark::State &state) {
+void BM_Merge_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
-  cv::Mat dst0(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
-  cv::Mat dst1(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
-  cv::Mat dst2(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
-  cv::Mat dst3(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
+  cv::Mat src0, src1, src2, src3;
+  src0 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           1));
+  src1 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           1));
+  src2 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           1));
+  src3 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           1));
+  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  cv::Mat dsts0[3] = {dst0, dst1, dst2};
-  cv::Mat dsts1[4] = {dst0, dst1, dst2, dst3};
+  cv::Mat srcs0[3] = {src0, src1, src2};
+  cv::Mat srcs1[4] = {src0, src1, src2, src3};
 
   for (auto _ : state) {
     if (channels == 3) {
-      cv::split(src, dsts0);
+      cv::merge(srcs0, 3, dst);
     }
-    else {  // channels == 4
-      cv::split(src, dsts1);
+    else { // channels == 4
+      cv::merge(srcs1, 4, dst);
     }
   }
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
 #define RUN_BENCHMARK0(channels, width, height)                                \
-BENCHMARK_TEMPLATE(BM_Split_opencv_x86_cuda, uchar, channels)->                \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_x86_cuda, uchar, channels)->                \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, uchar, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, uchar, channels)->                       \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_Split_opencv_x86_cuda, float, channels)->                \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_x86_cuda, float, channels)->                \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, float, channels)->                       \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
 // RUN_BENCHMARK0(c3, 320, 240)
@@ -170,13 +180,13 @@ BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
 // RUN_BENCHMARK0(c4, 1920, 1080)
 
 #define RUN_BENCHMARK1(channels, width, height)                                \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, uchar, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, uchar, channels)->                    \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, uchar, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, uchar, channels)->                       \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, float, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, float, channels)->                    \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, float, channels)->                       \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
 // RUN_BENCHMARK1(c3, 320, 240)
@@ -189,39 +199,39 @@ BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
 // RUN_BENCHMARK1(c4, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(channels)                                    \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, uchar, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, uchar, channels)->                    \
                    Args({320, 240})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, float, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, float, channels)->                    \
                    Args({320, 240})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, uchar, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, uchar, channels)->                    \
                    Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, float, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, float, channels)->                    \
                    Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, uchar, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, uchar, channels)->                    \
                    Args({1280, 720})->UseManualTime()->Iterations(10);         \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, float, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, float, channels)->                    \
                    Args({1280, 720})->UseManualTime()->Iterations(10);         \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, uchar, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, uchar, channels)->                    \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);        \
-BENCHMARK_TEMPLATE(BM_Split_opencv_cuda, float, channels)->                    \
+BENCHMARK_TEMPLATE(BM_Merge_opencv_cuda, float, channels)->                    \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(channels)                                    \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, uchar, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, uchar, channels)->                       \
                    Args({320, 240})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, float, channels)->                       \
                    Args({320, 240})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, uchar, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, uchar, channels)->                       \
                    Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, float, channels)->                       \
                    Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, uchar, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, uchar, channels)->                       \
                    Args({1280, 720})->UseManualTime()->Iterations(10);         \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, float, channels)->                       \
                    Args({1280, 720})->UseManualTime()->Iterations(10);         \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, uchar, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, uchar, channels)->                       \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);        \
-BENCHMARK_TEMPLATE(BM_Split_ppl_cuda, float, channels)->                       \
+BENCHMARK_TEMPLATE(BM_Merge_ppl_cuda, float, channels)->                       \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
 RUN_OPENCV_TYPE_FUNCTIONS(c3)

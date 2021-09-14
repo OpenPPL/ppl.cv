@@ -309,6 +309,29 @@ float3 saturate_cast_vector(float4 value) {
   return result;
 }
 
+template <>
+__DEVICE__
+short3 saturate_cast_vector(float4 value) {
+  short3 result;
+  result.x = saturate_cast_f2s(value.x);
+  result.y = saturate_cast_f2s(value.y);
+  result.z = saturate_cast_f2s(value.z);
+
+  return result;
+}
+
+template <>
+__DEVICE__
+short4 saturate_cast_vector(float4 value) {
+  short4 result;
+  result.x = saturate_cast_f2s(value.x);
+  result.y = saturate_cast_f2s(value.y);
+  result.z = saturate_cast_f2s(value.z);
+  result.w = saturate_cast_f2s(value.w);
+
+  return result;
+}
+
 __DEVICE__
 float3 operator+(float3 &value0, float3 &value1) {
   float3 result;
@@ -484,7 +507,20 @@ void operator/=(float4 &result, float value) {
 }
 
 __DEVICE__
+void operator/=(float4 &result, float4 value) {
+  result.x /= value.x;
+  result.y /= value.y;
+  result.z /= value.z;
+  result.w /= value.w;
+}
+
+__DEVICE__
 void mulAdd(float &result, uchar &value0, float value1) {
+  result += value0 * value1;
+}
+
+__DEVICE__
+void mulAdd(float &result, short &value0, float value1) {
   result += value0 * value1;
 }
 
@@ -511,6 +547,13 @@ void mulAdd(float4 &result, uchar3 &value0, float value1) {
 }
 
 __DEVICE__
+void mulAdd(float4 &result, short3 &value0, float value1) {
+  result.x += value0.x * value1;
+  result.y += value0.y * value1;
+  result.z += value0.z * value1;
+}
+
+__DEVICE__
 void mulAdd(float4 &result, float3 &value0, float value1) {
   result.x += value0.x * value1;
   result.y += value0.y * value1;
@@ -519,6 +562,14 @@ void mulAdd(float4 &result, float3 &value0, float value1) {
 
 __DEVICE__
 void mulAdd(float4 &result, uchar4 &value0, float value1) {
+  result.x += value0.x * value1;
+  result.y += value0.y * value1;
+  result.z += value0.z * value1;
+  result.w += value0.w * value1;
+}
+
+__DEVICE__
+void mulAdd(float4 &result, short4 &value0, float value1) {
   result.x += value0.x * value1;
   result.y += value0.y * value1;
   result.z += value0.z * value1;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/gaussianblur.h"
+#include "ppl/cv/cuda/bilateralfilter.h"
 
 #include <tuple>
 #include <sstream>
@@ -27,17 +27,21 @@
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
-using Parameters = std::tuple<int, int, BorderType, cv::Size>;
-inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
+using Parameters = std::tuple<int, int, int, BorderType, cv::Size>;
+inline
+std::string convertToStringBilateralFilter(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int ksize = std::get<0>(parameters);
-  formatted << "Ksize" << ksize << "_";
+  int diameter = std::get<0>(parameters);
+  formatted << "Diameter" << diameter << "_";
 
-  int int_sigma = std::get<1>(parameters);
-  formatted << "Sigma" << int_sigma << "_";
+  int int_color = std::get<1>(parameters);
+  formatted << "IntColor" << int_color << "_";
 
-  BorderType border_type = (BorderType)std::get<2>(parameters);
+  int int_space = std::get<2>(parameters);
+  formatted << "IntSpace" << int_space << "_";
+
+  BorderType border_type = (BorderType)std::get<3>(parameters);
   if (border_type == BORDER_TYPE_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
@@ -51,7 +55,7 @@ inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
     formatted << "BORDER_DEFAULT" << "_";
   }
 
-  cv::Size size = std::get<3>(parameters);
+  cv::Size size = std::get<4>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -59,30 +63,41 @@ inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
 }
 
 template <typename T, int channels>
-class PplCvCudaGaussianBlurTest : public ::testing::TestWithParam<Parameters> {
+class PplCvCudaBilateralFilterTest :
+  public ::testing::TestWithParam<Parameters> {
  public:
-  PplCvCudaGaussianBlurTest() {
+  PplCvCudaBilateralFilterTest() {
     const Parameters& parameters = GetParam();
-    ksize       = std::get<0>(parameters);
-    sigma       = std::get<1>(parameters) / 10.f;
-    border_type = std::get<2>(parameters);
-    size        = std::get<3>(parameters);
+    diameter    = std::get<0>(parameters);
+    sigma_color = std::get<1>(parameters);
+    sigma_space = std::get<2>(parameters);
+    border_type = std::get<3>(parameters);
+    size        = std::get<4>(parameters);
+
+    diameter    -= 4;
+    sigma_color -= 4;
+    sigma_space -= 4;
   }
 
-  ~PplCvCudaGaussianBlurTest() {
+  ~PplCvCudaBilateralFilterTest() {
   }
 
   bool apply();
 
  private:
-  int ksize;
-  float sigma;
+  int diameter;
+  float sigma_color;
+  float sigma_space;
   BorderType border_type;
   cv::Size size;
 };
 
 template <typename T, int channels>
-bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
+bool PplCvCudaBilateralFilterTest<T, channels>::apply() {
+  if (diameter <= 0 && sigma_space <= 0) {
+    return true;
+  }
+
   cv::Mat src;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
@@ -92,6 +107,7 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
+  cv::cuda::GpuMat gpu_cv_dst(cv_dst);
 
   int src_size = size.height * size.width * channels * sizeof(T);
   T* input  = (T*)malloc(src_size);
@@ -115,24 +131,26 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   }
   else {
   }
-  cv::GaussianBlur(src, cv_dst, cv::Size(ksize, ksize), sigma, sigma,
-                   cv_border);
+  cv::cuda::bilateralFilter(gpu_src, gpu_cv_dst, diameter, sigma_color,
+                            sigma_space, cv_border);
+  gpu_cv_dst.download(cv_dst);
 
-  GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
-      gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, sigma,
-      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
+  BilateralFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, diameter, sigma_color,
+      sigma_space, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  GaussianBlur<T, channels>(0, size.height, size.width, size.width * channels,
-      gpu_input, ksize, sigma, size.width * channels, gpu_output, border_type);
+  BilateralFilter<T, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, diameter, sigma_color, sigma_space,
+      size.width * channels, gpu_output, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
   if (sizeof(T) == 1) {
-    epsilon = EPSILON_2F;
+    epsilon = EPSILON_1F;
   }
   else {
-    epsilon = EPSILON_E4;
+    epsilon = EPSILON_E5;
   }
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
@@ -146,18 +164,18 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
 }
 
 #define UNITTEST(T, channels)                                                  \
-using PplCvCudaGaussianBlurTest ## T ## channels =                             \
-        PplCvCudaGaussianBlurTest<T, channels>;                                \
-TEST_P(PplCvCudaGaussianBlurTest ## T ## channels, Standard) {                 \
+using PplCvCudaBilateralFilterTest ## T ## channels =                          \
+        PplCvCudaBilateralFilterTest<T, channels>;                             \
+TEST_P(PplCvCudaBilateralFilterTest ## T ## channels, Standard) {              \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
-  PplCvCudaGaussianBlurTest ## T ## channels,                                  \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaBilateralFilterTest ## T ## channels,\
   ::testing::Combine(                                                          \
-    ::testing::Values(1, 5, 13, 31, 43),                                       \
-    ::testing::Values(0, 1, 7, 10, 43),                                        \
+    ::testing::Values(1, 7, 12, 21, 35, 47),                                   \
+    ::testing::Values(1, 27),                                                  \
+    ::testing::Values(1, 14),                                                  \
     ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
                       BORDER_TYPE_REFLECT_101),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
@@ -165,14 +183,12 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaGaussianBlurTest ## T ## channels::ParamType>& info) {          \
-    return convertToStringGaussianBlur(info.param);                            \
+      PplCvCudaBilateralFilterTest ## T ## channels::ParamType>& info) {       \
+    return convertToStringBilateralFilter(info.param);                         \
   }                                                                            \
 );
 
 UNITTEST(uchar, 1)
 UNITTEST(uchar, 3)
-UNITTEST(uchar, 4)
 UNITTEST(float, 1)
 UNITTEST(float, 3)
-UNITTEST(float, 4)

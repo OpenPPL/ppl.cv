@@ -212,7 +212,8 @@ ppl::common::RetCode AddWeighted(cudaStream_t stream,
  *                       channels` for cudaMalloc() allocated data, `pitch /
  *                       sizeof(T)` for 2D cudaMallocPitch() allocated data.
  * @param inData         input image data.
- * @param scalar         input scalar data, equals to `channels * sizeof(T)` on the host memory.
+ * @param scalar         input scalar data, equals to `channels * sizeof(T)` on
+ *                       the host memory.
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
@@ -457,3 +458,4 @@ ppl::common::RetCode Div(cudaStream_t stream,
 }  // namespace ppl
 
 #endif  // _ST_HPC_PPL3_CV_CUDA_ARITHMETIC_H_
+

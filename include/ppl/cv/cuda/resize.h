@@ -31,17 +31,18 @@ namespace cuda {
  *         uint8_t(uchar) and \a float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
- * @param stream            cuda stream object.
- * @param inHeight          input image's height.
- * @param inWidth           input image's width need to be processed.
- * @param inWidthStride     input image's width stride, usually it equals to
- *                          `width * channels`.
- * @param inData            input image data.
- * @param outHeight         output image's height.
- * @param outWidth          output image's width need to be processed.
- * @param outWidthStride    the width stride of output image, usually it equals
- *                          to `width * channels`.
- * @param outData           output image data.
+ * @param stream           cuda stream object.
+ * @param inHeight         input image's height.
+ * @param inWidth          input image's width need to be processed.
+ * @param inWidthStride    input image's width stride, it is `width * channels`
+ *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
+ *                         for 2D cudaMallocPitch() allocated data.
+ * @param inData           input image data.
+ * @param outHeight        output image's height.
+ * @param outWidth         output image's width need to be processed.
+ * @param outWidthStride   the width stride of output image, similar to
+ *                         inWidthStride.
+ * @param outData          output image data.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -67,22 +68,26 @@ namespace cuda {
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   const int src_width  = 320;
- *   const int src_height = 240;
- *   const int dst_width  = 640;
- *   const int dst_height = 480;
- *   const int channels = 3;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
+ *   int channels = 3;
  *
- *   float* dev_input = nullptr;
- *   float* dev_output = nullptr;
- *   cudaMalloc(&dev_input, src_width * src_height * channels * sizeof(float));
- *   cudaMalloc(&dev_output, dst_width * dst_height * channels * sizeof(float));
+ *   float* dev_input;
+ *   float* dev_output;
+ *   size_t input_pitch, output_pitch;
+ *   cudaMallocPitch(&dev_input, &input_pitch,
+ *                   width * channels * sizeof(float), height);
+ *   cudaMallocPitch(&dev_output, &output_pitch,
+ *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   ResizeLinear<float, 3>(stream, src_height, src_width, src_width * channels,
- *                          dev_input, dst_height, dst_width,
- *                          dst_width * channels, dev_output);
+ *   ResizeLinear<float, 3>(stream, src_height, src_width,
+ *                          input_pitch / sizeof(float), dev_input,
+ *                          dst_height, dst_width, output_pitch / sizeof(float),
+ *                          dev_output);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -109,17 +114,18 @@ ppl::common::RetCode ResizeLinear(cudaStream_t stream,
  *         uint8_t(uchar) and \a float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
- * @param stream            cuda stream object.
- * @param inHeight          input image's height.
- * @param inWidth           input image's width need to be processed.
- * @param inWidthStride     input image's width stride, usually it equals to
- *                          `width * channels`.
- * @param inData            input image data.
- * @param outHeight         output image's height.
- * @param outWidth          output image's width need to be processed.
- * @param outWidthStride    the width stride of output image, usually it equals
- *                          to `width * channels`.
- * @param outData           output image data.
+ * @param stream           cuda stream object.
+ * @param inHeight         input image's height.
+ * @param inWidth          input image's width need to be processed.
+ * @param inWidthStride    input image's width stride, it is `width * channels`
+ *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
+ *                         for 2D cudaMallocPitch() allocated data.
+ * @param inData           input image data.
+ * @param outHeight        output image's height.
+ * @param outWidth         output image's width need to be processed.
+ * @param outWidthStride   the width stride of output image, similar to
+ *                         inWidthStride.
+ * @param outData          output image data.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -145,22 +151,26 @@ ppl::common::RetCode ResizeLinear(cudaStream_t stream,
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   const int src_width  = 320;
- *   const int src_height = 240;
- *   const int dst_width  = 640;
- *   const int dst_height = 480;
- *   const int channels = 3;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
+ *   int channels = 3;
  *
- *   float* dev_input = nullptr;
- *   float* dev_output = nullptr;
- *   cudaMalloc(&dev_input, src_width * src_height * channels * sizeof(float));
- *   cudaMalloc(&dev_output, dst_width * dst_height * channels * sizeof(float));
+ *   float* dev_input;
+ *   float* dev_output;
+ *   size_t input_pitch, output_pitch;
+ *   cudaMallocPitch(&dev_input, &input_pitch,
+ *                   width * channels * sizeof(float), height);
+ *   cudaMallocPitch(&dev_output, &output_pitch,
+ *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   ResizeNearestPoint<float, 3>(stream, src_height, src_width,
- *                                src_width * channels, dev_input, dst_height,
- *                                dst_width, dst_width * channels, dev_output);
+ *                                input_pitch / sizeof(float), dev_input,
+ *                                dst_height, dst_width,
+ *                                output_pitch / sizeof(float), dev_output);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -187,17 +197,18 @@ ppl::common::RetCode ResizeNearestPoint(cudaStream_t stream,
  *         uint8_t(uchar) and \a float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
- * @param stream            cuda stream object.
- * @param inHeight          input image's height.
- * @param inWidth           input image's width need to be processed.
- * @param inWidthStride     input image's width stride, usually it equals to
- *                          `width * channels`.
- * @param inData            input image data.
- * @param outHeight         output image's height.
- * @param outWidth          output image's width need to be processed.
- * @param outWidthStride    the width stride of output image, usually it equals
- *                          to `width * channels`.
- * @param outData           output image data.
+ * @param stream           cuda stream object.
+ * @param inHeight         input image's height.
+ * @param inWidth          input image's width need to be processed.
+ * @param inWidthStride    input image's width stride, it is `width * channels`
+ *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
+ *                         for 2D cudaMallocPitch() allocated data.
+ * @param inData           input image data.
+ * @param outHeight        output image's height.
+ * @param outWidth         output image's width need to be processed.
+ * @param outWidthStride   the width stride of output image, similar to
+ *                         inWidthStride.
+ * @param outData          output image data.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -223,22 +234,26 @@ ppl::common::RetCode ResizeNearestPoint(cudaStream_t stream,
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   const int src_width  = 320;
- *   const int src_height = 240;
- *   const int dst_width  = 640;
- *   const int dst_height = 480;
- *   const int channels = 3;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
+ *   int channels = 3;
  *
- *   float* dev_input = nullptr;
- *   float* dev_output = nullptr;
- *   cudaMalloc(&dev_input, src_width * src_height * channels * sizeof(float));
- *   cudaMalloc(&dev_output, dst_width * dst_height * channels * sizeof(float));
+ *   float* dev_input;
+ *   float* dev_output;
+ *   size_t input_pitch, output_pitch;
+ *   cudaMallocPitch(&dev_input, &input_pitch,
+ *                   width * channels * sizeof(float), height);
+ *   cudaMallocPitch(&dev_output, &output_pitch,
+ *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   ResizeArea<float, 3>(stream, src_height, src_width, src_width * channels,
- *                        dev_input, dst_height, dst_width,
- *                        dst_width * channels, dev_output);
+ *   ResizeArea<float, 3>(stream, src_height, src_width,
+ *                        input_pitch / sizeof(float), dev_input,
+ *                        dst_height, dst_width, output_pitch / sizeof(float),
+ *                        dev_output);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);

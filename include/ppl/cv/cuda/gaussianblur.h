@@ -105,17 +105,16 @@ namespace cuda {
  * @endcode
  */
 template <typename T, int channels>
-ppl::common::RetCode
-GaussianBlur(cudaStream_t stream,
-             int height,
-             int width,
-             int inWidthStride,
-             const T* inData,
-             int ksize,
-             float sigma,
-             int outWidthStride,
-             T* outData,
-             BorderType border_type = ppl::cv::BORDER_TYPE_DEFAULT);
+ppl::common::RetCode GaussianBlur(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const T* inData,
+                                  int ksize,
+                                  float sigma,
+                                  int outWidthStride,
+                                  T* outData,
+                                  BorderType border_type = BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv

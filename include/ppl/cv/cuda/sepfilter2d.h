@@ -28,8 +28,10 @@ namespace cuda {
 
 /**
  * @brief Convolves an image with separable linear filters.
- * @tparam T The data type of input and output image, currently only
- *         uint8_t(uchar) and float are supported.
+ * @tparam Tsrc The data type of input image, currently only uint8_t(uchar) and
+ *         float are supported.
+ * @tparam Tdst The data type of output image, currently uint8_t(uchar), short
+ *         and float are supported.
  * @tparam channels The number of channels of input&output image, 1, 3 and 4
  *         are supported.
  * @param stream         cuda stream object.
@@ -56,10 +58,22 @@ namespace cuda {
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
- * <tr><th>Data type(T)<th>channels
+ * <tr><th>Data type(Tsrc)<th>channels
  * <tr><td>uint8_t(uchar)<td>1
  * <tr><td>uint8_t(uchar)<td>3
  * <tr><td>uint8_t(uchar)<td>4
+ * <tr><td>float<td>1
+ * <tr><td>float<td>3
+ * <tr><td>float<td>4
+ * </table>
+ * <table>
+ * <tr><th>Data type(Tdst)<th>channels
+ * <tr><td>uint8_t(uchar)<td>1
+ * <tr><td>uint8_t(uchar)<td>3
+ * <tr><td>uint8_t(uchar)<td>4
+ * <tr><td>short<td>1
+ * <tr><td>short<td>3
+ * <tr><td>short<td>4
  * <tr><td>float<td>1
  * <tr><td>float<td>3
  * <tr><td>float<td>4
@@ -94,10 +108,10 @@ namespace cuda {
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   SepFilter2D<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                         dev_input, ksize, dev_kernel, dev_kernel,
- *                         output_pitch / sizeof(float), dev_output, 0.f,
- *                         ppl::cv::BORDER_TYPE_DEFAULT);
+ *   SepFilter2D<float, float, 3>(stream, height, width,
+ *       input_pitch / sizeof(float), dev_input, ksize, dev_kernel, dev_kernel,
+ *       output_pitch / sizeof(float), dev_output, 0.f,
+ *       ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -108,20 +122,19 @@ namespace cuda {
  * }
  * @endcode
  */
-template <typename T, int channels>
-ppl::common::RetCode
-SepFilter2D(cudaStream_t stream,
-            int height,
-            int width,
-            int inWidthStride,
-            const T* inData,
-            int ksize,
-            const float* kernelX,
-            const float* kernelY,
-            int outWidthStride,
-            T* outData,
-            float delta = 0.f,
-            BorderType border_type = ppl::cv::BORDER_TYPE_DEFAULT);
+template <typename Tsrc, typename Tdst, int channels>
+ppl::common::RetCode SepFilter2D(cudaStream_t stream,
+                                 int height,
+                                 int width,
+                                 int inWidthStride,
+                                 const Tsrc* inData,
+                                 int ksize,
+                                 const float* kernelX,
+                                 const float* kernelY,
+                                 int outWidthStride,
+                                 Tdst* outData,
+                                 float delta = 0.f,
+                                 BorderType border_type = BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv

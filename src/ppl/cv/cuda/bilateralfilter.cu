@@ -14,7 +14,9 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/filter2d.h"
+#include "ppl/cv/cuda/bilateralfilter.h"
+
+#include <cmath>
 
 #include "utility.hpp"
 
@@ -33,8 +35,8 @@ namespace cuda {
 template <typename Tsrc, typename Tdst, typename BorderInterpolation>
 __global__
 void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
-                            const float* kernel, int radius, Tdst* dst,
-                            int dst_stride, float delta,
+                            int radius, float radius_sqr, float color_coeff,
+                            float space_coeff, Tdst* dst, int dst_stride,
                             BorderInterpolation interpolation) {
   __shared__ Tsrc data[kDimY0 + RADIUS0 * 2][(kDimX0 << 2) + RADIUS0 * 2];
 
@@ -42,7 +44,7 @@ void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
   int index, y_index, row_index, col_index;
-  int ksize = (radius << 1) + 1;
+  float space_sqr;
   Tsrc* input;
   Tsrc value0, value1, value2, value3;
 
@@ -112,29 +114,43 @@ void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  float4 weight_sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  float4 weight;
+  float4 center;
+  center.x = data[threadIdx.y + radius][(threadIdx.x << 2) + radius];
+  center.y = data[threadIdx.y + radius][(threadIdx.x << 2) + radius + 1];
+  center.z = data[threadIdx.y + radius][(threadIdx.x << 2) + radius + 2];
+  center.w = data[threadIdx.y + radius][(threadIdx.x << 2) + radius + 3];
+
   y_index = threadIdx.y;
-  index = 0;
-  for (row_index = 0; row_index < ksize; row_index++) {
-    for (col_index = 0; col_index < ksize; col_index++) {
-      mulAdd(sum.x, data[y_index][(threadIdx.x << 2) + col_index],
-             kernel[index]);
-      mulAdd(sum.y, data[y_index][(threadIdx.x << 2) + col_index + 1],
-             kernel[index]);
-      mulAdd(sum.z, data[y_index][(threadIdx.x << 2) + col_index + 2],
-             kernel[index]);
-      mulAdd(sum.w, data[y_index][(threadIdx.x << 2) + col_index + 3],
-             kernel[index]);
-      index++;
+  for (row_index = -radius; row_index <= radius; row_index++) {
+    for (col_index = -radius; col_index <= radius; col_index++) {
+      space_sqr = row_index * row_index + col_index * col_index;
+      if (space_sqr <= radius_sqr) {
+        space_sqr *= space_coeff;
+        index = (threadIdx.x << 2) + radius + col_index;
+        value0 = data[y_index][index];
+        value1 = data[y_index][index + 1];
+        value2 = data[y_index][index + 2];
+        value3 = data[y_index][index + 3];
+        weight.x = expf(space_sqr + (value0 - center.x) * (value0 - center.x) *
+                        color_coeff);
+        weight.y = expf(space_sqr + (value1 - center.y) * (value1 - center.y) *
+                        color_coeff);
+        weight.z = expf(space_sqr + (value2 - center.z) * (value2 - center.z) *
+                        color_coeff);
+        weight.w = expf(space_sqr + (value3 - center.w) * (value3 - center.w) *
+                        color_coeff);
+        sum.x += weight.x * value0;
+        sum.y += weight.y * value1;
+        sum.z += weight.z * value2;
+        sum.w += weight.w * value3;
+        weight_sum += weight;
+      }
     }
     y_index++;
   }
-
-  if (delta != 0.f) {
-    sum.x += delta;
-    sum.y += delta;
-    sum.z += delta;
-    sum.w += delta;
-  }
+  sum /= weight_sum;
 
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tsrc) == 1) {
@@ -183,8 +199,9 @@ template <typename Tsrc, typename Tsrcn, typename Tdst, typename Tdstn,
           typename BorderInterpolation>
 __global__
 void filter2DCnSharedKernel0(const Tsrc* src, int rows, int cols,
-                             int src_stride, const float* kernel, int radius,
-                             Tdst* dst, int dst_stride, float delta,
+                             int src_stride, int radius, float radius_sqr,
+                             float color_coeff, float space_coeff, Tdst* dst,
+                             int dst_stride,
                              BorderInterpolation interpolation) {
   __shared__ Tsrcn data[kDimY0 + RADIUS1 * 2][kDimX0 + RADIUS1 * 2];
 
@@ -192,7 +209,7 @@ void filter2DCnSharedKernel0(const Tsrc* src, int rows, int cols,
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
   int index, y_index, row_index, col_index;
-  int ksize = (radius << 1) + 1;
+  float space_sqr, color_tmp;
   Tsrcn* input;
 
   y_index   = threadIdx.y;
@@ -222,21 +239,30 @@ void filter2DCnSharedKernel0(const Tsrc* src, int rows, int cols,
   }
 
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  float weight_sum = 0.f;
+  float weight;
+  Tsrcn center = data[threadIdx.y + radius][threadIdx.x + radius];
+  Tsrcn value;
+
   y_index = threadIdx.y;
-  index = 0;
-  for (row_index = 0; row_index < ksize; row_index++) {
-    for (col_index = 0; col_index < ksize; col_index++) {
-      mulAdd(sum, data[y_index][threadIdx.x + col_index], kernel[index++]);
+  for (row_index = -radius; row_index <= radius; row_index++) {
+    for (col_index = -radius; col_index <= radius; col_index++) {
+      space_sqr = row_index * row_index + col_index * col_index;
+      if (space_sqr <= radius_sqr) {
+        space_sqr *= space_coeff;
+        value = data[y_index][threadIdx.x + radius + col_index];
+        color_tmp = fabsf(value.x - center.x) + fabsf(value.y - center.y) +
+                    fabsf(value.z - center.z);
+        weight = expf(space_sqr + color_tmp * color_tmp * color_coeff);
+        sum.x += weight * value.x;
+        sum.y += weight * value.y;
+        sum.z += weight * value.z;
+        weight_sum += weight;
+      }
     }
     y_index++;
   }
-
-  if (delta != 0.f) {
-    sum.x += delta;
-    sum.y += delta;
-    sum.z += delta;
-    sum.w += delta;
-  }
+  sum /= weight_sum;
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
@@ -246,8 +272,8 @@ template <typename Tsrc, typename Tsrc4, typename Tdst, typename Tdst4,
           typename BorderInterpolation>
 __global__
 void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
-                      const float* kernel, int radius, Tdst* dst,
-                      int dst_stride, float delta,
+                      int radius, float radius_sqr, float color_coeff,
+                      float space_coeff, Tdst* dst, int dst_stride,
                       BorderInterpolation interpolation) {
   int element_x, element_y;
   if (sizeof(Tsrc) == 1) {
@@ -267,11 +293,7 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   int top_x    = element_x + radius;
   int top_y    = element_y + radius;
 
-  int data_index, kernel_index = 0;
-  Tsrc* input;
-  Tsrc4 value;
-  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
-
+  int data_index;
   bool isnt_border_block = true;
   if (sizeof(Tsrc) == 1) {
     data_index = radius >> (kBlockShiftX0 + 2);
@@ -286,17 +308,46 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     if (blockIdx.x >= data_index) isnt_border_block = false;
   }
 
+  Tsrc* input = (Tsrc*)((uchar*)src + element_y * src_stride);
+  Tsrc4 value;
+
+  float space_sqr;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  float4 weight_sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  float4 weight;
+  Tsrc4 center;
+  center.x = input[element_x];
+  center.y = input[element_x + 1];
+  center.z = input[element_x + 2];
+  center.w = input[element_x + 3];
+
   if (isnt_border_block) {
     for (int i = origin_y; i <= top_y; i++) {
       data_index = interpolation(rows, radius, i);
       input = (Tsrc*)((uchar*)src + data_index * src_stride);
       for (int j = origin_x; j <= top_x; j++) {
-        value.x = input[j];
-        value.y = input[j + 1];
-        value.z = input[j + 2];
-        value.w = input[j + 3];
-        mulAdd(sum, value, kernel[kernel_index]);
-        kernel_index++;
+        space_sqr = (i - element_y) * (i - element_y) +
+                    (j - element_x) * (j - element_x);
+        if (space_sqr <= radius_sqr) {
+          space_sqr *= space_coeff;
+          value.x = input[j];
+          value.y = input[j + 1];
+          value.z = input[j + 2];
+          value.w = input[j + 3];
+          weight.x = expf(space_sqr + (value.x - center.x) *
+                          (value.x - center.x) * color_coeff);
+          weight.y = expf(space_sqr + (value.y - center.y) *
+                          (value.y - center.y) * color_coeff);
+          weight.z = expf(space_sqr + (value.z - center.z) *
+                          (value.z - center.z) * color_coeff);
+          weight.w = expf(space_sqr + (value.w - center.w) *
+                          (value.w - center.w) * color_coeff);
+          sum.x += weight.x * value.x;
+          sum.y += weight.y * value.y;
+          sum.z += weight.z * value.z;
+          sum.w += weight.w * value.w;
+          weight_sum += weight;
+        }
       }
     }
   }
@@ -305,26 +356,36 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
       data_index = interpolation(rows, radius, i);
       input = (Tsrc*)((uchar*)src + data_index * src_stride);
       for (int j = origin_x; j <= top_x; j++) {
-        data_index = interpolation(cols, radius, j);
-        value.x = input[data_index];
-        data_index = interpolation(cols, radius, j + 1);
-        value.y = input[data_index];
-        data_index = interpolation(cols, radius, j + 2);
-        value.z = input[data_index];
-        data_index = interpolation(cols, radius, j + 3);
-        value.w = input[data_index];
-        mulAdd(sum, value, kernel[kernel_index]);
-        kernel_index++;
+        space_sqr = (i - element_y) * (i - element_y) +
+                    (j - element_x) * (j - element_x);
+        if (space_sqr <= radius_sqr) {
+          space_sqr *= space_coeff;
+          data_index = interpolation(cols, radius, j);
+          value.x = input[data_index];
+          data_index = interpolation(cols, radius, j + 1);
+          value.y = input[data_index];
+          data_index = interpolation(cols, radius, j + 2);
+          value.z = input[data_index];
+          data_index = interpolation(cols, radius, j + 3);
+          value.w = input[data_index];
+          weight.x = expf(space_sqr + (value.x - center.x) *
+                          (value.x - center.x) * color_coeff);
+          weight.y = expf(space_sqr + (value.y - center.y) *
+                          (value.y - center.y) * color_coeff);
+          weight.z = expf(space_sqr + (value.z - center.z) *
+                          (value.z - center.z) * color_coeff);
+          weight.w = expf(space_sqr + (value.w - center.w) *
+                          (value.w - center.w) * color_coeff);
+          sum.x += weight.x * value.x;
+          sum.y += weight.y * value.y;
+          sum.z += weight.z * value.z;
+          sum.w += weight.w * value.w;
+          weight_sum += weight;
+        }
       }
     }
   }
-
-  if (delta != 0.f) {
-    sum.x += delta;
-    sum.y += delta;
-    sum.z += delta;
-    sum.w += delta;
-  }
+  sum /= weight_sum;
 
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tsrc) == 1) {
@@ -373,8 +434,9 @@ template <typename Tsrc, typename Tsrcn, typename Tdst, typename Tdstn,
           typename BorderInterpolation>
 __global__
 void filter2DCnSharedKernel1(const Tsrc* src, int rows, int cols,
-                             int src_stride, const float* kernel, int radius,
-                             Tdst* dst, int dst_stride, float delta,
+                             int src_stride, int radius, float radius_sqr,
+                             float color_coeff, float space_coeff, Tdst* dst,
+                             int dst_stride,
                              BorderInterpolation interpolation) {
   __shared__ Tsrcn data[kBlockDimY1][(kBlockDimX1 << 1)];
 
@@ -383,10 +445,14 @@ void filter2DCnSharedKernel1(const Tsrc* src, int rows, int cols,
 
   int origin_y = element_y - radius;
   int top_y    = element_y + radius;
-  int index, row_index, prev_index = -2, kernel_index = 0;
-  Tsrcn* input;
+  int index, row_index, prev_index = -2;
+  float space_sqr, color_tmp;
+  Tsrcn* input = (Tsrcn*)((uchar*)src + element_y * src_stride);
   Tsrcn value;
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  float weight_sum = 0.f;
+  float weight;
+  Tsrcn center = input[element_x];
 
   for (int i = origin_y; i <= top_y; i++) {
     if (element_y < rows) {
@@ -438,32 +504,37 @@ void filter2DCnSharedKernel1(const Tsrc* src, int rows, int cols,
 
     if (element_x < cols && element_y < rows) {
       for (index = 0; index < (radius << 1) + 1; index++) {
-        mulAdd(sum, data[threadIdx.y][threadIdx.x + index],
-               kernel[kernel_index]);
-        kernel_index++;
+        space_sqr = (i - element_y) * (i - element_y) +
+                    (index - radius) * (index - radius);
+        if (space_sqr <= radius_sqr) {
+          space_sqr *= space_coeff;
+          value = data[threadIdx.y][threadIdx.x + index];
+          color_tmp = fabsf(value.x - center.x) + fabsf(value.y - center.y) +
+                      fabsf(value.z - center.z);
+          weight = expf(space_sqr + color_tmp * color_tmp * color_coeff);
+          sum.x += weight * value.x;
+          sum.y += weight * value.y;
+          sum.z += weight * value.z;
+          weight_sum += weight;
+        }
       }
     }
   }
 
   if (element_x < cols && element_y < rows) {
-    if (delta != 0.f) {
-      sum.x += delta;
-      sum.y += delta;
-      sum.z += delta;
-      sum.w += delta;
-    }
+    sum /= weight_sum;
 
     Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
     output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
   }
 }
 
-template <typename Tsrc, typename Tsrc4, typename Tdst, typename Tdst4,
+template <typename Tsrc, typename Tsrcn, typename Tdst, typename Tdst4,
           typename BorderInterpolation>
 __global__
 void filter2DCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
-                      const float* kernel, int radius, Tdst* dst,
-                      int dst_stride, float delta,
+                      int radius, float radius_sqr, float color_coeff,
+                      float space_coeff, Tdst* dst, int dst_stride,
                       BorderInterpolation interpolation) {
   int element_x, element_y;
   if (sizeof(Tsrc) == 1) {
@@ -483,10 +554,14 @@ void filter2DCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
   int top_x    = element_x + radius;
   int top_y    = element_y + radius;
 
-  int data_index, kernel_index = 0;
-  Tsrc4* input;
-  Tsrc4 value;
+  int data_index;
+  float space_sqr, color_tmp;
+  Tsrcn* input = (Tsrcn*)((uchar*)src + element_y * src_stride);
+  Tsrcn value;
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  float weight_sum = 0.f;
+  float weight;
+  Tsrcn center = input[element_x];
 
   bool isnt_border_block = true;
   if (sizeof(Tsrc) == 1) {
@@ -505,33 +580,47 @@ void filter2DCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
   if (isnt_border_block) {
     for (int i = origin_y; i <= top_y; i++) {
       data_index = interpolation(rows, radius, i);
-      input = (Tsrc4*)((uchar*)src + data_index * src_stride);
+      input = (Tsrcn*)((uchar*)src + data_index * src_stride);
       for (int j = origin_x; j <= top_x; j++) {
-        value = input[j];
-        mulAdd(sum, value, kernel[kernel_index]);
-        kernel_index++;
+        space_sqr = (i - element_y) * (i - element_y) +
+                    (j - element_x) * (j - element_x);
+        if (space_sqr <= radius_sqr) {
+          space_sqr *= space_coeff;
+          value = input[j];
+          color_tmp = fabsf(value.x - center.x) + fabsf(value.y - center.y) +
+                      fabsf(value.z - center.z);
+          weight = expf(space_sqr + color_tmp * color_tmp * color_coeff);
+          sum.x += weight * value.x;
+          sum.y += weight * value.y;
+          sum.z += weight * value.z;
+          weight_sum += weight;
+        }
       }
     }
   }
   else {
     for (int i = origin_y; i <= top_y; i++) {
       data_index = interpolation(rows, radius, i);
-      input = (Tsrc4*)((uchar*)src + data_index * src_stride);
+      input = (Tsrcn*)((uchar*)src + data_index * src_stride);
       for (int j = origin_x; j <= top_x; j++) {
-        data_index = interpolation(cols, radius, j);
-        value = input[data_index];
-        mulAdd(sum, value, kernel[kernel_index]);
-        kernel_index++;
+        space_sqr = (i - element_y) * (i - element_y) +
+                    (j - element_x) * (j - element_x);
+        if (space_sqr <= radius_sqr) {
+          space_sqr *= space_coeff;
+          data_index = interpolation(cols, radius, j);
+          value = input[data_index];
+          color_tmp = fabsf(value.x - center.x) + fabsf(value.y - center.y) +
+                      fabsf(value.z - center.z);
+          weight = expf(space_sqr + color_tmp * color_tmp * color_coeff);
+          sum.x += weight * value.x;
+          sum.y += weight * value.y;
+          sum.z += weight * value.z;
+          weight_sum += weight;
+        }
       }
     }
   }
-
-  if (delta != 0.f) {
-    sum.x += delta;
-    sum.y += delta;
-    sum.z += delta;
-    sum.w += delta;
-  }
+  sum /= weight_sum;
 
   Tdst4* output = (Tdst4*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = saturate_cast_vector<Tdst4, float4>(sum);
@@ -540,77 +629,71 @@ void filter2DCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
 #define RUN_CHANNEL1_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
 Interpolation interpolation;                                                   \
 filter2DC1SharedKernel<Tsrc, Tdst, Interpolation><<<grid, block, 0, stream>>>( \
-    src, rows, cols, src_stride, kernel, radius, dst, dst_stride, delta,       \
-    interpolation);
+    src, rows, cols, src_stride, radius, radius_sqr, color_coeff, space_coeff, \
+    dst, dst_stride, interpolation);
 
 #define RUN_CHANNELN_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
 Interpolation interpolation;                                                   \
-if (channels == 3) {                                                           \
-  filter2DCnSharedKernel0<Tsrc, Tsrc ## 3, Tdst, Tdst ## 3, Interpolation>     \
-      <<<grid, block, 0, stream>>>(src, rows, cols, src_stride, kernel, radius,\
-      dst, dst_stride, delta, interpolation);                                  \
-}                                                                              \
-else {                                                                         \
-  filter2DCnSharedKernel0<Tsrc, Tsrc ## 4, Tdst, Tdst ## 4, Interpolation>     \
-      <<<grid, block, 0, stream>>>(src, rows, cols, src_stride, kernel, radius,\
-      dst, dst_stride, delta, interpolation);                                  \
-}
+filter2DCnSharedKernel0<Tsrc, Tsrc ## 3, Tdst, Tdst ## 3, Interpolation>       \
+    <<<grid, block, 0, stream>>>(src, rows, cols, src_stride, radius,          \
+    radius_sqr, color_coeff, space_coeff, dst, dst_stride, interpolation);
 
 #define RUN_KERNELS(Interpolation, T, grid_x)                                  \
 Interpolation interpolation;                                                   \
 if (channels == 1) {                                                           \
   grid0.x = grid_x;                                                            \
   filter2DC1Kernel<T, T ## 4, T, T ## 4, Interpolation><<<grid0, block0, 0,    \
-      stream>>>(src, rows, cols, src_stride, kernel, radius, dst, dst_stride,  \
-      delta, interpolation);                                                   \
+      stream>>>(src, rows, cols, src_stride, radius, radius_sqr, color_coeff,  \
+      space_coeff, dst, dst_stride, interpolation);                            \
 }                                                                              \
 else if (channels == 3) {                                                      \
-  if (ksize <= 33) {                                                           \
+  if (diameter <= 33) {                                                        \
     filter2DCnSharedKernel1<T, T ## 3, T, T ## 3, Interpolation><<<grid1,      \
-        block1, 0, stream>>>(src, rows, cols, src_stride, kernel, radius, dst, \
-        dst_stride, delta, interpolation);                                     \
+        block1, 0, stream>>>(src, rows, cols, src_stride, radius, radius_sqr,  \
+        color_coeff, space_coeff, dst, dst_stride, interpolation);             \
   }                                                                            \
   else {                                                                       \
     filter2DCnKernel<T, T ## 3, T, T ## 3, Interpolation><<<grid0, block0, 0,  \
-        stream>>>(src, rows, cols, src_stride, kernel, radius, dst, dst_stride,\
-        delta, interpolation);                                                 \
+        stream>>>(src, rows, cols, src_stride, radius, radius_sqr, color_coeff,\
+        space_coeff, dst, dst_stride, interpolation);                          \
   }                                                                            \
 }                                                                              \
 else {                                                                         \
-  if (ksize <= 33) {                                                           \
-    filter2DCnSharedKernel1<T, T ## 4, T, T ## 4, Interpolation><<<grid1,      \
-        block1, 0, stream>>>(src, rows, cols, src_stride, kernel, radius, dst, \
-        dst_stride, delta, interpolation);                                     \
-  }                                                                            \
-  else {                                                                       \
-    filter2DCnKernel<T, T ## 4, T, T ## 4, Interpolation><<<grid0, block0, 0,  \
-        stream>>>(src, rows, cols, src_stride, kernel, radius, dst, dst_stride,\
-        delta, interpolation);                                                 \
-  }                                                                            \
 }
 
-RetCode filter2D(const uchar* src, int rows, int cols, int channels,
-                 int src_stride, const float* kernel, int ksize, uchar* dst,
-                 int dst_stride, float delta, BorderType border_type,
-                 cudaStream_t stream) {
+RetCode bilateralFilter(const uchar* src, int rows, int cols, int channels,
+                        int src_stride, int diameter, float sigma_color,
+                        float sigma_space, uchar* dst, int dst_stride,
+                        BorderType border_type, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(kernel != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
-  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(!(diameter <= 0 && sigma_space <= 1));
+  PPL_ASSERT(channels == 1 || channels == 3);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
-  PPL_ASSERT(ksize > 0);
-  PPL_ASSERT((ksize & 1) == 1);
   PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
              border_type == BORDER_TYPE_REFLECT ||
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  int radius = ksize >> 1;
+  if (sigma_color <= 0) sigma_color = 1;
+  if (sigma_space <= 0) sigma_space = 1;
+  float color_coeff = -0.5 / (sigma_color * sigma_color);
+  float space_coeff = -0.5 / (sigma_space * sigma_space);
+  int radius;
+  if (diameter <= 0) {
+    radius = rint(sigma_space * 1.5);
+  }
+  else {
+    radius = diameter >> 1;
+  }
+  radius = radius > 1 ? radius : 1;
+  diameter = (radius << 1) + 1;
+  float radius_sqr = radius * radius;
 
   cudaError_t code = cudaSuccess;
-  if (ksize <= SMALL_KSIZE0 && channels == 1) {
+  if (diameter <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
     block.y = kDimY0;
@@ -636,7 +719,7 @@ RetCode filter2D(const uchar* src, int rows, int cols, int channels,
     return RC_SUCCESS;
   }
 
-  if (ksize <= SMALL_KSIZE1 && (channels == 3 || channels == 4)) {
+  if (diameter <= SMALL_KSIZE1 && (channels == 3)) {
     dim3 block, grid;
     block.x = kDimX0;
     block.y = kDimY0;
@@ -695,28 +778,39 @@ RetCode filter2D(const uchar* src, int rows, int cols, int channels,
   return RC_SUCCESS;
 }
 
-RetCode filter2D(const float* src, int rows, int cols, int channels,
-                 int src_stride, const float* kernel, int ksize, float* dst,
-                 int dst_stride, float delta, BorderType border_type,
-                 cudaStream_t stream) {
+RetCode bilateralFilter(const float* src, int rows, int cols, int channels,
+                        int src_stride, int diameter, float sigma_color,
+                        float sigma_space, float* dst, int dst_stride,
+                        BorderType border_type, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(kernel != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
-  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(!(diameter <= 0 && sigma_space <= 1));
+  PPL_ASSERT(channels == 1 || channels == 3);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
-  PPL_ASSERT(ksize > 0);
-  PPL_ASSERT((ksize & 1) == 1);
   PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
              border_type == BORDER_TYPE_REFLECT ||
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  int radius = ksize >> 1;
+  if (sigma_color <= 0) sigma_color = 1;
+  if (sigma_space <= 0) sigma_space = 1;
+  float color_coeff = -0.5 / (sigma_color * sigma_color);
+  float space_coeff = -0.5 / (sigma_space * sigma_space);
+  int radius;
+  if (diameter <= 0) {
+    radius = rint(sigma_space * 1.5);
+  }
+  else {
+    radius = diameter >> 1;
+  }
+  radius = radius > 1 ? radius : 1;
+  diameter = (radius << 1) + 1;
+  float radius_sqr = radius * radius;
 
   cudaError_t code = cudaSuccess;
-  if (ksize <= SMALL_KSIZE0 && channels == 1) {
+  if (diameter <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
     block.y = kDimY0;
@@ -742,7 +836,7 @@ RetCode filter2D(const float* src, int rows, int cols, int channels,
     return RC_SUCCESS;
   }
 
-  if (ksize <= SMALL_KSIZE1 && (channels == 3 || channels == 4)) {
+  if (diameter <= SMALL_KSIZE1 && (channels == 3)) {
     dim3 block, grid;
     block.x = kDimX0;
     block.y = kDimY0;
@@ -798,121 +892,81 @@ RetCode filter2D(const float* src, int rows, int cols, int channels,
 }
 
 template <>
-RetCode Filter2D<uchar, 1>(cudaStream_t stream,
-                           int height,
-                           int width,
-                           int inWidthStride,
-                           const uchar* inData,
-                           int ksize,
-                           const float* kernel,
-                           int outWidthStride,
-                           uchar* outData,
-                           float delta,
-                           BorderType border_type) {
-  RetCode code = filter2D(inData, height, width, 1, inWidthStride, kernel,
-                          ksize, outData, outWidthStride, delta, border_type,
-                          stream);
+RetCode BilateralFilter<uchar, 1>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const uchar* inData,
+                                  int diameter,
+                                  float sigma_color,
+                                  float sigma_space,
+                                  int outWidthStride,
+                                  uchar* outData,
+                                  BorderType border_type) {
+  RetCode code = bilateralFilter(inData, height, width, 1, inWidthStride,
+                                 diameter, sigma_color, sigma_space, outData,
+                                 outWidthStride, border_type, stream);
 
   return code;
 }
 
 template <>
-RetCode Filter2D<uchar, 3>(cudaStream_t stream,
-                           int height,
-                           int width,
-                           int inWidthStride,
-                           const uchar* inData,
-                           int ksize,
-                           const float* kernel,
-                           int outWidthStride,
-                           uchar* outData,
-                           float delta,
-                           BorderType border_type) {
-  RetCode code = filter2D(inData, height, width, 3, inWidthStride, kernel,
-                          ksize, outData, outWidthStride, delta, border_type,
-                          stream);
+RetCode BilateralFilter<uchar, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const uchar* inData,
+                                  int diameter,
+                                  float sigma_color,
+                                  float sigma_space,
+                                  int outWidthStride,
+                                  uchar* outData,
+                                  BorderType border_type) {
+  RetCode code = bilateralFilter(inData, height, width, 3, inWidthStride,
+                                 diameter, sigma_color, sigma_space, outData,
+                                 outWidthStride, border_type, stream);
 
   return code;
 }
 
 template <>
-RetCode Filter2D<uchar, 4>(cudaStream_t stream,
-                           int height,
-                           int width,
-                           int inWidthStride,
-                           const uchar* inData,
-                           int ksize,
-                           const float* kernel,
-                           int outWidthStride,
-                           uchar* outData,
-                           float delta,
-                           BorderType border_type) {
-  RetCode code = filter2D(inData, height, width, 4, inWidthStride, kernel,
-                          ksize, outData, outWidthStride, delta, border_type,
-                          stream);
-
-  return code;
-}
-
-template <>
-RetCode Filter2D<float, 1>(cudaStream_t stream,
-                           int height,
-                           int width,
-                           int inWidthStride,
-                           const float* inData,
-                           int ksize,
-                           const float* kernel,
-                           int outWidthStride,
-                           float* outData,
-                           float delta,
-                           BorderType border_type) {
+RetCode BilateralFilter<float, 1>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const float* inData,
+                                  int diameter,
+                                  float sigma_color,
+                                  float sigma_space,
+                                  int outWidthStride,
+                                  float* outData,
+                                  BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code = filter2D(inData, height, width, 1, inWidthStride, kernel,
-                          ksize, outData, outWidthStride, delta, border_type,
-                          stream);
+  RetCode code = bilateralFilter(inData, height, width, 1, inWidthStride,
+                                 diameter, sigma_color, sigma_space, outData,
+                                 outWidthStride, border_type, stream);
 
   return code;
 }
 
 template <>
-RetCode Filter2D<float, 3>(cudaStream_t stream,
-                           int height,
-                           int width,
-                           int inWidthStride,
-                           const float* inData,
-                           int ksize,
-                           const float* kernel,
-                           int outWidthStride,
-                           float* outData,
-                           float delta,
-                           BorderType border_type) {
+RetCode BilateralFilter<float, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const float* inData,
+                                  int diameter,
+                                  float sigma_color,
+                                  float sigma_space,
+                                  int outWidthStride,
+                                  float* outData,
+                                  BorderType border_type) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code = filter2D(inData, height, width, 3, inWidthStride, kernel,
-                          ksize, outData, outWidthStride, delta, border_type,
-                          stream);
-
-  return code;
-}
-
-template <>
-RetCode Filter2D<float, 4>(cudaStream_t stream,
-                           int height,
-                           int width,
-                           int inWidthStride,
-                           const float* inData,
-                           int ksize,
-                           const float* kernel,
-                           int outWidthStride,
-                           float* outData,
-                           float delta,
-                           BorderType border_type) {
-  inWidthStride  *= sizeof(float);
-  outWidthStride *= sizeof(float);
-  RetCode code = filter2D(inData, height, width, 4, inWidthStride, kernel,
-                          ksize, outData, outWidthStride, delta, border_type,
-                          stream);
+  RetCode code = bilateralFilter(inData, height, width, 3, inWidthStride,
+                                 diameter, sigma_color, sigma_space, outData,
+                                 outWidthStride, border_type, stream);
 
   return code;
 }
