@@ -78,7 +78,7 @@ namespace cuda {
  *   AdaptiveThresholdTypes adaptive_method = ppl::cv::ADAPTIVE_THRESH_MEAN_C;
  *   ThresholdTypes threshold_type = ppl::cv::THRESH_BINARY;
  *   int ksize = 3;
- *   float max_value = 25;
+ *   float max_value = 25.f;
  *   float delta = 5.f;
  *
  *   uchar* dev_input;

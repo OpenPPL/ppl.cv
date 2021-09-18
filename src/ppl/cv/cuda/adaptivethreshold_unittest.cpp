@@ -27,7 +27,7 @@
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
-using Parameters = std::tuple<int, int, int, int, BorderType, cv::Size>;
+using Parameters = std::tuple<int, int, int, int, int, BorderType, cv::Size>;
 inline std::string convertToStringThreshold(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -45,7 +45,10 @@ inline std::string convertToStringThreshold(const Parameters& parameters) {
   int max_value = std::get<3>(parameters);
   formatted << "MaxValue" << max_value << "_";
 
-  BorderType border_type = (BorderType)std::get<4>(parameters);
+  int int_delta = std::get<4>(parameters);
+  formatted << "IntDelta" << int_delta << "_";
+
+  BorderType border_type = (BorderType)std::get<5>(parameters);
   if (border_type == BORDER_TYPE_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
@@ -59,7 +62,7 @@ inline std::string convertToStringThreshold(const Parameters& parameters) {
     formatted << "BORDER_DEFAULT" << "_";
   }
 
-  cv::Size size = std::get<5>(parameters);
+  cv::Size size = std::get<6>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -76,8 +79,11 @@ class PplCvCudaAdaptiveThresholdTest :
     adaptive_method = std::get<1>(parameters);
     threshold_type  = std::get<2>(parameters);
     max_value       = std::get<3>(parameters) / 10.f;
-    border_type     = std::get<4>(parameters);
-    size            = std::get<5>(parameters);
+    delta           = std::get<4>(parameters) / 10.f;
+    border_type     = std::get<5>(parameters);
+    size            = std::get<6>(parameters);
+
+    max_value -= 1.f;
   }
 
   ~PplCvCudaAdaptiveThresholdTest() {
@@ -90,6 +96,7 @@ class PplCvCudaAdaptiveThresholdTest :
   int adaptive_method;
   int threshold_type;
   float max_value;
+  float delta;
   BorderType border_type;
   cv::Size size;
 };
@@ -115,8 +122,6 @@ bool PplCvCudaAdaptiveThresholdTest<T, channels>::apply() {
   cudaMalloc((void**)&gpu_output, src_size);
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
-
-  float delta = 12.f;
 
   cv::AdaptiveThresholdTypes cv_adaptive_method = cv::ADAPTIVE_THRESH_MEAN_C;
   if (adaptive_method == ADAPTIVE_THRESH_MEAN_C) {
@@ -153,7 +158,7 @@ bool PplCvCudaAdaptiveThresholdTest<T, channels>::apply() {
     epsilon = EPSILON_2F;
   }
   else {
-    epsilon = EPSILON_E4;
+    epsilon = EPSILON_E6;
   }
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
@@ -180,9 +185,9 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
     ::testing::Values(3, 5, 13, 31, 43),                                       \
     ::testing::Values(ADAPTIVE_THRESH_MEAN_C, ADAPTIVE_THRESH_GAUSSIAN_C),     \
     ::testing::Values(THRESH_BINARY, THRESH_BINARY_INV),                       \
-    ::testing::Values(0, 35, 3784),                                            \
-    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
-                      BORDER_TYPE_REFLECT_101),                                \
+    ::testing::Values(0, 70, 1587, 3784),                                      \
+    ::testing::Values(0, 70, 1587, 3784),                                      \
+    ::testing::Values(BORDER_TYPE_REPLICATE),                                  \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

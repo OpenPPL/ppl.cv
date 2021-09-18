@@ -14,7 +14,10 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/boxfilter.h"
+#include "ppl/cv/cuda/adaptivethreshold.h"
+#include "ppl/cv/cuda/zeros.h"
+
+#include <cmath>
 
 #include "utility.hpp"
 
@@ -24,41 +27,90 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-#define RADIUS 16
-#define SMALL_KSIZE RADIUS * 2 + 1
+#define SMALL_SIZE 7
+#define SMALL_MAX_KSIZE 32
 
-template <typename Tsrc, typename Tdst, typename BorderInterpolation>
+__host__ __device__
+void createGaussianKernel(float* coefficients, float sigma, int ksize) {
+  bool fixed_kernel = false;
+  if ((ksize & 1) == 1 && ksize <= SMALL_SIZE && sigma <= 0) {
+    if (ksize == 1) {
+      coefficients[0] = 1.f;
+    }
+    else if (ksize == 3) {
+      coefficients[0] = 0.25f;
+      coefficients[1] = 0.5f;
+      coefficients[2] = 0.25f;
+    }
+    else if (ksize == 5) {
+      coefficients[0] = 0.0625f;
+      coefficients[1] = 0.25f;
+      coefficients[2] = 0.375f;
+      coefficients[3] = 0.25f;
+      coefficients[4] = 0.0625f;
+    }
+    else {
+      coefficients[0] = 0.03125f;
+      coefficients[1] = 0.109375f;
+      coefficients[2] = 0.21875f;
+      coefficients[3] = 0.28125f;
+      coefficients[4] = 0.21875f;
+      coefficients[5] = 0.109375f;
+      coefficients[6] = 0.03125f;
+    }
+    fixed_kernel = true;
+  }
+
+  float value = sigma > 0 ? sigma : ((ksize - 1) * 0.5 - 1) * 0.3 + 0.8;
+  float scale_2x = -0.5 / (value * value);
+  float sum = 0.f;
+
+  int i;
+  float x;
+  for (i = 0; i < ksize; i++) {
+    x = i - (ksize - 1) * 0.5;
+    value = fixed_kernel ? coefficients[i] : std::exp(scale_2x * x * x);
+    if (!fixed_kernel) {
+      coefficients[i] = value;
+    }
+    sum += value;
+  }
+
+  sum = 1.f / sum;
+  for (i = 0; i < ksize; i++) {
+    coefficients[i] *= sum;
+  }
+}
+
+template <typename BorderInterpolation>
 __global__
-void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
-                    int radius_x, int radius_y,  bool is_x_symmetric,
-                    bool is_y_symmetric, bool normalize, float weight,
-                    Tdst* dst, int dst_stride,
-                    BorderInterpolation interpolation) {
+void rowColC1Kernel0(const uchar* src, int rows, int cols, int src_stride,
+                     int radius, float weight, int threshold_type,
+                     uchar setted_value, int delta, uchar* dst, int dst_stride,
+                     BorderInterpolation interpolation)
+{
   __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
 
   int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
-  int bottom = element_x - radius_x;
-  int top    = element_x + radius_x;
-  if (!is_x_symmetric) {
-    top -= 1;
-  }
+  int bottom = element_x - radius;
+  int top    = element_x + radius;
 
   int data_index, row_index;
-  Tsrc* input;
+  uchar* input;
   float4 value;
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
 
   bool isnt_border_block = true;
-  data_index = radius_x >> (kShiftX0 + 2);
+  data_index = radius >> (kShiftX0 + 2);
   if (blockIdx.x <= data_index) isnt_border_block = false;
-  data_index = (cols - radius_x) >> (kShiftX0 + 2);
+  data_index = (cols - radius) >> (kShiftX0 + 2);
   if (blockIdx.x >= data_index) isnt_border_block = false;
 
-  if (threadIdx.y < radius_y && element_x < cols) {
-    row_index = interpolation(rows, radius_y, element_y - radius_y);
-    input = (Tsrc*)((uchar*)src + row_index * src_stride);
+  if (threadIdx.y < radius && element_x < cols) {
+    row_index = interpolation(rows, radius, element_y - radius);
+    input = (uchar*)src + row_index * src_stride;
     if (isnt_border_block) {
       for (int i = bottom; i <= top; i++) {
         value.x = input[i];
@@ -70,13 +122,13 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
     else {
       for (int i = bottom; i <= top; i++) {
-        data_index = interpolation(cols, radius_x, i);
+        data_index = interpolation(cols, radius, i);
         value.x = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 1);
+        data_index = interpolation(cols, radius, i + 1);
         value.y = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 2);
+        data_index = interpolation(cols, radius, i + 2);
         value.z = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 3);
+        data_index = interpolation(cols, radius, i + 3);
         value.w = input[data_index];
         sum += value;
       }
@@ -90,7 +142,7 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 
   if (element_y < rows && element_x < cols) {
     sum = make_float4(0.f, 0.f, 0.f, 0.f);
-    input = (Tsrc*)((uchar*)src + element_y * src_stride);
+    input = (uchar*)src + element_y * src_stride;
 
     if (isnt_border_block) {
       for (int i = bottom; i <= top; i++) {
@@ -103,34 +155,34 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
     else {
       for (int i = bottom; i <= top; i++) {
-        data_index = interpolation(cols, radius_x, i);
+        data_index = interpolation(cols, radius, i);
         value.x = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 1);
+        data_index = interpolation(cols, radius, i + 1);
         value.y = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 2);
+        data_index = interpolation(cols, radius, i + 2);
         value.z = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 3);
+        data_index = interpolation(cols, radius, i + 3);
         value.w = input[data_index];
         sum += value;
       }
     }
     data_index = threadIdx.x << 2;
-    data[radius_y + threadIdx.y][data_index] = sum.x;
-    data[radius_y + threadIdx.y][data_index + 1] = sum.y;
-    data[radius_y + threadIdx.y][data_index + 2] = sum.z;
-    data[radius_y + threadIdx.y][data_index + 3] = sum.w;
+    data[radius + threadIdx.y][data_index] = sum.x;
+    data[radius + threadIdx.y][data_index + 1] = sum.y;
+    data[radius + threadIdx.y][data_index + 2] = sum.z;
+    data[radius + threadIdx.y][data_index + 3] = sum.w;
   }
 
-  if (threadIdx.y < radius_y && element_x < cols) {
+  if (threadIdx.y < radius && element_x < cols) {
     sum = make_float4(0.f, 0.f, 0.f, 0.f);
     if (blockIdx.y != gridDim.y - 1) {
-      row_index = interpolation(rows, radius_y,
+      row_index = interpolation(rows, radius,
                                 ((blockIdx.y + 1) << kShiftY0) + threadIdx.y);
     }
     else {
-      row_index = interpolation(rows, radius_y, rows + threadIdx.y);
+      row_index = interpolation(rows, radius, rows + threadIdx.y);
     }
-    input = (Tsrc*)((uchar*)src + row_index * src_stride);
+    input = (uchar*)src + row_index * src_stride;
 
     if (isnt_border_block) {
       for (int i = bottom; i <= top; i++) {
@@ -143,13 +195,13 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
     else {
       for (int i = bottom; i <= top; i++) {
-        data_index = interpolation(cols, radius_x, i);
+        data_index = interpolation(cols, radius, i);
         value.x = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 1);
+        data_index = interpolation(cols, radius, i + 1);
         value.y = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 2);
+        data_index = interpolation(cols, radius, i + 2);
         value.z = input[data_index];
-        data_index = interpolation(cols, radius_x, i + 3);
+        data_index = interpolation(cols, radius, i + 3);
         value.w = input[data_index];
         sum += value;
       }
@@ -157,10 +209,10 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 
     data_index = threadIdx.x << 2;
     if (blockIdx.y != gridDim.y - 1) {
-      row_index = radius_y + kDimY0 + threadIdx.y;
+      row_index = radius + kDimY0 + threadIdx.y;
     }
     else {
-      row_index = radius_y + (rows - (blockIdx.y << kShiftY0)) + threadIdx.y;
+      row_index = radius + (rows - (blockIdx.y << kShiftY0)) + threadIdx.y;
     }
     data[row_index][data_index] = sum.x;
     data[row_index][data_index + 1] = sum.y;
@@ -170,10 +222,7 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   __syncthreads();
 
   if (element_y < rows && element_x < cols) {
-    top = (radius_y << 1) + 1;
-    if (!is_y_symmetric) {
-      top -= 1;
-    }
+    top = (radius << 1) + 1;
     sum = make_float4(0.f, 0.f, 0.f, 0.f);
 
     for (int i = 0; i < top; i++) {
@@ -185,86 +234,301 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
       sum += value;
     }
 
-    if (normalize) {
-      sum.x *= weight;
-      sum.y *= weight;
-      sum.z *= weight;
-      sum.w *= weight;
-    }
+    sum.x *= weight;
+    sum.y *= weight;
+    sum.z *= weight;
+    sum.w *= weight;
 
-    Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
-    if (sizeof(Tdst) == 1) {
-      if (element_x < cols - 4) {
-        output[element_x]     = saturate_cast(sum.x);
-        output[element_x + 1] = saturate_cast(sum.y);
-        output[element_x + 2] = saturate_cast(sum.z);
-        output[element_x + 3] = saturate_cast(sum.w);
-      }
-      else {
-        output[element_x] = saturate_cast(sum.x);
-        if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast(sum.y);
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast(sum.z);
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = saturate_cast(sum.w);
-        }
-      }
+    int4 threshold;
+    threshold.x = saturate_cast(sum.x) - delta;
+    threshold.y = saturate_cast(sum.y) - delta;
+    threshold.z = saturate_cast(sum.z) - delta;
+    threshold.w = saturate_cast(sum.w) - delta;
+
+    input = (uchar*)src + element_y * src_stride;
+    value.x = input[element_x];
+    value.y = input[element_x + 1];
+    value.z = input[element_x + 2];
+    value.w = input[element_x + 3];
+
+    if (threshold_type == THRESH_BINARY) {
+      value.x = value.x > threshold.x ? setted_value : 0;
+      value.y = value.y > threshold.y ? setted_value : 0;
+      value.z = value.z > threshold.z ? setted_value : 0;
+      value.w = value.w > threshold.w ? setted_value : 0;
     }
     else {
-      if (element_x < cols - 4) {
-        output[element_x]     = sum.x;
-        output[element_x + 1] = sum.y;
-        output[element_x + 2] = sum.z;
-        output[element_x + 3] = sum.w;
+      value.x = value.x > threshold.x ? 0 : setted_value;
+      value.y = value.y > threshold.y ? 0 : setted_value;
+      value.z = value.z > threshold.z ? 0 : setted_value;
+      value.w = value.w > threshold.w ? 0 : setted_value;
+    }
+
+    uchar* output = dst + element_y * dst_stride;
+    if (element_x < cols - 4) {
+      output[element_x]     = saturate_cast(value.x);
+      output[element_x + 1] = saturate_cast(value.y);
+      output[element_x + 2] = saturate_cast(value.z);
+      output[element_x + 3] = saturate_cast(value.w);
+    }
+    else {
+      output[element_x] = saturate_cast(value.x);
+      if (element_x < cols - 1) {
+        output[element_x + 1] = saturate_cast(value.y);
       }
-      else {
-        output[element_x] = sum.x;
-        if (element_x < cols - 1) {
-          output[element_x + 1] = sum.y;
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = sum.z;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = sum.w;
-        }
+      if (element_x < cols - 2) {
+        output[element_x + 2] = saturate_cast(value.z);
+      }
+      if (element_x < cols - 3) {
+        output[element_x + 3] = saturate_cast(value.w);
       }
     }
   }
 }
 
-template <typename Tsrc, typename Tsrc4, typename BorderInterpolation>
+template <typename BorderInterpolation>
 __global__
-void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
-                     int radius_x, bool is_x_symmetric, float* dst,
-                     int dst_stride, BorderInterpolation interpolation) {
+void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
+                     int ksize, int threshold_type, uchar setted_value,
+                     int delta, uchar* dst, int dst_stride,
+                     BorderInterpolation interpolation)
+{
+  __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
+  __shared__ float kernel[SMALL_MAX_KSIZE];
+
+  int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
+  int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
+
+  if (threadIdx.y == 0 && threadIdx.x == 0) {
+    createGaussianKernel(kernel, 0, ksize);
+  }
+  __syncthreads();
+
+  int radius = ksize >> 1;
+  int bottom = element_x - radius;
+  int top    = element_x + radius;
+
+  int data_index, row_index, kernel_index = 0;
+  uchar* input;
+  float4 value;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+  bool isnt_border_block = true;
+  data_index = radius >> (kShiftX0 + 2);
+  if (blockIdx.x <= data_index) isnt_border_block = false;
+  data_index = (cols - radius) >> (kShiftX0 + 2);
+  if (blockIdx.x >= data_index) isnt_border_block = false;
+
+  if (threadIdx.y < radius && element_x < cols) {
+    row_index = interpolation(rows, radius, element_y - radius);
+    input = (uchar*)src + row_index * src_stride;
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        mulAdd(sum, value, kernel[kernel_index]);
+        kernel_index++;
+      }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius, i + 3);
+        value.w = input[data_index];
+        mulAdd(sum, value, kernel[kernel_index]);
+        kernel_index++;
+      }
+    }
+    data_index = threadIdx.x << 2;
+    data[threadIdx.y][data_index] = sum.x;
+    data[threadIdx.y][data_index + 1] = sum.y;
+    data[threadIdx.y][data_index + 2] = sum.z;
+    data[threadIdx.y][data_index + 3] = sum.w;
+  }
+
+  if (element_y < rows && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    input = (uchar*)src + element_y * src_stride;
+    kernel_index = 0;
+
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        mulAdd(sum, value, kernel[kernel_index]);
+        kernel_index++;
+      }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius, i + 3);
+        value.w = input[data_index];
+        mulAdd(sum, value, kernel[kernel_index]);
+        kernel_index++;
+      }
+    }
+    data_index = threadIdx.x << 2;
+    data[radius + threadIdx.y][data_index] = sum.x;
+    data[radius + threadIdx.y][data_index + 1] = sum.y;
+    data[radius + threadIdx.y][data_index + 2] = sum.z;
+    data[radius + threadIdx.y][data_index + 3] = sum.w;
+  }
+
+  if (threadIdx.y < radius && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    if (blockIdx.y != gridDim.y - 1) {
+      row_index = interpolation(rows, radius,
+                                ((blockIdx.y + 1) << kShiftY0) + threadIdx.y);
+    }
+    else {
+      row_index = interpolation(rows, radius, rows + threadIdx.y);
+    }
+    input = (uchar*)src + row_index * src_stride;
+    kernel_index = 0;
+
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        mulAdd(sum, value, kernel[kernel_index]);
+        kernel_index++;
+      }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius, i + 3);
+        value.w = input[data_index];
+        mulAdd(sum, value, kernel[kernel_index]);
+        kernel_index++;
+      }
+    }
+
+    data_index = threadIdx.x << 2;
+    if (blockIdx.y != gridDim.y - 1) {
+      row_index = radius + kDimY0 + threadIdx.y;
+    }
+    else {
+      row_index = radius + (rows - (blockIdx.y << kShiftY0)) + threadIdx.y;
+    }
+    data[row_index][data_index] = sum.x;
+    data[row_index][data_index + 1] = sum.y;
+    data[row_index][data_index + 2] = sum.z;
+    data[row_index][data_index + 3] = sum.w;
+  }
+  __syncthreads();
+
+  if (element_y < rows && element_x < cols) {
+    top = (radius << 1) + 1;
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    kernel_index = 0;
+
+    for (int i = 0; i < top; i++) {
+      data_index = threadIdx.x << 2;
+      value.x = data[i + threadIdx.y][data_index];
+      value.y = data[i + threadIdx.y][data_index + 1];
+      value.z = data[i + threadIdx.y][data_index + 2];
+      value.w = data[i + threadIdx.y][data_index + 3];
+      mulAdd(sum, value, kernel[kernel_index]);
+      kernel_index++;
+    }
+
+    int4 threshold;
+    threshold.x = saturate_cast(sum.x) - delta;
+    threshold.y = saturate_cast(sum.y) - delta;
+    threshold.z = saturate_cast(sum.z) - delta;
+    threshold.w = saturate_cast(sum.w) - delta;
+
+    input = (uchar*)src + element_y * src_stride;
+    value.x = input[element_x];
+    value.y = input[element_x + 1];
+    value.z = input[element_x + 2];
+    value.w = input[element_x + 3];
+
+    if (threshold_type == THRESH_BINARY) {
+      value.x = value.x > threshold.x ? setted_value : 0;
+      value.y = value.y > threshold.y ? setted_value : 0;
+      value.z = value.z > threshold.z ? setted_value : 0;
+      value.w = value.w > threshold.w ? setted_value : 0;
+    }
+    else {
+      value.x = value.x > threshold.x ? 0 : setted_value;
+      value.y = value.y > threshold.y ? 0 : setted_value;
+      value.z = value.z > threshold.z ? 0 : setted_value;
+      value.w = value.w > threshold.w ? 0 : setted_value;
+    }
+
+    uchar* output = dst + element_y * dst_stride;
+    if (element_x < cols - 4) {
+      output[element_x]     = saturate_cast(value.x);
+      output[element_x + 1] = saturate_cast(value.y);
+      output[element_x + 2] = saturate_cast(value.z);
+      output[element_x + 3] = saturate_cast(value.w);
+    }
+    else {
+      output[element_x] = saturate_cast(value.x);
+      if (element_x < cols - 1) {
+        output[element_x + 1] = saturate_cast(value.y);
+      }
+      if (element_x < cols - 2) {
+        output[element_x + 2] = saturate_cast(value.z);
+      }
+      if (element_x < cols - 3) {
+        output[element_x + 3] = saturate_cast(value.w);
+      }
+    }
+  }
+}
+
+template <typename BorderInterpolation>
+__global__
+void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
+                     int radius, float* dst, int dst_stride,
+                     BorderInterpolation interpolation)
+{
   int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
     return;
   }
 
-  int origin_x = element_x - radius_x;
-  int top_x    = element_x + radius_x;
-  if (!is_x_symmetric) {
-    top_x -= 1;
-  }
+  int origin_x = element_x - radius;
+  int top_x    = element_x + radius;
 
   int data_index;
-  Tsrc* input;
-  Tsrc4 value;
+  uchar* input;
+  uchar4 value;
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
 
   bool isnt_border_block = true;
-  data_index = radius_x >> (kBlockShiftX1 + 2);
+  data_index = radius >> (kBlockShiftX1 + 2);
   if (blockIdx.x <= data_index) isnt_border_block = false;
-  data_index = (cols - radius_x) >> (kBlockShiftX1 + 2);
+  data_index = (cols - radius) >> (kBlockShiftX1 + 2);
   if (blockIdx.x >= data_index) isnt_border_block = false;
 
-  input = (Tsrc*)((uchar*)src + element_y * src_stride);
+  input = (uchar*)src + element_y * src_stride;
   if (isnt_border_block) {
     for (int i = origin_x; i <= top_x; i++) {
       value.x = input[i];
@@ -276,13 +540,13 @@ void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
   else {
     for (int i = origin_x; i <= top_x; i++) {
-      data_index = interpolation(cols, radius_x, i);
+      data_index = interpolation(cols, radius, i);
       value.x = input[data_index];
-      data_index = interpolation(cols, radius_x, i + 1);
+      data_index = interpolation(cols, radius, i + 1);
       value.y = input[data_index];
-      data_index = interpolation(cols, radius_x, i + 2);
+      data_index = interpolation(cols, radius, i + 2);
       value.z = input[data_index];
-      data_index = interpolation(cols, radius_x, i + 3);
+      data_index = interpolation(cols, radius, i + 3);
       value.w = input[data_index];
       sum += value;
     }
@@ -309,13 +573,88 @@ void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 }
 
-template <typename Tdst, typename BorderInterpolation>
+template <typename BorderInterpolation>
 __global__
-void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
-                     int radius_y, bool is_y_symmetric, bool normalize,
-                     float weight, Tdst* dst, int dst_stride,
-                     BorderInterpolation interpolation) {
-  __shared__ Tdst data[kBlockDimY1][kBlockDimX1 << 2];
+void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
+                      const float* kernel, int radius, float* dst,
+                      int dst_stride, BorderInterpolation interpolation)
+{
+  int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_x >= cols || element_y >= rows) {
+    return;
+  }
+
+  int origin_x = element_x - radius;
+  int top_x    = element_x + radius;
+
+  int data_index, kernel_index = 0;
+  uchar* input;
+  uchar4 value;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+  bool isnt_border_block = true;
+  data_index = radius >> (kBlockShiftX1 + 2);
+  if (blockIdx.x <= data_index) isnt_border_block = false;
+  data_index = (cols - radius) >> (kBlockShiftX1 + 2);
+  if (blockIdx.x >= data_index) isnt_border_block = false;
+
+  input = (uchar*)src + element_y * src_stride;
+  if (isnt_border_block) {
+    for (int i = origin_x; i <= top_x; i++) {
+      value.x = input[i];
+      value.y = input[i + 1];
+      value.z = input[i + 2];
+      value.w = input[i + 3];
+      mulAdd(sum, value, kernel[kernel_index]);
+      kernel_index++;
+    }
+  }
+  else {
+    for (int i = origin_x; i <= top_x; i++) {
+      data_index = interpolation(cols, radius, i);
+      value.x = input[data_index];
+      data_index = interpolation(cols, radius, i + 1);
+      value.y = input[data_index];
+      data_index = interpolation(cols, radius, i + 2);
+      value.z = input[data_index];
+      data_index = interpolation(cols, radius, i + 3);
+      value.w = input[data_index];
+      mulAdd(sum, value, kernel[kernel_index]);
+      kernel_index++;
+    }
+  }
+
+  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+  if (element_x < cols - 4) {
+    output[element_x]     = sum.x;
+    output[element_x + 1] = sum.y;
+    output[element_x + 2] = sum.z;
+    output[element_x + 3] = sum.w;
+  }
+  else {
+    output[element_x] = sum.x;
+    if (element_x < cols - 1) {
+      output[element_x + 1] = sum.y;
+    }
+    if (element_x < cols - 2) {
+      output[element_x + 2] = sum.z;
+    }
+    if (element_x < cols - 3) {
+      output[element_x + 3] = sum.w;
+    }
+  }
+}
+
+template <typename BorderInterpolation>
+__global__
+void colBatch4Kernel0(const float* buffer, int rows, int cols,
+                      int buffer_stride, const uchar* src, int src_stride,
+                      int radius, float weight, int threshold_type,
+                      uchar setted_value, int delta, uchar* dst, int dst_stride,
+                      BorderInterpolation interpolation)
+{
+  __shared__ uchar data[kBlockDimY1][kBlockDimX1 << 2];
 
   int element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
@@ -323,94 +662,227 @@ void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
     return;
   }
 
-  int origin_y = element_y - radius_y;
-  int top_y    = element_y + radius_y;
-  if (!is_y_symmetric) {
-    top_y -= 1;
-  }
+  int origin_y = element_y - radius;
+  int top_y    = element_y + radius;
 
   int data_index;
-  float* input;
+  float* input0;
   float value;
   float sum = 0.f;
 
   bool isnt_border_block = true;
-  data_index = radius_y >> kBlockShiftY1;
+  data_index = radius >> kBlockShiftY1;
   if (blockIdx.y <= data_index) isnt_border_block = false;
-  data_index = (rows - radius_y) >> kBlockShiftY1;
+  data_index = (rows - radius) >> kBlockShiftY1;
   if (blockIdx.y >= data_index) isnt_border_block = false;
 
   if (isnt_border_block) {
     for (int i = origin_y; i <= top_y; i++) {
-      input = (float*)((uchar*)src + i * src_stride);
-      value = input[element_x];
+      input0 = (float*)((uchar*)buffer + i * buffer_stride);
+      value = input0[element_x];
       sum += value;
     }
   }
   else {
     for (int i = origin_y; i <= top_y; i++) {
-      data_index = interpolation(rows, radius_y, i);
-      input = (float*)((uchar*)src + data_index * src_stride);
-      value = input[element_x];
+      data_index = interpolation(rows, radius, i);
+      input0 = (float*)((uchar*)buffer + data_index * buffer_stride);
+      value = input0[element_x];
       sum += value;
     }
   }
 
-  if (normalize) {
-    sum *= weight;
-  }
-
-  if (sizeof(Tdst) == 1) {
-    data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
-  }
+  sum *= weight;
+  data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
   __syncthreads();
 
-  Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
-  if (sizeof(Tdst) == 1) {
-    if (threadIdx.x < kBlockDimX1) {
-      element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
-      data_index = threadIdx.x << 2;
-      if (element_x <= cols - 4) {
-        output[element_x]     = data[threadIdx.y][data_index];
-        output[element_x + 1] = data[threadIdx.y][data_index + 1];
-        output[element_x + 2] = data[threadIdx.y][data_index + 2];
-        output[element_x + 3] = data[threadIdx.y][data_index + 3];
+  if (threadIdx.x < kBlockDimX1) {
+    int4 value;
+    uchar* input1 = (uchar*)src + element_y * src_stride;
+    element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + (threadIdx.x << 2);
+    value.x = input1[element_x];
+    value.y = input1[element_x + 1];
+    value.z = input1[element_x + 2];
+    value.w = input1[element_x + 3];
+
+    int4 threshold;
+    threshold.x = data[threadIdx.y][(threadIdx.x << 2)] - delta;
+    threshold.y = data[threadIdx.y][(threadIdx.x << 2) + 1] - delta;
+    threshold.z = data[threadIdx.y][(threadIdx.x << 2) + 2] - delta;
+    threshold.w = data[threadIdx.y][(threadIdx.x << 2) + 3] - delta;
+
+    if (threshold_type == THRESH_BINARY) {
+      value.x = value.x > threshold.x ? setted_value : 0;
+      value.y = value.y > threshold.y ? setted_value : 0;
+      value.z = value.z > threshold.z ? setted_value : 0;
+      value.w = value.w > threshold.w ? setted_value : 0;
+    }
+    else {
+      value.x = value.x > threshold.x ? 0 : setted_value;
+      value.y = value.y > threshold.y ? 0 : setted_value;
+      value.z = value.z > threshold.z ? 0 : setted_value;
+      value.w = value.w > threshold.w ? 0 : setted_value;
+    }
+
+    uchar* output = (uchar*)dst + element_y * dst_stride;
+    element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+    data_index = threadIdx.x << 2;
+    if (element_x <= cols - 4) {
+      output[element_x]     = clip(value.x, 0, 255);
+      output[element_x + 1] = clip(value.y, 0, 255);
+      output[element_x + 2] = clip(value.z, 0, 255);
+      output[element_x + 3] = clip(value.w, 0, 255);
+    }
+    else if (element_x < cols) {
+      output[element_x] = clip(value.x, 0, 255);
+      if (element_x < cols - 1) {
+        output[element_x + 1] = clip(value.y, 0, 255);
       }
-      else if (element_x < cols) {
-        output[element_x] = data[threadIdx.y][data_index];
-        if (element_x < cols - 1) {
-          output[element_x + 1] = data[threadIdx.y][data_index + 1];
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = data[threadIdx.y][data_index + 2];
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = data[threadIdx.y][data_index + 3];
-        }
+      if (element_x < cols - 2) {
+        output[element_x + 2] = clip(value.z, 0, 255);
       }
-      else {
+      if (element_x < cols - 3) {
+        output[element_x + 3] = clip(value.w, 0, 255);
       }
     }
-  }
-  else {
-    output[element_x] = sum;
+    else {
+    }
   }
 }
 
-#define RUN_CHANNEL1_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
-Interpolation interpolation;                                                   \
-rowColC1Kernel<Tsrc, Tdst, Interpolation><<<grid, block, 0, stream>>>(src,     \
-    rows, cols, src_stride, radius_x, radius_y, is_x_symmetric, is_y_symmetric,\
-    normalize, weight, dst, dst_stride, interpolation);
+template <typename BorderInterpolation>
+__global__
+void colBatch4Kernel1(const float* buffer, int rows, int cols,
+                      int buffer_stride, const uchar* src, int src_stride,
+                      const float* kernel, int radius, int threshold_type,
+                      uchar setted_value, int delta, uchar* dst, int dst_stride,
+                      BorderInterpolation interpolation)
+{
+  __shared__ uchar data[kBlockDimY1][kBlockDimX1 << 2];
 
-#define RUN_KERNELS(Interpolation, Tsrc, Tdst)                                 \
+  int element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_x >= cols || element_y >= rows) {
+    return;
+  }
+
+  int origin_y = element_y - radius;
+  int top_y    = element_y + radius;
+
+  int data_index, kernel_index = 0;
+  float* input0;
+  float value;
+  float sum = 0.f;
+
+  bool isnt_border_block = true;
+  data_index = radius >> kBlockShiftY1;
+  if (blockIdx.y <= data_index) isnt_border_block = false;
+  data_index = (rows - radius) >> kBlockShiftY1;
+  if (blockIdx.y >= data_index) isnt_border_block = false;
+
+  if (isnt_border_block) {
+    for (int i = origin_y; i <= top_y; i++) {
+      input0 = (float*)((uchar*)buffer + i * buffer_stride);
+      value = input0[element_x];
+      sum += value * kernel[kernel_index];
+      kernel_index++;
+    }
+  }
+  else {
+    for (int i = origin_y; i <= top_y; i++) {
+      data_index = interpolation(rows, radius, i);
+      input0 = (float*)((uchar*)buffer + data_index * buffer_stride);
+      value = input0[element_x];
+      sum += value * kernel[kernel_index];
+      kernel_index++;
+    }
+  }
+
+  data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
+  __syncthreads();
+
+  if (threadIdx.x < kBlockDimX1) {
+    uchar4 value;
+    uchar* input1 = (uchar*)src + element_y * src_stride;
+    element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + (threadIdx.x << 2);
+    value.x = input1[element_x];
+    value.y = input1[element_x + 1];
+    value.z = input1[element_x + 2];
+    value.w = input1[element_x + 3];
+
+    int4 threshold;
+    threshold.x = data[threadIdx.y][(threadIdx.x << 2)] - delta;
+    threshold.y = data[threadIdx.y][(threadIdx.x << 2) + 1] - delta;
+    threshold.z = data[threadIdx.y][(threadIdx.x << 2) + 2] - delta;
+    threshold.w = data[threadIdx.y][(threadIdx.x << 2) + 3] - delta;
+
+    if (threshold_type == THRESH_BINARY) {
+      value.x = value.x > threshold.x ? setted_value : 0;
+      value.y = value.y > threshold.y ? setted_value : 0;
+      value.z = value.z > threshold.z ? setted_value : 0;
+      value.w = value.w > threshold.w ? setted_value : 0;
+    }
+    else {
+      value.x = value.x > threshold.x ? 0 : setted_value;
+      value.y = value.y > threshold.y ? 0 : setted_value;
+      value.z = value.z > threshold.z ? 0 : setted_value;
+      value.w = value.w > threshold.w ? 0 : setted_value;
+    }
+
+    uchar* output = (uchar*)dst + element_y * dst_stride;
+    element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+    data_index = threadIdx.x << 2;
+    if (element_x <= cols - 4) {
+      output[element_x]     = value.x;
+      output[element_x + 1] = value.y;
+      output[element_x + 2] = value.z;
+      output[element_x + 3] = value.w;
+    }
+    else if (element_x < cols) {
+      output[element_x] = value.x;
+      if (element_x < cols - 1) {
+        output[element_x + 1] = value.y;
+      }
+      if (element_x < cols - 2) {
+        output[element_x + 2] = value.z;
+      }
+      if (element_x < cols - 3) {
+        output[element_x + 3] = value.w;
+      }
+    }
+    else {
+    }
+  }
+}
+
+#define RUN_SMALL_KERNELS(Interpolation)                                       \
 Interpolation interpolation;                                                   \
-rowBatch4Kernel<Tsrc, Tsrc ## 4, Interpolation><<<grid1, block, 0, stream    \
-    >>>(src, rows, cols, src_stride, radius_x, is_x_symmetric, buffer,       \
-    pitch, interpolation);                                                   \
-colBatch4Kernel<Tdst, Interpolation><<<grid4, block4, 0, stream>>>(buffer, \
-    rows, columns, pitch, radius_y, is_y_symmetric, normalize, weight,     \
-    dst, dst_stride, interpolation);
+if (adaptive_method == ADAPTIVE_THRESH_MEAN_C) {                               \
+  rowColC1Kernel0<Interpolation><<<grid, block, 0, stream>>>(src, rows, cols,  \
+      src_stride, radius, weight, threshold_type, setted_value, int_delta, dst,\
+      dst_stride, interpolation);                                              \
+}                                                                              \
+else {                                                                         \
+  rowColC1Kernel1<Interpolation><<<grid, block, 0, stream>>>(src, rows, cols,  \
+      src_stride, ksize, threshold_type, setted_value, int_delta, dst,         \
+      dst_stride, interpolation);                                              \
+}
+
+#define RUN_LARAGE_KERNELS0(Interpolation)                                     \
+Interpolation interpolation;                                                   \
+rowBatch4Kernel0<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
+    src_stride, radius, buffer, pitch, interpolation);                         \
+colBatch4Kernel0<Interpolation><<<grid2, block2, 0, stream>>>(buffer, rows,    \
+    cols, pitch, src, src_stride, radius, weight, threshold_type, setted_value,\
+    int_delta, dst, dst_stride, interpolation);
+
+#define RUN_LARAGE_KERNELS1(Interpolation)                                     \
+Interpolation interpolation;                                                   \
+rowBatch4Kernel1<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
+    src_stride, gpu_kernel, radius, buffer, pitch, interpolation);             \
+colBatch4Kernel1<Interpolation><<<grid2, block2, 0, stream>>>(buffer, rows,    \
+    cols, pitch, src, src_stride, gpu_kernel, radius, threshold_type,          \
+    setted_value, int_delta, dst, dst_stride, interpolation);
 
 RetCode
 AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
@@ -433,32 +905,31 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  int channels = 1;
-  int ksize_x = ksize;
-  int ksize_y = ksize;
-  bool normalize = true;
-
   uchar setted_value = 0;
-  if (max_value <= 0) {
-    // Zeros<uchar, 1>(stream, rows, cols, dst_stride, dst);
+  if (max_value < 0) {
+    Zeros<uchar, 1>(stream, rows, cols, dst_stride, dst);
     return RC_SUCCESS;
   }
   else if (max_value < 255.f) {
-    setted_value = (uchar)max_value;
+    setted_value = rintf(max_value);
   }
   else {
     setted_value = 255;
   }
 
+  int int_delta = 0;
+  if (threshold_type == THRESH_BINARY) {
+    int_delta = std::ceil(delta);
+  }
+  else {
+    int_delta = std::floor(delta);
+  }
+
+  int radius = ksize >> 1;
+  float weight = 1.f / (ksize * ksize);
+
   cudaError_t code = cudaSuccess;
-
-  int radius_x = ksize_x >> 1;
-  int radius_y = ksize_y >> 1;
-  bool is_x_symmetric = ksize_x & 1;
-  bool is_y_symmetric = ksize_y & 1;
-  float weight = 1.0 / (ksize_x * ksize_y);
-
-  if (ksize <= SMALL_KSIZE) {
+  if (ksize < SMALL_MAX_KSIZE) {
     dim3 block, grid;
     block.x = kDimX0;
     block.y = kDimY0;
@@ -466,13 +937,13 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, uchar, uchar);
+      RUN_SMALL_KERNELS(ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, uchar, uchar);
+      RUN_SMALL_KERNELS(ReflectBorder);
     }
     else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, uchar, uchar);
+      RUN_SMALL_KERNELS(Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -484,43 +955,78 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
     return RC_SUCCESS;
   }
 
-  dim3 block, grid;
-  block.x = kBlockDimX1;
-  block.y = kBlockDimY1;
-  grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
-  grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
-
-  dim3 grid1;
+  dim3 block1, grid1;
+  block1.x = kBlockDimX1;
+  block1.y = kBlockDimY1;
   grid1.x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
   grid1.y = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  dim3 block4, grid4;
-  block4.x = (kBlockDimX1 << 2);
-  block4.y = kBlockDimY1;
-  int columns = cols * channels;
-  grid4.x  = divideUp(columns, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
-  grid4.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+  dim3 block2, grid2;
+  block2.x = (kBlockDimX1 << 2);
+  block2.y = kBlockDimY1;
+  grid2.x  = divideUp(cols, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
+  grid2.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  float* buffer;
-  size_t pitch;
-  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                         rows);
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
-  }
+  if (adaptive_method == ADAPTIVE_THRESH_MEAN_C) {
+    float* buffer;
+    size_t pitch;
+    code = cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
 
-  if (border_type == BORDER_TYPE_REPLICATE) {
-    RUN_KERNELS(ReplicateBorder, uchar, uchar);
-  }
-  else if (border_type == BORDER_TYPE_REFLECT) {
-    RUN_KERNELS(ReflectBorder, uchar, uchar);
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_LARAGE_KERNELS0(ReplicateBorder);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_LARAGE_KERNELS0(ReflectBorder);
+    }
+    else {
+      RUN_LARAGE_KERNELS0(Reflect101Border);
+    }
+
+    cudaFree(buffer);
   }
   else {
-    RUN_KERNELS(Reflect101Border, uchar, uchar);
-  }
+    float* buffer;
+    size_t pitch;
+    code = cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
 
-  cudaFree(buffer);
+    int kernel_size = ksize * sizeof(float);
+    float* kernel = (float*)malloc(kernel_size);
+    float* gpu_kernel;
+    code = cudaMalloc((void**)&gpu_kernel, kernel_size);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+    createGaussianKernel(kernel, 0, ksize);
+    code = cudaMemcpyAsync(gpu_kernel, kernel, kernel_size,
+                           cudaMemcpyHostToDevice);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_LARAGE_KERNELS1(ReplicateBorder);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_LARAGE_KERNELS1(ReflectBorder);
+    }
+    else {
+      RUN_LARAGE_KERNELS1(Reflect101Border);
+    }
+
+    free(kernel);
+    cudaFree(buffer);
+    cudaFree(gpu_kernel);
+  }
 
   code = cudaGetLastError();
   if (code != cudaSuccess) {
