@@ -87,8 +87,7 @@ __global__
 void rowColC1Kernel0(const uchar* src, int rows, int cols, int src_stride,
                      int radius, float weight, int threshold_type,
                      uchar setted_value, int delta, uchar* dst, int dst_stride,
-                     BorderInterpolation interpolation)
-{
+                     BorderInterpolation interpolation) {
   __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
 
   int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
@@ -291,8 +290,7 @@ __global__
 void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
                      int ksize, int threshold_type, uchar setted_value,
                      int delta, uchar* dst, int dst_stride,
-                     BorderInterpolation interpolation)
-{
+                     BorderInterpolation interpolation) {
   __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
   __shared__ float kernel[SMALL_MAX_KSIZE];
 
@@ -505,9 +503,8 @@ void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
 template <typename BorderInterpolation>
 __global__
 void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
-                     int radius, float* dst, int dst_stride,
-                     BorderInterpolation interpolation)
-{
+                      int radius, float* dst, int dst_stride,
+                      BorderInterpolation interpolation) {
   int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -577,8 +574,7 @@ template <typename BorderInterpolation>
 __global__
 void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
                       const float* kernel, int radius, float* dst,
-                      int dst_stride, BorderInterpolation interpolation)
-{
+                      int dst_stride, BorderInterpolation interpolation) {
   int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -652,8 +648,7 @@ void colBatch4Kernel0(const float* buffer, int rows, int cols,
                       int buffer_stride, const uchar* src, int src_stride,
                       int radius, float weight, int threshold_type,
                       uchar setted_value, int delta, uchar* dst, int dst_stride,
-                      BorderInterpolation interpolation)
-{
+                      BorderInterpolation interpolation) {
   __shared__ uchar data[kBlockDimY1][kBlockDimX1 << 2];
 
   int element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + threadIdx.x;
@@ -756,8 +751,7 @@ void colBatch4Kernel1(const float* buffer, int rows, int cols,
                       int buffer_stride, const uchar* src, int src_stride,
                       const float* kernel, int radius, int threshold_type,
                       uchar setted_value, int delta, uchar* dst, int dst_stride,
-                      BorderInterpolation interpolation)
-{
+                      BorderInterpolation interpolation) {
   __shared__ uchar data[kBlockDimY1][kBlockDimX1 << 2];
 
   int element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + threadIdx.x;

@@ -70,7 +70,7 @@ enum DimY {
   kDimY6 = 1,
   kDimY7 = 1,
   kDimY8 = 4,
-  kDimY9 = 2,
+  kDimY9 = 4,
 };
 
 enum ShiftX {
@@ -96,7 +96,7 @@ enum ShiftY {
   kShiftY6 = 0,
   kShiftY7 = 0,
   kShiftY8 = 2,
-  kShiftY9 = 1,
+  kShiftY9 = 2,
 };
 
 enum BlockConfiguration0 {
