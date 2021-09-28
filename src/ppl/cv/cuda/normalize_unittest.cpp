@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/norm.h"
+#include "ppl/cv/cuda/normalize.h"
 
 #include <tuple>
 #include <sstream>
@@ -32,8 +32,8 @@ enum MaskType {
   WITH_MASK,
 };
 
-using Parameters = std::tuple<NormTypes, MaskType, cv::Size>;
-inline std::string convertToStringNorm(const Parameters& parameters) {
+using Parameters = std::tuple<NormTypes, MaskType, int, int, cv::Size>;
+inline std::string convertToStringNormalize(const Parameters& parameters) {
   std::ostringstream formatted;
 
   NormTypes norm_type = std::get<0>(parameters);
@@ -43,8 +43,11 @@ inline std::string convertToStringNorm(const Parameters& parameters) {
   else if (norm_type == NORM_L2) {
     formatted << "NORM_L2" << "_";
   }
-  else {
+  else if (norm_type == NORM_INF) {
     formatted << "NORM_INF" << "_";
+  }
+  else {  // norm_type == NORM_MINMAX
+    formatted << "NORM_MINMAX" << "_";
   }
 
   MaskType is_masked = std::get<1>(parameters);
@@ -55,7 +58,13 @@ inline std::string convertToStringNorm(const Parameters& parameters) {
     formatted << "WithMask" << "_";
   }
 
-  cv::Size size = std::get<2>(parameters);
+  int int_alpha = std::get<2>(parameters);
+  formatted << "IntAlpha" << int_alpha << "_";
+
+  int int_beta = std::get<3>(parameters);
+  formatted << "IntBeta" << int_beta << "_";
+
+  cv::Size size = std::get<4>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -63,16 +72,18 @@ inline std::string convertToStringNorm(const Parameters& parameters) {
 }
 
 template <typename T, int channels>
-class PplCvCudaNormTest : public ::testing::TestWithParam<Parameters> {
+class PplCvCudaNormalizeTest : public ::testing::TestWithParam<Parameters> {
  public:
-  PplCvCudaNormTest() {
+  PplCvCudaNormalizeTest() {
     const Parameters& parameters = GetParam();
     norm_type = std::get<0>(parameters);
     is_masked = std::get<1>(parameters);
-    size      = std::get<2>(parameters);
+    alpha     = std::get<2>(parameters) / 10.f;
+    beta      = std::get<3>(parameters) / 10.f;
+    size      = std::get<4>(parameters);
   }
 
-  ~PplCvCudaNormTest() {
+  ~PplCvCudaNormalizeTest() {
   }
 
   bool apply();
@@ -80,26 +91,37 @@ class PplCvCudaNormTest : public ::testing::TestWithParam<Parameters> {
  private:
   NormTypes norm_type;
   MaskType is_masked;
+  float alpha;
+  float beta;
   cv::Size size;
 };
 
 template <typename T, int channels>
-bool PplCvCudaNormTest<T, channels>::apply() {
-  cv::Mat src, mask0;
+bool PplCvCudaNormalizeTest<T, channels>::apply() {
+  cv::Mat src, cv_dst, mask0;
   src  = createSourceImage(size.height, size.width,
                            CV_MAKETYPE(cv::DataType<T>::depth, channels));
   mask0 = createSourceImage(size.height, size.width,
                             CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+  cv::Mat dst(src.rows, src.cols,
+              CV_MAKETYPE(cv::DataType<float>::depth, channels));
+  cv_dst = cv::Mat::zeros(src.rows, src.cols,
+                          CV_MAKETYPE(cv::DataType<float>::depth, channels));
   cv::cuda::GpuMat gpu_src(src);
+  cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask0(mask0);
 
   int src_size = size.height * size.width * channels * sizeof(T);
+  int dst_size = size.height * size.width * channels * sizeof(float);
   int msk_size = size.height * size.width * sizeof(uchar);
   T* input = (T*)malloc(src_size);
+  float* output = (float*)malloc(dst_size);
   uchar* mask1 = (uchar*)malloc(msk_size);
   T* gpu_input;
+  float* gpu_output;
   uchar* gpu_mask1;
   cudaMalloc((void**)&gpu_input, src_size);
+  cudaMalloc((void**)&gpu_output, dst_size);
   cudaMalloc((void**)&gpu_mask1, msk_size);
   copyMatToArray(src, input);
   copyMatToArray(mask0, mask1);
@@ -113,26 +135,46 @@ bool PplCvCudaNormTest<T, channels>::apply() {
   else if (norm_type == NORM_L1) {
     cv_norm_type = cv::NORM_L1;
   }
-  else {  // norm_type == NORM_L2
+  else if (norm_type == NORM_L2) {
     cv_norm_type = cv::NORM_L2;
   }
+  else {  // norm_type == NORM_MINMAX
+    cv_norm_type = cv::NORM_MINMAX;
+  }
 
-  double result0, result1, result2;
   if (is_masked == NO_MASK) {
-    result0 = cv::norm(src, cv_norm_type);
-    Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, &result1, norm_type);
-    Norm<T, channels>(0, size.height, size.width, size.width * channels,
-                      gpu_input, &result2, norm_type);
+    cv::normalize(src, cv_dst, alpha, beta, cv_norm_type,
+                  CV_MAT_DEPTH(dst.type()));
+    Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
+                           gpu_src.step / sizeof(T), (T*)gpu_src.data,
+                           gpu_dst.step / sizeof(float), (float*)gpu_dst.data,
+                           alpha, beta, norm_type);
+    Normalize<T, channels>(0, size.height, size.width, size.width * channels,
+                           gpu_input, size.width * channels, gpu_output,
+                           alpha, beta, norm_type);
   }
   else {
-    result0 = cv::norm(src, cv_norm_type, mask0);
-    Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, &result1, norm_type, gpu_mask0.step,
-                      gpu_mask0.data);
-    Norm<T, channels>(0, size.height, size.width, size.width * channels,
-                      gpu_input, &result2, norm_type, size.width, gpu_mask1);
+    if (channels > 1 && norm_type == NORM_MINMAX) {
+      // cv::normalize() assertion fails.
+      cudaMemset(gpu_dst.data, 0, gpu_dst.step * gpu_src.rows);
+      cudaMemset(gpu_output, 0, dst_size);
+    }
+    else {
+      cv::normalize(src, cv_dst, alpha, beta, cv_norm_type,
+                    CV_MAT_DEPTH(dst.type()), mask0);
+      Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
+                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+                            gpu_dst.step / sizeof(float), (float*)gpu_dst.data,
+                            alpha, beta, norm_type, gpu_mask0.step,
+                            (uchar*)gpu_mask0.data);
+      Normalize<T, channels>(0, size.height, size.width, size.width * channels,
+                             gpu_input, size.width * channels,
+                             gpu_output, alpha, beta, norm_type, size.width,
+                             gpu_mask1);
+    }
   }
+  gpu_dst.download(dst);
+  cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -146,42 +188,40 @@ bool PplCvCudaNormTest<T, channels>::apply() {
       epsilon = EPSILON_E4;
     }
   }
-
-  bool identity0 = false;
-  if (fabs(result0 - result1) < epsilon) {
-    identity0 = true;
-  }
-  bool identity1 = false;
-  if (fabs(result0 - result2) < epsilon) {
-    identity1 = true;
-  }
+  bool identity0 = checkMatricesIdentity<float>(cv_dst, dst, epsilon);
+  bool identity1 = checkMatArrayIdentity<float>(cv_dst, output, epsilon);
 
   free(input);
+  free(output);
   free(mask1);
   cudaFree(gpu_input);
+  cudaFree(gpu_output);
   cudaFree(gpu_mask1);
 
   return (identity0 && identity1);
 }
 
 #define UNITTEST(T, channels)                                                  \
-using PplCvCudaNormTest ## T ## channels = PplCvCudaNormTest<T, channels>;     \
-TEST_P(PplCvCudaNormTest ## T ## channels, Standard) {                         \
+using PplCvCudaNormalizeTest ## T ## channels =                                \
+        PplCvCudaNormalizeTest<T, channels>;                                   \
+TEST_P(PplCvCudaNormalizeTest ## T ## channels, Standard) {                    \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaNormTest ## T ## channels,           \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaNormalizeTest ## T ## channels,      \
   ::testing::Combine(                                                          \
-    ::testing::Values(NORM_INF, NORM_L1, NORM_L2),                             \
+    ::testing::Values(NORM_INF, NORM_L1, NORM_L2, NORM_MINMAX),                \
     ::testing::Values(NO_MASK, WITH_MASK),                                     \
+    ::testing::Values(3, 10, 15),                                              \
+    ::testing::Values(7, 19, 42),                                              \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaNormTest ## T ## channels::ParamType>& info) {                  \
-    return convertToStringNorm(info.param);                                    \
+      PplCvCudaNormalizeTest ## T ## channels::ParamType>& info) {             \
+    return convertToStringNormalize(info.param);                               \
   }                                                                            \
 );
 

@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_NORM_H_
-#define _ST_HPC_PPL3_CV_CUDA_NORM_H_
+#ifndef _ST_HPC_PPL3_CV_CUDA_NORMALIZE_H_
+#define _ST_HPC_PPL3_CV_CUDA_NORMALIZE_H_
 
 #include "cuda_runtime.h"
 
@@ -27,23 +27,29 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Calculates the absolute norm of an array.
+ * @brief Normalizes the norm or value range of an image.
  * @tparam T The data type, used for the source image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream          cuda stream object.
- * @param inHeight        input image's height.
- * @param inWidth         input image's width.
+ * @param height          input&output image's height.
+ * @param width           input&output image's width.
  * @param inWidthStride   input image's width stride, it is `width * channels`
  *                        for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                        for 2D cudaMallocPitch() allocated data.
  * @param inData          input image data.
- * @param normType        norm type. NORM_INF, NORM_L1, and NORM_L2 are
- *                        supported for now.
+ * @param normType        norm type. NORM_INF, NORM_L1, NORM_L2, and NORM_MINMAX
+ *                        are supported for now.
+ * @param alpha           norm value to normalize to or the lower range boundary
+ *                        in case of the range normalization.
+ * @param beta            upper range boundary in case of the range
+ *                        normalization; it is not used for the norm
+ *                        normalization.
  * @param maskWidthStride the width stride of mask, similar to inWidthStride.
  * @param mask            optional operation mask; it must have the same size as
  *                        inData, and is uchar and single channel type.
+ * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
  * @warning All parameters must be valid, or undefined behaviour may occur.
@@ -60,13 +66,13 @@ namespace cuda {
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>CUDA platforms supported <td>CUDA 7.0
- * <tr><td>Header files <td>#include "ppl/cv/cuda/norm.h";
+ * <tr><td>Header files <td>#include "ppl/cv/cuda/normalize.h";
  * <tr><td>Project      <td>ppl.cv
  * </table>
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include "ppl/cv/cuda/norm.h"
+ * #include "ppl/cv/cuda/normalize.h"
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
@@ -74,37 +80,47 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 3;
  *
+ *   float alpht = 3;
+ *   float beta  = 0;
+ *
  *   float* dev_input;
- *   size_t input_pitch;
+ *   float* dev_output;
+ *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   double norm_value;
+ *   cudaMallocPitch(&dev_output, &output_pitch,
+ *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   Norm<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                  dev_input, &norm_value, NORM_L2);
+ *   Normalize<float, 3>(stream, height, width, input_pitch / sizeof(float),
+ *                       dev_input, output_pitch / sizeof(float), dev_output,
+ *                       alpha, beta, NORM_L2);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
+ *   cudaFree(dev_output);
  *
  *   return 0;
  * }
  * @endcode
  */
 template <typename T, int channels>
-ppl::common::RetCode Norm(cudaStream_t stream,
-                          int inHeight,
-                          int inWidth,
-                          int inWidthStride,
-                          const T* inData,
-                          double* normValue,
-                          NormTypes normType = NORM_L2,
-                          int maskWidthStride = 0,
-                          const uchar* mask = nullptr);
+ppl::common::RetCode Normalize(cudaStream_t stream,
+                               int height,
+                               int width,
+                               int inWidthStride,
+                               const T* inData,
+                               int outWidthStride,
+                               float* outData,
+                               float alpha = 1.f,
+                               float beta = 0.f,
+                               NormTypes normType = NORM_L2,
+                               int maskWidthStride = 0,
+                               const uchar* mask = nullptr);
 
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_NORM_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_NORMALIZE_H_
