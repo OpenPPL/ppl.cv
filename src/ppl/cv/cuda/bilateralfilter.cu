@@ -40,7 +40,7 @@ void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
                             BorderInterpolation interpolation) {
   __shared__ Tsrc data[kDimY0 + RADIUS0 * 2][(kDimX0 << 2) + RADIUS0 * 2];
 
-  int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
   int index, y_index, row_index, col_index;
@@ -154,7 +154,7 @@ void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
 
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tsrc) == 1) {
-    if (element_x < cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = saturate_cast(sum.x);
       output[element_x + 1] = saturate_cast(sum.y);
       output[element_x + 2] = saturate_cast(sum.z);
@@ -168,13 +168,10 @@ void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
       if (element_x < cols - 2) {
         output[element_x + 2] = saturate_cast(sum.z);
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = saturate_cast(sum.w);
-      }
     }
   }
   else {
-    if (element_x < cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = sum.x;
       output[element_x + 1] = sum.y;
       output[element_x + 2] = sum.z;
@@ -187,9 +184,6 @@ void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
       }
       if (element_x < cols - 2) {
         output[element_x + 2] = sum.z;
-      }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = sum.w;
       }
     }
   }
@@ -277,11 +271,11 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
                       BorderInterpolation interpolation) {
   int element_x, element_y;
   if (sizeof(Tsrc) == 1) {
-    element_x = (((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2);
+    element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
     element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   }
   else {
-    element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+    element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
     element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   }
   if (element_x >= cols || element_y >= rows) {
@@ -389,7 +383,7 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tsrc) == 1) {
-    if (element_x < cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = saturate_cast(sum.x);
       output[element_x + 1] = saturate_cast(sum.y);
       output[element_x + 2] = saturate_cast(sum.z);
@@ -403,13 +397,10 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
       if (element_x < cols - 2) {
         output[element_x + 2] = saturate_cast(sum.z);
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = saturate_cast(sum.w);
-      }
     }
   }
   else {
-    if (element_x < cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = sum.x;
       output[element_x + 1] = sum.y;
       output[element_x + 2] = sum.z;
@@ -422,9 +413,6 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
       }
       if (element_x < cols - 2) {
         output[element_x + 2] = sum.z;
-      }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = sum.w;
       }
     }
   }
@@ -692,7 +680,7 @@ RetCode bilateralFilter(const uchar* src, int rows, int cols, int channels,
   diameter = (radius << 1) + 1;
   float radius_sqr = radius * radius;
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (diameter <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -809,7 +797,7 @@ RetCode bilateralFilter(const float* src, int rows, int cols, int channels,
   diameter = (radius << 1) + 1;
   float radius_sqr = radius * radius;
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (diameter <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;

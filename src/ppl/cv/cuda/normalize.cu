@@ -84,7 +84,7 @@ void convertKernel(const Tsrc* src, int rows, int cols, int channels,
 
     offset = element_y * dst_stride;
     output = (float*)((uchar*)dst + offset);
-    if (element_x <= cols - 3) {
+    if (element_x < cols - 3) {
       if (mask != nullptr) {
         mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
         mvalue0 = mask_row[element_x / channels];
@@ -109,28 +109,21 @@ void convertKernel(const Tsrc* src, int rows, int cols, int channels,
         mvalue0 = mask_row[element_x / channels];
         mvalue1 = mask_row[(element_x + 1) / channels];
         mvalue2 = mask_row[(element_x + 2) / channels];
-        mvalue3 = mask_row[(element_x + 3) / channels];
         output[element_x] = mvalue0 > 0 ? value0 : 0;
-        if (element_x + 1 < cols) {
+        if (element_x < cols - 1) {
           output[element_x + 1] = mvalue1 > 0 ? value1 : 0;
         }
-        if (element_x + 2 < cols) {
+        if (element_x < cols - 2) {
           output[element_x + 2] = mvalue2 > 0 ? value2 : 0;
-        }
-        if (element_x + 3 < cols) {
-          output[element_x + 3] = mvalue3 > 0 ? value3 : 0;
         }
       }
       else {
         output[element_x] = value0;
-        if (element_x + 1 < cols) {
+        if (element_x < cols - 1) {
           output[element_x + 1] = value1;
         }
-        if (element_x + 2 < cols) {
+        if (element_x < cols - 2) {
           output[element_x + 2] = value2;
-        }
-        if (element_x + 3 < cols) {
-          output[element_x + 3] = value3;
         }
       }
     }
@@ -165,13 +158,13 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
   block.x = BLOCK_SIZE;
   block.y = 1;
   grid.x  = divideUp(columns, BLOCK_SIZE, BLOCK_SHIFT);
-  // run about MAX_BLOCKS thread blocks on a GPU.
+  // Launchs about MAX_BLOCKS thread blocks on a GPU.
   grid_y  = MAX_BLOCKS / grid.x;
   grid.y  = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
   long* norms_values;
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (norm_type == NORM_MINMAX) {
     code = cudaMalloc(&norms_values, blocks * 2 * sizeof(long));
   }
@@ -206,6 +199,7 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
       channels, src_stride, mask, mask_stride, dst, dst_stride, norms_values,
       alpha, beta, norm_type);
 
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
@@ -237,13 +231,13 @@ RetCode normalize(const float* src, int rows, int cols, int channels,
   block.x = BLOCK_SIZE;
   block.y = 1;
   grid.x  = divideUp(columns, BLOCK_SIZE, BLOCK_SHIFT);
-  // run about MAX_BLOCKS thread blocks on a GPU.
+  // Launchs about MAX_BLOCKS thread blocks on a GPU.
   grid_y  = MAX_BLOCKS / grid.x;
   grid.y  = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
   double* norms_values;
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (norm_type == NORM_MINMAX) {
     code = cudaMalloc(&norms_values, blocks * 2 * sizeof(double));
   }
@@ -278,6 +272,7 @@ RetCode normalize(const float* src, int rows, int cols, int channels,
       channels, src_stride, mask, mask_stride, dst, dst_stride, norms_values,
       alpha, beta, norm_type);
 
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;

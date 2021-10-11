@@ -47,7 +47,7 @@ void BM_CopyMakeBorder_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     CopyMakeBorder<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
                                 (T*)gpu_src.data, gpu_dst.step / sizeof(T),
@@ -110,7 +110,7 @@ void BM_CopyMakeBorder_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::cuda::copyMakeBorder(gpu_src, gpu_dst, top, bottom, left, right,
                              cv_border);

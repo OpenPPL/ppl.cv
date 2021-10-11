@@ -179,7 +179,7 @@ void cvtColorYUV2GRAYKernel1(const uchar* src, int rows, int cols,
   uchar* output = dst + element_y * dst_stride;
   uchar value0, value1, value2, value3;
 
-  if (index_x < cols - 4) {
+  if (index_x < cols - 3) {
     value0 = input[index_x];
     value1 = input[index_x + 1];
     value2 = input[index_x + 2];
@@ -198,9 +198,6 @@ void cvtColorYUV2GRAYKernel1(const uchar* src, int rows, int cols,
     if (index_x < cols - 2) {
       value2 = input[index_x + 2];
     }
-    if (index_x < cols - 3) {
-      value3 = input[index_x + 3];
-    }
 
     output[index_x] = value0;
     if (index_x < cols - 1) {
@@ -208,9 +205,6 @@ void cvtColorYUV2GRAYKernel1(const uchar* src, int rows, int cols,
     }
     if (index_x < cols - 2) {
       output[index_x + 2] = value2;
-    }
-    if (index_x < cols - 3) {
-      output[index_x + 3] = value3;
     }
   }
 }

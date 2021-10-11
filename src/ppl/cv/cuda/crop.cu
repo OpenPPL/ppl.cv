@@ -78,9 +78,6 @@ void cropKernel(const T* src, int src_stride, const int top, const int left,
     if (element_x < dst_cols - 2) {
       output[element_x + 2] = value2;
     }
-    if (element_x < dst_cols - 3) {
-      output[element_x + 3] = value3;
-    }
   }
 }
 
@@ -106,7 +103,7 @@ RetCode crop(const uchar* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  cudaError_t code = cudaGetLastError();
+  cudaError_t code;
   if (scale == 1.f) {
     uchar* src_start = (uchar*)src + top * src_stride +
                        left * channels * sizeof(uchar);
@@ -121,6 +118,7 @@ RetCode crop(const uchar* src, int src_rows, int src_cols, int channels,
   else {
     cropKernel<uchar><<<grid, block, 0, stream>>>(src, src_stride, top,
         left * channels, scale, dst, dst_rows, columns, dst_stride);
+    code = cudaGetLastError();
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_RUNTIME_ERROR;
@@ -152,7 +150,7 @@ RetCode crop(const float* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  cudaError_t code = cudaGetLastError();
+  cudaError_t code;
   if (scale == 1.f) {
     float* src_start = (float*)((uchar*)src + top * src_stride +
                        left * channels * sizeof(float));
@@ -167,6 +165,7 @@ RetCode crop(const float* src, int src_rows, int src_cols, int channels,
   else {
     cropKernel<float><<<grid, block, 0, stream>>>(src, src_stride, top,
         left * channels, scale, dst, dst_rows, columns, dst_stride);
+    code = cudaGetLastError();
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_RUNTIME_ERROR;

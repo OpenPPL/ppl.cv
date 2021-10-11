@@ -95,7 +95,7 @@ namespace cuda {
  *   cudaStreamCreate(&stream);
  *   Normalize<float, 3>(stream, height, width, input_pitch / sizeof(float),
  *                       dev_input, output_pitch / sizeof(float), dev_output,
- *                       alpha, beta, NORM_L2);
+ *                       alpha, beta, ppl::cv::NORM_L2);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);

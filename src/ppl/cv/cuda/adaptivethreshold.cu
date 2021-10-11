@@ -90,7 +90,7 @@ void rowColC1Kernel0(const uchar* src, int rows, int cols, int src_stride,
                      BorderInterpolation interpolation) {
   __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
 
-  int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
   int bottom = element_x - radius;
@@ -264,7 +264,7 @@ void rowColC1Kernel0(const uchar* src, int rows, int cols, int src_stride,
     }
 
     uchar* output = dst + element_y * dst_stride;
-    if (element_x < cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = saturate_cast(value.x);
       output[element_x + 1] = saturate_cast(value.y);
       output[element_x + 2] = saturate_cast(value.z);
@@ -277,9 +277,6 @@ void rowColC1Kernel0(const uchar* src, int rows, int cols, int src_stride,
       }
       if (element_x < cols - 2) {
         output[element_x + 2] = saturate_cast(value.z);
-      }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = saturate_cast(value.w);
       }
     }
   }
@@ -294,7 +291,7 @@ void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
   __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
   __shared__ float kernel[SMALL_MAX_KSIZE];
 
-  int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
   if (threadIdx.y == 0 && threadIdx.x == 0) {
@@ -479,7 +476,7 @@ void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
     }
 
     uchar* output = dst + element_y * dst_stride;
-    if (element_x < cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = saturate_cast(value.x);
       output[element_x + 1] = saturate_cast(value.y);
       output[element_x + 2] = saturate_cast(value.z);
@@ -493,9 +490,6 @@ void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
       if (element_x < cols - 2) {
         output[element_x + 2] = saturate_cast(value.z);
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = saturate_cast(value.w);
-      }
     }
   }
 }
@@ -505,7 +499,7 @@ __global__
 void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
                       int radius, float* dst, int dst_stride,
                       BorderInterpolation interpolation) {
-  int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
     return;
@@ -550,7 +544,7 @@ void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
   }
 
   float* output = (float*)((uchar*)dst + element_y * dst_stride);
-  if (element_x < cols - 4) {
+  if (element_x < cols - 3) {
     output[element_x]     = sum.x;
     output[element_x + 1] = sum.y;
     output[element_x + 2] = sum.z;
@@ -564,9 +558,6 @@ void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
     if (element_x < cols - 2) {
       output[element_x + 2] = sum.z;
     }
-    if (element_x < cols - 3) {
-      output[element_x + 3] = sum.w;
-    }
   }
 }
 
@@ -575,7 +566,7 @@ __global__
 void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
                       const float* kernel, int radius, float* dst,
                       int dst_stride, BorderInterpolation interpolation) {
-  int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
     return;
@@ -622,7 +613,7 @@ void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
   }
 
   float* output = (float*)((uchar*)dst + element_y * dst_stride);
-  if (element_x < cols - 4) {
+  if (element_x < cols - 3) {
     output[element_x]     = sum.x;
     output[element_x + 1] = sum.y;
     output[element_x + 2] = sum.z;
@@ -635,9 +626,6 @@ void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
     }
     if (element_x < cols - 2) {
       output[element_x + 2] = sum.z;
-    }
-    if (element_x < cols - 3) {
-      output[element_x + 3] = sum.w;
     }
   }
 }
@@ -720,9 +708,9 @@ void colBatch4Kernel0(const float* buffer, int rows, int cols,
     }
 
     uchar* output = (uchar*)dst + element_y * dst_stride;
-    element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+    element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
     data_index = threadIdx.x << 2;
-    if (element_x <= cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = clip(value.x, 0, 255);
       output[element_x + 1] = clip(value.y, 0, 255);
       output[element_x + 2] = clip(value.z, 0, 255);
@@ -735,9 +723,6 @@ void colBatch4Kernel0(const float* buffer, int rows, int cols,
       }
       if (element_x < cols - 2) {
         output[element_x + 2] = clip(value.z, 0, 255);
-      }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = clip(value.w, 0, 255);
       }
     }
     else {
@@ -824,9 +809,9 @@ void colBatch4Kernel1(const float* buffer, int rows, int cols,
     }
 
     uchar* output = (uchar*)dst + element_y * dst_stride;
-    element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+    element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
     data_index = threadIdx.x << 2;
-    if (element_x <= cols - 4) {
+    if (element_x < cols - 3) {
       output[element_x]     = value.x;
       output[element_x + 1] = value.y;
       output[element_x + 2] = value.z;
@@ -839,9 +824,6 @@ void colBatch4Kernel1(const float* buffer, int rows, int cols,
       }
       if (element_x < cols - 2) {
         output[element_x + 2] = value.z;
-      }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = value.w;
       }
     }
     else {
@@ -922,7 +904,7 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
   int radius = ksize >> 1;
   float weight = 1.f / (ksize * ksize);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize < SMALL_MAX_KSIZE) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -980,6 +962,13 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
       RUN_LARAGE_KERNELS0(Reflect101Border);
     }
 
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      cudaFree(buffer);
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
     cudaFree(buffer);
   }
   else {
@@ -1015,6 +1004,15 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
     }
     else {
       RUN_LARAGE_KERNELS1(Reflect101Border);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      free(kernel);
+      cudaFree(buffer);
+      cudaFree(gpu_kernel);
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
     }
 
     free(kernel);

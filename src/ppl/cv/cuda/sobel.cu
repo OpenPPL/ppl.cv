@@ -141,7 +141,7 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   __shared__ float kernel_x[MAX_KSIZE];
   __shared__ float kernel_y[MAX_KSIZE];
 
-  int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
   if (threadIdx.y == 0 && threadIdx.x == 0) {
@@ -316,7 +316,7 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 
     Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
     if (sizeof(Tdst) == 1) {
-      if (element_x < cols - 4) {
+      if (element_x < cols - 3) {
         output[element_x]     = saturate_cast(sum.x);
         output[element_x + 1] = saturate_cast(sum.y);
         output[element_x + 2] = saturate_cast(sum.z);
@@ -330,13 +330,10 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         if (element_x < cols - 2) {
           output[element_x + 2] = saturate_cast(sum.z);
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = saturate_cast(sum.w);
-        }
       }
     }
     else if (sizeof(Tdst) == 2) {
-      if (element_x < cols - 4) {
+      if (element_x < cols - 3) {
         output[element_x]     = saturate_cast_f2s(sum.x);
         output[element_x + 1] = saturate_cast_f2s(sum.y);
         output[element_x + 2] = saturate_cast_f2s(sum.z);
@@ -350,13 +347,10 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         if (element_x < cols - 2) {
           output[element_x + 2] = saturate_cast_f2s(sum.z);
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = saturate_cast_f2s(sum.w);
-        }
       }
     }
     else {
-      if (element_x < cols - 4) {
+      if (element_x < cols - 3) {
         output[element_x]     = sum.x;
         output[element_x + 1] = sum.y;
         output[element_x + 2] = sum.z;
@@ -369,9 +363,6 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         }
         if (element_x < cols - 2) {
           output[element_x + 2] = sum.z;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = sum.w;
         }
       }
     }
@@ -508,7 +499,7 @@ RetCode sobel(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize < MAX_KSIZE && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -587,7 +578,7 @@ RetCode sobel(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize < MAX_KSIZE && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -666,7 +657,7 @@ RetCode sobel(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize < MAX_KSIZE && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;

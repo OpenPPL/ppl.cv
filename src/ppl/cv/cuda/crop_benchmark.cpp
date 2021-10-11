@@ -47,7 +47,7 @@ void BM_Crop_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                       (T*)gpu_src.data, gpu_dst.rows, gpu_dst.cols,

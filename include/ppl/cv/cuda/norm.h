@@ -44,6 +44,7 @@ namespace cuda {
  * @param maskWidthStride the width stride of mask, similar to inWidthStride.
  * @param mask            optional operation mask; it must have the same size as
  *                        inData, and is uchar and single channel type.
+ * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
  * @warning All parameters must be valid, or undefined behaviour may occur.
@@ -83,7 +84,7 @@ namespace cuda {
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Norm<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                  dev_input, &norm_value, NORM_L2);
+ *                  dev_input, &norm_value, ppl::cv::NORM_L2);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);

@@ -116,7 +116,7 @@ void normLinfKernel(const Tsrc* src, int rows, int cols, int channels,
   Tsrc* input;
   Tsrc value0, value1, value2, value3;
 
-  // Reads data from the global memory and reduces in shared memory.
+  // Loads data from the global memory and reduces in shared memory.
   for (; element_y < rows; element_y += gridDim.y) {
     if (element_x < cols) {
       offset = element_y * src_stride;
@@ -148,7 +148,7 @@ void normLinfKernel(const Tsrc* src, int rows, int cols, int channels,
         }
       }
       else {
-        if (element_x <= cols - 3) {
+        if (element_x < cols - 3) {
           checkMax1(partial_norms, threadIdx_x, value0);
           checkMax1(partial_norms, threadIdx_x, value1);
           checkMax1(partial_norms, threadIdx_x, value2);
@@ -156,14 +156,11 @@ void normLinfKernel(const Tsrc* src, int rows, int cols, int channels,
         }
         else {
           checkMax1(partial_norms, threadIdx_x, value0);
-          if (element_x + 1 < cols) {
+          if (element_x < cols - 1) {
             checkMax1(partial_norms, threadIdx_x, value1);
           }
-          if (element_x + 2 < cols) {
+          if (element_x < cols - 2) {
           checkMax1(partial_norms, threadIdx_x, value2);
-          }
-          if (element_x + 3 < cols) {
-            checkMax1(partial_norms, threadIdx_x, value3);
           }
         }
       }
@@ -308,7 +305,7 @@ void normL1Kernel(const Tsrc* src, int rows, int cols, int channels,
   Tsrc* input;
   Tsrc value0, value1, value2, value3;
 
-  // Reads data from the global memory and reduces in shared memory.
+  // Loads data from the global memory and reduces in shared memory.
   for (; element_y < rows; element_y += gridDim.y) {
     if (element_x < cols) {
       offset = element_y * src_stride;
@@ -340,7 +337,7 @@ void normL1Kernel(const Tsrc* src, int rows, int cols, int channels,
         }
       }
       else {
-        if (element_x <= cols - 3) {
+        if (element_x < cols - 3) {
           partial_norms[threadIdx_x] += value0;
           partial_norms[threadIdx_x] += value1;
           partial_norms[threadIdx_x] += value2;
@@ -348,14 +345,11 @@ void normL1Kernel(const Tsrc* src, int rows, int cols, int channels,
         }
         else {
           partial_norms[threadIdx_x] += value0;
-          if (element_x + 1 < cols) {
+          if (element_x < cols - 1) {
             partial_norms[threadIdx_x] += value1;
           }
-          if (element_x + 2 < cols) {
+          if (element_x < cols - 2) {
             partial_norms[threadIdx_x] += value2;
-          }
-          if (element_x + 3 < cols) {
-            partial_norms[threadIdx_x] += value3;
           }
         }
       }
@@ -500,7 +494,7 @@ void normL2Kernel(const Tsrc* src, int rows, int cols, int channels,
   Tsrc* input;
   Tsrc value0, value1, value2, value3;
 
-  // Reads data from the global memory and reduces in shared memory.
+  // Loads data from the global memory and reduces in shared memory.
   for (; element_y < rows; element_y += gridDim.y) {
     if (element_x < cols) {
       offset = element_y * src_stride;
@@ -532,7 +526,7 @@ void normL2Kernel(const Tsrc* src, int rows, int cols, int channels,
         }
       }
       else {
-        if (element_x <= cols - 3) {
+        if (element_x < cols - 3) {
           partial_norms[threadIdx_x] += value0 * value0;
           partial_norms[threadIdx_x] += value1 * value1;
           partial_norms[threadIdx_x] += value2 * value2;
@@ -540,14 +534,11 @@ void normL2Kernel(const Tsrc* src, int rows, int cols, int channels,
         }
         else {
           partial_norms[threadIdx_x] += value0 * value0;
-          if (element_x + 1 < cols) {
+          if (element_x < cols - 1) {
             partial_norms[threadIdx_x] += value1 * value1;
           }
-          if (element_x + 2 < cols) {
+          if (element_x < cols - 2) {
             partial_norms[threadIdx_x] += value2 * value2;
-          }
-          if (element_x + 3 < cols) {
-            partial_norms[threadIdx_x] += value3 * value3;
           }
         }
       }
@@ -700,7 +691,7 @@ void MinMaxKernel(const Tsrc* src, int rows, int cols, int channels,
   Tsrc* input;
   Tsrc value0, value1, value2, value3;
 
-  // Reads data from the global memory and reduces in shared memory.
+  // Loads data from the global memory and reduces in shared memory.
   for (; element_y < rows; element_y += gridDim.y) {
     if (element_x < cols) {
       offset = element_y * src_stride;
@@ -736,7 +727,7 @@ void MinMaxKernel(const Tsrc* src, int rows, int cols, int channels,
         }
       }
       else {
-        if (element_x <= cols - 3) {
+        if (element_x < cols - 3) {
           checkMax1(partial_maxs, threadIdx_x, value0);
           checkMax1(partial_maxs, threadIdx_x, value1);
           checkMax1(partial_maxs, threadIdx_x, value2);
@@ -749,17 +740,13 @@ void MinMaxKernel(const Tsrc* src, int rows, int cols, int channels,
         else {
           checkMax1(partial_maxs, threadIdx_x, value0);
           checkMin1(partial_mins, threadIdx_x, value0);
-          if (element_x + 1 < cols) {
+          if (element_x < cols - 1) {
             checkMax1(partial_maxs, threadIdx_x, value1);
             checkMin1(partial_mins, threadIdx_x, value1);
           }
-          if (element_x + 2 < cols) {
+          if (element_x < cols - 2) {
             checkMax1(partial_maxs, threadIdx_x, value2);
             checkMin1(partial_mins, threadIdx_x, value2);
-          }
-          if (element_x + 3 < cols) {
-            checkMax1(partial_maxs, threadIdx_x, value3);
-            checkMin1(partial_mins, threadIdx_x, value3);
           }
         }
       }

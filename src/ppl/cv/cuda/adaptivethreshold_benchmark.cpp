@@ -49,7 +49,7 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
                       (uchar*)gpu_src.data, gpu_dst.step, (uchar*)gpu_dst.data,

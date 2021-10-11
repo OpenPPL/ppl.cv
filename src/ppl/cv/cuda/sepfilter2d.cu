@@ -35,7 +35,7 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
                     BorderInterpolation interpolation) {
   __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
 
-  int element_x = (((blockIdx.x << kShiftX0) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
 
   int bottom = element_x - radius;
@@ -203,7 +203,7 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 
     Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
     if (sizeof(Tdst) == 1) {
-      if (element_x < cols - 4) {
+      if (element_x < cols - 3) {
         output[element_x]     = saturate_cast(sum.x);
         output[element_x + 1] = saturate_cast(sum.y);
         output[element_x + 2] = saturate_cast(sum.z);
@@ -217,13 +217,10 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         if (element_x < cols - 2) {
           output[element_x + 2] = saturate_cast(sum.z);
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = saturate_cast(sum.w);
-        }
       }
     }
     else if (sizeof(Tdst) == 2) {
-      if (element_x < cols - 4) {
+      if (element_x < cols - 3) {
         output[element_x]     = saturate_cast_f2s(sum.x);
         output[element_x + 1] = saturate_cast_f2s(sum.y);
         output[element_x + 2] = saturate_cast_f2s(sum.z);
@@ -237,13 +234,10 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         if (element_x < cols - 2) {
           output[element_x + 2] = saturate_cast_f2s(sum.z);
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = saturate_cast_f2s(sum.w);
-        }
       }
     }
     else {
-      if (element_x < cols - 4) {
+      if (element_x < cols - 3) {
         output[element_x]     = sum.x;
         output[element_x + 1] = sum.y;
         output[element_x + 2] = sum.z;
@@ -256,9 +250,6 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         }
         if (element_x < cols - 2) {
           output[element_x + 2] = sum.z;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = sum.w;
         }
       }
     }
@@ -347,7 +338,7 @@ void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
                      const float* kernel, int radius, bool is_symmetric,
                      float* dst, int dst_stride,
                      BorderInterpolation interpolation) {
-  int element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
     return;
@@ -397,7 +388,7 @@ void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   float* output = (float*)((uchar*)dst + element_y * dst_stride);
-  if (element_x < cols - 4) {
+  if (element_x < cols - 3) {
     output[element_x]     = sum.x;
     output[element_x + 1] = sum.y;
     output[element_x + 2] = sum.z;
@@ -410,9 +401,6 @@ void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
     if (element_x < cols - 2) {
       output[element_x + 2] = sum.z;
-    }
-    if (element_x < cols - 3) {
-      output[element_x + 3] = sum.w;
     }
   }
 }
@@ -711,37 +699,37 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   else {
     if (sizeof(Tdst) == 1) {
       output[index] = saturate_cast(sum.x);
-      if (index < cols - 1) {
+      if (index + 1 < cols) {
         output[index + 1] = saturate_cast(sum.y);
       }
-      if (index < cols - 2) {
+      if (index + 2 < cols) {
         output[index + 2] = saturate_cast(sum.z);
       }
-      if (index < cols - 3) {
+      if (index + 3 < cols) {
         output[index + 3] = saturate_cast(sum.w);
       }
     }
     else if (sizeof(Tdst) == 2) {
       output[index] = saturate_cast_f2s(sum.x);
-      if (index < cols - 1) {
+      if (index + 1 < cols) {
         output[index + 1] = saturate_cast_f2s(sum.y);
       }
-      if (index < cols - 2) {
+      if (index + 2 < cols) {
         output[index + 2] = saturate_cast_f2s(sum.z);
       }
-      if (index < cols - 3) {
+      if (index + 3 < cols) {
         output[index + 3] = saturate_cast_f2s(sum.w);
       }
     }
     else {
       output[index] = sum.x;
-      if (index < cols - 1) {
+      if (index + 1 < cols) {
         output[index + 1] = sum.y;
       }
-      if (index < cols - 2) {
+      if (index + 2 < cols) {
         output[index + 2] = sum.z;
       }
-      if (index < cols - 3) {
+      if (index + 3 < cols) {
         output[index + 3] = sum.w;
       }
     }
@@ -814,7 +802,7 @@ void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
     if (threadIdx.x < kBlockDimX1) {
       element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
       data_index = threadIdx.x << 2;
-      if (element_x <= cols - 4) {
+      if (element_x < cols - 3) {
         output[element_x]     = data[threadIdx.y][data_index];
         output[element_x + 1] = data[threadIdx.y][data_index + 1];
         output[element_x + 2] = data[threadIdx.y][data_index + 2];
@@ -827,9 +815,6 @@ void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
         }
         if (element_x < cols - 2) {
           output[element_x + 2] = data[threadIdx.y][data_index + 2];
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = data[threadIdx.y][data_index + 3];
         }
       }
       else {
@@ -979,7 +964,7 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize <= 31 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -1112,7 +1097,7 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize <= 31 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -1245,7 +1230,7 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
   int radius = ksize >> 1;
   bool is_symmetric = ksize & 1;
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize <= 25 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;

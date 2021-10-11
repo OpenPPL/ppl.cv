@@ -55,7 +55,7 @@ void BM_Normalize_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data,
@@ -124,7 +124,7 @@ void BM_Normalize_opencv_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::cuda::normalize(gpu_src, gpu_dst, alpha, beta, cv_norm_type,
                         CV_MAT_DEPTH(dst.type()));

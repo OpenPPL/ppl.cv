@@ -64,9 +64,6 @@ namespace cuda {
  * <tr><td>uint8_t(uchar)<td>1
  * <tr><td>uint8_t(uchar)<td>3
  * <tr><td>uint8_t(uchar)<td>4
- * <tr><td>short<td>1
- * <tr><td>short<td>3
- * <tr><td>short<td>4
  * <tr><td>float<td>1
  * <tr><td>float<td>3
  * <tr><td>float<td>4
@@ -99,8 +96,8 @@ namespace cuda {
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   ConvertTo<uchar, float, 3>(stream, height, width,
- *       input_pitch / sizeof(uchar), dev_input,
- *       output_pitch / sizeof(float), dev_output);
+ *       input_pitch / sizeof(uchar), dev_input, output_pitch / sizeof(float),
+ *       dev_output);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);

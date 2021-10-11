@@ -45,7 +45,7 @@ void BM_Merge_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
                       gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
@@ -100,7 +100,7 @@ void BM_Merge_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     for (auto _ : state) {
       cv::cuda::merge(gpu_srcs0, 3, gpu_dst);

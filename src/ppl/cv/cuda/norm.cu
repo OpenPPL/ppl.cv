@@ -45,13 +45,13 @@ RetCode norm(const uchar* src, int rows, int cols, int channels, int src_stride,
   block.x = BLOCK_SIZE;
   block.y = 1;
   grid.x  = divideUp(columns, BLOCK_SIZE, BLOCK_SHIFT);
-  // run about MAX_BLOCKS thread blocks on a GPU.
+  // Launchs about MAX_BLOCKS thread blocks on a GPU.
   grid_y  = MAX_BLOCKS / grid.x;
   grid.y  = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
   long* norm_values;
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   code = cudaMalloc(&norm_values, blocks * sizeof(long));
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -71,6 +71,12 @@ RetCode norm(const uchar* src, int rows, int cols, int channels, int src_stride,
         channels, src_stride, mask, mask_stride, blocks, norm_values);
   }
 
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   long value;
   code = cudaMemcpy(&value, norm_values, sizeof(long), cudaMemcpyDeviceToHost);
   if (code != cudaSuccess) {
@@ -85,11 +91,6 @@ RetCode norm(const uchar* src, int rows, int cols, int channels, int src_stride,
   }
   else {
     *norm_value = value;
-  }
-
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -115,13 +116,13 @@ RetCode norm(const float* src, int rows, int cols, int channels, int src_stride,
   block.x = BLOCK_SIZE;
   block.y = 1;
   grid.x  = divideUp(columns, BLOCK_SIZE, BLOCK_SHIFT);
-  // run about MAX_BLOCKS thread blocks on a GPU.
+  // Launchs about MAX_BLOCKS thread blocks on a GPU.
   grid_y  = MAX_BLOCKS / grid.x;
   grid.y  = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
   double* norm_values;
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   code = cudaMalloc(&norm_values, blocks * sizeof(double));
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -143,8 +144,15 @@ RetCode norm(const float* src, int rows, int cols, int channels, int src_stride,
         norm_values);
   }
 
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   double value;
-  code = cudaMemcpy(&value, norm_values, sizeof(double), cudaMemcpyDeviceToHost);
+  code = cudaMemcpy(&value, norm_values, sizeof(double),
+                    cudaMemcpyDeviceToHost);
   if (code != cudaSuccess) {
     cudaFree(norm_values);
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -157,11 +165,6 @@ RetCode norm(const float* src, int rows, int cols, int channels, int src_stride,
   }
   else {
     *norm_value = value;
-  }
-
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
