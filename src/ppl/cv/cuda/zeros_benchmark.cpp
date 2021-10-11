@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#include "ppl/cv/cuda/transpose.h"
+#include "ppl/cv/cuda/zeros.h"
 
 #include <time.h>
 #include <sys/time.h>
@@ -23,38 +23,36 @@
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
+#include "utility.hpp"
 #include "infrastructure.hpp"
 
 using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels>
-void BM_Transpose_ppl_cuda(benchmark::State &state) {
+void BM_Zeros_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+  cv::Mat dst;
+  dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
-  cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(width, height, src.type());
+  cv::cuda::GpuMat gpu_dst(dst);
 
   int iterations = 3000;
   struct timeval start, end;
 
   // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
-    Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                           gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                           gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    Zeros<T, channels>(0, gpu_dst.rows, gpu_dst.cols, gpu_dst.step / sizeof(T),
+                       (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                             gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+      Zeros<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -66,28 +64,29 @@ void BM_Transpose_ppl_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels>
-void BM_Transpose_opencv_cuda(benchmark::State &state) {
+void BM_Zeros_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+  cv::Mat dst;
+  dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
-  cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(width, height, src.type());
+  cv::cuda::GpuMat gpu_dst(dst);
+
+  cv::Scalar scalar(0, 0, 0, 0);
 
   int iterations = 3000;
   struct timeval start, end;
 
   // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
-    cv::cuda::transpose(gpu_src, gpu_dst);
+    gpu_dst.setTo(scalar);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      cv::cuda::transpose(gpu_src, gpu_dst);
+      gpu_dst.setTo(scalar);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -99,49 +98,70 @@ void BM_Transpose_opencv_cuda(benchmark::State &state) {
 }
 
 template <typename T, int channels>
-void BM_Transpose_opencv_x86_cuda(benchmark::State &state) {
+void BM_Zeros_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+  cv::Mat dst;
+  dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
-  cv::Mat dst(width, height, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
   for (auto _ : state) {
-    cv::transpose(src, dst);
+    dst = cv::Mat::zeros(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                         channels));
   }
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_BENCHMARK(channels, width, height)                                 \
-BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, uchar, channels)->            \
+#define RUN_BENCHMARK0(channels, width, height)                                \
+BENCHMARK_TEMPLATE(BM_Zeros_opencv_x86_cuda, uchar, channels)->                \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, uchar, channels)->                   \
+BENCHMARK_TEMPLATE(BM_Zeros_ppl_cuda, uchar, channels)->                       \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, float, channels)->            \
+BENCHMARK_TEMPLATE(BM_Zeros_opencv_x86_cuda, float, channels)->                \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, float, channels)->                   \
+BENCHMARK_TEMPLATE(BM_Zeros_ppl_cuda, float, channels)->                       \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(c1, 640, 480)
-// RUN_BENCHMARK(c3, 640, 480)
-// RUN_BENCHMARK(c4, 640, 480)
+// RUN_BENCHMARK0(c1, 640, 480)
+// RUN_BENCHMARK0(c3, 640, 480)
+// RUN_BENCHMARK0(c4, 640, 480)
 
-// RUN_BENCHMARK(c1, 1920, 1080)
-// RUN_BENCHMARK(c3, 1920, 1080)
-// RUN_BENCHMARK(c4, 1920, 1080)
+// RUN_BENCHMARK0(c1, 1920, 1080)
+// RUN_BENCHMARK0(c3, 1920, 1080)
+// RUN_BENCHMARK0(c4, 1920, 1080)
+
+#define RUN_BENCHMARK1(channels, width, height)                                \
+BENCHMARK_TEMPLATE(BM_Zeros_opencv_cuda, uchar, channels)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Zeros_ppl_cuda, uchar, channels)->                       \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Zeros_opencv_cuda, float, channels)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Zeros_ppl_cuda, float, channels)->                       \
+                   Args({width, height})->UseManualTime()->Iterations(10);
+
+// RUN_BENCHMARK1(c1, 640, 480)
+// RUN_BENCHMARK1(c3, 640, 480)
+// RUN_BENCHMARK1(c4, 640, 480)
+
+// RUN_BENCHMARK1(c1, 1920, 1080)
+// RUN_BENCHMARK1(c3, 1920, 1080)
+// RUN_BENCHMARK1(c4, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type)                                        \
-BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c1)->Args({640, 480});  \
-BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c3)->Args({640, 480});  \
-BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c4)->Args({640, 480});
+BENCHMARK_TEMPLATE(BM_Zeros_opencv_cuda, type, c1)->Args({640, 480})->         \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Zeros_opencv_cuda, type, c3)->Args({640, 480})->         \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Zeros_opencv_cuda, type, c4)->Args({640, 480})->         \
+                   UseManualTime()->Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(type)                                        \
-BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c1)->Args({640, 480})->        \
+BENCHMARK_TEMPLATE(BM_Zeros_ppl_cuda, type, c1)->Args({640, 480})->            \
                    UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c3)->Args({640, 480})->        \
+BENCHMARK_TEMPLATE(BM_Zeros_ppl_cuda, type, c3)->Args({640, 480})->            \
                    UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c4)->Args({640, 480})->        \
+BENCHMARK_TEMPLATE(BM_Zeros_ppl_cuda, type, c4)->Args({640, 480})->            \
                    UseManualTime()->Iterations(10);
 
 RUN_OPENCV_TYPE_FUNCTIONS(uchar)

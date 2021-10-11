@@ -45,7 +45,7 @@ void BM_Split_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     Split3Channels<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                       (T*)gpu_src.data, gpu_dst0.step / sizeof(T),
@@ -99,7 +99,7 @@ void BM_Split_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::cuda::split(gpu_src, gpu_dsts0);
   }
