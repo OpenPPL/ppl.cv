@@ -46,7 +46,7 @@ void BM_GaussianBlur_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, sigma,
@@ -100,7 +100,7 @@ void BM_GaussianBlur_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // warm up the GPU
+  // Warm up the GPU
   for (int i = 0; i < iterations; i++) {
     cv::Ptr<cv::cuda::Filter> filter =
       cv::cuda::createGaussianFilter(gpu_src.type(), gpu_dst.type(),

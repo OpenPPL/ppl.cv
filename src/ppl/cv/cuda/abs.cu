@@ -78,7 +78,7 @@ void absKernel10(const schar* src, int cols, schar* dst) {
   char4 input_value, output_value;
   input_value = input[element_x];
 
-  if (index_x < cols - 4) {
+  if (index_x < cols - 3) {
     output_value.x = abs_device(input_value.x);
     output_value.y = abs_device(input_value.y);
     output_value.z = abs_device(input_value.z);
@@ -92,22 +92,16 @@ void absKernel10(const schar* src, int cols, schar* dst) {
     if (index_x < cols - 1) {
       output_value.y = abs_device(input_value.y);
     }
-    if (index_x < cols - 2) {
+    if ((index_x < cols - 2)) {
       output_value.z = abs_device(input_value.z);
-    }
-    if (index_x < cols - 3) {
-      output_value.w = abs_device(input_value.w);
     }
 
     dst[index_x] = output_value.x;
     if (index_x < cols - 1) {
       dst[index_x + 1] = output_value.y;
     }
-    if (index_x < cols - 2) {
+    if ((index_x < cols - 2)) {
       dst[index_x + 2] = output_value.z;
-    }
-    if (index_x < cols - 3) {
-      dst[index_x + 3] = output_value.w;
     }
   }
 }
@@ -149,33 +143,24 @@ void absKernel11(const schar* src, int rows, int cols, int src_stride,
     if (index_x < cols - 1) {
       input_value1 = input[index_x + 1];
     }
-    if (index_x < cols - 2) {
+    if ((index_x < cols - 2)) {
       input_value2 = input[index_x + 2];
-    }
-    if (index_x < cols - 3) {
-      input_value3 = input[index_x + 3];
     }
 
     output_value0 = abs_device(input_value0);
     if (index_x < cols - 1) {
       output_value1 = abs_device(input_value1);
     }
-    if (index_x < cols - 2) {
+    if ((index_x < cols - 2)) {
       output_value2 = abs_device(input_value2);
-    }
-    if (index_x < cols - 3) {
-      output_value3 = abs_device(input_value3);
     }
 
     output[index_x] = output_value0;
     if (index_x < cols - 1) {
       output[index_x + 1] = output_value1;
     }
-    if (index_x < cols - 2) {
+    if ((index_x < cols - 2)) {
       output[index_x + 2] = output_value2;
-    }
-    if (index_x < cols - 3) {
-      output[index_x + 3] = output_value3;
     }
   }
 }

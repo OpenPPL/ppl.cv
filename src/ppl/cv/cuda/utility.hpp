@@ -45,6 +45,7 @@ if (!(expression)) {                                                           \
 
 typedef unsigned char uchar;
 typedef signed char schar;
+typedef unsigned int uint;
 
 // configuration of thread block
 enum DimX {
@@ -70,7 +71,7 @@ enum DimY {
   kDimY6 = 1,
   kDimY7 = 1,
   kDimY8 = 4,
-  kDimY9 = 2,
+  kDimY9 = 4,
 };
 
 enum ShiftX {
@@ -96,7 +97,7 @@ enum ShiftY {
   kShiftY6 = 0,
   kShiftY7 = 0,
   kShiftY8 = 2,
-  kShiftY9 = 1,
+  kShiftY9 = 2,
 };
 
 enum BlockConfiguration0 {
