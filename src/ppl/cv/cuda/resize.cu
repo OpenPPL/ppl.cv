@@ -319,7 +319,7 @@ RetCode resizeLinear(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -367,7 +367,7 @@ RetCode resizeLinear(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -542,7 +542,7 @@ RetCode resizeNearestPoint(const uchar* src, int src_rows, int src_cols,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -603,7 +603,7 @@ RetCode resizeNearestPoint(const float* src, int src_rows, int src_cols,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -1459,7 +1459,7 @@ RetCode resizeArea(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -1547,7 +1547,7 @@ RetCode resizeArea(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
 
-  cudaError_t code;
+  cudaError_t code = cudaSuccess;
   if (src_rows == dst_rows && src_cols == dst_cols &&
       src_stride == dst_stride) {
     if (src != dst) {

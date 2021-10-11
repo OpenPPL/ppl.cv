@@ -236,6 +236,26 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         }
       }
     }
+    else if (sizeof(Tdst) == 2) {
+      if (element_x < cols - 4) {
+        output[element_x]     = saturate_cast_f2s(sum.x);
+        output[element_x + 1] = saturate_cast_f2s(sum.y);
+        output[element_x + 2] = saturate_cast_f2s(sum.z);
+        output[element_x + 3] = saturate_cast_f2s(sum.w);
+      }
+      else {
+        output[element_x] = saturate_cast_f2s(sum.x);
+        if (element_x < cols - 1) {
+          output[element_x + 1] = saturate_cast_f2s(sum.y);
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = saturate_cast_f2s(sum.z);
+        }
+        if (element_x < cols - 3) {
+          output[element_x + 3] = saturate_cast_f2s(sum.w);
+        }
+      }
+    }
     else {
       if (element_x < cols - 3) {
         output[element_x]     = sum.x;
@@ -699,37 +719,37 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   else {
     if (sizeof(Tdst) == 1) {
       output[index] = saturate_cast(sum.x);
-      if (index + 1 < cols) {
+      if (index < cols - 1) {
         output[index + 1] = saturate_cast(sum.y);
       }
-      if (index + 2 < cols) {
+      if (index < cols - 2) {
         output[index + 2] = saturate_cast(sum.z);
       }
-      if (index + 3 < cols) {
+      if (index < cols - 3) {
         output[index + 3] = saturate_cast(sum.w);
       }
     }
     else if (sizeof(Tdst) == 2) {
       output[index] = saturate_cast_f2s(sum.x);
-      if (index + 1 < cols) {
+      if (index < cols - 1) {
         output[index + 1] = saturate_cast_f2s(sum.y);
       }
-      if (index + 2 < cols) {
+      if (index < cols - 2) {
         output[index + 2] = saturate_cast_f2s(sum.z);
       }
-      if (index + 3 < cols) {
+      if (index < cols - 3) {
         output[index + 3] = saturate_cast_f2s(sum.w);
       }
     }
     else {
       output[index] = sum.x;
-      if (index + 1 < cols) {
+      if (index < cols - 1) {
         output[index + 1] = sum.y;
       }
-      if (index + 2 < cols) {
+      if (index < cols - 2) {
         output[index + 2] = sum.z;
       }
-      if (index + 3 < cols) {
+      if (index < cols - 3) {
         output[index + 3] = sum.w;
       }
     }
