@@ -20,6 +20,7 @@
 #include "ppl/cv/x86/util.hpp"
 #include "ppl/cv/x86/fma/internal_fma.hpp"
 #include "ppl/common/sys.h"
+#include "ppl/common/x86/sysinfo.h"
 #include <string.h>
 #include <cmath>
 #include <limits.h>

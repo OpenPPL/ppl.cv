@@ -18,6 +18,7 @@
 #include "ppl/cv/x86/avx/intrinutils_avx.hpp"
 #include "ppl/cv/x86/avx/internal_avx.hpp"
 #include "ppl/common/sys.h"
+#include "ppl/common/x86/sysinfo.h"
 #include <vector>
 #include <stdint.h>
 #include <cstring>
