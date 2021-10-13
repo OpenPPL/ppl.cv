@@ -20,6 +20,7 @@
 #include "ppl/cv/types.h"
 #include "ppl/common/sys.h"
 #include "ppl/common/retcode.h"
+#include "ppl/common/x86/sysinfo.h"
 
 #include <string.h>
 #include <limits.h>

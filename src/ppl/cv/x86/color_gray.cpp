@@ -22,6 +22,7 @@
 #include "ppl/cv/types.h"
 #include "ppl/cv/x86/util.hpp"
 #include "ppl/common/sys.h"
+#include "ppl/common/x86/sysinfo.h"
 #include <string.h>
 #include <cmath>
 
