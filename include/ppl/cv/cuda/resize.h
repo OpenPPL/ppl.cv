@@ -27,19 +27,19 @@ namespace cuda {
 
 /**
  * @brief Scale the image with the bilinear interpolation method.
- * @tparam T The data type of input and output image, currently only \a
- *         uint8_t(uchar) and \a float are supported.
+ * @tparam T The data type of input and output image, currently only
+ *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream           cuda stream object.
  * @param inHeight         input image's height.
- * @param inWidth          input image's width need to be processed.
+ * @param inWidth          input image's width.
  * @param inWidthStride    input image's width stride, it is `width * channels`
  *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                         for 2D cudaMallocPitch() allocated data.
  * @param inData           input image data.
  * @param outHeight        output image's height.
- * @param outWidth         output image's width need to be processed.
+ * @param outWidth         output image's width.
  * @param outWidthStride   the width stride of output image, similar to
  *                         inWidthStride.
  * @param outData          output image data.
@@ -110,19 +110,19 @@ ppl::common::RetCode ResizeLinear(cudaStream_t stream,
 
 /**
  * @brief Scale the image with the nearest neighbor interpolation method.
- * @tparam T The data type of input and output image, currently only \a
- *         uint8_t(uchar) and \a float are supported.
+ * @tparam T The data type of input and output image, currently only
+ *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream           cuda stream object.
  * @param inHeight         input image's height.
- * @param inWidth          input image's width need to be processed.
+ * @param inWidth          input image's width.
  * @param inWidthStride    input image's width stride, it is `width * channels`
  *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                         for 2D cudaMallocPitch() allocated data.
  * @param inData           input image data.
  * @param outHeight        output image's height.
- * @param outWidth         output image's width need to be processed.
+ * @param outWidth         output image's width.
  * @param outWidthStride   the width stride of output image, similar to
  *                         inWidthStride.
  * @param outData          output image data.
@@ -193,19 +193,19 @@ ppl::common::RetCode ResizeNearestPoint(cudaStream_t stream,
 
 /**
  * @brief Scale the image with the pixel area interpolation method.
- * @tparam T The data type of input and output image, currently only \a
- *         uint8_t(uchar) and \a float are supported.
+ * @tparam T The data type of input and output image, currently only
+ *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream           cuda stream object.
  * @param inHeight         input image's height.
- * @param inWidth          input image's width need to be processed.
+ * @param inWidth          input image's width.
  * @param inWidthStride    input image's width stride, it is `width * channels`
  *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                         for 2D cudaMallocPitch() allocated data.
  * @param inData           input image data.
  * @param outHeight        output image's height.
- * @param outWidth         output image's width need to be processed.
+ * @param outWidth         output image's width.
  * @param outWidthStride   the width stride of output image, similar to
  *                         inWidthStride.
  * @param outData          output image data.

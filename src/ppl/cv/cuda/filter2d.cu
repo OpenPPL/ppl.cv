@@ -245,11 +245,11 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
                       BorderInterpolation interpolation) {
   int element_x, element_y;
   if (sizeof(Tsrc) == 1) {
-    element_x = (((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2);
+    element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
     element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   }
   else {
-    element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+    element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
     element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   }
   if (element_x >= cols || element_y >= rows) {
@@ -597,7 +597,7 @@ RetCode filter2D(const uchar* src, int rows, int cols, int channels,
 
   int radius = ksize >> 1;
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;
@@ -703,7 +703,7 @@ RetCode filter2D(const float* src, int rows, int cols, int channels,
 
   int radius = ksize >> 1;
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize <= SMALL_KSIZE0 && channels == 1) {
     dim3 block, grid;
     block.x = kDimX0;

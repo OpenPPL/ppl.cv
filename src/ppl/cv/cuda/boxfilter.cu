@@ -906,7 +906,7 @@ RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize_x == 1 && ksize_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,
@@ -1053,7 +1053,7 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize_x == 1 && ksize_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,

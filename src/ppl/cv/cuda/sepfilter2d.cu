@@ -236,26 +236,6 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         }
       }
     }
-    else if (sizeof(Tdst) == 2) {
-      if (element_x < cols - 4) {
-        output[element_x]     = saturate_cast_f2s(sum.x);
-        output[element_x + 1] = saturate_cast_f2s(sum.y);
-        output[element_x + 2] = saturate_cast_f2s(sum.z);
-        output[element_x + 3] = saturate_cast_f2s(sum.w);
-      }
-      else {
-        output[element_x] = saturate_cast_f2s(sum.x);
-        if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast_f2s(sum.y);
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast_f2s(sum.z);
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = saturate_cast_f2s(sum.w);
-        }
-      }
-    }
     else {
       if (element_x < cols - 3) {
         output[element_x]     = sum.x;

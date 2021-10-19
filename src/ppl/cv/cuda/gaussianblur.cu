@@ -643,7 +643,7 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,
@@ -758,7 +758,7 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,
