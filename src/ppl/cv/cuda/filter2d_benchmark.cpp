@@ -50,7 +50,7 @@ void BM_Filter2D_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     Filter2D<Tsrc, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize,
@@ -108,7 +108,7 @@ void BM_Filter2D_opencv_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     cv::Ptr<cv::cuda::Filter> linearfilter =
       cv::cuda::createLinearFilter(gpu_src.type(), gpu_dst.type(), kernel,

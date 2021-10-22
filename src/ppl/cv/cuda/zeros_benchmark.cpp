@@ -41,7 +41,7 @@ void BM_Zeros_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     Zeros<T, channels>(0, gpu_dst.rows, gpu_dst.cols, gpu_dst.step / sizeof(T),
                        (T*)gpu_dst.data);
@@ -77,7 +77,7 @@ void BM_Zeros_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     gpu_dst.setTo(scalar);
   }

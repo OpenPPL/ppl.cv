@@ -44,7 +44,7 @@ void BM_MedianBlur_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
@@ -83,7 +83,7 @@ void BM_MedianBlur_opencv_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     cv::Ptr<cv::cuda::Filter> median_filter =
       cv::cuda::createMedianFilter(gpu_src.type(), ksize, 128);

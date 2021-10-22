@@ -53,7 +53,7 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     Add<T, channels>(0, gpu_src.rows, gpu_src.cols,
                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
@@ -125,7 +125,7 @@ void BM_Arith_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     cv::cuda::add(gpu_src, gpu_src, gpu_dst);
   }

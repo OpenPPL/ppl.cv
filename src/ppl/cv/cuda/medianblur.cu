@@ -1644,7 +1644,7 @@ else {                                                                         \
       cols, src_stride, median_index, radius, dst, dst_stride, interpolation); \
 }
 
-#define RUN_KERNELS0(Interpolation, grid_x)                                    \
+#define RUN_KERNELS0(grid_x, Interpolation)                                    \
 Interpolation interpolation;                                                   \
 if (channels == 1) {                                                           \
   grid0.x = grid_x;                                                            \
@@ -1660,7 +1660,7 @@ else {                                                                         \
       src_stride, median_index, radius, dst, dst_stride, interpolation);       \
 }
 
-#define RUN_KERNELS1(Interpolation, grid_x)                                    \
+#define RUN_KERNELS1(grid_x, Interpolation)                                    \
 Interpolation interpolation;                                                   \
 if (channels == 1) {                                                           \
   grid0.x = grid_x;                                                            \
@@ -1756,13 +1756,13 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
 
   int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX0, kBlockShiftX0);
   if (border_type == BORDER_TYPE_REPLICATE) {
-    RUN_KERNELS0(ReplicateBorder, grid_x);
+    RUN_KERNELS0(grid_x, ReplicateBorder);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    RUN_KERNELS0(ReflectBorder, grid_x);
+    RUN_KERNELS0(grid_x, ReflectBorder);
   }
   else {
-    RUN_KERNELS0(Reflect101Border, grid_x);
+    RUN_KERNELS0(grid_x, Reflect101Border);
   }
 
   code = cudaGetLastError();
@@ -1854,13 +1854,13 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
 
   int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
   if (border_type == BORDER_TYPE_REPLICATE) {
-    RUN_KERNELS1(ReplicateBorder, grid_x);
+    RUN_KERNELS1(grid_x, ReplicateBorder);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    RUN_KERNELS1(ReflectBorder, grid_x);
+    RUN_KERNELS1(grid_x, ReflectBorder);
   }
   else {
-    RUN_KERNELS1(Reflect101Border, grid_x);
+    RUN_KERNELS1(grid_x, Reflect101Border);
   }
 
   code = cudaGetLastError();
