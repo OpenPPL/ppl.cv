@@ -25,19 +25,19 @@ namespace cv {
 namespace cuda {
 
 #define RADIUS 2
-#define kBlockDimX 128
-#define kBlockDimY 2
-#define kBlockShiftX 7
-#define kBlockShiftY 1
+#define BlockDimX 128
+#define BlockDimY 2
+#define BlockShiftX 7
+#define BlockShiftY 1
 
 template <typename T, typename BorderInterpolation>
 __global__
 void colRowC1Kernel0(const T* src, int rows, int cols, int src_stride, T* dst,
                      int dst_stride, BorderInterpolation interpolation) {
-  __shared__ float row_data[kBlockDimY][(kBlockDimX << 2) + RADIUS * 2];
+  __shared__ float row_data[BlockDimY][(BlockDimX << 2) + RADIUS * 2];
 
-  int element_x = ((blockIdx.x << kBlockShiftX) + threadIdx.x) << 2;
-  int element_y = ((blockIdx.y << kBlockShiftY) + threadIdx.y) << 1;
+  int element_x = ((blockIdx.x << BlockShiftX) + threadIdx.x) << 2;
+  int element_y = ((blockIdx.y << BlockShiftY) + threadIdx.y) << 1;
 
   int y_index, row_index;
   int x_index = threadIdx.x << 2;
@@ -47,7 +47,7 @@ void colRowC1Kernel0(const T* src, int rows, int cols, int src_stride, T* dst,
   float4 sum;
 
   if (element_y != 0 && element_y < ((rows + 1) >> 1) - 1) {
-    while (col_index0 < (int)(((blockIdx.x + 1) << (kBlockShiftX + 2)) + RADIUS)
+    while (col_index0 < (int)(((blockIdx.x + 1) << (BlockShiftX + 2)) + RADIUS)
            && col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -86,12 +86,12 @@ void colRowC1Kernel0(const T* src, int rows, int cols, int src_stride, T* dst,
       row_data[threadIdx.y][x_index + 2] = sum.z;
       row_data[threadIdx.y][x_index + 3] = sum.w;
 
-      x_index    += (kBlockDimX << 2);
-      col_index0 += (kBlockDimX << 2);
+      x_index    += (BlockDimX << 2);
+      col_index0 += (BlockDimX << 2);
     }
   }
   else {
-    while (col_index0 < (int)(((blockIdx.x + 1) << (kBlockShiftX + 2)) + RADIUS)
+    while (col_index0 < (int)(((blockIdx.x + 1) << (BlockShiftX + 2)) + RADIUS)
            && col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -135,8 +135,8 @@ void colRowC1Kernel0(const T* src, int rows, int cols, int src_stride, T* dst,
       row_data[threadIdx.y][x_index + 2] = sum.z;
       row_data[threadIdx.y][x_index + 3] = sum.w;
 
-      x_index    += (kBlockDimX << 2);
-      col_index0 += (kBlockDimX << 2);
+      x_index    += (BlockDimX << 2);
+      col_index0 += (BlockDimX << 2);
     }
   }
   __syncthreads();
@@ -190,10 +190,10 @@ template <typename T, typename BorderInterpolation>
 __global__
 void colRowC1Kernel1(const T* src, int rows, int cols, int src_stride, T* dst,
                      int dst_stride, BorderInterpolation interpolation) {
-  __shared__ float row_data[kBlockDimY][(kBlockDimX << 1) + RADIUS * 2];
+  __shared__ float row_data[BlockDimY][(BlockDimX << 1) + RADIUS * 2];
 
-  int element_x = ((blockIdx.x << kBlockShiftX) + threadIdx.x) << 1;
-  int element_y = ((blockIdx.y << kBlockShiftY) + threadIdx.y) << 1;
+  int element_x = ((blockIdx.x << BlockShiftX) + threadIdx.x) << 1;
+  int element_y = ((blockIdx.y << BlockShiftY) + threadIdx.y) << 1;
 
   int y_index, row_index;
   int x_index = threadIdx.x << 1;
@@ -203,7 +203,7 @@ void colRowC1Kernel1(const T* src, int rows, int cols, int src_stride, T* dst,
   float4 sum;
 
   if (element_y != 0 && element_y < ((rows + 1) >> 1) - 1) {
-    while (col_index0 < (int)(((blockIdx.x + 1) << (kBlockShiftX + 1)) + RADIUS)
+    while (col_index0 < (int)(((blockIdx.x + 1) << (BlockShiftX + 1)) + RADIUS)
            && col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -228,12 +228,12 @@ void colRowC1Kernel1(const T* src, int rows, int cols, int src_stride, T* dst,
       row_data[threadIdx.y][x_index] = sum.x;
       row_data[threadIdx.y][x_index + 1] = sum.y;
 
-      x_index    += (kBlockDimX << 1);
-      col_index0 += (kBlockDimX << 1);
+      x_index    += (BlockDimX << 1);
+      col_index0 += (BlockDimX << 1);
     }
   }
   else {
-    while (col_index0 < (int)(((blockIdx.x + 1) << (kBlockShiftX + 1)) + RADIUS)
+    while (col_index0 < (int)(((blockIdx.x + 1) << (BlockShiftX + 1)) + RADIUS)
            && col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -263,8 +263,8 @@ void colRowC1Kernel1(const T* src, int rows, int cols, int src_stride, T* dst,
       row_data[threadIdx.y][x_index] = sum.x;
       row_data[threadIdx.y][x_index + 1] = sum.y;
 
-      x_index    += (kBlockDimX << 1);
-      col_index0 += (kBlockDimX << 1);
+      x_index    += (BlockDimX << 1);
+      col_index0 += (BlockDimX << 1);
     }
   }
   __syncthreads();
@@ -294,10 +294,10 @@ template <typename T, typename Tn, typename BorderInterpolation>
 __global__
 void colRowCnKernel0(const T* src, int rows, int cols, int src_stride, T* dst,
                      int dst_stride, BorderInterpolation interpolation) {
-  __shared__ float4 row_data[kBlockDimY][kBlockDimX + RADIUS * 2];
+  __shared__ float4 row_data[BlockDimY][BlockDimX + RADIUS * 2];
 
-  int element_x = (blockIdx.x << kBlockShiftX) + threadIdx.x;
-  int element_y = ((blockIdx.y << kBlockShiftY) + threadIdx.y) << 1;
+  int element_x = (blockIdx.x << BlockShiftX) + threadIdx.x;
+  int element_y = ((blockIdx.y << BlockShiftY) + threadIdx.y) << 1;
 
   int y_index, row_index;
   int x_index = threadIdx.x;
@@ -306,7 +306,7 @@ void colRowCnKernel0(const T* src, int rows, int cols, int src_stride, T* dst,
   float4 sum;
 
   if (element_y != 0 && element_y < ((rows + 1) >> 1) - 1) {
-    while (col_index0 < (int)(((blockIdx.x + 1) << kBlockShiftX) + RADIUS) &&
+    while (col_index0 < (int)(((blockIdx.x + 1) << BlockShiftX) + RADIUS) &&
            col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -324,12 +324,12 @@ void colRowCnKernel0(const T* src, int rows, int cols, int src_stride, T* dst,
       mulAdd(sum, input[col_index1], 0.0625f);
       row_data[threadIdx.y][x_index] = sum;
 
-      x_index    += kBlockDimX;
-      col_index0 += kBlockDimX;
+      x_index    += BlockDimX;
+      col_index0 += BlockDimX;
     }
   }
   else {
-    while (col_index0 < (int)(((blockIdx.x + 1) << kBlockShiftX) + RADIUS) &&
+    while (col_index0 < (int)(((blockIdx.x + 1) << BlockShiftX) + RADIUS) &&
            col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -352,17 +352,17 @@ void colRowCnKernel0(const T* src, int rows, int cols, int src_stride, T* dst,
       mulAdd(sum, input[col_index1], 0.0625f);
       row_data[threadIdx.y][x_index] = sum;
 
-      x_index    += kBlockDimX;
-      col_index0 += kBlockDimX;
+      x_index    += BlockDimX;
+      col_index0 += BlockDimX;
     }
   }
   __syncthreads();
 
-  element_x = (blockIdx.x << (kBlockShiftX - 1)) + threadIdx.x;
+  element_x = (blockIdx.x << (BlockShiftX - 1)) + threadIdx.x;
   y_index = threadIdx.y;
   x_index = threadIdx.x << 1;
   if (element_y < rows && element_x < ((cols + 1) >> 1) &&
-      x_index < kBlockDimX) {
+      x_index < BlockDimX) {
     sum = make_float4(0.f, 0.f, 0.f, 0.f);
     mulAdd(sum, row_data[y_index][x_index++], 0.0625f);
     mulAdd(sum, row_data[y_index][x_index++], 0.25f);
@@ -379,10 +379,10 @@ template <typename T, typename Tn, typename BorderInterpolation>
 __global__
 void colRowCnKernel1(const T* src, int rows, int cols, int src_stride, T* dst,
                      int dst_stride, BorderInterpolation interpolation) {
-  __shared__ float4 row_data[kBlockDimY][(kBlockDimX << 1) + RADIUS * 2];
+  __shared__ float4 row_data[BlockDimY][(BlockDimX << 1) + RADIUS * 2];
 
-  int element_x = ((blockIdx.x << kBlockShiftX) + threadIdx.x) << 1;
-  int element_y = ((blockIdx.y << kBlockShiftY) + threadIdx.y) << 1;
+  int element_x = ((blockIdx.x << BlockShiftX) + threadIdx.x) << 1;
+  int element_y = ((blockIdx.y << BlockShiftY) + threadIdx.y) << 1;
 
   int y_index, row_index;
   int x_index = threadIdx.x << 1;
@@ -391,7 +391,7 @@ void colRowCnKernel1(const T* src, int rows, int cols, int src_stride, T* dst,
   float4 sum0, sum1;
 
   if (element_y != 0 && element_y < ((rows + 1) >> 1) - 1) {
-    while (col_index0 < (int)(((blockIdx.x + 1) << (kBlockShiftX + 1)) + RADIUS)
+    while (col_index0 < (int)(((blockIdx.x + 1) << (BlockShiftX + 1)) + RADIUS)
            && col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -417,12 +417,12 @@ void colRowCnKernel1(const T* src, int rows, int cols, int src_stride, T* dst,
       row_data[threadIdx.y][x_index] = sum0;
       row_data[threadIdx.y][x_index + 1] = sum1;
 
-      x_index    += (kBlockDimX << 1);
-      col_index0 += (kBlockDimX << 1);
+      x_index    += (BlockDimX << 1);
+      col_index0 += (BlockDimX << 1);
     }
   }
   else {
-    while (col_index0 < (int)(((blockIdx.x + 1) << (kBlockShiftX + 1)) + RADIUS)
+    while (col_index0 < (int)(((blockIdx.x + 1) << (BlockShiftX + 1)) + RADIUS)
            && col_index0 < cols + RADIUS && element_y < rows) {
       row_index = element_y - RADIUS;
       col_index1 = interpolation(cols, RADIUS, col_index0);
@@ -453,8 +453,8 @@ void colRowCnKernel1(const T* src, int rows, int cols, int src_stride, T* dst,
       row_data[threadIdx.y][x_index] = sum0;
       row_data[threadIdx.y][x_index + 1] = sum1;
 
-      x_index    += (kBlockDimX << 1);
-      col_index0 += (kBlockDimX << 1);
+      x_index    += (BlockDimX << 1);
+      col_index0 += (BlockDimX << 1);
     }
   }
   __syncthreads();
@@ -523,12 +523,11 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
 
   int dst_rows = (rows + 1) >> 1;
   dim3 block, grid;
-  block.x = kBlockDimX;
-  block.y = kBlockDimY;
-  grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX, kBlockShiftX);
-  grid.y = divideUp(dst_rows, kBlockDimY, kBlockShiftY);
+  block.x = BlockDimX;
+  block.y = BlockDimY;
+  grid.x = divideUp(divideUp(cols, 4, 2), BlockDimX, BlockShiftX);
+  grid.y = divideUp(dst_rows, BlockDimY, BlockShiftY);
 
-  cudaError_t code;
   if (channels == 1) {
     if (border_type == BORDER_TYPE_REPLICATE) {
       RUN_C1_BATCH4_KERNELS(uchar, ReplicateBorder);
@@ -541,7 +540,7 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
     }
   }
   else if (channels == 3) {
-    grid.x = divideUp(cols, kBlockDimX, kBlockShiftX);
+    grid.x = divideUp(cols, BlockDimX, BlockShiftX);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
       RUN_CN_BATCH1_KERNELS(uchar, ReplicateBorder);
@@ -554,7 +553,7 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
     }
   }
   else {
-    grid.x = divideUp(divideUp(cols, 2, 1), kBlockDimX, kBlockShiftX);
+    grid.x = divideUp(divideUp(cols, 2, 1), BlockDimX, BlockShiftX);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
       RUN_CN_BATCH2_KERNELS(uchar, ReplicateBorder);
@@ -567,7 +566,7 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
     }
   }
 
-  code = cudaGetLastError();
+  cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
@@ -592,12 +591,11 @@ RetCode pyrdown(const float* src, int rows, int cols, int channels,
 
   int dst_rows = (rows + 1) >> 1;
   dim3 block, grid;
-  block.x = kBlockDimX;
-  block.y = kBlockDimY;
-  grid.x = divideUp(divideUp(cols, 2, 1), kBlockDimX, kBlockShiftX);
-  grid.y = divideUp(dst_rows, kBlockDimY, kBlockShiftY);
+  block.x = BlockDimX;
+  block.y = BlockDimY;
+  grid.x = divideUp(divideUp(cols, 2, 1), BlockDimX, BlockShiftX);
+  grid.y = divideUp(dst_rows, BlockDimY, BlockShiftY);
 
-  cudaError_t code;
   if (channels == 1) {
     if (border_type == BORDER_TYPE_REPLICATE) {
       RUN_C1_BATCH2_KERNELS(float, ReplicateBorder);
@@ -610,7 +608,7 @@ RetCode pyrdown(const float* src, int rows, int cols, int channels,
     }
   }
   else {
-    grid.x = divideUp(cols, kBlockDimX, kBlockShiftX);
+    grid.x = divideUp(cols, BlockDimX, BlockShiftX);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
       RUN_CN_BATCH1_KERNELS(float, ReplicateBorder);
@@ -623,7 +621,7 @@ RetCode pyrdown(const float* src, int rows, int cols, int channels,
     }
   }
 
-  code = cudaGetLastError();
+  cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;

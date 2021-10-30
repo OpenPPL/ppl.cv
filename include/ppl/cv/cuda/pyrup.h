@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_PYRDOWN_H_
-#define _ST_HPC_PPL3_CV_CUDA_PYRDOWN_H_
+#ifndef _ST_HPC_PPL3_CV_CUDA_PYRUP_H_
+#define _ST_HPC_PPL3_CV_CUDA_PYRUP_H_
 
 #include <cuda_runtime.h>
 
@@ -27,7 +27,7 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Blurs an image using a gaussian filter and downsamples it.
+ * @brief Upsamples an image and then blurs it.
  * @tparam T The data type of input and output image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
@@ -48,8 +48,7 @@ namespace cuda {
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 The size of the output image is computed as ((height + 1) / 2, 
- *         (width + 1) / 2).
+ *       2 The size of the output image is computed as (height * 2, width * 2).
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -64,20 +63,20 @@ namespace cuda {
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>CUDA platforms supported <td>CUDA 7.0
- * <tr><td>Header files  <td> #include "ppl/cv/cuda/pyrdown.h"
+ * <tr><td>Header files  <td> #include "ppl/cv/cuda/pyrup.h"
  * <tr><td>Project       <td> ppl.cv
  * </table>
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include "ppl/cv/cuda/pyrdown.h"
+ * #include "ppl/cv/cuda/pyrup.h"
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   int src_width  = 640;
- *   int src_height = 480;
- *   int dst_width  = 320;
- *   int dst_height = 240;
+ *   int src_width  = 320;
+ *   int src_height = 240;
+ *   int dst_width  = 640;
+ *   int dst_height = 480;
  *   int channels = 3;
  *
  *   float* dev_input;
@@ -90,9 +89,8 @@ namespace cuda {
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   PyrDown<float, 3>(stream, src_height, src_width, 
- *                     input_pitch / sizeof(float), dev_input,
- *                     output_pitch / sizeof(float), dev_output);
+ *   PyrUp<float, 3>(stream, src_height, src_width, input_pitch / sizeof(float),
+ *                   dev_input, output_pitch / sizeof(float), dev_output);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
@@ -103,17 +101,17 @@ namespace cuda {
  * @endcode
  */
 template <typename T, int channels>
-ppl::common::RetCode PyrDown(cudaStream_t stream,
-                             int height,
-                             int width,
-                             int inWidthStride,
-                             const T* inData,
-                             int outWidthStride,
-                             T* outData,
-                             BorderType border_type = BORDER_TYPE_DEFAULT);
+ppl::common::RetCode PyrUp(cudaStream_t stream,
+                           int height,
+                           int width,
+                           int inWidthStride,
+                           const T* inData,
+                           int outWidthStride,
+                           T* outData,
+                           BorderType border_type = BORDER_TYPE_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_PYRDOWN_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_PYRUP_H_
