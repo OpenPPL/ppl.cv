@@ -416,6 +416,8 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
              image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
              image0.type() == CV_16SC1 || image0.type() == CV_16SC2 ||
              image0.type() == CV_16SC3 || image0.type() == CV_16SC4 ||
+             image0.type() == CV_32SC1 || image0.type() == CV_32SC2 ||
+             image0.type() == CV_32SC3 || image0.type() == CV_32SC4 ||
              image0.type() == CV_32FC1 || image0.type() == CV_32FC2 ||
              image0.type() == CV_32FC3 || image0.type() == CV_32FC4 ||
              image0.type() == CV_64FC1 || image0.type() == CV_64FC2 ||
@@ -496,6 +498,8 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
              image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
              image0.type() == CV_16SC1 || image0.type() == CV_16SC2 ||
              image0.type() == CV_16SC3 || image0.type() == CV_16SC4 ||
+             image0.type() == CV_32SC1 || image0.type() == CV_32SC2 ||
+             image0.type() == CV_32SC3 || image0.type() == CV_32SC4 ||
              image0.type() == CV_32FC1 || image0.type() == CV_32FC2 ||
              image0.type() == CV_32FC3 || image0.type() == CV_32FC4 ||
              image0.type() == CV_64FC1 || image0.type() == CV_64FC2 ||

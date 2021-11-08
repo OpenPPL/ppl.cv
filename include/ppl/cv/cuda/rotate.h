@@ -17,7 +17,7 @@
 #ifndef _ST_HPC_PPL3_CV_CUDA_ROTATE_H_
 #define _ST_HPC_PPL3_CV_CUDA_ROTATE_H_
 
-#include <cuda_runtime.h>
+#include "cuda_runtime.h"
 
 #include "ppl/common/retcode.h"
 
