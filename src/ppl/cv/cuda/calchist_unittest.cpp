@@ -28,8 +28,8 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 enum MaskType {
-  MASKED,
   UNMASKED,
+  MASKED,
 };
 
 using Parameters = std::tuple<MaskType, cv::Size>;
@@ -37,11 +37,11 @@ inline std::string convertToStringNorm(const Parameters& parameters) {
   std::ostringstream formatted;
 
   MaskType is_masked = std::get<0>(parameters);
-  if (is_masked == MASKED) {
-    formatted << "Masked" << "_";
+  if (is_masked == UNMASKED) {
+    formatted << "Unmasked" << "_";
   }
   else {
-    formatted << "Unmasked" << "_";
+    formatted << "Masked" << "_";
   }
 
   cv::Size size = std::get<1>(parameters);
@@ -85,20 +85,20 @@ bool PplCvCudaCalcHistTest<T, channels>::apply() {
 
   int src_size = size.height * size.width * channels * sizeof(T);
   int dst_size = 256 * sizeof(int);
-  int msk_size = size.height * size.width * sizeof(uchar);
+  int mask_size = size.height * size.width * sizeof(uchar);
   T* input = (T*)malloc(src_size);
   int* output = (int*)malloc(dst_size);
-  uchar* mask1 = (uchar*)malloc(msk_size);
+  uchar* mask1 = (uchar*)malloc(mask_size);
   T* gpu_input;
   int* gpu_output;
   uchar* gpu_mask1;
   cudaMalloc((void**)&gpu_input, src_size);
   cudaMalloc((void**)&gpu_output, dst_size);
-  cudaMalloc((void**)&gpu_mask1, msk_size);
+  cudaMalloc((void**)&gpu_mask1, mask_size);
   copyMatToArray(src, input);
   copyMatToArray(mask0, mask1);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(gpu_mask1, mask1, msk_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
   int channel[] = {0};
   int hist_size[] = {256};
@@ -106,7 +106,7 @@ bool PplCvCudaCalcHistTest<T, channels>::apply() {
   const float* ranges[1] = {data_range};
 
   if (is_masked == UNMASKED) {
-    cv::calcHist(&src, 1, channel, cv::Mat(), cv_dst1, 1, hist_size, ranges, 
+    cv::calcHist(&src, 1, channel, cv::Mat(), cv_dst1, 1, hist_size, ranges,
                  true, false);
     CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                 (T*)gpu_src.data, (int*)gpu_dst.data);
@@ -156,7 +156,7 @@ TEST_P(PplCvCudaCalcHistTest ## T ## channels, Standard) {                     \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaCalcHistTest ## T ## channels,       \
   ::testing::Combine(                                                          \
-    ::testing::Values(MASKED, UNMASKED),                                       \
+    ::testing::Values(UNMASKED, MASKED),                                       \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
