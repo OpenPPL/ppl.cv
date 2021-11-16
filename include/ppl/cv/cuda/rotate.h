@@ -17,7 +17,7 @@
 #ifndef _ST_HPC_PPL3_CV_CUDA_ROTATE_H_
 #define _ST_HPC_PPL3_CV_CUDA_ROTATE_H_
 
-#include <cuda_runtime.h>
+#include "cuda_runtime.h"
 
 #include "ppl/common/retcode.h"
 
@@ -27,8 +27,8 @@ namespace cuda {
 
 /**
  * @brief  Rotates a 2D array in multiples of 90 degrees.
- * @tparam T The data type of input and output image, currently only \a
- *         uint8_t(uchar) and \a float are supported.
+ * @tparam T The data type of input and output image, currently only
+ *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream           cuda stream object.

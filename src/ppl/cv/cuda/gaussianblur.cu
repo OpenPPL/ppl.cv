@@ -589,12 +589,12 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
 }
 
-#define RUN_CHANNEL1_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
+#define RUN_CHANNEL1_SMALL_KERNELS(Tsrc, Tdst, Interpolation)                  \
 Interpolation interpolation;                                                   \
 rowColC1Kernel<Tsrc, Tdst, Interpolation><<<grid, block, 0, stream>>>(src,     \
     rows, cols, src_stride, sigma, ksize, dst, dst_stride, interpolation);
 
-#define RUN_CHANNELN_SMALL_KERNELS0(Interpolation, Tsrc, Tdst)                 \
+#define RUN_CHANNELN_SMALL_KERNELS0(Tsrc, Tdst, Interpolation)                 \
 Interpolation interpolation;                                                   \
 if (channels == 3) {                                                           \
   rowColCnKernel<Tsrc, Tsrc ## 3, float ## 3, Tdst, Tdst ## 3, Interpolation>  \
@@ -607,7 +607,7 @@ else {                                                                         \
       dst, dst_stride, interpolation);                                         \
 }
 
-#define RUN_CHANNELN_SMALL_KERNELS1(Interpolation, Tsrc, Tdst)                 \
+#define RUN_CHANNELN_SMALL_KERNELS1(Tsrc, Tdst, Interpolation)                 \
 Interpolation interpolation;                                                   \
 if (channels == 3) {                                                           \
   rowSharedKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block,   \
@@ -643,7 +643,7 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,
@@ -664,13 +664,13 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, uchar, uchar);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, uchar, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, uchar, uchar);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, uchar, ReflectBorder);
     }
     else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, uchar, uchar);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, uchar, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -690,13 +690,13 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS0(ReplicateBorder, uchar, uchar);
+      RUN_CHANNELN_SMALL_KERNELS0(uchar, uchar, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS0(ReflectBorder, uchar, uchar);
+      RUN_CHANNELN_SMALL_KERNELS0(uchar, uchar, ReflectBorder);
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS0(Reflect101Border, uchar, uchar);
+      RUN_CHANNELN_SMALL_KERNELS0(uchar, uchar, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -758,7 +758,7 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (ksize == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,
@@ -779,13 +779,13 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, float, float);
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, float, float);
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, ReflectBorder);
     }
     else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, float, float);
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -805,13 +805,13 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS0(ReplicateBorder, float, float);
+      RUN_CHANNELN_SMALL_KERNELS0(float, float, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS0(ReflectBorder, float, float);
+      RUN_CHANNELN_SMALL_KERNELS0(float, float, ReflectBorder);
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS0(Reflect101Border, float, float);
+      RUN_CHANNELN_SMALL_KERNELS0(float, float, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -848,13 +848,13 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
     }
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS1(ReplicateBorder, float, float);
+      RUN_CHANNELN_SMALL_KERNELS1(float, float, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS1(ReflectBorder, float, float);
+      RUN_CHANNELN_SMALL_KERNELS1(float, float, ReflectBorder);
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS1(Reflect101Border, float, float);
+      RUN_CHANNELN_SMALL_KERNELS1(float, float, Reflect101Border);
     }
 
     code = cudaGetLastError();

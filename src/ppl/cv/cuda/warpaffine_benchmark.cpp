@@ -52,7 +52,7 @@ void BM_WarpAffine_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     WarpAffineNearestPoint<T, channels>(0, src.rows, src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
@@ -119,7 +119,7 @@ void BM_WarpAffine_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     cv::cuda::warpAffine(gpu_src, gpu_dst, M, cv::Size(dst_width, dst_height),
                          cv::WARP_INVERSE_MAP | cv::INTER_LINEAR, cv_border);

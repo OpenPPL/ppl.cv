@@ -58,7 +58,7 @@ void BM_Rotate_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     Rotate<T, channels>(0, src_height, src_width, gpu_src.step / sizeof(T),
                         (T*)gpu_src.data, dst_height, dst_width,
@@ -112,7 +112,7 @@ void BM_Rotate_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     cv::cuda::rotate(gpu_src, gpu_dst, cv::Size(dst_width, dst_height), degree);
   }

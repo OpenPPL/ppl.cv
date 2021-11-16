@@ -46,7 +46,7 @@ void BM_ConvertTo_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ConvertTo<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
@@ -88,7 +88,7 @@ void BM_ConvertTo_opencv_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     gpu_src.convertTo(gpu_dst, gpu_dst.type(), alpha, beta);
   }

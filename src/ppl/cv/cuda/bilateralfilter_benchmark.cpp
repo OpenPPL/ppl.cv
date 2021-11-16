@@ -47,7 +47,7 @@ void BM_BilateralFilter_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     BilateralFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, diameter, sigma_color,
@@ -102,7 +102,7 @@ void BM_BilateralFilter_opencv_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     cv::cuda::bilateralFilter(gpu_src, gpu_dst, diameter, sigma_color,
                               sigma_space, border);

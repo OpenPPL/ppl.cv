@@ -51,7 +51,7 @@ void BM_Norm_ppl_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                       (T*)gpu_src.data, &result, norm_type);
@@ -108,7 +108,7 @@ void BM_Norm_opencv_cuda(benchmark::State &state) {
   int iterations = 1000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     result = cv::cuda::norm(gpu_src, cv_norm_type);
   }
