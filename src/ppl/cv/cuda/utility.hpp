@@ -199,6 +199,13 @@ uchar saturate_cast(int value) {
 }
 
 __DEVICE__
+uchar saturate_cast(short value) {
+  unsigned int result = 0;
+  asm("cvt.sat.u8.s16 %0, %1;" : "=r"(result) : "h"(value));
+  return result;
+}
+
+__DEVICE__
 uchar saturate_cast(float value) {
   unsigned int result = 0;
   asm("cvt.rni.sat.u8.f32 %0, %1;" : "=r"(result) : "f"(value));
@@ -259,6 +266,29 @@ float3 saturate_cast_vector(float3 value) {
 template <>
 __DEVICE__
 uchar4 saturate_cast_vector(float4 value) {
+  uchar4 result;
+  result.x = saturate_cast(value.x);
+  result.y = saturate_cast(value.y);
+  result.z = saturate_cast(value.z);
+  result.w = saturate_cast(value.w);
+
+  return result;
+}
+
+template <>
+__DEVICE__
+uchar3 saturate_cast_vector(short3 value) {
+  uchar3 result;
+  result.x = saturate_cast(value.x);
+  result.y = saturate_cast(value.y);
+  result.z = saturate_cast(value.z);
+
+  return result;
+}
+
+template <>
+__DEVICE__
+uchar4 saturate_cast_vector(short4 value) {
   uchar4 result;
   result.x = saturate_cast(value.x);
   result.y = saturate_cast(value.y);

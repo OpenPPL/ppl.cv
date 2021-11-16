@@ -48,7 +48,7 @@ void BM_Laplacian_ppl_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
@@ -105,7 +105,7 @@ void BM_Laplacian_opencv_cuda(benchmark::State &state) {
   int iterations = 3000;
   struct timeval start, end;
 
-  // Warm up the GPU
+  // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     cv::Ptr<cv::cuda::Filter> laplacian =
       cv::cuda::createLaplacianFilter(gpu_src.type(), gpu_dst.type(), ksize,

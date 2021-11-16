@@ -289,7 +289,7 @@ RetCode copyMakeBorder(const uchar* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&
       src_stride == dst_stride) {
     if (src != dst) {
@@ -360,7 +360,7 @@ RetCode copyMakeBorder(const float* src, int rows, int cols, int channels,
              border_type == BORDER_TYPE_REFLECT_101 ||
              border_type == BORDER_TYPE_DEFAULT);
 
-  cudaError_t code = cudaSuccess;
+  cudaError_t code;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&
       src_stride == dst_stride) {
     if (src != dst) {

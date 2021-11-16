@@ -236,26 +236,6 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
         }
       }
     }
-    else if (sizeof(Tdst) == 2) {
-      if (element_x < cols - 4) {
-        output[element_x]     = saturate_cast_f2s(sum.x);
-        output[element_x + 1] = saturate_cast_f2s(sum.y);
-        output[element_x + 2] = saturate_cast_f2s(sum.z);
-        output[element_x + 3] = saturate_cast_f2s(sum.w);
-      }
-      else {
-        output[element_x] = saturate_cast_f2s(sum.x);
-        if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast_f2s(sum.y);
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast_f2s(sum.z);
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = saturate_cast_f2s(sum.w);
-        }
-      }
-    }
     else {
       if (element_x < cols - 3) {
         output[element_x]     = sum.x;
@@ -889,13 +869,13 @@ void colFilterKernel(const float* src, int rows, int cols, int src_stride,
   output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
 }
 
-#define RUN_CHANNEL1_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
+#define RUN_CHANNEL1_SMALL_KERNELS(Tsrc, Tdst, Interpolation)                  \
 Interpolation interpolation;                                                   \
 rowColC1Kernel<Tsrc, Tdst, Interpolation><<<grid, block, 0, stream>>>(src,     \
     rows, cols, src_stride, kernel_x, kernel_y, radius, is_symmetric, dst,     \
     dst_stride, delta, interpolation);
 
-#define RUN_CHANNELN_SMALL_KERNELS(Interpolation, Tsrc, Tdst)                  \
+#define RUN_CHANNELN_SMALL_KERNELS(Tsrc, Tdst, Interpolation)                  \
 Interpolation interpolation;                                                   \
 if (channels == 3) {                                                           \
   rowColCnKernel<Tsrc, Tsrc ## 3, float ## 3, Tdst, Tdst ## 3, Interpolation>  \
@@ -908,7 +888,7 @@ else {                                                                         \
       kernel_y, radius, is_symmetric, dst, dst_stride, delta, interpolation);  \
 }
 
-#define RUN_KERNELS(Interpolation, Tsrc, Tdst)                                 \
+#define RUN_KERNELS(Tsrc, Tdst, Interpolation)                                 \
 Interpolation interpolation;                                                   \
 if (channels == 1) {                                                           \
   rowBatch4Kernel<Tsrc, Tsrc ## 4, Interpolation><<<grid1, block, 0, stream    \
@@ -993,13 +973,13 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, uchar, uchar);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, uchar, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, uchar, uchar);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, uchar, ReflectBorder);
     }
     else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, uchar, uchar);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, uchar, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1019,13 +999,13 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder, uchar, uchar);
+      RUN_CHANNELN_SMALL_KERNELS(uchar, uchar, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder, uchar, uchar);
+      RUN_CHANNELN_SMALL_KERNELS(uchar, uchar, ReflectBorder);
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border, uchar, uchar);
+      RUN_CHANNELN_SMALL_KERNELS(uchar, uchar, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1075,13 +1055,13 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   }
 
   if (border_type == BORDER_TYPE_REPLICATE) {
-    RUN_KERNELS(ReplicateBorder, uchar, uchar);
+    RUN_KERNELS(uchar, uchar, ReplicateBorder);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    RUN_KERNELS(ReflectBorder, uchar, uchar);
+    RUN_KERNELS(uchar, uchar, ReflectBorder);
   }
   else {
-    RUN_KERNELS(Reflect101Border, uchar, uchar);
+    RUN_KERNELS(uchar, uchar, Reflect101Border);
   }
 
   cudaFree(buffer);
@@ -1126,13 +1106,13 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, uchar, short);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, short, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, uchar, short);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, short, ReflectBorder);
     }
     else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, uchar, short);
+      RUN_CHANNEL1_SMALL_KERNELS(uchar, short, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1152,13 +1132,13 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder, uchar, short);
+      RUN_CHANNELN_SMALL_KERNELS(uchar, short, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder, uchar, short);
+      RUN_CHANNELN_SMALL_KERNELS(uchar, short, ReflectBorder);
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border, uchar, short);
+      RUN_CHANNELN_SMALL_KERNELS(uchar, short, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1208,13 +1188,13 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
   }
 
   if (border_type == BORDER_TYPE_REPLICATE) {
-    RUN_KERNELS(ReplicateBorder, uchar, short);
+    RUN_KERNELS(uchar, short, ReplicateBorder);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    RUN_KERNELS(ReflectBorder, uchar, short);
+    RUN_KERNELS(uchar, short, ReflectBorder);
   }
   else {
-    RUN_KERNELS(Reflect101Border, uchar, short);
+    RUN_KERNELS(uchar, short, Reflect101Border);
   }
 
   cudaFree(buffer);
@@ -1259,13 +1239,13 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder, float, float);
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder, float, float);
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, ReflectBorder);
     }
     else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border, float, float);
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1285,13 +1265,13 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_TYPE_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder, float, float);
+      RUN_CHANNELN_SMALL_KERNELS(float, float, ReplicateBorder);
     }
     else if (border_type == BORDER_TYPE_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder, float, float);
+      RUN_CHANNELN_SMALL_KERNELS(float, float, ReflectBorder);
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border, float, float);
+      RUN_CHANNELN_SMALL_KERNELS(float, float, Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1341,13 +1321,13 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
   }
 
   if (border_type == BORDER_TYPE_REPLICATE) {
-    RUN_KERNELS(ReplicateBorder, float, float);
+    RUN_KERNELS(float, float, ReplicateBorder);
   }
   else if (border_type == BORDER_TYPE_REFLECT) {
-    RUN_KERNELS(ReflectBorder, float, float);
+    RUN_KERNELS(float, float, ReflectBorder);
   }
   else {
-    RUN_KERNELS(Reflect101Border, float, float);
+    RUN_KERNELS(float, float, Reflect101Border);
   }
 
   cudaFree(buffer);
