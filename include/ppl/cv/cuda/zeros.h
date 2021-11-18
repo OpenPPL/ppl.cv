@@ -20,7 +20,6 @@
 #include "cuda_runtime.h"
 
 #include "ppl/common/retcode.h"
-#include "ppl/cv/types.h"
 
 namespace ppl {
 namespace cv {
@@ -28,13 +27,13 @@ namespace cuda {
 
 /**
  * @brief Returns a zero matrix of the specified size and type.
- * @tparam T The data type of input and output image, currently only
- *         uint8_t(uchar) and float are supported.
- * @tparam channels The number of channels of input&output image, 1, 3 and 4
- *         are supported.
+ * @tparam T The data type of output image, currently only uint8_t(uchar) and
+ *         float are supported.
+ * @tparam channels The number of channels of output image, 1, 3 and 4 are
+ *         supported.
  * @param stream         cuda stream object.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
+ * @param height         output image's height.
+ * @param width          output image's width.
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
