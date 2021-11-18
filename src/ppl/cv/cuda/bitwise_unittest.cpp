@@ -28,8 +28,8 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 enum MaskType {
-  UNMASKED,
-  MASKED,
+  kUnmasked,
+  kMasked,
 };
 
 using Parameters = std::tuple<MaskType, cv::Size>;
@@ -37,7 +37,7 @@ inline std::string convertToStringBitwise(const Parameters& parameters) {
   std::ostringstream formatted;
 
   MaskType is_masked = std::get<0>(parameters);
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     formatted << "Unmasked" << "_";
   }
   else {
@@ -108,7 +108,7 @@ bool PplCvCudaBitwiseTest<T, channels>::apply() {
   cudaMemcpy(gpu_input1, input1, src_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     cv::bitwise_and(src0, src1, cv_dst);
     BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
                             gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
@@ -170,7 +170,7 @@ TEST_P(PplCvCudaBitwiseTest ## T ## channels, Standard) {                      \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaBitwiseTest ## T ## channels,        \
   ::testing::Combine(                                                          \
-    ::testing::Values(UNMASKED, MASKED),                                       \
+    ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

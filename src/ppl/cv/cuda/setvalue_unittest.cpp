@@ -15,7 +15,6 @@
  */
 
 #include "ppl/cv/cuda/setvalue.h"
-#include "ppl/cv/cuda/zeros.h"
 
 #include <tuple>
 #include <sstream>
@@ -29,25 +28,25 @@
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
-enum SetValFunctions {
-  SETTO_MASKED,
-  SETTO,
-  ONES,
-  ZEROS,
+enum SetValueFunctions {
+  kUnmaskedSetTo,
+  kMaskedSetTo,
+  kOnes,
+  kZeros,
 };
 
-using Parameters = std::tuple<SetValFunctions, cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
+using Parameters = std::tuple<SetValueFunctions, cv::Size>;
+inline std::string convertToStringSetValue(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  SetValFunctions function = std::get<0>(parameters);
-  if (function == SETTO_MASKED) {
-    formatted << "SetToMasked" << "_";
+  SetValueFunctions function = std::get<0>(parameters);
+  if (function == kUnmaskedSetTo) {
+    formatted << "UnmaskedSetTo" << "_";
   }
-  else if (function == SETTO) {
-    formatted << "SetTo" << "_";
+  else if (function == kMaskedSetTo) {
+    formatted << "MaskedSetTo" << "_";
   }
-  else if (function == ONES) {
+  else if (function == kOnes) {
     formatted << "Ones" << "_";
   }
   else {
@@ -76,22 +75,21 @@ class PplCvCudaSetValueTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
-  SetValFunctions function;
+  SetValueFunctions function;
   cv::Size size;
 };
 
 template <typename T, int outChannels, int maskChannels>
 bool PplCvCudaSetValueTest<T, outChannels, maskChannels>::apply() {
   cv::Mat dst, mask0, cv_dst;
-  dst  = createSourceImage(size.height, size.width,
-                           CV_MAKETYPE(cv::DataType<T>::depth, outChannels));
+  dst = cv::Mat::zeros(size.height, size.width,
+                       CV_MAKETYPE(cv::DataType<T>::depth, outChannels));
   mask0 = createSourceImage(size.height, size.width,
-                           CV_MAKETYPE(cv::DataType<uchar>::depth,
-                                       maskChannels));
+                            CV_MAKETYPE(cv::DataType<uchar>::depth,
+                            maskChannels));
   dst.copyTo(cv_dst);
   cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask0(mask0);
-  int value = 50;
 
   int dst_size = size.height * size.width * outChannels * sizeof(T);
   int mask_size = size.height * size.width * maskChannels * sizeof(uchar);
@@ -105,24 +103,44 @@ bool PplCvCudaSetValueTest<T, outChannels, maskChannels>::apply() {
   cudaMemcpy(gpu_output, output, dst_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
-  bool check_result2 = false;
-  if (function == ONES) {
+  int value = 5;
+  if (function == kUnmaskedSetTo) {
+    cv_dst.setTo(value);
+
+    SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
+
+    SetTo<T, outChannels, maskChannels>(0, size.height, size.width,
+      size.width * outChannels, gpu_output, value);
+  }
+  else if (function == kMaskedSetTo) {
+    cv_dst.setTo(value, mask0);
+
+    SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask0.step,
+      gpu_mask0.data);
+
+    SetTo<T, outChannels, maskChannels>(0, size.height, size.width,
+      size.width * outChannels, gpu_output, value, size.width * maskChannels,
+      gpu_mask1);
+  }
+  else if (function == kOnes) {
     cv_dst = cv::Mat::ones(size.height, size.width,
                            CV_MAKETYPE(cv::DataType<T>::depth, outChannels));
+
     Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    check_result2 = true;
     Ones<T, outChannels>(0, size.height, size.width,
                          size.width * outChannels, gpu_output);
   }
   else {
     cv_dst = cv::Mat::zeros(size.height, size.width,
                             CV_MAKETYPE(cv::DataType<T>::depth, outChannels));
+
     Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
                           gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    check_result2 = true;
     Zeros<T, outChannels>(0, size.height, size.width,
                           size.width * outChannels, gpu_output);
   }
@@ -156,27 +174,27 @@ TEST_P(PplCvCudaSetValueTest ## T ## outChannels ## maskChannels, Standard) {  \
 }                                                                              \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
-  PplCvCudaSetValueTest ## T ## outChannels ## maskChannels,                     \
+  PplCvCudaSetValueTest ## T ## outChannels ## maskChannels,                   \
   ::testing::Combine(                                                          \
-    ::testing::Values(ONES),                                                   \
+    ::testing::Values(kUnmaskedSetTo, kMaskedSetTo, kOnes, kZeros),            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
                       cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
-      PplCvCudaSetValueTest ## T ## outChannels ## maskChannels::ParamType>&     \
+      PplCvCudaSetValueTest ## T ## outChannels ## maskChannels::ParamType>&   \
       info) {                                                                  \
-    return convertToString(info.param);                                        \
+    return convertToStringSetValue(info.param);                                \
   }                                                                            \
 );
 
 UNITTEST(uchar, 1, 1)
-UNITTEST(uchar, 3, 1)
-UNITTEST(uchar, 4, 1)
 UNITTEST(uchar, 3, 3)
 UNITTEST(uchar, 4, 4)
+UNITTEST(uchar, 3, 1)
+UNITTEST(uchar, 4, 1)
 UNITTEST(float, 1, 1)
-UNITTEST(float, 3, 1)
-UNITTEST(float, 4, 1)
 UNITTEST(float, 3, 3)
 UNITTEST(float, 4, 4)
+UNITTEST(float, 3, 1)
+UNITTEST(float, 4, 1)

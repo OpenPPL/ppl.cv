@@ -30,8 +30,8 @@ using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum MaskType {
-  UNMASKED,
-  MASKED,
+  kUnmasked,
+  kMasked,
 };
 
 template <typename T, int channels, MaskType mask_type>
@@ -61,7 +61,7 @@ void BM_CalcHist_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (mask_type == UNMASKED) {
+      if (mask_type == kUnmasked) {
         CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                     (T*)gpu_src.data, (int*)gpu_dst.data);
       }
@@ -106,7 +106,7 @@ void BM_CalcHist_opencv_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (mask_type == UNMASKED) {
+      if (mask_type == kUnmasked) {
         cv::cuda::calcHist(gpu_src, gpu_dst);
       }
       else {
@@ -139,8 +139,8 @@ void BM_CalcHist_opencv_x86_cuda(benchmark::State &state) {
   const float* ranges[1] = {data_range};
 
   for (auto _ : state) {
-    if (mask_type == UNMASKED) {
-      cv::calcHist(&src, 1, channel, cv::Mat(), dst, 1, &hist_size, ranges, 
+    if (mask_type == kUnmasked) {
+      cv::calcHist(&src, 1, channel, cv::Mat(), dst, 1, &hist_size, ranges,
                    true, false);
     }
     else {
@@ -155,31 +155,31 @@ void BM_CalcHist_opencv_x86_cuda(benchmark::State &state) {
 BENCHMARK_TEMPLATE(BM_CalcHist_opencv_cuda, uchar, channels,  mask_type)->     \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, uchar, channels, mask_type)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10); 
+                   Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(c1, UNMASKED, 320, 240)
-// RUN_BENCHMARK0(c1, UNMASKED, 640, 480)
-// RUN_BENCHMARK0(c1, UNMASKED, 1280, 720)
-// RUN_BENCHMARK0(c1, UNMASKED, 1920, 1080)
-// RUN_BENCHMARK0(c1, MASKED, 320, 240)
-// RUN_BENCHMARK0(c1, MASKED, 640, 480)
-// RUN_BENCHMARK0(c1, MASKED, 1280, 720)
-// RUN_BENCHMARK0(c1, MASKED, 1920, 1080)
+// RUN_BENCHMARK0(c1, kUnmasked, 320, 240)
+// RUN_BENCHMARK0(c1, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c1, kUnmasked, 1280, 720)
+// RUN_BENCHMARK0(c1, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK0(c1, kMasked, 320, 240)
+// RUN_BENCHMARK0(c1, kMasked, 640, 480)
+// RUN_BENCHMARK0(c1, kMasked, 1280, 720)
+// RUN_BENCHMARK0(c1, kMasked, 1920, 1080)
 
 #define RUN_BENCHMARK1(channels, mask_type, width, height)                     \
 BENCHMARK_TEMPLATE(BM_CalcHist_opencv_x86_cuda, uchar, channels, mask_type)->  \
                    Args({width, height});                                      \
 BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, uchar, channels, mask_type)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);  
+                   Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK1(c1, UNMASKED, 320, 240)
-// RUN_BENCHMARK1(c1, UNMASKED, 640, 480)
-// RUN_BENCHMARK1(c1, UNMASKED, 1280, 720)
-// RUN_BENCHMARK1(c1, UNMASKED, 1920, 1080)
-// RUN_BENCHMARK1(c1, MASKED, 320, 240)
-// RUN_BENCHMARK1(c1, MASKED, 640, 480)
-// RUN_BENCHMARK1(c1, MASKED, 1280, 720)
-// RUN_BENCHMARK1(c1, MASKED, 1920, 1080)
+// RUN_BENCHMARK1(c1, kUnmasked, 320, 240)
+// RUN_BENCHMARK1(c1, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c1, kUnmasked, 1280, 720)
+// RUN_BENCHMARK1(c1, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(c1, kMasked, 320, 240)
+// RUN_BENCHMARK1(c1, kMasked, 640, 480)
+// RUN_BENCHMARK1(c1, kMasked, 1280, 720)
+// RUN_BENCHMARK1(c1, kMasked, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, mask_type)                             \
 BENCHMARK_TEMPLATE(BM_CalcHist_opencv_cuda, type, c1, mask_type)->             \
@@ -189,7 +189,7 @@ BENCHMARK_TEMPLATE(BM_CalcHist_opencv_cuda, type, c1, mask_type)->             \
 BENCHMARK_TEMPLATE(BM_CalcHist_opencv_cuda, type, c1, mask_type)->             \
                    Args({1280, 720})->UseManualTime()->Iterations(10);         \
 BENCHMARK_TEMPLATE(BM_CalcHist_opencv_cuda, type, c1, mask_type)->             \
-                   Args({1920, 1080})->UseManualTime()->Iterations(10);  
+                   Args({1920, 1080})->UseManualTime()->Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(type, mask_type)                             \
 BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
@@ -199,10 +199,10 @@ BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
 BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
                    Args({1280, 720})->UseManualTime()->Iterations(10);         \
 BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
-                   Args({1920, 1080})->UseManualTime()->Iterations(10);    
+                   Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, UNMASKED)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, kUnmasked)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, UNMASKED)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kUnmasked)

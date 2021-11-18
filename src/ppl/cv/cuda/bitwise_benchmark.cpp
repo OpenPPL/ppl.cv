@@ -29,8 +29,8 @@ using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum MaskType {
-  UNMASKED,
-  MASKED,
+  kUnmasked,
+  kMasked,
 };
 
 template <typename T, int channels, MaskType mask_type>
@@ -66,7 +66,7 @@ void BM_BitwiseAnd_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (mask_type == UNMASKED) {
+      if (mask_type == kUnmasked) {
         BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
                                 gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
                                 gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
@@ -120,7 +120,7 @@ void BM_BitwiseAnd_opencv_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (mask_type == UNMASKED) {
+      if (mask_type == kUnmasked) {
         cv::cuda::bitwise_and(gpu_src0, gpu_src1, gpu_dst);
       }
       else {
@@ -151,7 +151,7 @@ void BM_BitwiseAnd_opencv_x86_cuda(benchmark::State &state) {
                            CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
 
   for (auto _ : state) {
-    if (mask_type == UNMASKED) {
+    if (mask_type == kUnmasked) {
       cv::bitwise_and(src0, src1, dst);
     }
     else {
@@ -175,10 +175,10 @@ BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c4, mask_type)->          \
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c4, mask_type)->             \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(UNMASKED, 320, 240)
-// RUN_BENCHMARK0(UNMASKED, 640, 480)
-// RUN_BENCHMARK0(UNMASKED, 1280, 720)
-// RUN_BENCHMARK0(UNMASKED, 1920, 1080)
+// RUN_BENCHMARK0(kUnmasked, 320, 240)
+// RUN_BENCHMARK0(kUnmasked, 640, 480)
+// RUN_BENCHMARK0(kUnmasked, 1280, 720)
+// RUN_BENCHMARK0(kUnmasked, 1920, 1080)
 
 #define RUN_BENCHMARK1(mask_type, width, height)                               \
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c1, mask_type)->          \
@@ -186,10 +186,10 @@ BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c1, mask_type)->          \
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c1, mask_type)->             \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK1(MASKED, 320, 240)
-// RUN_BENCHMARK1(MASKED, 640, 480)
-// RUN_BENCHMARK1(MASKED, 1280, 720)
-// RUN_BENCHMARK1(MASKED, 1920, 1080)
+// RUN_BENCHMARK1(kMasked, 320, 240)
+// RUN_BENCHMARK1(kMasked, 640, 480)
+// RUN_BENCHMARK1(kMasked, 1280, 720)
+// RUN_BENCHMARK1(kMasked, 1920, 1080)
 
 #define RUN_BENCHMARK2(mask_type, width, height)                               \
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_x86_cuda, uchar, c1, mask_type)->      \
@@ -205,42 +205,42 @@ BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_x86_cuda, uchar, c4, mask_type)->      \
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c4, mask_type)->             \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK2(UNMASKED, 320, 240)
-// RUN_BENCHMARK2(UNMASKED, 640, 480)
-// RUN_BENCHMARK2(UNMASKED, 1280, 720)
-// RUN_BENCHMARK2(UNMASKED, 1920, 1080)
+// RUN_BENCHMARK2(kUnmasked, 320, 240)
+// RUN_BENCHMARK2(kUnmasked, 640, 480)
+// RUN_BENCHMARK2(kUnmasked, 1280, 720)
+// RUN_BENCHMARK2(kUnmasked, 1920, 1080)
 
-// RUN_BENCHMARK2(MASKED, 320, 240)
-// RUN_BENCHMARK2(MASKED, 640, 480)
-// RUN_BENCHMARK2(MASKED, 1280, 720)
-// RUN_BENCHMARK2(MASKED, 1920, 1080)
+// RUN_BENCHMARK2(kMasked, 320, 240)
+// RUN_BENCHMARK2(kMasked, 640, 480)
+// RUN_BENCHMARK2(kMasked, 1280, 720)
+// RUN_BENCHMARK2(kMasked, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(width, height)                               \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c1, UNMASKED)->           \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c1, kUnmasked)->          \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c3, UNMASKED)->           \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c3, kUnmasked)->          \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c4, UNMASKED)->           \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c4, kUnmasked)->          \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c1, MASKED)->             \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c1, kMasked)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c3, MASKED)->             \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c3, kMasked)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c4, MASKED)->             \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c4, kMasked)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(width, height)                               \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c1, UNMASKED)->              \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c1, kUnmasked)->             \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c3, UNMASKED)->              \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c3, kUnmasked)->             \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c4, UNMASKED)->              \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c4, kUnmasked)->             \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c1, MASKED)->                \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c1, kMasked)->               \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c3, MASKED)->                \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c3, kMasked)->               \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c4, MASKED)->                \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c4, kMasked)->               \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
 RUN_OPENCV_TYPE_FUNCTIONS(320, 240)

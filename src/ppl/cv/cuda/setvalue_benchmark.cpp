@@ -15,7 +15,6 @@
  */
 
 #include "ppl/cv/cuda/setvalue.h"
-#include "ppl/cv/cuda/zeros.h"
 
 #include <time.h>
 #include <sys/time.h>
@@ -30,40 +29,58 @@
 using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
-enum Functions {
-  OnesFunc,
-  ZerosFunc,
+enum SetValueFunctions {
+  kUnmaskedSetTo,
+  kMaskedSetTo,
+  kOnes,
+  kZeros,
 };
 
-template <typename T, int channels, Functions function>
+template <typename T, int outChannels, int maskChannels,
+          SetValueFunctions function>
 void BM_SetValue_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat dst;
+  cv::Mat dst, mask;
   dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
+                          outChannels));
+  mask = createSourceImage(height, width,
+                           CV_MAKETYPE(cv::DataType<uchar>::depth,
+                           maskChannels));
   cv::cuda::GpuMat gpu_dst(dst);
+  cv::cuda::GpuMat gpu_mask(mask);
+
+  int value = 5;
 
   int iterations = 3000;
   struct timeval start, end;
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Zeros<T, channels>(0, gpu_dst.rows, gpu_dst.cols, gpu_dst.step / sizeof(T),
-                       (T*)gpu_dst.data);
+    Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (function == OnesFunc) {
-        Ones<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
-                            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+      if (function == kUnmaskedSetTo) {
+        SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
+      }
+      else if (function == kMaskedSetTo) {
+        SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask.step,
+          gpu_mask.data);
+      }
+      else if (function == kOnes) {
+        Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {
-        Zeros<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
-                              gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
     }
     cudaDeviceSynchronize();
@@ -75,17 +92,23 @@ void BM_SetValue_ppl_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename T, int channels, Functions function>
+template <typename T, int outChannels, int maskChannels,
+          SetValueFunctions function>
 void BM_SetValue_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat dst;
+  cv::Mat dst, mask;
   dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
+                          outChannels));
+  mask = createSourceImage(height, width,
+                           CV_MAKETYPE(cv::DataType<uchar>::depth,
+                           maskChannels));
   cv::cuda::GpuMat gpu_dst(dst);
+  cv::cuda::GpuMat gpu_mask(mask);
 
   cv::Scalar scalar_one(1, 1, 1, 1);
   cv::Scalar scalar_zero(0, 0, 0, 0);
+  cv::Scalar scalar_five(5, 5, 5, 5);
 
   int iterations = 3000;
   struct timeval start, end;
@@ -99,7 +122,13 @@ void BM_SetValue_opencv_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (function == OnesFunc) {
+      if (function == kUnmaskedSetTo) {
+        gpu_dst.setTo(scalar_five);
+      }
+      else if (function == kMaskedSetTo) {
+        gpu_dst.setTo(scalar_five, gpu_mask);
+      }
+      else if (function == kOnes) {
         gpu_dst.setTo(scalar_one);
       }
       else {
@@ -115,130 +144,287 @@ void BM_SetValue_opencv_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename T, int channels, Functions function>
+template <typename T, int outChannels, int maskChannels,
+          SetValueFunctions function>
 void BM_SetValue_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat dst;
+  cv::Mat dst, mask;
   dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
+                          outChannels));
+  mask = createSourceImage(height, width,
+                           CV_MAKETYPE(cv::DataType<uchar>::depth,
+                           maskChannels));
+
+  int value = 5;
 
   for (auto _ : state) {
-    if (function == OnesFunc) {
+    if (function == kUnmaskedSetTo) {
+      dst.setTo(value);
+    }
+    else if (function == kMaskedSetTo) {
+      dst.setTo(value, mask);
+    }
+    else if (function == kOnes) {
       dst = cv::Mat::ones(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
+                          outChannels));
     }
     else {
       dst = cv::Mat::zeros(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                           channels));
+                           outChannels));
     }
   }
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_BENCHMARK0(function, width, height)                                \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c1, function)->         \
+#define RUN_BENCHMARK00(function, width, height)                               \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c1, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c3, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c3, c3, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c3, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c4, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c4, c4, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c4, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c1, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c3, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c3, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c4, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c1, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c3, c3, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c3, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, c4, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c4, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c3, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-RUN_BENCHMARK0(OnesFunc, 320, 240)
-RUN_BENCHMARK0(OnesFunc, 640, 480)
-RUN_BENCHMARK0(OnesFunc, 1280, 720)
-RUN_BENCHMARK0(OnesFunc, 1920, 1080)
+// RUN_BENCHMARK00(kUnmaskedSetTo, 320, 240)
+// RUN_BENCHMARK00(kUnmaskedSetTo, 640, 480)
+// RUN_BENCHMARK00(kUnmaskedSetTo, 1280, 720)
+// RUN_BENCHMARK00(kUnmaskedSetTo, 1920, 1080)
 
-// #define RUN_BENCHMARK1(function, width, height)                                \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c1, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, function)->                \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, function)->                \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, function)->                \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c1, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, function)->                \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, function)->                \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, function)->                \
-//                    Args({width, height})->UseManualTime()->Iterations(10);
+// RUN_BENCHMARK00(kMaskedSetTo, 320, 240)
+// RUN_BENCHMARK00(kMaskedSetTo, 640, 480)
+// RUN_BENCHMARK00(kMaskedSetTo, 1280, 720)
+// RUN_BENCHMARK00(kMaskedSetTo, 1920, 1080)
 
-// RUN_BENCHMARK1(OnesFunc, 320, 240)
-// RUN_BENCHMARK1(OnesFunc, 640, 480)
-// RUN_BENCHMARK1(OnesFunc, 1280, 720)
-// RUN_BENCHMARK1(OnesFunc, 1920, 1080)
+#define RUN_BENCHMARK01(function, width, height)                               \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c1, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c3, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c4, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c1, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c3, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, c1, function)->     \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(function)                                    \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c1, function)->         \
+// RUN_BENCHMARK01(kOnes, 320, 240)
+// RUN_BENCHMARK01(kOnes, 640, 480)
+// RUN_BENCHMARK01(kOnes, 1280, 720)
+// RUN_BENCHMARK01(kOnes, 1920, 1080)
+
+// RUN_BENCHMARK01(kZeros, 320, 240)
+// RUN_BENCHMARK01(kZeros, 640, 480)
+// RUN_BENCHMARK01(kZeros, 1280, 720)
+// RUN_BENCHMARK01(kZeros, 1920, 1080)
+
+#define RUN_BENCHMARK1(function, width, height)                                \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c1, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c3, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c3, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, c4, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c4, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c1, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c3, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c3, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, c4, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c4, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);
+
+// RUN_BENCHMARK1(kUnmaskedSetTo, 320, 240)
+// RUN_BENCHMARK1(kUnmaskedSetTo, 640, 480)
+// RUN_BENCHMARK1(kUnmaskedSetTo, 1280, 720)
+// RUN_BENCHMARK1(kUnmaskedSetTo, 1920, 1080)
+
+// RUN_BENCHMARK1(kMaskedSetTo, 320, 240)
+// RUN_BENCHMARK1(kMaskedSetTo, 640, 480)
+// RUN_BENCHMARK1(kMaskedSetTo, 1280, 720)
+// RUN_BENCHMARK1(kMaskedSetTo, 1920, 1080)
+
+#define RUN_OPENCV_TYPE_FUNCTIONS0(function, width, height)                    \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c1, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c3, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, c4, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c1, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c3, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, c4, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);
+
+#define RUN_OPENCV_TYPE_FUNCTIONS1(function, width, height)                    \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c1, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c3, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c3, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c4, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, uchar, c4, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c1, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c1, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c3, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c3, c1, function)->     \
                    Args({width, height});                                      \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, function)->         \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, c1, function)->     \
                    Args({width, height});
 
-// #define RUN_OPENCV_TYPE_FUNCTIONS(function)                                    \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c1, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c1, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);     \
-// BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, function)->             \
-//                    Args({width, height})->UseManualTime()->Iterations(10);
-
-#define RUN_PPL_CV_TYPE_FUNCTIONS(function)                                    \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, function)->                \
+#define RUN_PPL_CV_TYPE_FUNCTIONS0(function, width, height)                    \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c3, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c4, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, function)->                \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c3, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c4, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(OnesFunc)
-// RUN_PPL_CV_TYPE_FUNCTIONS(OnesFunc)
+#define RUN_PPL_CV_TYPE_FUNCTIONS1(function, width, height)                    \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
+                   Args({width, height})->UseManualTime()->Iterations(10);
+
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
+
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
+
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
+
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
+
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
+
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
+
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
+
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
