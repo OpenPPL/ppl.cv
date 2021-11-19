@@ -28,8 +28,8 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 enum MaskType {
-  NO_MASK,
-  WITH_MASK,
+  kUnmasked,
+  kMasked,
 };
 
 using Parameters = std::tuple<NormTypes, MaskType, cv::Size>;
@@ -48,11 +48,11 @@ inline std::string convertToStringNorm(const Parameters& parameters) {
   }
 
   MaskType is_masked = std::get<1>(parameters);
-  if (is_masked == NO_MASK) {
-    formatted << "NoMask" << "_";
+  if (is_masked == kUnmasked) {
+    formatted << "Unmasked" << "_";
   }
   else {
-    formatted << "WithMask" << "_";
+    formatted << "Masked" << "_";
   }
 
   cv::Size size = std::get<2>(parameters);
@@ -118,7 +118,7 @@ bool PplCvCudaNormTest<T, channels>::apply() {
   }
 
   double result0, result1, result2;
-  if (is_masked == NO_MASK) {
+  if (is_masked == kUnmasked) {
     result0 = cv::norm(src, cv_norm_type);
     Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                       (T*)gpu_src.data, &result1, norm_type);
@@ -174,7 +174,7 @@ TEST_P(PplCvCudaNormTest ## T ## channels, Standard) {                         \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaNormTest ## T ## channels,           \
   ::testing::Combine(                                                          \
     ::testing::Values(NORM_INF, NORM_L1, NORM_L2),                             \
-    ::testing::Values(NO_MASK, WITH_MASK),                                     \
+    ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

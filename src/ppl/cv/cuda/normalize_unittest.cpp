@@ -28,8 +28,8 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 enum MaskType {
-  NO_MASK,
-  WITH_MASK,
+  kUnmasked,
+  kMasked,
 };
 
 using Parameters = std::tuple<NormTypes, MaskType, int, int, cv::Size>;
@@ -51,11 +51,11 @@ inline std::string convertToStringNormalize(const Parameters& parameters) {
   }
 
   MaskType is_masked = std::get<1>(parameters);
-  if (is_masked == NO_MASK) {
-    formatted << "NoMask" << "_";
+  if (is_masked == kUnmasked) {
+    formatted << "Unmasked" << "_";
   }
   else {
-    formatted << "WithMask" << "_";
+    formatted << "Masked" << "_";
   }
 
   int int_alpha = std::get<2>(parameters);
@@ -142,7 +142,7 @@ bool PplCvCudaNormalizeTest<T, channels>::apply() {
     cv_norm_type = cv::NORM_MINMAX;
   }
 
-  if (is_masked == NO_MASK) {
+  if (is_masked == kUnmasked) {
     cv::normalize(src, cv_dst, alpha, beta, cv_norm_type,
                   CV_MAT_DEPTH(dst.type()));
     Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -212,7 +212,7 @@ TEST_P(PplCvCudaNormalizeTest ## T ## channels, Standard) {                    \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaNormalizeTest ## T ## channels,      \
   ::testing::Combine(                                                          \
     ::testing::Values(NORM_INF, NORM_L1, NORM_L2, NORM_MINMAX),                \
-    ::testing::Values(NO_MASK, WITH_MASK),                                     \
+    ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(3, 10, 15),                                              \
     ::testing::Values(7, 19, 42),                                              \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
