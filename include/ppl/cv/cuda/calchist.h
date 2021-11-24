@@ -32,7 +32,7 @@ namespace cuda {
  * @param stream          cuda stream object.
  * @param height          input image's height.
  * @param width           input image's width.
- * @param inWidthStride   input image's width stride, it is `width` for 
+ * @param inWidthStride   input image's width stride, it is `width` for
  *                        cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                        for 2D cudaMallocPitch() allocated data.
  * @param inData          input image data.
@@ -43,7 +43,7 @@ namespace cuda {
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 The size of the output histogram is 256. 
+ *       2 The size of the output histogram is 256.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -76,7 +76,7 @@ namespace cuda {
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   CalcHist<uchar>(stream, height, width, input_pitch / sizeof(uchar), 
+ *   CalcHist<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   dev_input, dev_output);
  *   cudaStreamSynchronize(stream);
  *
@@ -95,7 +95,7 @@ ppl::common::RetCode CalcHist(cudaStream_t stream,
                               const T* inData,
                               int* outHist,
                               int maskWidthStride = 0,
-                              const unsigned char* mask = NULL);
+                              const unsigned char* mask = nullptr);
 
 }  // namespace cuda
 }  // namespace cv

@@ -80,7 +80,7 @@ void addKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst) {
     if (index_x < cols - 1) {
       output_value.y = saturate_cast((int)input_value0.y + input_value1.y);
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       output_value.z = saturate_cast((int)input_value0.z + input_value1.z);
     }
 
@@ -88,7 +88,7 @@ void addKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst) {
     if (index_x < cols - 1) {
       dst[index_x + 1] = output_value.y;
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       dst[index_x + 2] = output_value.z;
     }
   }
@@ -139,7 +139,7 @@ void addKernel11(const uchar* src0, int rows, int cols, int src0_stride,
     if (index_x < cols - 1) {
       input_value01 = input0[index_x + 1];
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       input_value02 = input0[index_x + 2];
     }
 
@@ -147,7 +147,7 @@ void addKernel11(const uchar* src0, int rows, int cols, int src0_stride,
     if (index_x < cols - 1) {
       input_value11 = input1[index_x + 1];
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       input_value12 = input1[index_x + 2];
     }
 
@@ -155,7 +155,7 @@ void addKernel11(const uchar* src0, int rows, int cols, int src0_stride,
     if (index_x < cols - 1) {
       output_value1 = input_value01 + input_value11;
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       output_value2 = input_value02 + input_value12;
     }
 
@@ -163,7 +163,7 @@ void addKernel11(const uchar* src0, int rows, int cols, int src0_stride,
     if (index_x < cols - 1) {
       output[index_x + 1] = saturate_cast(output_value1);
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       output[index_x + 2] = saturate_cast(output_value2);
     }
   }
@@ -899,7 +899,7 @@ void subtractKernel10(const T0* src, int cols, int channels, T0 scalar0,
       if (index_x < cols - 1) {
         output_value.y = saturate_cast(input_value.y - value1);
       }
-      if ((index_x < cols - 2)) {
+      if (index_x < cols - 2) {
         output_value.z = saturate_cast(input_value.z - value2);
       }
     }
@@ -908,7 +908,7 @@ void subtractKernel10(const T0* src, int cols, int channels, T0 scalar0,
       if (index_x < cols - 1) {
         output_value.y = input_value.y - value1;
       }
-      if ((index_x < cols - 2)) {
+      if (index_x < cols - 2) {
         output_value.z = input_value.z - value2;
       }
     }
@@ -917,7 +917,7 @@ void subtractKernel10(const T0* src, int cols, int channels, T0 scalar0,
     if (index_x < cols - 1) {
       dst[index_x + 1] = output_value.y;
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       dst[index_x + 2] = output_value.z;
     }
   }
@@ -1333,7 +1333,7 @@ void multiplyKernel10(const uchar* src0, int cols, const uchar* src1,
       if (index_x < cols - 1) {
         output_value.y = input_value0.y * input_value1.y;
       }
-      if ((index_x < cols - 2)) {
+      if (index_x < cols - 2) {
         output_value.z = input_value0.z * input_value1.z;
       }
     }
@@ -1342,7 +1342,7 @@ void multiplyKernel10(const uchar* src0, int cols, const uchar* src1,
       if (index_x < cols - 1) {
         output_value.y = input_value0.y * input_value1.y * scale;
       }
-      if ((index_x < cols - 2)) {
+      if (index_x < cols - 2) {
         output_value.z = input_value0.z * input_value1.z * scale;
       }
     }
@@ -1351,7 +1351,7 @@ void multiplyKernel10(const uchar* src0, int cols, const uchar* src1,
     if (index_x < cols - 1) {
       dst[index_x + 1] = saturate_cast(output_value.y);
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       dst[index_x + 2] = saturate_cast(output_value.z);
     }
   }
@@ -1763,7 +1763,7 @@ void divideKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst,
         output_value.y = input_value1.y == 0 ? 0 :
                            input_value0.y / input_value1.y;
       }
-      if ((index_x < cols - 2)) {
+      if (index_x < cols - 2) {
         output_value.z = input_value1.z == 0 ? 0 :
                            input_value0.z / input_value1.z;
       }
@@ -1775,7 +1775,7 @@ void divideKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst,
         output_value.y = input_value1.y == 0 ? 0 :
                            scale * input_value0.y / input_value1.y;
       }
-      if ((index_x < cols - 2)) {
+      if (index_x < cols - 2) {
         output_value.z = input_value1.z == 0 ? 0 :
                            scale * input_value0.z / input_value1.z;
       }
@@ -1785,7 +1785,7 @@ void divideKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst,
     if (index_x < cols - 1) {
       dst[index_x + 1] = saturate_cast(output_value.y);
     }
-    if ((index_x < cols - 2)) {
+    if (index_x < cols - 2) {
       dst[index_x + 2] = saturate_cast(output_value.z);
     }
   }
