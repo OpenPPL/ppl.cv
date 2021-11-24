@@ -28,12 +28,12 @@ namespace cuda {
 
 __global__
 void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
-                            int channels, int src_stride, uchar* dst,
-                            int dst_rows, int dst_cols, int dst_stride,
-                            float coeffe0, float coeffe1, float coeffe2,
-                            float coeffe3, float coeffe4, float coeffe5,
-                            float coeffe6, float coeffe7, float coeffe8,
-                            BorderType border_type, uchar border_value) {
+                                 int channels, int src_stride, uchar* dst,
+                                 int dst_rows, int dst_cols, int dst_stride,
+                                 float coeffe0, float coeffe1, float coeffe2,
+                                 float coeffe3, float coeffe4, float coeffe5,
+                                 float coeffe6, float coeffe7, float coeffe8,
+                                 BorderType border_type, uchar border_value) {
   int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= dst_rows || element_x >= dst_cols) {
@@ -264,12 +264,12 @@ void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
 
 __global__
 void warpPerspectiveLinearKernel(const float* src, int src_rows, int src_cols,
-                            int channels, int src_stride, float* dst,
-                            int dst_rows, int dst_cols, int dst_stride,
-                            float coeffe0, float coeffe1, float coeffe2,
-                            float coeffe3, float coeffe4, float coeffe5,
-                            float coeffe6, float coeffe7, float coeffe8,
-                            BorderType border_type, float border_value) {
+                                 int channels, int src_stride, float* dst,
+                                 int dst_rows, int dst_cols, int dst_stride,
+                                 float coeffe0, float coeffe1, float coeffe2,
+                                 float coeffe3, float coeffe4, float coeffe5,
+                                 float coeffe6, float coeffe7, float coeffe8,
+                                 BorderType border_type, float border_value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= dst_rows || element_x >= dst_cols) {
@@ -449,10 +449,10 @@ void warpPerspectiveLinearKernel(const float* src, int src_rows, int src_cols,
 }
 
 RetCode warpPerspectiveLinear(const uchar* src, int src_rows, int src_cols,
-                         int channels, int src_stride, uchar* dst, int dst_rows,
-                         int dst_cols, int dst_stride,
-                         const float* affine_matrix, BorderType border_type,
-                         uchar border_value, cudaStream_t stream) {
+                              int channels, int src_stride, uchar* dst,
+                              int dst_rows, int dst_cols, int dst_stride,
+                              const float* affine_matrix, BorderType border_type,
+                              uchar border_value, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(src != dst);
@@ -488,10 +488,10 @@ RetCode warpPerspectiveLinear(const uchar* src, int src_rows, int src_cols,
 }
 
 RetCode warpPerspectiveLinear(const float* src, int src_rows, int src_cols,
-                         int channels, int src_stride, float* dst, int dst_rows,
-                         int dst_cols, int dst_stride,
-                         const float* affine_matrix, BorderType border_type,
-                         float border_value, cudaStream_t stream) {
+                              int channels, int src_stride, float* dst,
+                              int dst_rows, int dst_cols, int dst_stride,
+                              const float* affine_matrix, BorderType border_type,
+                              float border_value, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(src != dst);
@@ -528,126 +528,126 @@ RetCode warpPerspectiveLinear(const float* src, int src_rows, int src_cols,
 
 template <>
 RetCode WarpPerspectiveLinear<uchar, 1>(cudaStream_t stream,
-                                   int inHeight,
-                                   int inWidth,
-                                   int inWidthStride,
-                                   const uchar* inData,
-                                   int outHeight,
-                                   int outWidth,
-                                   int outWidthStride,
-                                   uchar* outData,
-                                   const float* affineMatrix,
-                                   BorderType borderType,
-                                   uchar borderValue) {
-  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 1, inWidthStride,
-                                  outData, outHeight, outWidth, outWidthStride,
-                                  affineMatrix, borderType, borderValue,
-                                  stream);
+                                        int inHeight,
+                                        int inWidth,
+                                        int inWidthStride,
+                                        const uchar* inData,
+                                        int outHeight,
+                                        int outWidth,
+                                        int outWidthStride,
+                                        uchar* outData,
+                                        const float* affineMatrix,
+                                        BorderType borderType,
+                                        uchar borderValue) {
+  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 1,
+                     inWidthStride, outData, outHeight, outWidth,
+                     outWidthStride, affineMatrix, borderType, borderValue,
+                     stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveLinear<uchar, 3>(cudaStream_t stream,
-                                   int inHeight,
-                                   int inWidth,
-                                   int inWidthStride,
-                                   const uchar* inData,
-                                   int outHeight,
-                                   int outWidth,
-                                   int outWidthStride,
-                                   uchar* outData,
-                                   const float* affineMatrix,
-                                   BorderType borderType,
-                                   uchar borderValue) {
-  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 3, inWidthStride,
-                                  outData, outHeight, outWidth, outWidthStride,
-                                  affineMatrix, borderType, borderValue,
-                                  stream);
+                                        int inHeight,
+                                        int inWidth,
+                                        int inWidthStride,
+                                        const uchar* inData,
+                                        int outHeight,
+                                        int outWidth,
+                                        int outWidthStride,
+                                        uchar* outData,
+                                        const float* affineMatrix,
+                                        BorderType borderType,
+                                        uchar borderValue) {
+  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 3,
+                     inWidthStride, outData, outHeight, outWidth,
+                     outWidthStride, affineMatrix, borderType, borderValue,
+                     stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveLinear<uchar, 4>(cudaStream_t stream,
-                                   int inHeight,
-                                   int inWidth,
-                                   int inWidthStride,
-                                   const uchar* inData,
-                                   int outHeight,
-                                   int outWidth,
-                                   int outWidthStride,
-                                   uchar* outData,
-                                   const float* affineMatrix,
-                                   BorderType borderType,
-                                   uchar borderValue) {
-  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 4, inWidthStride,
-                                  outData, outHeight, outWidth, outWidthStride,
-                                  affineMatrix, borderType, borderValue,
-                                  stream);
+                                        int inHeight,
+                                        int inWidth,
+                                        int inWidthStride,
+                                        const uchar* inData,
+                                        int outHeight,
+                                        int outWidth,
+                                        int outWidthStride,
+                                        uchar* outData,
+                                        const float* affineMatrix,
+                                        BorderType borderType,
+                                        uchar borderValue) {
+  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 4,
+                     inWidthStride, outData, outHeight, outWidth,
+                     outWidthStride, affineMatrix, borderType, borderValue,
+                     stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveLinear<float, 1>(cudaStream_t stream,
-                                   int inHeight,
-                                   int inWidth,
-                                   int inWidthStride,
-                                   const float* inData,
-                                   int outHeight,
-                                   int outWidth,
-                                   int outWidthStride,
-                                   float* outData,
-                                   const float* affineMatrix,
-                                   BorderType borderType,
-                                   float borderValue) {
-  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 1, inWidthStride,
-                                  outData, outHeight, outWidth, outWidthStride,
-                                  affineMatrix, borderType, borderValue,
-                                  stream);
+                                        int inHeight,
+                                        int inWidth,
+                                        int inWidthStride,
+                                        const float* inData,
+                                        int outHeight,
+                                        int outWidth,
+                                        int outWidthStride,
+                                        float* outData,
+                                        const float* affineMatrix,
+                                        BorderType borderType,
+                                        float borderValue) {
+  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 1,
+                     inWidthStride, outData, outHeight, outWidth,
+                     outWidthStride, affineMatrix, borderType, borderValue,
+                     stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveLinear<float, 3>(cudaStream_t stream,
-                                   int inHeight,
-                                   int inWidth,
-                                   int inWidthStride,
-                                   const float* inData,
-                                   int outHeight,
-                                   int outWidth,
-                                   int outWidthStride,
-                                   float* outData,
-                                   const float* affineMatrix,
-                                   BorderType borderType,
-                                   float borderValue) {
-  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 3, inWidthStride,
-                                  outData, outHeight, outWidth, outWidthStride,
-                                  affineMatrix, borderType, borderValue,
-                                  stream);
+                                        int inHeight,
+                                        int inWidth,
+                                        int inWidthStride,
+                                        const float* inData,
+                                        int outHeight,
+                                        int outWidth,
+                                        int outWidthStride,
+                                        float* outData,
+                                        const float* affineMatrix,
+                                        BorderType borderType,
+                                        float borderValue) {
+  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 3,
+                     inWidthStride, outData, outHeight, outWidth,
+                     outWidthStride, affineMatrix, borderType, borderValue,
+                     stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveLinear<float, 4>(cudaStream_t stream,
-                                   int inHeight,
-                                   int inWidth,
-                                   int inWidthStride,
-                                   const float* inData,
-                                   int outHeight,
-                                   int outWidth,
-                                   int outWidthStride,
-                                   float* outData,
-                                   const float* affineMatrix,
-                                   BorderType borderType,
-                                   float borderValue) {
-  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 4, inWidthStride,
-                                  outData, outHeight, outWidth, outWidthStride,
-                                  affineMatrix, borderType, borderValue,
-                                  stream);
+                                        int inHeight,
+                                        int inWidth,
+                                        int inWidthStride,
+                                        const float* inData,
+                                        int outHeight,
+                                        int outWidth,
+                                        int outWidthStride,
+                                        float* outData,
+                                        const float* affineMatrix,
+                                        BorderType borderType,
+                                        float borderValue) {
+  RetCode code = warpPerspectiveLinear(inData, inHeight, inWidth, 4,
+                     inWidthStride, outData, outHeight, outWidth,
+                     outWidthStride, affineMatrix, borderType, borderValue,
+                     stream);
 
   return code;
 }
@@ -656,13 +656,13 @@ RetCode WarpPerspectiveLinear<float, 4>(cudaStream_t stream,
 
 template <typename T0, typename T1>
 __global__
-void warpPerspectiveNearestPointKernel(const T1* src, int src_rows, int src_cols,
-                                  int channels, int src_stride, T1* dst,
-                                  int dst_rows, int dst_cols, int dst_stride,
-                                  float coeffe0, float coeffe1, float coeffe2,
-                                  float coeffe3, float coeffe4, float coeffe5,
-                                  float coeffe6, float coeffe7, float coeffe8,
-                                  BorderType border_type, T0 border_value) {
+void warpPerspectiveNNKernel(const T1* src, int src_rows, int src_cols,
+                             int channels, int src_stride, T1* dst,
+                             int dst_rows, int dst_cols, int dst_stride,
+                             float coeffe0, float coeffe1, float coeffe2,
+                             float coeffe3, float coeffe4, float coeffe5,
+                             float coeffe6, float coeffe7, float coeffe8,
+                             BorderType border_type, T0 border_value) {
   int element_x, element_y;
   if (sizeof(T1) == 1) {
     element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
@@ -714,12 +714,12 @@ void warpPerspectiveNearestPointKernel(const T1* src, int src_rows, int src_cols
   }
 }
 
-RetCode warpPerspectiveNearestPoint(const uchar* src, int src_rows, int src_cols,
-                               int channels, int src_stride, uchar* dst,
-                               int dst_rows, int dst_cols, int dst_stride,
-                               const float* affine_matrix,
-                               BorderType border_type, uchar border_value,
-                               cudaStream_t stream) {
+RetCode warpPerspectiveNN(const uchar* src, int src_rows, int src_cols,
+                          int channels, int src_stride, uchar* dst,
+                          int dst_rows, int dst_cols, int dst_stride,
+                          const float* affine_matrix,
+                          BorderType border_type, uchar border_value,
+                          cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(src != dst);
@@ -740,7 +740,7 @@ RetCode warpPerspectiveNearestPoint(const uchar* src, int src_rows, int src_cols
   grid.y  = divideUp(dst_rows, kBlockDimY0, kBlockShiftY0);
 
   if (channels == 1) {
-    warpPerspectiveNearestPointKernel<uchar, uchar><<<grid, block, 0, stream>>>(src,
+    warpPerspectiveNNKernel<uchar, uchar><<<grid, block, 0, stream>>>(src,
         src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
         dst_stride, affine_matrix[0], affine_matrix[1], affine_matrix[2],
         affine_matrix[3], affine_matrix[4], affine_matrix[5], affine_matrix[6],
@@ -749,7 +749,7 @@ RetCode warpPerspectiveNearestPoint(const uchar* src, int src_rows, int src_cols
   else if (channels == 3) {
     uchar3 border_value1 = make_uchar3(border_value, border_value,
                                        border_value);
-    warpPerspectiveNearestPointKernel<uchar3, uchar><<<grid, block, 0, stream>>>(src,
+    warpPerspectiveNNKernel<uchar3, uchar><<<grid, block, 0, stream>>>(src,
         src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
         dst_stride, affine_matrix[0], affine_matrix[1], affine_matrix[2],
         affine_matrix[3], affine_matrix[4], affine_matrix[5], affine_matrix[6],
@@ -758,7 +758,7 @@ RetCode warpPerspectiveNearestPoint(const uchar* src, int src_rows, int src_cols
   else {
     uchar4 border_value1 = make_uchar4(border_value, border_value,
                                        border_value, border_value);
-    warpPerspectiveNearestPointKernel<uchar4, uchar><<<grid, block, 0, stream>>>(src,
+    warpPerspectiveNNKernel<uchar4, uchar><<<grid, block, 0, stream>>>(src,
         src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
         dst_stride, affine_matrix[0], affine_matrix[1], affine_matrix[2],
         affine_matrix[3], affine_matrix[4], affine_matrix[5], affine_matrix[6],
@@ -774,12 +774,12 @@ RetCode warpPerspectiveNearestPoint(const uchar* src, int src_rows, int src_cols
   return RC_SUCCESS;
 }
 
-RetCode warpPerspectiveNearestPoint(const float* src, int src_rows, int src_cols,
-                               int channels, int src_stride, float* dst,
-                               int dst_rows, int dst_cols, int dst_stride,
-                               const float* affine_matrix,
-                               BorderType border_type, float border_value,
-                               cudaStream_t stream) {
+RetCode warpPerspectiveNN(const float* src, int src_rows, int src_cols,
+                          int channels, int src_stride, float* dst,
+                          int dst_rows, int dst_cols, int dst_stride,
+                          const float* affine_matrix,
+                          BorderType border_type, float border_value,
+                          cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(src != dst);
@@ -800,7 +800,7 @@ RetCode warpPerspectiveNearestPoint(const float* src, int src_rows, int src_cols
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
   if (channels == 1) {
-    warpPerspectiveNearestPointKernel<float, float><<<grid, block, 0, stream>>>(src,
+    warpPerspectiveNNKernel<float, float><<<grid, block, 0, stream>>>(src,
         src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
         dst_stride, affine_matrix[0], affine_matrix[1], affine_matrix[2],
         affine_matrix[3], affine_matrix[4], affine_matrix[5], affine_matrix[6],
@@ -809,7 +809,7 @@ RetCode warpPerspectiveNearestPoint(const float* src, int src_rows, int src_cols
   else if (channels == 3) {
     float3 border_value1 = make_float3(border_value, border_value,
                                        border_value);
-    warpPerspectiveNearestPointKernel<float3, float><<<grid, block, 0, stream>>>(src,
+    warpPerspectiveNNKernel<float3, float><<<grid, block, 0, stream>>>(src,
         src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
         dst_stride, affine_matrix[0], affine_matrix[1], affine_matrix[2],
         affine_matrix[3], affine_matrix[4], affine_matrix[5], affine_matrix[6],
@@ -818,7 +818,7 @@ RetCode warpPerspectiveNearestPoint(const float* src, int src_rows, int src_cols
   else {
     float4 border_value1 = make_float4(border_value, border_value,
                                        border_value, border_value);
-    warpPerspectiveNearestPointKernel<float4, float><<<grid, block, 0, stream>>>(src,
+    warpPerspectiveNNKernel<float4, float><<<grid, block, 0, stream>>>(src,
         src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
         dst_stride, affine_matrix[0], affine_matrix[1], affine_matrix[2],
         affine_matrix[3], affine_matrix[4], affine_matrix[5], affine_matrix[6],
@@ -836,126 +836,126 @@ RetCode warpPerspectiveNearestPoint(const float* src, int src_rows, int src_cols
 
 template <>
 RetCode WarpPerspectiveNearestPoint<uchar, 1>(cudaStream_t stream,
-                                         int inHeight,
-                                         int inWidth,
-                                         int inWidthStride,
-                                         const uchar* inData,
-                                         int outHeight,
-                                         int outWidth,
-                                         int outWidthStride,
-                                         uchar* outData,
-                                         const float* affineMatrix,
-                                         BorderType borderType,
-                                         uchar borderValue) {
-  RetCode code = warpPerspectiveNearestPoint(inData, inHeight, inWidth, 1,
-                                        inWidthStride, outData, outHeight,
-                                        outWidth, outWidthStride, affineMatrix,
-                                        borderType, borderValue, stream);
+                                              int inHeight,
+                                              int inWidth,
+                                              int inWidthStride,
+                                              const uchar* inData,
+                                              int outHeight,
+                                              int outWidth,
+                                              int outWidthStride,
+                                              uchar* outData,
+                                              const float* affineMatrix,
+                                              BorderType borderType,
+                                              uchar borderValue) {
+  RetCode code = warpPerspectiveNN(inData, inHeight, inWidth, 1,
+                                   inWidthStride, outData, outHeight,
+                                   outWidth, outWidthStride, affineMatrix,
+                                   borderType, borderValue, stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveNearestPoint<uchar, 3>(cudaStream_t stream,
-                                         int inHeight,
-                                         int inWidth,
-                                         int inWidthStride,
-                                         const uchar* inData,
-                                         int outHeight,
-                                         int outWidth,
-                                         int outWidthStride,
-                                         uchar* outData,
-                                         const float* affineMatrix,
-                                         BorderType borderType,
-                                         uchar borderValue) {
-  RetCode code = warpPerspectiveNearestPoint(inData, inHeight, inWidth, 3,
-                                        inWidthStride, outData, outHeight,
-                                        outWidth, outWidthStride, affineMatrix,
-                                        borderType, borderValue, stream);
+                                              int inHeight,
+                                              int inWidth,
+                                              int inWidthStride,
+                                              const uchar* inData,
+                                              int outHeight,
+                                              int outWidth,
+                                              int outWidthStride,
+                                              uchar* outData,
+                                              const float* affineMatrix,
+                                              BorderType borderType,
+                                              uchar borderValue) {
+  RetCode code = warpPerspectiveNN(inData, inHeight, inWidth, 3,
+                                   inWidthStride, outData, outHeight,
+                                   outWidth, outWidthStride, affineMatrix,
+                                   borderType, borderValue, stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveNearestPoint<uchar, 4>(cudaStream_t stream,
-                                         int inHeight,
-                                         int inWidth,
-                                         int inWidthStride,
-                                         const uchar* inData,
-                                         int outHeight,
-                                         int outWidth,
-                                         int outWidthStride,
-                                         uchar* outData,
-                                         const float* affineMatrix,
-                                         BorderType borderType,
-                                         uchar borderValue) {
-  RetCode code = warpPerspectiveNearestPoint(inData, inHeight, inWidth, 4,
-                                        inWidthStride, outData, outHeight,
-                                        outWidth, outWidthStride, affineMatrix,
-                                        borderType, borderValue, stream);
+                                              int inHeight,
+                                              int inWidth,
+                                              int inWidthStride,
+                                              const uchar* inData,
+                                              int outHeight,
+                                              int outWidth,
+                                              int outWidthStride,
+                                              uchar* outData,
+                                              const float* affineMatrix,
+                                              BorderType borderType,
+                                              uchar borderValue) {
+  RetCode code = warpPerspectiveNN(inData, inHeight, inWidth, 4,
+                                   inWidthStride, outData, outHeight,
+                                   outWidth, outWidthStride, affineMatrix,
+                                   borderType, borderValue, stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveNearestPoint<float, 1>(cudaStream_t stream,
-                                         int inHeight,
-                                         int inWidth,
-                                         int inWidthStride,
-                                         const float* inData,
-                                         int outHeight,
-                                         int outWidth,
-                                         int outWidthStride,
-                                         float* outData,
-                                         const float* affineMatrix,
-                                         BorderType borderType,
-                                         float borderValue) {
-  RetCode code = warpPerspectiveNearestPoint(inData, inHeight, inWidth, 1,
-                                        inWidthStride, outData, outHeight,
-                                        outWidth, outWidthStride, affineMatrix,
-                                        borderType, borderValue, stream);
+                                              int inHeight,
+                                              int inWidth,
+                                              int inWidthStride,
+                                              const float* inData,
+                                              int outHeight,
+                                              int outWidth,
+                                              int outWidthStride,
+                                              float* outData,
+                                              const float* affineMatrix,
+                                              BorderType borderType,
+                                              float borderValue) {
+  RetCode code = warpPerspectiveNN(inData, inHeight, inWidth, 1,
+                                   inWidthStride, outData, outHeight,
+                                   outWidth, outWidthStride, affineMatrix,
+                                   borderType, borderValue, stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveNearestPoint<float, 3>(cudaStream_t stream,
-                                         int inHeight,
-                                         int inWidth,
-                                         int inWidthStride,
-                                         const float* inData,
-                                         int outHeight,
-                                         int outWidth,
-                                         int outWidthStride,
-                                         float* outData,
-                                         const float* affineMatrix,
-                                         BorderType borderType,
-                                         float borderValue) {
-  RetCode code = warpPerspectiveNearestPoint(inData, inHeight, inWidth, 3,
-                                        inWidthStride, outData, outHeight,
-                                        outWidth, outWidthStride, affineMatrix,
-                                        borderType, borderValue, stream);
+                                              int inHeight,
+                                              int inWidth,
+                                              int inWidthStride,
+                                              const float* inData,
+                                              int outHeight,
+                                              int outWidth,
+                                              int outWidthStride,
+                                              float* outData,
+                                              const float* affineMatrix,
+                                              BorderType borderType,
+                                              float borderValue) {
+  RetCode code = warpPerspectiveNN(inData, inHeight, inWidth, 3,
+                                   inWidthStride, outData, outHeight,
+                                   outWidth, outWidthStride, affineMatrix,
+                                   borderType, borderValue, stream);
 
   return code;
 }
 
 template <>
 RetCode WarpPerspectiveNearestPoint<float, 4>(cudaStream_t stream,
-                                         int inHeight,
-                                         int inWidth,
-                                         int inWidthStride,
-                                         const float* inData,
-                                         int outHeight,
-                                         int outWidth,
-                                         int outWidthStride,
-                                         float* outData,
-                                         const float* affineMatrix,
-                                         BorderType borderType,
-                                         float borderValue) {
-  RetCode code = warpPerspectiveNearestPoint(inData, inHeight, inWidth, 4,
-                                        inWidthStride, outData, outHeight,
-                                        outWidth, outWidthStride, affineMatrix,
-                                        borderType, borderValue, stream);
+                                              int inHeight,
+                                              int inWidth,
+                                              int inWidthStride,
+                                              const float* inData,
+                                              int outHeight,
+                                              int outWidth,
+                                              int outWidthStride,
+                                              float* outData,
+                                              const float* affineMatrix,
+                                              BorderType borderType,
+                                              float borderValue) {
+  RetCode code = warpPerspectiveNN(inData, inHeight, inWidth, 4,
+                                   inWidthStride, outData, outHeight,
+                                   outWidth, outWidthStride, affineMatrix,
+                                   borderType, borderValue, stream);
 
   return code;
 }

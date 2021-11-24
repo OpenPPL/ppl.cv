@@ -103,7 +103,7 @@ ppl::common::RetCode Mean(cudaStream_t stream,
                           const T* inData,
                           float* outMean,
                           int maskWidthStride = 0,
-                          const unsigned char* mask = NULL,
+                          const unsigned char* mask = nullptr,
                           bool channelWise = true);
 
 }  // namespace cuda
