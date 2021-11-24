@@ -28,8 +28,8 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 enum MaskType {
-  UNMASKED,
-  MASKED,
+  kUnmasked,
+  kMasked,
 };
 
 using Parameters = std::tuple<MaskType, cv::Size>;
@@ -37,7 +37,7 @@ inline std::string convertToString(const Parameters& parameters) {
   std::ostringstream formatted;
 
   MaskType is_masked = std::get<0>(parameters);
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     formatted << "Unmasked" << "_";
   }
   else {
@@ -99,7 +99,7 @@ bool PplCvCudaMinMaxLocTest<T>::apply() {
   T max_value1, max_value2;
   int min_index_x, min_index_y, max_index_x, max_index_y;
   int min_index_x2, min_index_y2, max_index_x2, max_index_y2;
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     cv::minMaxLoc(src, &min_value0, &max_value0, &minLoc, &maxLoc);
     MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                  (T*)gpu_src.data, &min_value1, &max_value1, &min_index_x,
@@ -152,7 +152,7 @@ TEST_P(PplCvCudaMinMaxLocTest ## T, Standard) {                                \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaMinMaxLocTest ## T,                  \
   ::testing::Combine(                                                          \
-    ::testing::Values(UNMASKED, MASKED),                                       \
+    ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

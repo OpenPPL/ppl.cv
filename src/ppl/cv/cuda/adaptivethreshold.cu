@@ -15,7 +15,7 @@
  */
 
 #include "ppl/cv/cuda/adaptivethreshold.h"
-#include "ppl/cv/cuda/zeros.h"
+#include "ppl/cv/cuda/setvalue.h"
 
 #include <cmath>
 

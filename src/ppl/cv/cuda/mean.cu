@@ -25,7 +25,7 @@ namespace cuda {
 typedef unsigned char uchar;
 
 template<typename T>
-__host__ __device__ inline T divUp(T a, T b){
+__host__ __device__ inline T divUp(T a, T b) {
     return (a + b - 1) / b;
 }
 

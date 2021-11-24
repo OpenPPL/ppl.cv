@@ -337,7 +337,7 @@ RetCode resizeLinear(const uchar* src, int src_rows, int src_cols, int channels,
   const int kBlockY = 16;
   dim3 block(kBlockX, kBlockY);
   dim3 grid;
-  grid.x = (dst_cols + kBlockX -1) / kBlockX;
+  grid.x = (dst_cols + kBlockX - 1) / kBlockX;
   grid.y = (dst_rows + kBlockY - 1) / kBlockY;
 
   float col_scale = (double)src_cols / dst_cols;
@@ -385,7 +385,7 @@ RetCode resizeLinear(const float* src, int src_rows, int src_cols, int channels,
   const int kBlockY = 4;
   dim3 block(kBlockX, kBlockY);
   dim3 grid;
-  grid.x = (dst_cols + kBlockX -1) / kBlockX;
+  grid.x = (dst_cols + kBlockX - 1) / kBlockX;
   grid.y = (dst_rows + kBlockY - 1) / kBlockY;
 
   double col_scale = (double)src_cols / dst_cols;
@@ -560,7 +560,7 @@ RetCode resizeNearestPoint(const uchar* src, int src_rows, int src_cols,
   const int kBlockY = 4;
   dim3 block(kBlockX, kBlockY);
   dim3 grid;
-  grid.x = (dst_cols + kBlockX -1) / kBlockX;
+  grid.x = (dst_cols + kBlockX - 1) / kBlockX;
   grid.y = (dst_rows + kBlockY - 1) / kBlockY;
 
   float col_scale = (double)src_cols / dst_cols;
@@ -621,7 +621,7 @@ RetCode resizeNearestPoint(const float* src, int src_rows, int src_cols,
   const int kBlockY = 4;
   dim3 block(kBlockX, kBlockY);
   dim3 grid;
-  grid.x = (dst_cols + kBlockX -1) / kBlockX;
+  grid.x = (dst_cols + kBlockX - 1) / kBlockX;
   grid.y = (dst_rows + kBlockY - 1) / kBlockY;
 
   float col_scale = (double)src_cols / dst_cols;
@@ -1565,7 +1565,7 @@ RetCode resizeArea(const float* src, int src_rows, int src_cols, int channels,
   const int kBlockY = 16;
   dim3 block(kBlockX, kBlockY);
   dim3 grid;
-  grid.x = (dst_cols + kBlockX -1) / kBlockX;
+  grid.x = (dst_cols + kBlockX - 1) / kBlockX;
   grid.y = (dst_rows + kBlockY - 1) / kBlockY;
 
   double col_scale = (double)src_cols / dst_cols;

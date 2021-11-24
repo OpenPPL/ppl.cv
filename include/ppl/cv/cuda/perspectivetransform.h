@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_MEAN_H_
-#define _ST_HPC_PPL3_CV_CUDA_MEAN_H_
+#ifndef _ST_HPC_PPL3_CV_CUDA_PERSPECTIVETRANSFORM_H_
+#define _ST_HPC_PPL3_CV_CUDA_PERSPECTIVETRANSFORM_H_
 
 #include "cuda_runtime.h"
 
@@ -26,88 +26,84 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Calculates a mean of array elements.
+ * @brief Performs the perspective matrix transformation of vectors.
  * @tparam T The data type of input and output image, currently only
- *         uint8_t(uchar) and float are supported.
- * @tparam channels The number of channels of input&output image, 1, 3 and 4
- *         are supported.
+ *         float is supported.
+ * @tparam srcCns The number of channels of input image, 2 or 3 supported.
+ * @tparam dstCns The number of channels of output image, 2 or 3 supported.
  * @param stream           cuda stream object.
- * @param height           input image's height.
- * @param width            input image's width.
+ * @param height           input&output image's height.
+ * @param width            input&output image's width.
  * @param inWidthStride    input image's width stride, it is `width * channels`
  *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                         for 2D cudaMallocPitch() allocated data.
  * @param inData           input image data.
- * @param outMean          output mean data, its size depends on channel wise,
- *                         1 or channel.
- * @param maskWidthStride  the width stride of mask image, similar to
+ * @param outWidthStride   the width stride of output image, similar to
  *                         inWidthStride.
- * @param mask             specified single-channel array.
- * @param channelWise      uniform or channel wise.
+ * @param outData          output image data.
+ * @param transData        transformation matrix.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
- * @warning All parameters must be valid, or undefined behaviour may occur.
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
- * <tr><th>Data type(T)<th>channels
- * <tr><td>uint8_t(uchar)<td>1
- * <tr><td>uint8_t(uchar)<td>3
- * <tr><td>uint8_t(uchar)<td>4
- * <tr><td>float<td>1
- * <tr><td>float<td>3
- * <tr><td>float<td>4
+ * <tr><th>Data type(T)<th>srcCns<th>dstCns
+ * <tr><td>float<td>2<td>2
+ * <tr><td>float<td>2<td>3
+ * <tr><td>float<td>3<td>2
+ * <tr><td>float<td>3<td>3
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>CUDA platforms supported <td>CUDA 7.0
- * <tr><td>Header files  <td> #include "ppl/cv/cuda/mean.h"
+ * <tr><td>Header files  <td> #include "ppl/cv/cuda/perspectivetransform.h"
  * <tr><td>Project       <td> ppl.cv
  * </table>
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include "ppl/cv/cuda/mean.h"
+ * #include "ppl/cv/cuda/perspectivetransform.h"
  * using namespace ppl::cv::cuda;
  *
  * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
+ *   int src_width  = 320;
+ *   int src_height = 240;
  *   int channels = 3;
  *
  *   float* dev_input;
- *   float* dev_mean;
- *   size_t input_pitch;
+ *   float* dev_output;
+ *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&dev_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMalloc(&dev_mean, channels * sizeof(float));
+ *   cudaMallocPitch(&dev_output, &output_pitch,
+ *                   width * channels * sizeof(float), height);
+ *   float trans_matrix[16];
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   Mean<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                  dev_input, dev_mean);
+ *   PerspectiveTransform<float, 3, 3>(stream, src_height, src_width,
+ *     input_pitch / sizeof(float), dev_input, output_pitch / sizeof(float),
+ *     dev_output, trans_matrix);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);
- *   cudaFree(dev_mean);
+ *   cudaFree(dev_output);
  *
  *   return 0;
  * }
  * @endcode
  */
-template <typename T, int channels>
-ppl::common::RetCode Mean(cudaStream_t stream,
-                          int height,
-                          int width,
-                          int inWidthStride,
-                          const T* inData,
-                          float* outMean,
-                          int maskWidthStride = 0,
-                          const unsigned char* mask = nullptr,
-                          bool channelWise = true);
+template <typename T, int srcCns, int dstCns>
+ppl::common::RetCode PerspectiveTransform(cudaStream_t stream,
+                                          int height,
+                                          int width,
+                                          int inWidthStride,
+                                          const T* inData,
+                                          int outWidthStride,
+                                          T* outData,
+                                          const float* transData);
 
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_MEAN_H_
+#endif  // _ST_HPC_PPL3_CV_CUDA_PERSPECTIVETRANSFORM_H_

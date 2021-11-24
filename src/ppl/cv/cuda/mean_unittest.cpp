@@ -28,8 +28,8 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 enum MaskType {
-  UNMASKED,
-  MASKED,
+  kUnmasked,
+  kMasked,
 };
 
 using Parameters = std::tuple<MaskType, bool, cv::Size>;
@@ -37,7 +37,7 @@ inline std::string convertToStringMean(const Parameters& parameters) {
   std::ostringstream formatted;
 
   MaskType is_masked = std::get<0>(parameters);
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     formatted << "Unmasked" << "_";
   }
   else {
@@ -111,7 +111,7 @@ bool PplCvCudaMeanTest<T, channels>::apply() {
   cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
   cv::Scalar mean_value;
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     mean_value = cv::mean(src);
     // Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
     //                   (T*)gpu_src.data, gpu_dst, 0, nullptr, channel_wise);
@@ -170,7 +170,7 @@ TEST_P(PplCvCudaMeanTest ## T ## channels, Standard) {                         \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaMeanTest ## T ## channels,           \
   ::testing::Combine(                                                          \
-    ::testing::Values(UNMASKED, MASKED),                                       \
+    ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(true, false),                                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \

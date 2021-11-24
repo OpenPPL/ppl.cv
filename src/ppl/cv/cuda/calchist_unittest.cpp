@@ -28,8 +28,8 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 
 enum MaskType {
-  UNMASKED,
-  MASKED,
+  kUnmasked,
+  kMasked,
 };
 
 using Parameters = std::tuple<MaskType, cv::Size>;
@@ -37,7 +37,7 @@ inline std::string convertToStringHist(const Parameters& parameters) {
   std::ostringstream formatted;
 
   MaskType is_masked = std::get<0>(parameters);
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     formatted << "Unmasked" << "_";
   }
   else {
@@ -105,7 +105,7 @@ bool PplCvCudaCalcHistTest<T, channels>::apply() {
   float data_range[2] = {0, 256};
   const float* ranges[1] = {data_range};
 
-  if (is_masked == UNMASKED) {
+  if (is_masked == kUnmasked) {
     cv::calcHist(&src, 1, channel, cv::Mat(), cv_dst1, 1, hist_size, ranges,
                  true, false);
     CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
@@ -156,7 +156,7 @@ TEST_P(PplCvCudaCalcHistTest ## T ## channels, Standard) {                     \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaCalcHistTest ## T ## channels,       \
   ::testing::Combine(                                                          \
-    ::testing::Values(UNMASKED, MASKED),                                       \
+    ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

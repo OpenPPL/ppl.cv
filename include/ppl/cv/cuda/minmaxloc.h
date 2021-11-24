@@ -114,7 +114,7 @@ ppl::common::RetCode MinMaxLoc(cudaStream_t stream,
                                int* maxIdxX,
                                int* maxIdxY,
                                int maskWidthStride = 0,
-                               const unsigned char* mask = NULL);
+                               const unsigned char* mask = nullptr);
 
 }  // namespace cuda
 }  // namespace cv

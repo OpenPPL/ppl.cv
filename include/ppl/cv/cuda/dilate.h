@@ -99,7 +99,7 @@ namespace cuda {
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Dilate<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                    dev_input, 3, 3, NULL, output_pitch / sizeof(float),
+ *                    dev_input, 3, 3, nullptr, output_pitch / sizeof(float),
  *                    dev_output, ppl::cv::BORDER_TYPE_REPLICATE);
  *   cudaStreamSynchronize(stream);
  *

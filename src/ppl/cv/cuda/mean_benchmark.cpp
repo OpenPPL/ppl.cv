@@ -30,8 +30,8 @@ using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum MaskType {
-  UNMASKED,
-  MASKED,
+  kUnmasked,
+  kMasked,
 };
 
 template <typename T, int channels, bool channel_wise, MaskType mask_type>
@@ -62,7 +62,7 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (mask_type == UNMASKED) {
+      if (mask_type == kUnmasked) {
         Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
                           gpu_src.step / sizeof(T), (T*)gpu_src.data,
                           gpu_dst, 0, nullptr, channel_wise);
@@ -132,7 +132,7 @@ void BM_Mean_opencv_x86_cuda(benchmark::State &state) {
   float* dst = (float*)malloc(dst_size);
 
   for (auto _ : state) {
-    if (mask_type == UNMASKED) {
+    if (mask_type == kUnmasked) {
       cv::Scalar mean_value = cv::mean(src);
     }
     else {
@@ -145,9 +145,9 @@ void BM_Mean_opencv_x86_cuda(benchmark::State &state) {
 }
 
 #define RUN_BENCHMARK0(width, height)                                          \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_cuda, uchar, 1, true, UNMASKED)->            \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_cuda, uchar, 1, true, kUnmasked)->           \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, uchar, 1, true, UNMASKED)->               \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, uchar, 1, true, kUnmasked)->              \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
 // RUN_BENCHMARK0(320, 240)
@@ -187,22 +187,22 @@ BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, float, c4, channel_wise,                  \
                    mask_type)->Args({width, height})->UseManualTime()->        \
                    Iterations(10);
 
-// RUN_BENCHMARK1(true, UNMASKED, 320, 240)
-// RUN_BENCHMARK1(true, UNMASKED, 640, 480)
-// RUN_BENCHMARK1(true, UNMASKED, 1280, 720)
-// RUN_BENCHMARK1(true, UNMASKED, 1920, 1080)
-// RUN_BENCHMARK1(true, MASKED, 320, 240)
-// RUN_BENCHMARK1(true, MASKED, 640, 480)
-// RUN_BENCHMARK1(true, MASKED, 1280, 720)
-// RUN_BENCHMARK1(true, MASKED, 1920, 1080)
-// RUN_BENCHMARK1(false, UNMASKED, 320, 240)
-// RUN_BENCHMARK1(false, UNMASKED, 640, 480)
-// RUN_BENCHMARK1(false, UNMASKED, 1280, 720)
-// RUN_BENCHMARK1(false, UNMASKED, 1920, 1080)
-// RUN_BENCHMARK1(false, MASKED, 320, 240)
-// RUN_BENCHMARK1(false, MASKED, 640, 480)
-// RUN_BENCHMARK1(false, MASKED, 1280, 720)
-// RUN_BENCHMARK1(false, MASKED, 1920, 1080)
+// RUN_BENCHMARK1(true, kUnmasked, 320, 240)
+// RUN_BENCHMARK1(true, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(true, kUnmasked, 1280, 720)
+// RUN_BENCHMARK1(true, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(true, kMasked, 320, 240)
+// RUN_BENCHMARK1(true, kMasked, 640, 480)
+// RUN_BENCHMARK1(true, kMasked, 1280, 720)
+// RUN_BENCHMARK1(true, kMasked, 1920, 1080)
+// RUN_BENCHMARK1(false, kUnmasked, 320, 240)
+// RUN_BENCHMARK1(false, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(false, kUnmasked, 1280, 720)
+// RUN_BENCHMARK1(false, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(false, kMasked, 320, 240)
+// RUN_BENCHMARK1(false, kMasked, 640, 480)
+// RUN_BENCHMARK1(false, kMasked, 1280, 720)
+// RUN_BENCHMARK1(false, kMasked, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, channels, channel_wise, mask_type)     \
 BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, channel_wise,      \
@@ -224,52 +224,52 @@ BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, channel_wise, mask_type)->\
 BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, channel_wise, mask_type)->\
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, true, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, true, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, true, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, true, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, true, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, true, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, false, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, false, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, false, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, false, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, false, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, false, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, true, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, true, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, true, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, true, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, true, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, true, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, false, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, false, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, false, MASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, false, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, false, UNMASKED)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, false, UNMASKED)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, true, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, true, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, true, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, true, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, true, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, true, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, false, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, false, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, false, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, false, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, false, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, false, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c1, true, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c3, true, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c4, true, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c1, true, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c3, true, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c4, true, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c1, false, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c3, false, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c4, false, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c1, false, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c3, false, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c4, false, kUnmasked)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, true, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, true, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, true, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, true, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, true, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, true, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, false, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, false, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, false, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, false, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, false, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, false, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, true, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, true, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, true, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, true, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, true, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, true, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, false, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, false, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, false, MASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, false, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, false, UNMASKED)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, false, UNMASKED)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, true, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, true, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, true, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, true, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, true, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, true, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, false, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, false, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, false, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, false, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, false, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, false, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, true, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, true, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, true, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, true, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, true, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, true, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, false, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, false, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, false, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, false, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, false, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, false, kUnmasked)
