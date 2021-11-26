@@ -348,6 +348,26 @@ cv::Mat createSourceImage(int rows, int cols, int type, float begin,
   return image;
 }
 
+inline
+cv::Mat createBinaryImage(int rows, int cols, int type) {
+  AUX_ASSERT(rows >= 1 && cols >= 1);
+  AUX_ASSERT(type == CV_8UC1);
+
+  cv::Mat image(rows, cols, type);
+
+  uchar *element;
+  for (int row = 0; row < rows; ++row) {
+    element = image.ptr<uchar>(row);
+
+    for (int col = 0; col < cols; ++col) {
+      element[0] = rand() % 1;
+      element++;
+    }
+  }
+
+  return image;
+}
+
 template <typename T>
 void copyMatToArray(const cv::Mat& image0, T* image1) {
   AUX_ASSERT(image0.data != nullptr);
