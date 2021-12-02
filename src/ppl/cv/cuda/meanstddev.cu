@@ -15,6 +15,9 @@
  */
 
 #include "ppl/cv/cuda/meanstddev.h"
+#include "mean.hpp"
+
+#include "utility.hpp"
 
 using namespace ppl::common;
 
@@ -22,1009 +25,723 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-typedef unsigned char uchar;
+template <typename Tsrc>
+__global__
+void unmaskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
+                         uint blocks, float* mean_values,
+                         float* stddev_values) {
+  __shared__ float partial_sums[BLOCK_SIZE];
 
-template<typename T>
-__host__ __device__ inline T divUp(T a, T b) {
-    return (a + b - 1) / b;
-}
+  int threadIdx_x = threadIdx.x;
+  int element_x = ((blockIdx.x << BLOCK_SHIFT) + threadIdx_x) << 2;
+  int element_y = blockIdx.y;
+  partial_sums[threadIdx_x] = 0;
 
-//subMeanDivVariance  Mean ImageToTensor
-template<typename T>
-__device__ T shfl_sum(T mySum, int offset, int warpSize);
-template<>
-inline __device__ double4 shfl_sum(double4 mySum, int offset, int warpSize) {
-    double4 res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res.x += __shfl_down_sync(0xffffffff, mySum.x, offset, warpSize);
-        res.y += __shfl_down_sync(0xffffffff, mySum.y, offset, warpSize);
-        res.z += __shfl_down_sync(0xffffffff, mySum.z, offset, warpSize);
-        res.w += __shfl_down_sync(0xffffffff, mySum.w, offset, warpSize);
-    #else
-        res.x += __shfl_down(mySum.x, offset);
-        res.y += __shfl_down(mySum.y, offset);
-        res.z += __shfl_down(mySum.z, offset);
-        res.w += __shfl_down(mySum.w, offset);
-    #endif
-    return res;
-}
+  Tsrc* input;
+  Tsrc value0, value1, value2, value3;
+  float mean = mean_values[0];
 
-template<>
-inline __device__ double3 shfl_sum(double3 mySum, int offset, int warpSize) {
-    double3 res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res.x += __shfl_down_sync(0xffffffff, mySum.x, offset, warpSize);
-        res.y += __shfl_down_sync(0xffffffff, mySum.y, offset, warpSize);
-        res.z += __shfl_down_sync(0xffffffff, mySum.z, offset, warpSize);
-    #else
-        res.x += __shfl_down(mySum.x, offset);
-        res.y += __shfl_down(mySum.y, offset);
-        res.z += __shfl_down(mySum.z, offset);
-    #endif
-    return res;
-}
+  for (; element_y < rows; element_y += gridDim.y) {
+    if (element_x < cols) {
+      input = (Tsrc*)((uchar*)src + element_y * src_stride);
+      value0 = input[element_x];
+      value1 = input[element_x + 1];
+      value2 = input[element_x + 2];
+      value3 = input[element_x + 3];
 
-template<>
-inline __device__ double shfl_sum(double mySum, int offset, int warpSize) {
-    double res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res += __shfl_down_sync(0xffffffff, mySum, offset, warpSize);
-    #else
-        res += __shfl_down(mySum, offset);
-    #endif
-    return res;
-}
-template<>
-inline __device__ float4 shfl_sum(float4 mySum, int offset, int warpSize) {
-    float4 res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res.x += __shfl_down_sync(0xffffffff, mySum.x, offset, warpSize);
-        res.y += __shfl_down_sync(0xffffffff, mySum.y, offset, warpSize);
-        res.z += __shfl_down_sync(0xffffffff, mySum.z, offset, warpSize);
-        res.w += __shfl_down_sync(0xffffffff, mySum.w, offset, warpSize);
-    #else
-        res.x += __shfl_down(mySum.x, offset);
-        res.y += __shfl_down(mySum.y, offset);
-        res.z += __shfl_down(mySum.z, offset);
-        res.w += __shfl_down(mySum.w, offset);
-    #endif
-    return res;
-}
-
-template<>
-inline __device__ float3 shfl_sum(float3 mySum, int offset, int warpSize) {
-    float3 res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res.x += __shfl_down_sync(0xffffffff, mySum.x, offset, warpSize);
-        res.y += __shfl_down_sync(0xffffffff, mySum.y, offset, warpSize);
-        res.z += __shfl_down_sync(0xffffffff, mySum.z, offset, warpSize);
-    #else
-        res.x += __shfl_down(mySum.x, offset);
-        res.y += __shfl_down(mySum.y, offset);
-        res.z += __shfl_down(mySum.z, offset);
-    #endif
-    return res;
-}
-
-template<>
-inline __device__ float shfl_sum(float mySum, int offset, int warpSize) {
-    float res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res += __shfl_down_sync(0xffffffff, mySum, offset, warpSize);
-    #else
-        res += __shfl_down(mySum, offset);
-    #endif
-    return res;
-}
-
-template<>
-inline __device__ uint4 shfl_sum(uint4 mySum, int offset, int warpSize) {
-    uint4 res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res.x += __shfl_down_sync(0xffffffff, mySum.x, offset, warpSize);
-        res.y += __shfl_down_sync(0xffffffff, mySum.y, offset, warpSize);
-        res.z += __shfl_down_sync(0xffffffff, mySum.z, offset, warpSize);
-        res.w += __shfl_down_sync(0xffffffff, mySum.w, offset, warpSize);
-    #else
-        res.x += __shfl_down(mySum.x, offset);
-        res.y += __shfl_down(mySum.y, offset);
-        res.z += __shfl_down(mySum.z, offset);
-        res.w += __shfl_down(mySum.w, offset);
-    #endif
-    return res;
-}
-
-template<>
-inline __device__ uint3 shfl_sum(uint3 mySum, int offset, int warpSize) {
-    uint3 res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res.x += __shfl_down_sync(0xffffffff, mySum.x, offset, warpSize);
-        res.y += __shfl_down_sync(0xffffffff, mySum.y, offset, warpSize);
-        res.z += __shfl_down_sync(0xffffffff, mySum.z, offset, warpSize);
-    #else
-        res.x += __shfl_down(mySum.x, offset);
-        res.y += __shfl_down(mySum.y, offset);
-        res.z += __shfl_down(mySum.z, offset);
-    #endif
-    return res;
-}
-
-template<>
-inline __device__ int shfl_sum(int mySum, int offset, int warpSize) {
-    int res = mySum;
-    #if __CUDACC_VER_MAJOR__ >= 9
-        res += __shfl_down_sync(0xffffffff, mySum, offset, warpSize);
-    #else
-        res += __shfl_down(mySum, offset);
-    #endif
-    return res;
-}
-
-
-template<class T>
-struct SharedMemory
-{
-    __device__ inline operator       T *()
-    {
-        extern __shared__ int __smem[];
-        return (T *)__smem;
-    }
-
-    __device__ inline operator const T *() const
-    {
-        extern __shared__ int __smem[];
-        return (T *)__smem;
-    }
-};
-
-inline  __device__ double4 operator+(double4 a, uint4 b)
-{
-    return make_double4(a.x + __uint2double_rn(b.x), a.y +
-                        __uint2double_rn(b.y), a.z + __uint2double_rn(b.z),
-                        a.w + __uint2double_rn(b.w));
-}
-inline  __device__ double3 operator+(double3 a, uint3 b)
-{
-    return make_double3(a.x + __uint2double_rn(b.x), a.y +
-                        __uint2double_rn(b.y), a.z + __uint2double_rn(b.z));
-}
-inline  __device__ double4 operator+(double4 a, uchar4 b)
-{
-    return make_double4(a.x + __uint2double_rn(b.x), a.y +
-                        __uint2double_rn(b.y), a.z + __uint2double_rn(b.z),
-                        a.w + __uint2double_rn(b.w));
-}
-inline  __device__ double3 operator+(double3 a, uchar3 b)
-{
-    return make_double3(a.x + __uint2double_rn(b.x), a.y +
-                        __uint2double_rn(b.y), a.z + __uint2double_rn(b.z));
-}
-inline  __device__ double4 operator+(double4 a, double4 b)
-{
-    return make_double4(a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w);
-}
-inline  __device__ double3 operator+(double3 a, double3 b)
-{
-    return make_double3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-
-
-
-inline  __device__ float4 operator+(float4 a, uint4 b)
-{
-    return make_float4(a.x + __uint2float_rn(b.x), a.y +
-                       __uint2float_rn(b.y), a.z + __uint2float_rn(b.z),
-                       a.w + __uint2float_rn(b.w));
-}
-inline  __device__ float3 operator+(float3 a, uint3 b)
-{
-    return make_float3(a.x + __uint2float_rn(b.x), a.y +
-                       __uint2float_rn(b.y), a.z + __uint2float_rn(b.z));
-}
-inline  __device__ float4 operator+(float4 a, uchar4 b)
-{
-    return make_float4(a.x + __uint2float_rn(b.x), a.y +
-                       __uint2float_rn(b.y), a.z + __uint2float_rn(b.z),
-                       a.w + __uint2float_rn(b.w));
-}
-inline  __device__ float3 operator+(float3 a, uchar3 b)
-{
-    return make_float3(a.x + __uint2float_rn(b.x), a.y +
-                       __uint2float_rn(b.y), a.z + __uint2float_rn(b.z));
-}
-inline  __device__ float4 operator+(float4 a, float4 b)
-{
-    return make_float4(a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w);
-}
-inline  __device__ float3 operator+(float3 a, float3 b)
-{
-    return make_float3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-inline  __device__ uchar4 operator+(uchar4 a, uchar4 b)
-{
-    return make_uchar4(a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w);
-}
-inline  __device__ uchar3 operator+(uchar3 a, uchar3 b)
-{
-    return make_uchar3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-inline  __device__ uint4 operator+(uint4 a, uchar4 b)
-{
-    return make_uint4(a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w);
-}
-inline  __device__ uint3 operator+(uint3 a, uchar3 b)
-{
-    return make_uint3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-inline  __device__ uint4 operator+(uint4 a, uint4 b)
-{
-    return make_uint4(a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w);
-}
-inline  __device__ uint3 operator+(uint3 a, uint3 b)
-{
-    return make_uint3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-
-inline  __device__ double4 operator*(double4 a, double4 b)
-{
-    return make_double4(a.x * b.x, a.y * b.y, a.z * b.z,  a.w * b.w);
-}
-inline  __device__ double3 operator*(double3 a, double3 b)
-{
-    return make_double3(a.x * b.x, a.y * b.y, a.z * b.z);
-}
-
-inline  __device__ float4 operator*(float4 a, float4 b)
-{
-    return make_float4(a.x * b.x, a.y * b.y, a.z * b.z,  a.w * b.w);
-}
-inline  __device__ float3 operator*(float3 a, float3 b)
-{
-    return make_float3(a.x * b.x, a.y * b.y, a.z * b.z);
-}
-inline  __device__ uint4 operator*(uchar4 a, uchar4 b)
-{
-    return make_uint4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
-}
-inline  __device__ uint3 operator*(uchar3 a, uchar3 b)
-{
-    return make_uint3(a.x * b.x, a.y * b.y, a.z * b.z);
-}
-inline  __device__ uint4 operator*(uint4 a, uchar4 b)
-{
-    return make_uint4(a.x * b.x, a.y * b.y, a.z * b.z,  a.w * b.w);
-}
-inline  __device__ uint3 operator*(uint3 a, uchar3 b)
-{
-    return make_uint3(a.x * b.x, a.y * b.y, a.z * b.z);
-}
-inline  __device__ uint4 operator*(uint4 a, uint4 b)
-{
-    return make_uint4(a.x * b.x, a.y * b.y, a.z * b.z,  a.w * b.w);
-}
-inline  __device__ uint3 operator*(uint3 a, uint3 b)
-{
-    return make_uint3(a.x * b.x, a.y * b.y, a.z * b.z);
-}
-
-
-template <typename T1, typename T2>
-__global__ void
-reduce_kernel_mask(const T1 *g_idata, T2 *g_odata, const uchar *mask,
-                   int* tempMask, int height, int width, int mask_stride,
-                   int in_stride, int meanSmemCount) {
-    T2 *sdata = SharedMemory<T2>();
-    int *scount = (int*)&sdata[meanSmemCount];
-
-    int warpSize = 32;
-    int tid = threadIdx.y * blockDim.x + threadIdx.x;
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col_const = blockIdx.x * blockDim.x + threadIdx.x;
-    int col = col_const;
-    int rowStride = blockDim.y * gridDim.y;
-    int colStride = blockDim.x * gridDim.x;
-
-    T2 mySum = {0};
-    int count = 0;
-    while (row < height)
-    {
-        while(col < width) {
-            int maskIndex = row * mask_stride + col;
-            int inIndex = row * in_stride + col;
-            if(mask[maskIndex]) {
-                mySum = mySum + g_idata[inIndex];
-                count += 1;
-            }
-            col += colStride;
+      if (element_x < cols - 3) {
+        partial_sums[threadIdx_x] += (value0 - mean) * (value0 - mean);
+        partial_sums[threadIdx_x] += (value1 - mean) * (value1 - mean);
+        partial_sums[threadIdx_x] += (value2 - mean) * (value2 - mean);
+        partial_sums[threadIdx_x] += (value3 - mean) * (value3 - mean);
+      }
+      else {
+        partial_sums[threadIdx_x] += (value0 - mean) * (value0 - mean);
+        if (element_x < cols - 1) {
+          partial_sums[threadIdx_x] += (value1 - mean) * (value1 - mean);
         }
-        row += rowStride;
-        col = col_const;
-    }
-
-    // each thread puts its local sum into shared memory
-    sdata[tid] = mySum;
-    scount[tid] = count;
-    __syncthreads();
-
-    // do reduction in shared mem
-    if (tid < 128)
-    {
-        sdata[tid] = mySum = mySum + sdata[tid + 128];
-        scount[tid] = count = count + scount[tid + 128];
-    }
-
-    __syncthreads();
-
-    if (tid <  64)
-    {
-        sdata[tid] = mySum = mySum + sdata[tid +  64];
-        scount[tid] = count = count + scount[tid + 64];
-    }
-
-    __syncthreads();
-
-    if (tid < 32)
-    {
-        // Fetch final intermediate sum from 2nd warp
-        mySum = mySum + sdata[tid + 32];
-        scount[tid] = count = count + scount[tid + 32];
-        // Reduce final warp using shuffle
-        for (int offset = warpSize/2; offset > 0; offset /= 2)
-        {
-            mySum = shfl_sum(mySum, offset, warpSize);
-            #if __CUDACC_VER_MAJOR__ >= 9
-                count += __shfl_down_sync(0xffffffff, count, offset, warpSize);
-            #else
-                count += __shfl_down(count, offset);
-            #endif
+        if (element_x < cols - 2) {
+          partial_sums[threadIdx_x] += (value2 - mean) * (value2 - mean);
         }
+      }
     }
+  }
+  __syncthreads();
 
-    // write result for this block to global mem
-    if (tid == 0) {
-        g_odata[blockIdx.y * gridDim.x + blockIdx.x] = mySum;
-        tempMask[blockIdx.y * gridDim.x + blockIdx.x] = count;
+#if BLOCK_SIZE == 512
+  if (threadIdx_x < 256) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 256];
+  }
+  __syncthreads();
+#endif
+
+#if BLOCK_SIZE >= 256
+  if (threadIdx_x < 128) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 128];
+  }
+  __syncthreads();
+#endif
+
+#if BLOCK_SIZE >= 128
+  if (threadIdx_x < 64) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 64];
+  }
+  __syncthreads();
+#endif
+
+  if (threadIdx_x < 32) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 32];
+  }
+  __syncthreads();
+  if (threadIdx_x < 16) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 16];
+  }
+  __syncthreads();
+  if (threadIdx_x < 8) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 8];
+  }
+  __syncthreads();
+  if (threadIdx_x < 4) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 4];
+  }
+  __syncthreads();
+  if (threadIdx_x < 2) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 2];
+  }
+  __syncthreads();
+  if (threadIdx_x < 1) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 1];
+  }
+  __syncthreads();
+
+  if (threadIdx_x == 0) {
+    atomicAdd(stddev_values, partial_sums[0]);
+
+    uint local_count = atomicInc(&count, blocks);
+    bool is_last_block_done = (local_count == (blocks - 1));
+    if (is_last_block_done) {
+      int elements = rows * cols;
+      float weight = 1.f / elements;
+      float square = stddev_values[0] * weight;
+      stddev_values[0] = sqrtf(square);
+
+      count = 0;
     }
+  }
 }
 
-template <typename T1, typename T2>
-__global__ void
-reduce_kernel(const T1 *g_idata, T2 *g_odata, int height, int width,
-              int width_stride) {
-    T2 *sdata = SharedMemory<T2>();
+template <typename Tsrc, typename Tsrcn, typename Tsumn>
+__global__
+void unmaskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
+                         int src_stride, uint blocks, float* mean_values,
+                         float* stddev_values) {
+  __shared__ Tsumn partial_sums[BLOCK_SIZE];
 
-    int warpSize = 32;
-    int tid = threadIdx.y * blockDim.x + threadIdx.x;
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col_const = blockIdx.x * blockDim.x + threadIdx.x;
-    int col = col_const;
-    int rowStride = blockDim.y * gridDim.y;
-    int colStride = blockDim.x * gridDim.x;
+  int threadIdx_x = threadIdx.x;
+  int element_x = (blockIdx.x << BLOCK_SHIFT) + threadIdx_x;
+  int element_y = blockIdx.y;
+  setZeroVector(partial_sums[threadIdx_x]);
 
-    T2 mySum = {0};
-    while (row < height)
-    {
-        while(col < width) {
-            int index = row * width_stride + col;
-            mySum = mySum + g_idata[index];
-            col += colStride;
-        }
-        row += rowStride;
-        col = col_const;
+  Tsrcn* input;
+  Tsrcn value0;
+  Tsumn mean, value1;
+  readVector(mean, mean_values);
+
+  for (; element_y < rows; element_y += gridDim.y) {
+    if (element_x < cols) {
+      input = (Tsrcn*)((uchar*)src + element_y * src_stride);
+      value0 = input[element_x];
+      assignVector(value1, value0);
+      value1 -= mean;
+      mulAdd(partial_sums[threadIdx_x], value1, value1);
     }
+  }
+  __syncthreads();
 
-    // each thread puts its local sum into shared memory
-    sdata[tid] = mySum;
-    __syncthreads();
+#if BLOCK_SIZE == 512
+  if (threadIdx_x < 256) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 256];
+  }
+  __syncthreads();
+#endif
 
-    // do reduction in shared mem
-    if (tid < 128)
-    {
-        sdata[tid] = mySum = mySum + sdata[tid + 128];
+#if BLOCK_SIZE >= 256
+  if (threadIdx_x < 128) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 128];
+  }
+  __syncthreads();
+#endif
+
+#if BLOCK_SIZE >= 128
+  if (threadIdx_x < 64) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 64];
+  }
+  __syncthreads();
+#endif
+
+  if (threadIdx_x < 32) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 32];
+  }
+  __syncthreads();
+  if (threadIdx_x < 16) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 16];
+  }
+  __syncthreads();
+  if (threadIdx_x < 8) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 8];
+  }
+  __syncthreads();
+  if (threadIdx_x < 4) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 4];
+  }
+  __syncthreads();
+  if (threadIdx_x < 2) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 2];
+  }
+  __syncthreads();
+  if (threadIdx_x < 1) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 1];
+  }
+  __syncthreads();
+
+  if (threadIdx_x == 0) {
+    atomicAddVector(stddev_values, partial_sums[0]);
+
+    uint local_count = atomicInc(&count, blocks);
+    bool is_last_block_done = (local_count == (blocks - 1));
+    if (is_last_block_done) {
+      int elements = rows * cols;
+      float weight = 1.f / elements;
+      float square = stddev_values[0] * weight;
+      stddev_values[0] = sqrtf(square);
+      if (channels > 2) {
+        square = stddev_values[1] * weight;
+        stddev_values[1] = sqrtf(square);
+        square = stddev_values[2] * weight;
+        stddev_values[2] = sqrtf(square);
+      }
+      if (channels > 3) {
+        square = stddev_values[3] * weight;
+        stddev_values[3] = sqrtf(square);
+      }
+
+      count = 0;
     }
-
-    __syncthreads();
-
-    if (tid <  64)
-    {
-        sdata[tid] = mySum = mySum + sdata[tid +  64];
-    }
-
-    __syncthreads();
-
-    if (tid < 32)
-    {
-        // Fetch final intermediate sum from 2nd warp
-        mySum = mySum + sdata[tid + 32];
-        // Reduce final warp using shuffle
-        for (int offset = warpSize/2; offset > 0; offset /= 2)
-        {
-            mySum = shfl_sum(mySum, offset, warpSize);
-        }
-    }
-
-    // write result for this block to global mem
-    if (tid == 0) {
-        g_odata[blockIdx.y * gridDim.x + blockIdx.x] = mySum;
-    }
+  }
 }
 
+template <typename Tsrc>
+__global__
+void maskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
+                       const uchar* mask, int mask_stride, uint blocks,
+                       float* mean_values, float* stddev_values) {
+  __shared__ float partial_sums[BLOCK_SIZE];
+  __shared__ uint partial_counts[BLOCK_SIZE];
 
-template <typename T1, typename T2, int nc>
-__global__ void
-block_reduce_kernel(T1 *tempIdata, T2 *g_odata, int* tempMask, int height,
-                    int width, int blockNum, bool channelWise) {
-    int count = 0;
-    if(tempMask == NULL) {
-        count = height * width;
-    }
-    else {
-        for(int i = 0; i < blockNum; i++) {
-            count += tempMask[i];
-        }
-    }
-    if(channelWise) {
-        for(int i = 1; i < blockNum; i++) {
-            tempIdata[threadIdx.x] += tempIdata[i * nc + threadIdx.x];
-        }
-        g_odata[threadIdx.x] = tempIdata[threadIdx.x] / count;
-    }
-    else {
-        for(int i = 1; i < blockNum * nc; i++) {
-            tempIdata[0] += tempIdata[i];
-        }
-        g_odata[0] = tempIdata[0] / (count * nc);
-    }
+  int threadIdx_x = threadIdx.x;
+  int element_x = ((blockIdx.x << BLOCK_SHIFT) + threadIdx_x) << 2;
+  int element_y = blockIdx.y;
+  partial_sums[threadIdx_x] = 0;
+  partial_counts[threadIdx_x] = 0;
 
+  Tsrc* input;
+  uchar* mask_row;
+  Tsrc value0, value1, value2, value3;
+  uchar mvalue0, mvalue1, mvalue2, mvalue3;
+  float mean = mean_values[0];
+
+  for (; element_y < rows; element_y += gridDim.y) {
+    if (element_x < cols) {
+      input  = (Tsrc*)((uchar*)src + element_y * src_stride);
+      mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
+      value0 = input[element_x];
+      value1 = input[element_x + 1];
+      value2 = input[element_x + 2];
+      value3 = input[element_x + 3];
+
+      mvalue0 = mask_row[element_x];
+      mvalue1 = mask_row[element_x + 1];
+      mvalue2 = mask_row[element_x + 2];
+      mvalue3 = mask_row[element_x + 3];
+      if (mvalue0 > 0) {
+        partial_sums[threadIdx_x] += (value0 - mean) * (value0 - mean);
+        partial_counts[threadIdx_x] += 1;
+      }
+      if (mvalue1 > 0 && element_x < cols - 1) {
+        partial_sums[threadIdx_x] += (value1 - mean) * (value1 - mean);
+        partial_counts[threadIdx_x] += 1;
+      }
+      if (mvalue2 > 0 && element_x < cols - 2) {
+        partial_sums[threadIdx_x] += (value2 - mean) * (value2 - mean);
+        partial_counts[threadIdx_x] += 1;
+      }
+      if (mvalue3 > 0 && element_x < cols - 3) {
+        partial_sums[threadIdx_x] += (value3 - mean) * (value3 - mean);
+        partial_counts[threadIdx_x] += 1;
+      }
+    }
+  }
+  __syncthreads();
+
+#if BLOCK_SIZE == 512
+  if (threadIdx_x < 256) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 256];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 256];
+  }
+  __syncthreads();
+#endif
+
+#if BLOCK_SIZE >= 256
+  if (threadIdx_x < 128) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 128];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 128];
+  }
+  __syncthreads();
+#endif
+
+#if BLOCK_SIZE >= 128
+  if (threadIdx_x < 64) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 64];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 64];
+  }
+  __syncthreads();
+#endif
+
+  if (threadIdx_x < 32) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 32];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 32];
+  }
+  __syncthreads();
+  if (threadIdx_x < 16) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 16];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 16];
+  }
+  __syncthreads();
+  if (threadIdx_x < 8) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 8];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 8];
+  }
+  __syncthreads();
+  if (threadIdx_x < 4) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 4];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 4];
+  }
+  __syncthreads();
+  if (threadIdx_x < 2) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 2];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 2];
+  }
+  __syncthreads();
+  if (threadIdx_x < 1) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 1];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 1];
+  }
+  __syncthreads();
+
+  if (threadIdx_x == 0) {
+    atomicAdd(stddev_values, partial_sums[0]);
+    atomicAdd(&mask_count, partial_counts[0]);
+
+    uint local_count = atomicInc(&count, blocks);
+    bool is_last_block_done = (local_count == (blocks - 1));
+    if (is_last_block_done) {
+      float weight = 1.f / mask_count;
+      float square = stddev_values[0] * weight;
+      stddev_values[0] = sqrtf(square);
+
+      count = 0;
+      mask_count = 0;
+    }
+  }
 }
 
+template <typename Tsrc, typename Tsrcn, typename Tsumn>
+__global__
+void maskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
+                       int src_stride, const uchar* mask, int mask_stride,
+                       uint blocks, float* mean_values, float* stddev_values) {
+  __shared__ Tsumn partial_sums[BLOCK_SIZE];
+  __shared__ uint partial_counts[BLOCK_SIZE];
 
-template <typename T1, typename T2>
-__global__ void
-reducemeanvar_kernel_mask(const T1 *g_idata, T2 *g_meandata, T2* g_vardata,
-                          const uchar *mask, int* tempMask, int height,
-                          int width, int mask_stride, int in_stride,
-                          int meanSmemCount) {
-    T2 *ssum = SharedMemory<T2>();
-    T2 *sqsum = &ssum[meanSmemCount];
-    int *scount = (int*)&ssum[meanSmemCount << 1];
+  int threadIdx_x = threadIdx.x;
+  int element_x = (blockIdx.x << BLOCK_SHIFT) + threadIdx_x;
+  int element_y = blockIdx.y;
+  setZeroVector(partial_sums[threadIdx_x]);
+  partial_counts[threadIdx_x] = 0;
 
-    int warpSize = 32;
-    int tid = threadIdx.y * blockDim.x + threadIdx.x;
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col_const = blockIdx.x * blockDim.x + threadIdx.x;
-    int col = col_const;
-    int rowStride = blockDim.y * gridDim.y;
-    int colStride = blockDim.x * gridDim.x;
+  Tsrcn* input;
+  uchar* mask_row;
+  Tsrcn value0;
+  uchar mvalue;
+  Tsumn mean, value1;
+  readVector(mean, mean_values);
 
-    T2 mySum = {0};
-    T2 myQSum = {0};
-    int count = 0;
-    while (row < height)
-    {
-        while(col < width) {
-            int maskIndex = row * mask_stride + col;
-            int inIndex = row * in_stride + col;
-            if(mask[maskIndex]) {
-                mySum = mySum + g_idata[inIndex];
-                myQSum = myQSum + g_idata[inIndex] * g_idata[inIndex];
-                count += 1;
-            }
-            col += colStride;
-        }
-        row += rowStride;
-        col = col_const;
+  for (; element_y < rows; element_y += gridDim.y) {
+    if (element_x < cols) {
+      input  = (Tsrcn*)((uchar*)src + element_y * src_stride);
+      mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
+      value0  = input[element_x];
+      mvalue = mask_row[element_x];
+
+      if (mvalue > 0) {
+        assignVector(value1, value0);
+        value1 -= mean;
+        mulAdd(partial_sums[threadIdx_x], value1, value1);
+        partial_counts[threadIdx_x] += 1;
+      }
     }
+  }
+  __syncthreads();
 
-    // each thread puts its local sum into shared memory
-    ssum[tid] = mySum;
-    sqsum[tid] = myQSum;
-    scount[tid] = count;
-    __syncthreads();
+#if BLOCK_SIZE == 512
+  if (threadIdx_x < 256) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 256];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 256];
+  }
+  __syncthreads();
+#endif
 
-    // do reduction in shared mem
-    if (tid < 128)
-    {
-        ssum[tid] = mySum = mySum + ssum[tid + 128];
-        sqsum[tid] = myQSum = myQSum + sqsum[tid + 128];
-        scount[tid] = count = count + scount[tid + 128];
+#if BLOCK_SIZE >= 256
+  if (threadIdx_x < 128) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 128];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 128];
+  }
+  __syncthreads();
+#endif
+
+#if BLOCK_SIZE >= 128
+  if (threadIdx_x < 64) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 64];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 64];
+  }
+  __syncthreads();
+#endif
+
+  if (threadIdx_x < 32) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 32];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 32];
+  }
+  __syncthreads();
+  if (threadIdx_x < 16) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 16];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 16];
+  }
+  __syncthreads();
+  if (threadIdx_x < 8) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 8];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 8];
+  }
+  __syncthreads();
+  if (threadIdx_x < 4) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 4];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 4];
+  }
+  __syncthreads();
+  if (threadIdx_x < 2) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 2];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 2];
+  }
+  __syncthreads();
+  if (threadIdx_x < 1) {
+    partial_sums[threadIdx_x] += partial_sums[threadIdx_x + 1];
+    partial_counts[threadIdx_x] += partial_counts[threadIdx_x + 1];
+  }
+  __syncthreads();
+
+  if (threadIdx_x == 0) {
+    atomicAddVector(stddev_values, partial_sums[0]);
+    atomicAdd(&mask_count, partial_counts[0]);
+
+    uint local_count = atomicInc(&count, blocks);
+    bool is_last_block_done = (local_count == (blocks - 1));
+    if (is_last_block_done) {
+      float weight = 1.f / mask_count;
+      float square = stddev_values[0] * weight;
+      stddev_values[0] = sqrtf(square);
+      if (channels > 2) {
+        square = stddev_values[1] * weight;
+        stddev_values[1] = sqrtf(square);
+        square = stddev_values[2] * weight;
+        stddev_values[2] = sqrtf(square);
+      }
+      if (channels > 3) {
+        square = stddev_values[3] * weight;
+        stddev_values[3] = sqrtf(square);
+      }
+
+      count = 0;
+      mask_count = 0;
     }
-
-    __syncthreads();
-
-    if (tid <  64)
-    {
-        ssum[tid] = mySum = mySum + ssum[tid +  64];
-        sqsum[tid] = myQSum = myQSum + sqsum[tid + 64];
-        scount[tid] = count = count + scount[tid + 64];
-    }
-
-    __syncthreads();
-
-    if (tid < 32)
-    {
-        // Fetch final intermediate sum from 2nd warp
-        mySum = mySum + ssum[tid + 32];
-        myQSum = myQSum + sqsum[tid + 32];
-        count = count + scount[tid + 32];
-        // Reduce final warp using shuffle
-        for (int offset = warpSize/2; offset > 0; offset /= 2)
-        {
-            mySum = shfl_sum(mySum, offset, warpSize);
-            myQSum = shfl_sum(myQSum, offset, warpSize);
-            #if __CUDACC_VER_MAJOR__ >= 9
-                count += __shfl_down_sync(0xffffffff, count, offset, warpSize);
-            #else
-                count += __shfl_down(count, offset);
-            #endif
-        }
-    }
-
-    // write result for this block to global mem
-    if (tid == 0) {
-        g_meandata[blockIdx.y * gridDim.x + blockIdx.x] = mySum;
-        g_vardata[blockIdx.y * gridDim.x + blockIdx.x] = myQSum;
-        tempMask[blockIdx.y * gridDim.x + blockIdx.x] = count;
-    }
+  }
 }
 
-template <typename T1, typename T2>
-__global__ void
-reducemeanvar_kernel(const T1 *g_idata, T2 *g_meandata, T2 *g_vardata,
-                     int height, int width, int width_stride,
-                     int meanSmemCount) {
-    T2 *ssum = SharedMemory<T2>();
-    T2 *sqsum = &ssum[meanSmemCount];
+RetCode meanStdDev(const uchar* src, int rows, int cols, int channels,
+                   int src_stride, const uchar* mask, int mask_stride,
+                   float* mean_values, float* stddev_values,
+                   cudaStream_t stream) {
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(mean_values != nullptr);
+  PPL_ASSERT(stddev_values != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
+  if (mask != nullptr) {
+    PPL_ASSERT(mask_stride >= cols * (int)sizeof(uchar));
+  }
 
-    int warpSize = 32;
-    int tid = threadIdx.y * blockDim.x + threadIdx.x;
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col_const = blockIdx.x * blockDim.x + threadIdx.x;
-    int col = col_const;
-    int rowStride = blockDim.y * gridDim.y;
-    int colStride = blockDim.x * gridDim.x;
+  int columns, grid_y;
+  if (channels == 1) {
+    columns = divideUp(cols, 4, 2);
+  }
+  else {
+    columns = cols;
+  }
+  dim3 block, grid;
+  block.x = BLOCK_SIZE;
+  block.y = 1;
+  grid.x  = divideUp(columns, BLOCK_SIZE, BLOCK_SHIFT);
+  grid_y  = MAX_BLOCKS / grid.x;
+  grid.y  = (grid_y < rows) ? grid_y : rows;
 
-    T2 mySum = {0};
-    T2 myQSum = {0};
-    while (row < height)
-    {
-        while(col < width) {
-            int index = row * width_stride + col;
-            mySum = mySum + g_idata[index];
-            myQSum = myQSum + g_idata[index] * g_idata[index];
-            col += colStride;
-        }
-        row += rowStride;
-        col = col_const;
+  int blocks = grid.x * grid.y;
+  if (mask == nullptr) {
+    if (channels == 1) {
+      unmaskedMeanC1Kernel<uchar, uint><<<grid, block, 0, stream>>>(src, rows,
+          cols, src_stride, blocks, mean_values);
+      unmaskedDevC1Kernel<uchar><<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, blocks, mean_values, stddev_values);
     }
-
-    // each thread puts its local sum into shared memory
-    ssum[tid] = mySum;
-    sqsum[tid] = myQSum;
-    __syncthreads();
-
-    // do reduction in shared mem
-    if (tid < 128)
-    {
-        ssum[tid] = mySum = mySum + ssum[tid + 128];
-        sqsum[tid] = myQSum = myQSum + sqsum[tid + 128];
+    else if (channels == 3) {
+      unmaskedMeanCnKernel<uchar, uchar3, uint3><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values);
+      unmaskedDevCnKernel<uchar, uchar3, float3><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values,
+          stddev_values);
     }
-
-    __syncthreads();
-
-    if (tid <  64)
-    {
-        ssum[tid] = mySum = mySum + ssum[tid +  64];
-        sqsum[tid] = myQSum = myQSum + sqsum[tid +  64];
+    else {  //  channels == 4
+      unmaskedMeanCnKernel<uchar, uchar4, uint4><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values);
+      unmaskedDevCnKernel<uchar, uchar4, float4><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values,
+          stddev_values);
     }
-
-    __syncthreads();
-
-    if (tid < 32)
-    {
-        // Fetch final intermediate sum from 2nd warp
-        mySum = mySum + ssum[tid + 32];
-        myQSum = myQSum + sqsum[tid + 32];
-        // Reduce final warp using shuffle
-        for (int offset = warpSize/2; offset > 0; offset /= 2)
-        {
-            mySum = shfl_sum(mySum, offset, warpSize);
-            myQSum = shfl_sum(myQSum, offset, warpSize);
-        }
+  }
+  else {
+    if (channels == 1) {
+      maskedMeanC1Kernel<uchar, uint><<<grid, block, 0, stream>>>(src, rows,
+          cols, src_stride, mask, mask_stride, blocks, mean_values);
+      maskedDevC1Kernel<uchar><<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, mask, mask_stride, blocks, mean_values, stddev_values);
     }
-
-    // write result for this block to global mem
-    if (tid == 0) {
-        int outIndex = blockIdx.y * gridDim.x + blockIdx.x;
-        g_meandata[outIndex] = mySum;
-        g_vardata[outIndex] = myQSum;
+    else if (channels == 3) {
+      maskedMeanCnKernel<uchar, uchar3, uint3><<<grid, block, 0, stream>>>(src,
+          rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values);
+      maskedDevCnKernel<uchar, uchar3, float3><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values, stddev_values);
     }
+    else {  //  channels == 4
+      maskedMeanCnKernel<uchar, uchar4, uint4><<<grid, block, 0, stream>>>(src,
+          rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values);
+      maskedDevCnKernel<uchar, uchar4, float4><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values, stddev_values);
+    }
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
 }
 
+RetCode meanStdDev(const float* src, int rows, int cols, int channels,
+                   int src_stride, const uchar* mask, int mask_stride,
+                   float* mean_values, float* stddev_values,
+                   cudaStream_t stream) {
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(mean_values != nullptr);
+  PPL_ASSERT(stddev_values != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
+  if (mask != nullptr) {
+    PPL_ASSERT(mask_stride >= cols * (int)sizeof(uchar));
+  }
 
-template <typename T1, typename T2, int nc>
-__global__ void
-block_reducemeanvar_kernel(T1 *tempMeanData, T1 *tempVarData, T2 *g_omeandata,
-                           T2 * g_ovardata, int* tempMask, int height,
-                           int width, int blockNum, bool channelWise) {
-    int count = 0;
-    if(tempMask == NULL) {
-        count = height * width;
-    }
-    else {
-        for(int i = 0; i < blockNum; i++) {
-            count += tempMask[i];
-        }
-    }
-    if(channelWise) {
-        for(int i = 1; i < blockNum; i++) {
-            tempMeanData[threadIdx.x] += tempMeanData[i * nc + threadIdx.x];
-            tempVarData[threadIdx.x] += tempVarData[i * nc + threadIdx.x];
-        }
-        g_omeandata[threadIdx.x] = tempMeanData[threadIdx.x] / count;
-        g_ovardata[threadIdx.x] = sqrt(max((double)(tempVarData[threadIdx.x] /
-            count - g_omeandata[threadIdx.x] * g_omeandata[threadIdx.x]), 0.f));
-    }
-    else {
-        for(int i = 1; i < blockNum * nc; i++) {
-            tempMeanData[0] += tempMeanData[i];
-            tempVarData[0] += tempVarData[i];
-        }
-        g_omeandata[0] = tempMeanData[0] / (count * nc);
-        g_ovardata[0] = sqrt(max((double)(tempVarData[0] /
-            (count * nc)- g_omeandata[0] * g_omeandata[0]), 0.f));
-    }
+  int columns, grid_y;
+  if (channels == 1) {
+    columns = divideUp(cols, 4, 2);
+  }
+  else {
+    columns = cols;
+  }
+  dim3 block, grid;
+  block.x = BLOCK_SIZE;
+  block.y = 1;
+  grid.x  = divideUp(columns, BLOCK_SIZE, BLOCK_SHIFT);
+  grid_y  = MAX_BLOCKS / grid.x;
+  grid.y  = (grid_y < rows) ? grid_y : rows;
 
+  int blocks = grid.x * grid.y;
+  if (mask == nullptr) {
+    if (channels == 1) {
+      unmaskedMeanC1Kernel<float, float><<<grid, block, 0, stream>>>(src, rows,
+          cols, src_stride, blocks, mean_values);
+      unmaskedDevC1Kernel<float><<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, blocks, mean_values, stddev_values);
+    }
+    else if (channels == 3) {
+      unmaskedMeanCnKernel<float, float3, float3><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values);
+      unmaskedDevCnKernel<float, float3, float3><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values,
+          stddev_values);
+    }
+    else {  //  channels == 4
+      unmaskedMeanCnKernel<float, float4, float4><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values);
+      unmaskedDevCnKernel<float, float4, float4><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, blocks, mean_values,
+          stddev_values);
+    }
+  }
+  else {
+    if (channels == 1) {
+      maskedMeanC1Kernel<float, float><<<grid, block, 0, stream>>>(src, rows,
+          cols, src_stride, mask, mask_stride, blocks, mean_values);
+      maskedDevC1Kernel<float><<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, mask, mask_stride, blocks, mean_values, stddev_values);
+    }
+    else if (channels == 3) {
+      maskedMeanCnKernel<float, float3, float3><<<grid, block, 0, stream>>>(src,
+          rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values);
+      maskedDevCnKernel<float, float3, float3><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values, stddev_values);
+    }
+    else {  //  channels == 4
+      maskedMeanCnKernel<float, float4, float4><<<grid, block, 0, stream>>>(src,
+          rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values);
+      maskedDevCnKernel<float, float4, float4><<<grid, block, 0, stream>>>(
+          src, rows, cols, channels, src_stride, mask, mask_stride, blocks,
+          mean_values, stddev_values);
+    }
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
 }
 
-#define maxBlocksReduce 8
+template <>
+RetCode MeanStdDev<uchar, 1>(cudaStream_t stream,
+                             int height,
+                             int width,
+                             int inWidthStride,
+                             const uchar* inData,
+                             float* outMean,
+                             float* outStdDev,
+                             int maskWidthStride,
+                             const uchar* mask) {
+  RetCode code = meanStdDev(inData, height, width, 1, inWidthStride, mask,
+                            maskWidthStride, outMean, outStdDev, stream);
 
-template<>
-RetCode MeanStdDev<float, 1>(cudaStream_t stream, int height, int width,
-                             int inWidthStride, const float* inData,
-                             float* outMeanData, float* outVarData,
-                             int maskStride, const uchar* inMask,
-                             bool channelWise) {
-    const int nc = 1;
-
-    float* tempMean = NULL;
-    float* tempVar= NULL;
-    int* tempMask = NULL;
-    cudaMalloc(&tempMean,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempVar,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempMask, sizeof(int) * maxBlocksReduce * maxBlocksReduce);
-
-    int inVecWidthStride = inWidthStride / nc;
-    const int threadx = 32;
-    const int thready = 8;
-    dim3 blockSize(threadx, thready);
-    int calBlocksPerGridex = (width + threadx - 1)/threadx;
-    int blocksPerGridx = calBlocksPerGridex > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridex;
-    int calBlocksPerGridey = (height + thready - 1)/thready;
-    int blocksPerGridy = calBlocksPerGridey > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridey;
-    dim3 gridSize(blocksPerGridx, blocksPerGridy);
-    if(inMask != NULL) {
-        int smemSize = threadx * thready * (sizeof(float) * 2 * nc +
-                       sizeof(int));
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel_mask<float, float><<<gridSize, blockSize,
-            smemSize>>>(inData, tempMean, tempVar, inMask, tempMask, height,
-            width, maskStride, inVecWidthStride, meanSmemCount);
-    }
-    else {
-        int smemSize = threadx * thready * sizeof(float) * 2 * nc;
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel<float, float><<<gridSize, blockSize, smemSize>>>(
-            inData, tempMean, tempVar, height, width, inVecWidthStride,
-            meanSmemCount);
-    }
-
-    int blockNum = blocksPerGridx * blocksPerGridy;
-    int* tempMaskPtr = inMask == NULL ? NULL : tempMask;
-    block_reducemeanvar_kernel<float, float, nc><<<1, nc>>>(tempMean, tempVar,
-        outMeanData, outVarData, tempMaskPtr, height, width, blockNum,
-        channelWise);
-
-    cudaFree(tempMean);
-    cudaFree(tempVar);
-    cudaFree(tempMask);
-
-    return RC_SUCCESS;
+  return code;
 }
 
-template<>
-RetCode MeanStdDev<float, 3>(cudaStream_t stream, int height, int width,
-                             int inWidthStride, const float* inData,
-                             float* outMeanData, float* outVarData,
-                             int maskStride, const uchar* inMask,
-                             bool channelWise) {
-    const int nc = 3;
+template <>
+RetCode MeanStdDev<uchar, 3>(cudaStream_t stream,
+                             int height,
+                             int width,
+                             int inWidthStride,
+                             const uchar* inData,
+                             float* outMean,
+                             float* outStdDev,
+                             int maskWidthStride,
+                             const uchar* mask) {
+  RetCode code = meanStdDev(inData, height, width, 3, inWidthStride, mask,
+                            maskWidthStride, outMean, outStdDev, stream);
 
-    float* tempMean = NULL;
-    float* tempVar= NULL;
-    int* tempMask = NULL;
-    cudaMalloc(&tempMean,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempVar,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempMask, sizeof(int) * maxBlocksReduce * maxBlocksReduce);
-
-    int inVecWidthStride = inWidthStride / nc;
-    const int threadx = 32;
-    const int thready = 8;
-    dim3 blockSize(threadx, thready);
-    int calBlocksPerGridex = (width + threadx - 1)/threadx;
-    int blocksPerGridx = calBlocksPerGridex > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridex;
-    int calBlocksPerGridey = (height + thready - 1)/thready;
-    int blocksPerGridy = calBlocksPerGridey > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridey;
-    dim3 gridSize(blocksPerGridx, blocksPerGridy);
-    if(inMask != NULL) {
-        int smemSize = threadx * thready * (sizeof(float) * 2 * nc +
-                       sizeof(int));
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel_mask<float3, float3><<<gridSize, blockSize,
-            smemSize>>>((float3*)inData, (float3*)tempMean, (float3*)tempVar,
-            inMask, tempMask, height, width, maskStride, inVecWidthStride,
-            meanSmemCount);
-    }
-    else {
-        int smemSize = threadx * thready * sizeof(float) * 2 * nc;
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel<float3, float3><<<gridSize, blockSize, smemSize>>>(
-            (float3*)inData, (float3*)tempMean, (float3*)tempVar, height, width,
-            inVecWidthStride, meanSmemCount);
-    }
-
-    int blockNum = blocksPerGridx * blocksPerGridy;
-    int* tempMaskPtr = inMask == NULL ? NULL : tempMask;
-    block_reducemeanvar_kernel<float, float, nc><<<1, nc>>>(tempMean, tempVar,
-        outMeanData, outVarData, tempMaskPtr, height, width, blockNum,
-        channelWise);
-
-    cudaFree(tempMean);
-    cudaFree(tempVar);
-    cudaFree(tempMask);
-
-    return RC_SUCCESS;
+  return code;
 }
 
-template<>
-RetCode MeanStdDev<float, 4>(cudaStream_t stream, int height, int width,
-                             int inWidthStride, const float* inData,
-                             float* outMeanData, float* outVarData,
-                             int maskStride, const uchar* inMask,
-                             bool channelWise) {
-    const int nc = 4;
+template <>
+RetCode MeanStdDev<uchar, 4>(cudaStream_t stream,
+                             int height,
+                             int width,
+                             int inWidthStride,
+                             const uchar* inData,
+                             float* outMean,
+                             float* outStdDev,
+                             int maskWidthStride,
+                             const uchar* mask) {
+  RetCode code = meanStdDev(inData, height, width, 4, inWidthStride, mask,
+                            maskWidthStride, outMean, outStdDev, stream);
 
-    float* tempMean = NULL;
-    float* tempVar= NULL;
-    int* tempMask = NULL;
-    cudaMalloc(&tempMean,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempVar,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempMask, sizeof(int) * maxBlocksReduce * maxBlocksReduce);
-
-    int inVecWidthStride = inWidthStride / nc;
-    const int threadx = 32;
-    const int thready = 8;
-    dim3 blockSize(threadx, thready);
-    int calBlocksPerGridex = (width + threadx - 1)/threadx;
-    int blocksPerGridx = calBlocksPerGridex > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridex;
-    int calBlocksPerGridey = (height + thready - 1)/thready;
-    int blocksPerGridy = calBlocksPerGridey > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridey;
-    dim3 gridSize(blocksPerGridx, blocksPerGridy);
-    if(inMask != NULL) {
-        int smemSize = threadx * thready * (sizeof(float) * 2 * nc +
-                       sizeof(int));
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel_mask<float4, float4><<<gridSize, blockSize,
-            smemSize>>>((float4*)inData, (float4*)tempMean, (float4*)tempVar,
-            inMask, tempMask, height, width, maskStride, inVecWidthStride,
-            meanSmemCount);
-    }
-    else {
-        int smemSize = threadx * thready * sizeof(float) * 2 * nc;
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel<float4, float4><<<gridSize, blockSize, smemSize>>>(
-            (float4*)inData, (float4*)tempMean, (float4*)tempVar, height, width,
-            inVecWidthStride, meanSmemCount);
-    }
-
-    int blockNum = blocksPerGridx * blocksPerGridy;
-    int* tempMaskPtr = inMask == NULL ? NULL : tempMask;
-    block_reducemeanvar_kernel<float, float, nc><<<1, nc>>>(tempMean, tempVar,
-        outMeanData, outVarData, tempMaskPtr, height, width, blockNum,
-        channelWise);
-
-    cudaFree(tempMean);
-    cudaFree(tempVar);
-    cudaFree(tempMask);
-
-    return RC_SUCCESS;
+  return code;
 }
 
+template <>
+RetCode MeanStdDev<float, 1>(cudaStream_t stream,
+                             int height,
+                             int width,
+                             int inWidthStride,
+                             const float* inData,
+                             float* outMean,
+                             float* outStdDev,
+                             int maskWidthStride,
+                             const uchar* mask) {
+  inWidthStride *= sizeof(float);
+  RetCode code = meanStdDev(inData, height, width, 1, inWidthStride, mask,
+                            maskWidthStride, outMean, outStdDev, stream);
 
-template<>
-RetCode MeanStdDev<uchar, 1>(cudaStream_t stream, int height, int width,
-                             int inWidthStride, const uchar* inData,
-                             float* outMeanData, float* outVarData,
-                             int maskStride, const uchar* inMask,
-                             bool channelWise) {
-    const int nc = 1;
-
-    float* tempMean = NULL;
-    float* tempVar= NULL;
-    int* tempMask = NULL;
-    cudaMalloc(&tempMean,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempVar,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempMask, sizeof(int) * maxBlocksReduce * maxBlocksReduce);
-
-    int inVecWidthStride = inWidthStride / nc;
-    const int threadx = 32;
-    const int thready = 8;
-    dim3 blockSize(threadx, thready);
-    int calBlocksPerGridex = (width + threadx - 1)/threadx;
-    int blocksPerGridx = calBlocksPerGridex > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridex;
-    int calBlocksPerGridey = (height + thready - 1)/thready;
-    int blocksPerGridy = calBlocksPerGridey > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridey;
-    dim3 gridSize(blocksPerGridx, blocksPerGridy);
-    if(inMask != NULL) {
-        int smemSize = threadx * thready * (sizeof(float) * 2 * nc +
-                       sizeof(int));
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel_mask<uchar, float><<<gridSize, blockSize,
-            smemSize>>>((uchar*)inData, (float*)tempMean, (float*)tempVar,
-            inMask, tempMask, height, width, maskStride, inVecWidthStride,
-            meanSmemCount);
-    }
-    else {
-        int smemSize = threadx * thready * sizeof(float) * 2 * nc;
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel<uchar, float><<<gridSize, blockSize, smemSize>>>(
-            (uchar*)inData, (float*)tempMean, (float*)tempVar, height, width,
-            inVecWidthStride, meanSmemCount);
-    }
-
-    int blockNum = blocksPerGridx * blocksPerGridy;
-    int* tempMaskPtr = inMask == NULL ? NULL : tempMask;
-    block_reducemeanvar_kernel<float, float, nc><<<1, nc>>>((float*)tempMean,
-        (float*)tempVar, (float*)outMeanData, (float*)outVarData, tempMaskPtr,
-        height, width, blockNum, channelWise);
-
-    cudaFree(tempMean);
-    cudaFree(tempVar);
-    cudaFree(tempMask);
-
-    return RC_SUCCESS;
+  return code;
 }
 
-template<>
-RetCode MeanStdDev<uchar, 3>(cudaStream_t stream, int height, int width,
-                             int inWidthStride, const uchar* inData,
-                             float* outMeanData, float* outVarData,
-                             int maskStride, const uchar* inMask,
-                             bool channelWise) {
-    const int nc = 3;
+template <>
+RetCode MeanStdDev<float, 3>(cudaStream_t stream,
+                             int height,
+                             int width,
+                             int inWidthStride,
+                             const float* inData,
+                             float* outMean,
+                             float* outStdDev,
+                             int maskWidthStride,
+                             const uchar* mask) {
+  inWidthStride *= sizeof(float);
+  RetCode code = meanStdDev(inData, height, width, 3, inWidthStride, mask,
+                            maskWidthStride, outMean, outStdDev, stream);
 
-    float* tempMean = NULL;
-    float* tempVar= NULL;
-    int* tempMask = NULL;
-    cudaMalloc(&tempMean,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempVar,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempMask, sizeof(int) * maxBlocksReduce * maxBlocksReduce);
-
-    int inVecWidthStride = inWidthStride / nc;
-    const int threadx = 32;
-    const int thready = 8;
-    dim3 blockSize(threadx, thready);
-    int calBlocksPerGridex = (width + threadx - 1)/threadx;
-    int blocksPerGridx = calBlocksPerGridex > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridex;
-    int calBlocksPerGridey = (height + thready - 1)/thready;
-    int blocksPerGridy = calBlocksPerGridey > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridey;
-    dim3 gridSize(blocksPerGridx, blocksPerGridy);
-    if(inMask != NULL) {
-        int smemSize = threadx * thready * (sizeof(float) * 2 * nc +
-                       sizeof(int));
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel_mask<uchar3, float3><<<gridSize, blockSize,
-            smemSize>>>((uchar3*)inData, (float3*)tempMean, (float3*)tempVar,
-            inMask, tempMask, height, width, maskStride, inVecWidthStride,
-            meanSmemCount);
-    }
-    else {
-        int smemSize = threadx * thready * sizeof(float) * 2 * nc;
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel<uchar3, float3><<<gridSize, blockSize, smemSize>>>(
-            (uchar3*)inData, (float3*)tempMean, (float3*)tempVar, height, width,
-            inVecWidthStride, meanSmemCount);
-    }
-
-    int blockNum = blocksPerGridx * blocksPerGridy;
-    int* tempMaskPtr = inMask == NULL ? NULL : tempMask;
-    block_reducemeanvar_kernel<float, float, nc><<<1, nc>>>((float*)tempMean,
-        (float*)tempVar, (float*)outMeanData, (float*)outVarData, tempMaskPtr,
-        height, width, blockNum, channelWise);
-
-    cudaFree(tempMean);
-    cudaFree(tempVar);
-    cudaFree(tempMask);
-
-    return RC_SUCCESS;
+  return code;
 }
 
-template<>
-RetCode MeanStdDev<uchar, 4>(cudaStream_t stream, int height, int width,
-                             int inWidthStride, const uchar* inData,
-                             float* outMeanData, float* outVarData,
-                             int maskStride, const uchar* inMask,
-                             bool channelWise) {
-    const int nc = 4;
+template <>
+RetCode MeanStdDev<float, 4>(cudaStream_t stream,
+                             int height,
+                             int width,
+                             int inWidthStride,
+                             const float* inData,
+                             float* outMean,
+                             float* outStdDev,
+                             int maskWidthStride,
+                             const uchar* mask) {
+  inWidthStride *= sizeof(float);
+  RetCode code = meanStdDev(inData, height, width, 4, inWidthStride, mask,
+                            maskWidthStride, outMean, outStdDev, stream);
 
-    float* tempMean = NULL;
-    float* tempVar= NULL;
-    int* tempMask = NULL;
-    cudaMalloc(&tempMean,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempVar,
-               sizeof(float) * nc * maxBlocksReduce * maxBlocksReduce);
-    cudaMalloc(&tempMask, sizeof(int) * maxBlocksReduce * maxBlocksReduce);
-
-    int inVecWidthStride = inWidthStride / nc;
-    const int threadx = 32;
-    const int thready = 8;
-    dim3 blockSize(threadx, thready);
-    int calBlocksPerGridex = (width + threadx - 1)/threadx;
-    int blocksPerGridx = calBlocksPerGridex > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridex;
-    int calBlocksPerGridey = (height + thready - 1)/thready;
-    int blocksPerGridy = calBlocksPerGridey > maxBlocksReduce ?
-                         maxBlocksReduce : calBlocksPerGridey;
-    dim3 gridSize(blocksPerGridx, blocksPerGridy);
-    if(inMask != NULL) {
-        int smemSize = threadx * thready * (sizeof(float) * 2 * nc +
-                       sizeof(int));
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel_mask<uchar4, float4><<<gridSize, blockSize,
-            smemSize>>>((uchar4*)inData, (float4*)tempMean, (float4*)tempVar,
-            inMask, tempMask, height, width, maskStride, inVecWidthStride,
-            meanSmemCount);
-    }
-    else {
-        int smemSize = threadx * thready * sizeof(float) * 2 * nc;
-        int meanSmemCount = threadx * thready;
-        reducemeanvar_kernel<uchar4, float4><<<gridSize, blockSize, smemSize>>>(
-            (uchar4*)inData, (float4*)tempMean, (float4*)tempVar, height, width,
-            inVecWidthStride, meanSmemCount);
-    }
-
-    int blockNum = blocksPerGridx * blocksPerGridy;
-    int* tempMaskPtr = inMask == NULL ? NULL : tempMask;
-    block_reducemeanvar_kernel<float, float, nc><<<1, nc>>>((float*)tempMean,
-        (float*)tempVar, (float*)outMeanData, (float*)outVarData, tempMaskPtr,
-        height, width, blockNum, channelWise);
-
-    cudaFree(tempMean);
-    cudaFree(tempVar);
-    cudaFree(tempMask);
-
-    return RC_SUCCESS;
+  return code;
 }
 
 }  // namespace cuda

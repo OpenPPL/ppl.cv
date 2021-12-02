@@ -1,7 +1,7 @@
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
+ * work for anditional information regarding copyright ownership. The ASF
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
@@ -25,7 +25,7 @@ namespace cv {
 namespace cuda {
 
 __global__
-void bitwiseAddKernel(const uchar* src0, int rows, int cols, int channels,
+void bitwiseAndKernel(const uchar* src0, int rows, int cols, int channels,
                       int src0_stride, const uchar* src1, int src1_stride,
                       uchar* dst, int dst_stride, uchar* mask,
                       int mask_stride) {
@@ -169,7 +169,7 @@ void bitwiseAddKernel(const uchar* src0, int rows, int cols, int channels,
   }
 }
 
-RetCode bitwiseAdd(const uchar* src0, int rows, int cols, int channels,
+RetCode bitwiseAnd(const uchar* src0, int rows, int cols, int channels,
                    int src0_stride, const uchar* src1, int src1_stride,
                    uchar* dst, int dst_stride, uchar* mask, int mask_stride,
                    cudaStream_t stream) {
@@ -193,7 +193,7 @@ RetCode bitwiseAdd(const uchar* src0, int rows, int cols, int channels,
   grid.x = divideUp(cols, kBlockDimX0, kBlockShiftX0);
   grid.y = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  bitwiseAddKernel<<<grid, block, 0, stream>>>(src0, rows, columns, channels,
+  bitwiseAndKernel<<<grid, block, 0, stream>>>(src0, rows, columns, channels,
     src0_stride, src1, src1_stride, dst, dst_stride, mask, mask_stride);
 
   cudaError_t code = cudaGetLastError();
@@ -217,7 +217,7 @@ RetCode BitwiseAnd<uchar, 1>(cudaStream_t stream,
                              uchar* outData,
                              int maskWidthStride,
                              uchar* mask) {
-  RetCode code = bitwiseAdd(inData0, height, width, 1, inWidthStride0, inData1,
+  RetCode code = bitwiseAnd(inData0, height, width, 1, inWidthStride0, inData1,
                             inWidthStride1, outData, outWidthStride, mask,
                             maskWidthStride, stream);
 
@@ -236,7 +236,7 @@ RetCode BitwiseAnd<uchar, 3>(cudaStream_t stream,
                              uchar* outData,
                              int maskWidthStride,
                              uchar* mask) {
-  RetCode code = bitwiseAdd(inData0, height, width, 3, inWidthStride0, inData1,
+  RetCode code = bitwiseAnd(inData0, height, width, 3, inWidthStride0, inData1,
                             inWidthStride1, outData, outWidthStride, mask,
                             maskWidthStride, stream);
 
@@ -255,7 +255,7 @@ RetCode BitwiseAnd<uchar, 4>(cudaStream_t stream,
                              uchar* outData,
                              int maskWidthStride,
                              uchar* mask) {
-  RetCode code = bitwiseAdd(inData0, height, width, 4, inWidthStride0, inData1,
+  RetCode code = bitwiseAnd(inData0, height, width, 4, inWidthStride0, inData1,
                             inWidthStride1, outData, outWidthStride, mask,
                             maskWidthStride, stream);
 

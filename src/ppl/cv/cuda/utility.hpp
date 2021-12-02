@@ -532,6 +532,36 @@ void operator+=(float4 &result, float4 &value) {
 }
 
 __DEVICE__
+void operator-=(float3 &result, uchar3 &value) {
+  result.x -= value.x;
+  result.y -= value.y;
+  result.z -= value.z;
+}
+
+__DEVICE__
+void operator-=(float3 &result, float3 &value) {
+  result.x -= value.x;
+  result.y -= value.y;
+  result.z -= value.z;
+}
+
+__DEVICE__
+void operator-=(float4 &result, uchar4 &value) {
+  result.x -= value.x;
+  result.y -= value.y;
+  result.z -= value.z;
+  result.w -= value.w;
+}
+
+__DEVICE__
+void operator-=(float4 &result, float4 &value) {
+  result.x -= value.x;
+  result.y -= value.y;
+  result.z -= value.z;
+  result.w -= value.w;
+}
+
+__DEVICE__
 void operator/=(float2 &result, int value) {
   result.x /= value;
   result.y /= value;
@@ -576,6 +606,36 @@ void operator/=(float4 &result, float4 value) {
 }
 
 __DEVICE__
+void assignVector(float3 &result, uchar3 &value) {
+  result.x = value.x;
+  result.y = value.y;
+  result.z = value.z;
+}
+
+__DEVICE__
+void assignVector(float3 &result, float3 &value) {
+  result.x = value.x;
+  result.y = value.y;
+  result.z = value.z;
+}
+
+__DEVICE__
+void assignVector(float4 &result, uchar4 &value) {
+  result.x = value.x;
+  result.y = value.y;
+  result.z = value.z;
+  result.w = value.w;
+}
+
+__DEVICE__
+void assignVector(float4 &result, float4 &value) {
+  result.x = value.x;
+  result.y = value.y;
+  result.z = value.z;
+  result.w = value.w;
+}
+
+__DEVICE__
 void mulAdd(float &result, uchar &value0, float value1) {
   result += value0 * value1;
 }
@@ -588,6 +648,21 @@ void mulAdd(float &result, short &value0, float value1) {
 __DEVICE__
 void mulAdd(float &result, float &value0, float value1) {
   result += value0 * value1;
+}
+
+__DEVICE__
+void mulAdd(float3 &result, float3 &value0, float3 &value1) {
+  result.x += value0.x * value1.x;
+  result.y += value0.y * value1.y;
+  result.z += value0.z * value1.z;
+}
+
+__DEVICE__
+void mulAdd(float4 &result, float4 &value0, float4 &value1) {
+  result.x += value0.x * value1.x;
+  result.y += value0.y * value1.y;
+  result.z += value0.z * value1.z;
+  result.w += value0.w * value1.w;
 }
 
 __DEVICE__
