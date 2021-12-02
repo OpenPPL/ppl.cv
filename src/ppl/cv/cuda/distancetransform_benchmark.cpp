@@ -34,7 +34,7 @@ void BM_DistanceTransform_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
-  src = createSourceImage(height, width,
+  src = createBinaryImage(height, width,
                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
   cv::cuda::GpuMat gpu_src(src);
@@ -74,7 +74,7 @@ void BM_DistanceTransform_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
-  src = createSourceImage(height, width,
+  src = createBinaryImage(height, width,
                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
 
@@ -116,22 +116,6 @@ BENCHMARK_TEMPLATE(BM_DistanceTransform_ppl_cuda, float, distance_type,        \
 // RUN_BENCHMARK(DIST_L2, DIST_MASK_PRECISE, 640, 480)
 // RUN_BENCHMARK(DIST_L2, DIST_MASK_PRECISE, 1280, 720)
 // RUN_BENCHMARK(DIST_L2, DIST_MASK_PRECISE, 1920, 1080)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_3, 320, 240)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_3, 640, 480)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_3, 1280, 720)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_3, 1920, 1080)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_5, 320, 240)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_5, 640, 480)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_5, 1280, 720)
-// RUN_BENCHMARK(DIST_L2, DIST_MASK_5, 1920, 1080)
-// RUN_BENCHMARK(DIST_L1, DIST_MASK_3, 320, 240)
-// RUN_BENCHMARK(DIST_L1, DIST_MASK_3, 640, 480)
-// RUN_BENCHMARK(DIST_L1, DIST_MASK_3, 1280, 720)
-// RUN_BENCHMARK(DIST_L1, DIST_MASK_3, 1920, 1080)
-// RUN_BENCHMARK(DIST_C, DIST_MASK_3, 320, 240)
-// RUN_BENCHMARK(DIST_C, DIST_MASK_3, 640, 480)
-// RUN_BENCHMARK(DIST_C, DIST_MASK_3, 1280, 720)
-// RUN_BENCHMARK(DIST_C, DIST_MASK_3, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, distance_type, mask_size)              \
 BENCHMARK_TEMPLATE(BM_DistanceTransform_opencv_x86_cuda, type, distance_type,  \
@@ -158,13 +142,5 @@ BENCHMARK_TEMPLATE(BM_DistanceTransform_ppl_cuda, type, distance_type,         \
                    Iterations(10);
 
 RUN_OPENCV_TYPE_FUNCTIONS(float, DIST_L2, DIST_MASK_PRECISE)
-RUN_OPENCV_TYPE_FUNCTIONS(float, DIST_L2, DIST_MASK_3)
-RUN_OPENCV_TYPE_FUNCTIONS(float, DIST_L2, DIST_MASK_5)
-RUN_OPENCV_TYPE_FUNCTIONS(float, DIST_L1, DIST_MASK_3)
-RUN_OPENCV_TYPE_FUNCTIONS(float, DIST_C, DIST_MASK_3)
 
 RUN_PPL_CV_TYPE_FUNCTIONS(float, DIST_L2, DIST_MASK_PRECISE)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, DIST_L2, DIST_MASK_3)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, DIST_L2, DIST_MASK_5)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, DIST_L1, DIST_MASK_3)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, DIST_C, DIST_MASK_3)

@@ -34,7 +34,7 @@ enum MaskType {
   kMasked,
 };
 
-template <typename T, int channels, bool channel_wise, MaskType mask_type>
+template <typename T, int channels, MaskType mask_type>
 void BM_Mean_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
@@ -42,7 +42,7 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
   src = createSourceImage(height, width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
   mask = createSourceImage(height, width,
-                            CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_mask(mask);
   int dst_size = channels * sizeof(float);
@@ -55,7 +55,7 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, gpu_dst, 0, nullptr, channel_wise);
+                      (T*)gpu_src.data, gpu_dst, 0, nullptr);
   }
   cudaDeviceSynchronize();
 
@@ -65,13 +65,13 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
       if (mask_type == kUnmasked) {
         Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
                           gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                          gpu_dst, 0, nullptr, channel_wise);
+                          gpu_dst, 0, nullptr);
       }
       else {
         Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
                           gpu_src.step / sizeof(T), (T*)gpu_src.data,
                           gpu_dst, gpu_mask.step / sizeof(uchar),
-                          (uchar*)gpu_mask.data, channel_wise);
+                          (uchar*)gpu_mask.data);
       }
     }
     cudaDeviceSynchronize();
@@ -85,41 +85,7 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
   cudaFree(gpu_dst);
 }
 
-template <typename T, int channels, bool channel_wise, MaskType mask_type>
-void BM_Mean_opencv_cuda(benchmark::State &state) {
-  int width  = state.range(0);
-  int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width,
-                          CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  cv::cuda::GpuMat gpu_src(src);
-  cv::Scalar mean_value;
-  cv::Scalar stddev_value;
-
-  int iterations = 1000;
-  struct timeval start, end;
-
-  // Warm up the GPU.
-  for (int i = 0; i < iterations; i++) {
-    cv::cuda::meanStdDev(gpu_src, mean_value, stddev_value);
-  }
-  cudaDeviceSynchronize();
-
-  for (auto _ : state) {
-    gettimeofday(&start, NULL);
-    for (int i = 0; i < iterations; i++) {
-      cv::cuda::meanStdDev(gpu_src, mean_value, stddev_value);
-    }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
-    state.SetIterationTime(time * 1e-6);
-  }
-  state.SetItemsProcessed(state.iterations() * 1);
-}
-
-template <typename T, int channels, bool channel_wise, MaskType mask_type>
+template <typename T, int channels, MaskType mask_type>
 void BM_Mean_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
@@ -127,9 +93,7 @@ void BM_Mean_opencv_x86_cuda(benchmark::State &state) {
   src = createSourceImage(height, width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
   mask = createSourceImage(height, width,
-                            CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
-  int dst_size = channels * sizeof(float);
-  float* dst = (float*)malloc(dst_size);
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
 
   for (auto _ : state) {
     if (mask_type == kUnmasked) {
@@ -140,136 +104,85 @@ void BM_Mean_opencv_x86_cuda(benchmark::State &state) {
     }
   }
   state.SetItemsProcessed(state.iterations() * 1);
-
-  free(dst);
 }
 
-#define RUN_BENCHMARK0(width, height)                                          \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_cuda, uchar, 1, true, kUnmasked)->           \
+#define RUN_BENCHMARK(type, width, height)                                     \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, c1, kUnmasked)->             \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, c1, kUnmasked)->                    \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, uchar, 1, true, kUnmasked)->              \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, c3, kUnmasked)->             \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, c3, kUnmasked)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, c4, kUnmasked)->             \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, c4, kUnmasked)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, c1, kMasked)->               \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, c1, kMasked)->                      \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, c3, kMasked)->               \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, c3, kMasked)->                      \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, c4, kMasked)->               \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, c4, kMasked)->                      \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(320, 240)
-// RUN_BENCHMARK0(640, 480)
-// RUN_BENCHMARK0(1280, 720)
-// RUN_BENCHMARK0(1920, 1080)
+// RUN_BENCHMARK(uchar, 320, 240)
+// RUN_BENCHMARK(uchar, 640, 480)
+// RUN_BENCHMARK(uchar, 1280, 720)
+// RUN_BENCHMARK(uchar, 1920, 1080)
+// RUN_BENCHMARK(float, 320, 240)
+// RUN_BENCHMARK(float, 640, 480)
+// RUN_BENCHMARK(float, 1280, 720)
+// RUN_BENCHMARK(float, 1920, 1080)
 
-#define RUN_BENCHMARK1(channel_wise, mask_type, width, height)                 \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, uchar, c1, channel_wise,           \
-                   mask_type)->Args({width, height});                          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, uchar, c1, channel_wise,                  \
-                   mask_type)->Args({width, height})->UseManualTime()->        \
-                   Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, uchar, c3, channel_wise,           \
-                   mask_type)->Args({width, height});                          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, uchar, c3, channel_wise,                  \
-                   mask_type)->Args({width, height})->UseManualTime()->        \
-                   Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, uchar, c4, channel_wise,           \
-                   mask_type)->Args({width, height});                          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, uchar, c4, channel_wise,                  \
-                   mask_type)->Args({width, height})->UseManualTime()->        \
-                   Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, float, c1, channel_wise,           \
-                   mask_type)->Args({width, height});                          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, float, c1, channel_wise,                  \
-                   mask_type)->Args({width, height})->UseManualTime()->        \
-                   Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, float, c3, channel_wise,           \
-                   mask_type)->Args({width, height});                          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, float, c3, channel_wise,                  \
-                   mask_type)->Args({width, height})->UseManualTime()->        \
-                   Iterations(10);                                             \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, float, c4, channel_wise,           \
-                   mask_type)->Args({width, height});                          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, float, c4, channel_wise,                  \
-                   mask_type)->Args({width, height})->UseManualTime()->        \
-                   Iterations(10);
+#define RUN_OPENCV_TYPE_FUNCTIONS(type, channels, mask_type)                   \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, mask_type)->       \
+                   Args({320, 240});                                           \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, mask_type)->       \
+                   Args({640, 480});                                           \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, mask_type)->       \
+                   Args({1280, 720});                                          \
+BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, mask_type)->       \
+                   Args({1920, 1080});
 
-// RUN_BENCHMARK1(true, kUnmasked, 320, 240)
-// RUN_BENCHMARK1(true, kUnmasked, 640, 480)
-// RUN_BENCHMARK1(true, kUnmasked, 1280, 720)
-// RUN_BENCHMARK1(true, kUnmasked, 1920, 1080)
-// RUN_BENCHMARK1(true, kMasked, 320, 240)
-// RUN_BENCHMARK1(true, kMasked, 640, 480)
-// RUN_BENCHMARK1(true, kMasked, 1280, 720)
-// RUN_BENCHMARK1(true, kMasked, 1920, 1080)
-// RUN_BENCHMARK1(false, kUnmasked, 320, 240)
-// RUN_BENCHMARK1(false, kUnmasked, 640, 480)
-// RUN_BENCHMARK1(false, kUnmasked, 1280, 720)
-// RUN_BENCHMARK1(false, kUnmasked, 1920, 1080)
-// RUN_BENCHMARK1(false, kMasked, 320, 240)
-// RUN_BENCHMARK1(false, kMasked, 640, 480)
-// RUN_BENCHMARK1(false, kMasked, 1280, 720)
-// RUN_BENCHMARK1(false, kMasked, 1920, 1080)
-
-#define RUN_OPENCV_TYPE_FUNCTIONS(type, channels, channel_wise, mask_type)     \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, channel_wise,      \
-                   mask_type)->Args({320, 240});                               \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, channel_wise,      \
-                   mask_type)->Args({640, 480});                               \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, channel_wise,      \
-                   mask_type)->Args({1280, 720});                              \
-BENCHMARK_TEMPLATE(BM_Mean_opencv_x86_cuda, type, channels, channel_wise,      \
-                   mask_type)->Args({1920, 1080});
-
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, channels, channel_wise, mask_type)     \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, channel_wise, mask_type)->\
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type, channels, mask_type)                   \
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, mask_type)->              \
                    Args({320, 240})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, channel_wise, mask_type)->\
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, mask_type)->              \
                    Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, channel_wise, mask_type)->\
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, mask_type)->              \
                    Args({1280, 720})->UseManualTime()->Iterations(10);         \
-BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, channel_wise, mask_type)->\
+BENCHMARK_TEMPLATE(BM_Mean_ppl_cuda, type, channels, mask_type)->              \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, true, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, true, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, true, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, true, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, true, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, true, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, false, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, false, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, false, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, false, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, false, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, false, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, true, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, true, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, true, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, true, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, true, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, true, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, false, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, false, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, false, kMasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c1, false, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c3, false, kUnmasked)
-RUN_OPENCV_TYPE_FUNCTIONS(float, c4, false, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c1, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c3, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, c4, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c1, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c3, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c4, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c1, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c3, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, c4, kMasked)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, true, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, true, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, true, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, true, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, true, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, true, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, false, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, false, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, false, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, false, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, false, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, false, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, true, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, true, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, true, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, true, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, true, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, true, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, false, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, false, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, false, kMasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, false, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, false, kUnmasked)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, false, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c1, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c3, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, c4, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c1, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c3, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, c4, kMasked)
