@@ -32,7 +32,7 @@ enum MaskType {
   kMasked,
 };
 
-using Parameters = std::tuple<MaskType, bool, cv::Size>;
+using Parameters = std::tuple<MaskType, cv::Size>;
 inline std::string convertToStringMean(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -44,15 +44,7 @@ inline std::string convertToStringMean(const Parameters& parameters) {
     formatted << "Masked" << "_";
   }
 
-  bool channel_wise = std::get<1>(parameters);
-  if (channel_wise) {
-    formatted << "channel_wise" << "_";
-  }
-  else {
-    formatted << "unchannel_wise" << "_";
-  }
-
-  cv::Size size = std::get<2>(parameters);
+  cv::Size size = std::get<1>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -64,9 +56,8 @@ class PplCvCudaMeanTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaMeanTest() {
     const Parameters& parameters = GetParam();
-    is_masked    = std::get<0>(parameters);
-    channel_wise = std::get<1>(parameters);
-    size         = std::get<2>(parameters);
+    is_masked = std::get<0>(parameters);
+    size      = std::get<1>(parameters);
   }
 
   ~PplCvCudaMeanTest() {
@@ -76,7 +67,6 @@ class PplCvCudaMeanTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   MaskType is_masked;
-  bool channel_wise;
   cv::Size size;
 };
 
@@ -97,72 +87,65 @@ bool PplCvCudaMeanTest<T, channels>::apply() {
   int src_size = size.height * size.width * channels * sizeof(T);
   int mask_size = size.height * size.width * sizeof(uchar);
   T* input = (T*)malloc(src_size);
-  float* output = (float*)malloc(dst_size);
   uchar* mask1 = (uchar*)malloc(mask_size);
+  float* output = (float*)malloc(dst_size);
   T* gpu_input;
-  float* gpu_output;
   uchar* gpu_mask1;
+  float* gpu_output;
   cudaMalloc((void**)&gpu_input, src_size);
-  cudaMalloc((void**)&gpu_output, dst_size);
   cudaMalloc((void**)&gpu_mask1, mask_size);
+  cudaMalloc((void**)&gpu_output, dst_size);
   copyMatToArray(src, input);
   copyMatToArray(mask0, mask1);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
-  cv::Scalar mean_value;
+  cv::Scalar cv_mean;
   if (is_masked == kUnmasked) {
-    mean_value = cv::mean(src);
-    // Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-    //                   (T*)gpu_src.data, gpu_dst, 0, nullptr, channel_wise);
-    // cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
+    cv_mean = cv::mean(src);
+    Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
+                      (T*)gpu_src.data, gpu_dst, 0, nullptr);
+    cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
 
     Mean<T, channels>(0, size.height, size.width, size.width * channels,
-                      gpu_input, gpu_output, 0, nullptr, channel_wise);
+                      gpu_input, gpu_output, 0, nullptr);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }
   else {
-    mean_value = cv::mean(src, mask0);
-    // Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-    //                   (T*)gpu_src.data, gpu_dst, gpu_mask0.step / sizeof(uchar),
-    //                   (uchar*)gpu_mask0.data, channel_wise);
-    // cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
+    cv_mean = cv::mean(src, mask0);
+    Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
+                      (T*)gpu_src.data, gpu_dst, gpu_mask0.step / sizeof(uchar),
+                      (uchar*)gpu_mask0.data);
+    cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
 
     Mean<T, channels>(0, size.height, size.width, size.width * channels,
-                      gpu_input, gpu_output, size.width, gpu_mask1,
-                      channel_wise);
+                      gpu_input, gpu_output, size.width, gpu_mask1);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }
 
   float epsilon = EPSILON_1F;
   bool identity = true;
-  if (channel_wise) {
-    for (int i = 0; i < channels; i++) {
-      if (fabs(mean_value.val[i] - output[i]) > epsilon) {
-        identity = false;
-      }
-    }
-  }
-  else {
-    if (fabs(mean_value.val[0] - output[0]) > epsilon) {
+  for (int i = 0; i < channels; i++) {
+    if (fabs(cv_mean.val[i] - dst[i]) > epsilon ||
+        fabs(cv_mean.val[i] - output[i]) > epsilon) {
       identity = false;
     }
   }
 
   free(dst);
   free(input);
-  free(output);
   free(mask1);
-  cudaFree(gpu_input);
+  free(output);
   cudaFree(gpu_dst);
-  cudaFree(gpu_output);
+  cudaFree(gpu_input);
   cudaFree(gpu_mask1);
+  cudaFree(gpu_output);
 
   return identity;
 }
 
 #define UNITTEST(T, channels)                                                  \
-using PplCvCudaMeanTest ## T ## channels =  PplCvCudaMeanTest<T, channels>;    \
+using PplCvCudaMeanTest ## T ## channels = PplCvCudaMeanTest<T, channels>;     \
 TEST_P(PplCvCudaMeanTest ## T ## channels, Standard) {                         \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
@@ -171,7 +154,6 @@ TEST_P(PplCvCudaMeanTest ## T ## channels, Standard) {                         \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaMeanTest ## T ## channels,           \
   ::testing::Combine(                                                          \
     ::testing::Values(kUnmasked, kMasked),                                     \
-    ::testing::Values(true, false),                                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

@@ -134,10 +134,10 @@ BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, float)->Args({width, height})->   \
 BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float)->Args({width, height})->      \
                    UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(320, 240)
-// RUN_BENCHMARK0(640, 480)
-// RUN_BENCHMARK0(1280, 720)
-// RUN_BENCHMARK0(1920, 1080)
+RUN_BENCHMARK0(320, 240)
+RUN_BENCHMARK0(640, 480)
+RUN_BENCHMARK0(1280, 720)
+RUN_BENCHMARK0(1920, 1080)
 
 #define RUN_BENCHMARK1(width, height)                                          \
 BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, uchar)->Args({width, height});\
@@ -147,10 +147,10 @@ BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, float)->Args({width, height});\
 BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float)->Args({width, height})->      \
                    UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK1(320, 240)
-// RUN_BENCHMARK1(640, 480)
-// RUN_BENCHMARK1(1280, 720)
-// RUN_BENCHMARK1(1920, 1080)
+RUN_BENCHMARK1(320, 240)
+RUN_BENCHMARK1(640, 480)
+RUN_BENCHMARK1(1280, 720)
+RUN_BENCHMARK1(1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type)                                        \
 BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type)->Args({320, 240})->         \
@@ -172,8 +172,8 @@ BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type)->Args({1280, 720})->           \
 BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type)->Args({1920, 1080})->          \
                    UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar)
-RUN_OPENCV_TYPE_FUNCTIONS(float)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar)
+// RUN_OPENCV_TYPE_FUNCTIONS(float)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar)
-RUN_PPL_CV_TYPE_FUNCTIONS(float)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float)

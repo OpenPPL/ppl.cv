@@ -32,7 +32,7 @@ enum MaskType {
   kMasked,
 };
 
-using Parameters = std::tuple<MaskType, bool, cv::Size>;
+using Parameters = std::tuple<MaskType, cv::Size>;
 inline std::string convertToStringMean(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -44,15 +44,7 @@ inline std::string convertToStringMean(const Parameters& parameters) {
     formatted << "Masked" << "_";
   }
 
-  bool channel_wise = std::get<1>(parameters);
-  if (channel_wise) {
-    formatted << "channel_wise" << "_";
-  }
-  else {
-    formatted << "unchannel_wise" << "_";
-  }
-
-  cv::Size size = std::get<2>(parameters);
+  cv::Size size = std::get<1>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -64,9 +56,8 @@ class PplCvCudaMeanStdDevTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaMeanStdDevTest() {
     const Parameters& parameters = GetParam();
-    is_masked    = std::get<0>(parameters);
-    channel_wise = std::get<1>(parameters);
-    size         = std::get<2>(parameters);
+    is_masked = std::get<0>(parameters);
+    size      = std::get<1>(parameters);
   }
 
   ~PplCvCudaMeanStdDevTest() {
@@ -76,7 +67,6 @@ class PplCvCudaMeanStdDevTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   MaskType is_masked;
-  bool channel_wise;
   cv::Size size;
 };
 
@@ -90,27 +80,27 @@ bool PplCvCudaMeanStdDevTest<T, channels>::apply() {
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_mask0(mask0);
   int dst_size = channels * sizeof(float);
-  float* dst = (float*)malloc(dst_size);
-  float* dev0 = (float*)malloc(dst_size);
-  float* gpu_dst;
-  float* gpu_dev0;
-  cudaMalloc((void**)&gpu_dst, dst_size);
-  cudaMalloc((void**)&gpu_dev0, dst_size);
+  float* mean0 = (float*)malloc(dst_size);
+  float* stddev0 = (float*)malloc(dst_size);
+  float* gpu_mean0;
+  float* gpu_stddev0;
+  cudaMalloc((void**)&gpu_mean0, dst_size);
+  cudaMalloc((void**)&gpu_stddev0, dst_size);
 
   int src_size = size.height * size.width * channels * sizeof(T);
   int mask_size = size.height * size.width * sizeof(uchar);
   T* input = (T*)malloc(src_size);
-  float* output = (float*)malloc(dst_size);
-  float* dev1 = (float*)malloc(dst_size);
   uchar* mask1 = (uchar*)malloc(mask_size);
+  float* mean1 = (float*)malloc(dst_size);
+  float* stddev1 = (float*)malloc(dst_size);
   T* gpu_input;
-  float* gpu_output;
-  float* gpu_dev1;
   uchar* gpu_mask1;
+  float* gpu_mean1;
+  float* gpu_stddev1;
   cudaMalloc((void**)&gpu_input, src_size);
-  cudaMalloc((void**)&gpu_output, dst_size);
-  cudaMalloc((void**)&gpu_dev1, dst_size);
   cudaMalloc((void**)&gpu_mask1, mask_size);
+  cudaMalloc((void**)&gpu_mean1, dst_size);
+  cudaMalloc((void**)&gpu_stddev1, dst_size);
   copyMatToArray(src, input);
   copyMatToArray(mask0, mask1);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
@@ -120,63 +110,56 @@ bool PplCvCudaMeanStdDevTest<T, channels>::apply() {
   cv::Scalar cv_stddev;
   if (is_masked == kUnmasked) {
     cv::meanStdDev(src, cv_mean, cv_stddev);
-    // MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
-    //                         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst,
-    //                         gpu_dev0, 0, nullptr, channel_wise);
-    // cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
-    // cudaMemcpy(dev0, gpu_dev0, dst_size, cudaMemcpyDeviceToHost);
+    MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
+                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+                            gpu_mean0, gpu_stddev0);
+    cudaMemcpy(mean0, gpu_mean0, dst_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(stddev0, gpu_stddev0, dst_size, cudaMemcpyDeviceToHost);
 
     MeanStdDev<T, channels>(0, size.height, size.width, size.width * channels,
-                            gpu_input, gpu_output, gpu_dev1, 0, nullptr,
-                            channel_wise);
-    cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
-    cudaMemcpy(dev1, gpu_dev1, dst_size, cudaMemcpyDeviceToHost);
+                            gpu_input, gpu_mean1, gpu_stddev1);
+    cudaMemcpy(mean1, gpu_mean1, dst_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(stddev1, gpu_stddev1, dst_size, cudaMemcpyDeviceToHost);
   }
   else {
     cv::meanStdDev(src, cv_mean, cv_stddev, mask0);
-    // MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
-    //                         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst,
-    //                         gpu_dev0, gpu_mask0.step / sizeof(uchar),
-    //                         (uchar*)gpu_mask0.data, channel_wise);
-    // cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
-    // cudaMemcpy(dev0, gpu_dev0, dst_size, cudaMemcpyDeviceToHost);
+    MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
+                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+                            gpu_mean0, gpu_stddev0, gpu_mask0.step,
+                            (uchar*)gpu_mask0.data);
+    cudaMemcpy(mean0, gpu_mean0, dst_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(stddev0, gpu_stddev0, dst_size, cudaMemcpyDeviceToHost);
 
     MeanStdDev<T, channels>(0, size.height, size.width, size.width * channels,
-                            gpu_input, gpu_output, gpu_dev1, size.width,
-                            gpu_mask1, channel_wise);
-    cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
-    cudaMemcpy(dev1, gpu_dev1, dst_size, cudaMemcpyDeviceToHost);
+                            gpu_input, gpu_mean1, gpu_stddev1, size.width,
+                            gpu_mask1);
+    cudaMemcpy(mean1, gpu_mean1, dst_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(stddev1, gpu_stddev1, dst_size, cudaMemcpyDeviceToHost);
   }
 
-  float epsilon = EPSILON_1F;
+  float epsilon = EPSILON_E3;
   bool identity = true;
-  if (channel_wise) {
-    for (int i = 0; i < channels; i++) {
-      if (fabs(cv_mean.val[i] - output[i]) > epsilon ||
-          fabs(cv_stddev.val[i] - dev1[i]) > epsilon) {
-        identity = false;
-      }
-    }
-  }
-  else {
-    if (fabs(cv_mean.val[0] - output[0]) > epsilon ||
-        fabs(cv_stddev.val[0] - dev1[0]) > epsilon) {
+  for (int i = 0; i < channels; i++) {
+    if (fabs(cv_mean.val[i] - mean0[i]) > epsilon ||
+        fabs(cv_mean.val[i] - mean1[i]) > epsilon ||
+        fabs(cv_stddev.val[i] - stddev0[i]) > epsilon ||
+        fabs(cv_stddev.val[i] - stddev1[i]) > epsilon) {
       identity = false;
     }
   }
 
-  free(dst);
-  free(dev0);
-  free(dev1);
   free(input);
-  free(output);
   free(mask1);
+  free(mean0);
+  free(mean1);
+  free(stddev0);
+  free(stddev1);
   cudaFree(gpu_input);
-  cudaFree(gpu_dst);
-  cudaFree(gpu_dev0);
-  cudaFree(gpu_dev1);
-  cudaFree(gpu_output);
   cudaFree(gpu_mask1);
+  cudaFree(gpu_mean0);
+  cudaFree(gpu_mean1);
+  cudaFree(gpu_stddev0);
+  cudaFree(gpu_stddev1);
 
   return identity;
 }
@@ -192,7 +175,6 @@ TEST_P(PplCvCudaMeanStdDevTest ## T ## channels, Standard) {                   \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaMeanStdDevTest ## T ## channels,     \
   ::testing::Combine(                                                          \
     ::testing::Values(kUnmasked, kMasked),                                     \
-    ::testing::Values(true, false),                                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

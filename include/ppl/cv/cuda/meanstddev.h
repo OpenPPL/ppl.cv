@@ -38,14 +38,12 @@ namespace cuda {
  *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                         for 2D cudaMallocPitch() allocated data.
  * @param inData           input image data.
- * @param outMean          output mean data, its size depends on channel wise,
- *                         1 or channel.
+ * @param outMean          output mean data, its size depends on channels.
  * @param outStdDev        output standard deviation data, its size depends on
- *                         channel wise, 1 or channel.
- * @param maskWidthStride  the width stride of mask image, similar to
+ *                         channels.
+ * @param maskWidthStride  the width stride of mask array, similar to
  *                         inWidthStride.
- * @param mask             specified single-channel array.
- * @param channelWise      uniform or channel wise.
+ * @param mask             optional single-channel array.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
@@ -109,8 +107,7 @@ ppl::common::RetCode MeanStdDev(cudaStream_t stream,
                                 float* outMean,
                                 float* outStdDev,
                                 int maskWidthStride = 0,
-                                const unsigned char* mask = nullptr,
-                                bool channelWise = true);
+                                const unsigned char* mask = nullptr);
 
 }  // namespace cuda
 }  // namespace cv
