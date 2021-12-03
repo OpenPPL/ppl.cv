@@ -67,20 +67,20 @@ void BM_SetValue_ppl_cuda(benchmark::State &state) {
     for (int i = 0; i < iterations; i++) {
       if (function == kUnmaskedSetTo) {
         SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
       }
       else if (function == kMaskedSetTo) {
         SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask.step,
-          gpu_mask.data);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask.step,
+            gpu_mask.data);
       }
       else if (function == kOnes) {
         Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {
         Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
     }
     cudaDeviceSynchronize();
@@ -106,7 +106,6 @@ void BM_SetValue_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask(mask);
 
-  cv::Scalar scalar_one(1, 1, 1, 1);
   cv::Scalar scalar_zero(0, 0, 0, 0);
   cv::Scalar scalar_five(5, 5, 5, 5);
 
@@ -127,9 +126,6 @@ void BM_SetValue_opencv_cuda(benchmark::State &state) {
       }
       else if (function == kMaskedSetTo) {
         gpu_dst.setTo(scalar_five, gpu_mask);
-      }
-      else if (function == kOnes) {
-        gpu_dst.setTo(scalar_one);
       }
       else {
         gpu_dst.setTo(scalar_zero);
@@ -255,10 +251,10 @@ BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, c1, function)->     \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK01(kOnes, 320, 240)
-// RUN_BENCHMARK01(kOnes, 640, 480)
-// RUN_BENCHMARK01(kOnes, 1280, 720)
-// RUN_BENCHMARK01(kOnes, 1920, 1080)
+RUN_BENCHMARK01(kOnes, 320, 240)
+RUN_BENCHMARK01(kOnes, 640, 480)
+RUN_BENCHMARK01(kOnes, 1280, 720)
+RUN_BENCHMARK01(kOnes, 1920, 1080)
 
 // RUN_BENCHMARK01(kZeros, 320, 240)
 // RUN_BENCHMARK01(kZeros, 640, 480)
@@ -389,42 +385,42 @@ BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c1, function)->            \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
-RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
-RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
-RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
 
-RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
-RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
-RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
-RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
+// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
 
-RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 320, 240)
-RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 640, 480)
-RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
-RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 320, 240)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 640, 480)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
 
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 320, 240)
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 640, 480)
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 320, 240)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 640, 480)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
+// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
 
-RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
-RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
-RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
-RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
 
-RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
-RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
-RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
-RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
+// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
 
-RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 320, 240)
-RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 640, 480)
-RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
-RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 320, 240)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 640, 480)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
 
-RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 320, 240)
-RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 640, 480)
-RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
-RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 320, 240)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 640, 480)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
+// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)

@@ -940,7 +940,7 @@ RetCode SetTo<float, 4, 1>(cudaStream_t stream,
 /******************************* Ones() *******************************/
 
 __global__
-void onesKernel1(uchar* dst, int rows, int cols, int channels, int dst_stride) {
+void onesKernel(uchar* dst, int rows, int cols, int channels, int dst_stride) {
   int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -951,53 +951,7 @@ void onesKernel1(uchar* dst, int rows, int cols, int channels, int dst_stride) {
   uchar* output = dst + offset;
 
   if (channels == 1) {
-    output[element_x]     = 1;
-    output[element_x + 1] = 1;
-    output[element_x + 2] = 1;
-    output[element_x + 3] = 1;
-  }
-  else if (channels == 3) {
-    int remainder = (element_x >> 2) % 3;
-    if (remainder == 0) {
-      output[element_x]     = 1;
-      output[element_x + 1] = 0;
-      output[element_x + 2] = 0;
-      output[element_x + 3] = 1;
-    }
-    else if (remainder == 1) {
-      output[element_x]     = 0;
-      output[element_x + 1] = 0;
-      output[element_x + 2] = 1;
-      output[element_x + 3] = 0;
-    }
-    else {  // remainder == 2
-      output[element_x]     = 0;
-      output[element_x + 1] = 1;
-      output[element_x + 2] = 0;
-      output[element_x + 3] = 0;
-    }
-  }
-  else {  // channels == 4
-    output[element_x]     = 1;
-    output[element_x + 1] = 0;
-    output[element_x + 2] = 0;
-    output[element_x + 3] = 0;
-  }
-}
-
-__global__
-void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * dst_stride;
-  uchar* output = dst + offset;
-
-  if (channels == 1) {
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 3) {
       output[element_x]     = 1;
       output[element_x + 1] = 1;
       output[element_x + 2] = 1;
@@ -1011,13 +965,10 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
       if (element_x < cols - 2) {
         output[element_x + 2] = 1;
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 1;
-      }
     }
   }
   else if (channels == 3) {
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 3) {
       int remainder = (element_x >> 2) % 3;
       if (remainder == 0) {
         output[element_x]     = 1;
@@ -1048,9 +999,6 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
         if (element_x < cols - 2) {
           output[element_x + 2] = 0;
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 1;
-        }
       }
       else if (remainder == 1) {
         output[element_x] = 0;
@@ -1059,9 +1007,6 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
         }
         if (element_x < cols - 2) {
           output[element_x + 2] = 1;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0;
         }
       }
       else {  // remainder == 2
@@ -1072,14 +1017,11 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
         if (element_x < cols - 2) {
           output[element_x + 2] = 0;
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0;
-        }
       }
     }
   }
   else {  // channels == 4
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 3) {
       output[element_x]     = 1;
       output[element_x + 1] = 0;
       output[element_x + 2] = 0;
@@ -1093,16 +1035,13 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
       if (element_x < cols - 2) {
         output[element_x + 2] = 0;
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 0;
-      }
     }
   }
 }
 
 __global__
-void onesKernel1(float* dst, int rows, int cols, int channels, int dst_stride) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
+void onesKernel(float* dst, int rows, int cols, int channels, int dst_stride) {
+  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
     return;
@@ -1112,150 +1051,62 @@ void onesKernel1(float* dst, int rows, int cols, int channels, int dst_stride) {
   float* output  = (float*)((uchar*)dst + offset);
 
   if (channels == 1) {
-    output[element_x]     = 1.f;
-    output[element_x + 1] = 1.f;
-    output[element_x + 2] = 1.f;
-    output[element_x + 3] = 1.f;
-  }
-  else if (channels == 3) {
-    int remainder = (element_x >> 2) % 3;
-    if (remainder == 0) {
-      output[element_x]     = 1.f;
-      output[element_x + 1] = 0.f;
-      output[element_x + 2] = 0.f;
-      output[element_x + 3] = 1.f;
-    }
-    else if (remainder == 1) {
-      output[element_x]     = 0.f;
-      output[element_x + 1] = 0.f;
-      output[element_x + 2] = 1.f;
-      output[element_x + 3] = 0.f;
-    }
-    else {  // remainder == 2
-      output[element_x]     = 0.f;
-      output[element_x + 1] = 1.f;
-      output[element_x + 2] = 0.f;
-      output[element_x + 3] = 0.f;
-    }
-  }
-  else {  // channels == 4
-    output[element_x]     = 1.f;
-    output[element_x + 1] = 0.f;
-    output[element_x + 2] = 0.f;
-    output[element_x + 3] = 0.f;
-  }
-}
-
-__global__
-void onesKernel2(float* dst, int rows, int cols, int channels, int dst_stride) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * dst_stride;
-  float* output  = (float*)((uchar*)dst + offset);
-
-  if (channels == 1) {
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 1) {
       output[element_x]     = 1.f;
       output[element_x + 1] = 1.f;
-      output[element_x + 2] = 1.f;
-      output[element_x + 3] = 1.f;
     }
     else {
       output[element_x] = 1.f;
-      if (element_x < cols - 1) {
-        output[element_x + 1] = 1.f;
-      }
-      if (element_x < cols - 2) {
-        output[element_x + 2] = 1.f;
-      }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 1.f;
-      }
     }
   }
   else if (channels == 3) {
-    if (blockIdx.x < gridDim.x - 1) {
-      int remainder = (element_x >> 2) % 3;
+    if (element_x < cols - 1) {
+      int remainder = (element_x >> 1) % 3;
       if (remainder == 0) {
         output[element_x]     = 1.f;
         output[element_x + 1] = 0.f;
-        output[element_x + 2] = 0.f;
-        output[element_x + 3] = 1.f;
       }
       else if (remainder == 1) {
         output[element_x]     = 0.f;
-        output[element_x + 1] = 0.f;
-        output[element_x + 2] = 1.f;
-        output[element_x + 3] = 0.f;
+        output[element_x + 1] = 1.f;
       }
       else {  // remainder == 2
         output[element_x]     = 0.f;
-        output[element_x + 1] = 1.f;
-        output[element_x + 2] = 0.f;
-        output[element_x + 3] = 0.f;
+        output[element_x + 1] = 0.f;
       }
     }
     else {
-      int remainder = (element_x >> 2) % 3;
+      int remainder = (element_x >> 1) % 3;
       if (remainder == 0) {
         output[element_x] = 1.f;
-        if (element_x < cols - 1) {
-          output[element_x + 1] = 0.f;
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = 0.f;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 1.f;
-        }
       }
       else if (remainder == 1) {
         output[element_x] = 0.f;
-        if (element_x < cols - 1) {
-          output[element_x + 1] = 0.f;
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = 1.f;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0.f;
-        }
       }
       else {  // remainder == 2
         output[element_x] = 0.f;
-        if (element_x < cols - 1) {
-          output[element_x + 1] = 1.f;
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = 0.f;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0.f;
-        }
       }
     }
   }
   else {  // channels == 4
-    if (blockIdx.x < gridDim.x - 1) {
-      output[element_x]     = 1.f;
-      output[element_x + 1] = 0.f;
-      output[element_x + 2] = 0.f;
-      output[element_x + 3] = 0.f;
-    }
-    else {
-      output[element_x] = 1.f;
-      if (element_x < cols - 1) {
+    if (element_x < cols - 1) {
+      int remainder = element_x & 3;
+      if (remainder == 0) {
+        output[element_x]     = 1.f;
         output[element_x + 1] = 0.f;
       }
-      if (element_x < cols - 2) {
-        output[element_x + 2] = 0.f;
+      else {
+        output[element_x]     = 0.f;
+        output[element_x + 1] = 0.f;
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 0.f;
+    }
+    else {
+      int remainder = element_x & 3;
+      if (remainder == 0) {
+        output[element_x] = 1.f;
+      }
+      else {
+        output[element_x] = 0.f;
       }
     }
   }
@@ -1275,15 +1126,8 @@ RetCode ones(uchar* dst, int rows, int cols, int channels, int dst_stride,
   grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  int padded_stride = roundUp(cols, 4, 2) * channels * sizeof(uchar);
-  if (dst_stride >= padded_stride) {
-    onesKernel1<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
-  else {
-    onesKernel2<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
+  onesKernel<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
+                                         dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -1305,18 +1149,11 @@ RetCode ones(float* dst, int rows, int cols, int channels, int dst_stride,
   dim3 block, grid;
   block.x = kBlockDimX0;
   block.y = kBlockDimY0;
-  grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX0, kBlockShiftX0);
+  grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  int padded_stride = roundUp(cols, 4, 2) * channels * sizeof(float);
-  if (dst_stride >= padded_stride) {
-    onesKernel1<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
-  else {
-    onesKernel2<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
+  onesKernel<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
+                                         dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
