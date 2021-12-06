@@ -101,13 +101,12 @@ void BM_SetValue_opencv_cuda(benchmark::State &state) {
   dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           outChannels));
   mask = createSourceImage(height, width,
-                           CV_MAKETYPE(cv::DataType<uchar>::depth,
-                           maskChannels));
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
   cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask(mask);
 
   cv::Scalar scalar_zero(0, 0, 0, 0);
-  cv::Scalar scalar_five(5, 5, 5, 5);
+  cv::Scalar scalar_five(5, 9, 2, 37);
 
   int iterations = 3000;
   struct timeval start, end;
@@ -251,10 +250,10 @@ BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, c1, function)->     \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-RUN_BENCHMARK01(kOnes, 320, 240)
-RUN_BENCHMARK01(kOnes, 640, 480)
-RUN_BENCHMARK01(kOnes, 1280, 720)
-RUN_BENCHMARK01(kOnes, 1920, 1080)
+// RUN_BENCHMARK01(kOnes, 320, 240)
+// RUN_BENCHMARK01(kOnes, 640, 480)
+// RUN_BENCHMARK01(kOnes, 1280, 720)
+// RUN_BENCHMARK01(kOnes, 1920, 1080)
 
 // RUN_BENCHMARK01(kZeros, 320, 240)
 // RUN_BENCHMARK01(kZeros, 640, 480)
@@ -265,14 +264,6 @@ RUN_BENCHMARK01(kOnes, 1920, 1080)
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c1, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c3, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c3, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, c4, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c4, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
@@ -285,14 +276,6 @@ BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c1, function)->            \
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c1, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, c1, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c3, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c3, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, c4, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c4, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
@@ -385,42 +368,42 @@ BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c1, function)->            \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
-// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
-// RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
 
-// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
-// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
-// RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
 
-// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 320, 240)
-// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
-// RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
 
-// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 320, 240)
-// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
-// RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 1920, 1080)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
-// RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS0(kMaskedSetTo, 1920, 1080)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 320, 240)
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 320, 240)
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
-// RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 320, 240)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 640, 480)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
+RUN_PPL_CV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
