@@ -28,29 +28,29 @@ namespace cuda {
 /**
  * @brief Finds the global minimum and maximum element values and their
  *        positions in a 2D array.
- * @tparam T The data type, used for both source matrix, currently only uchar
- *         and float are supported.
+ * @tparam T The data type of input array, currently only uint8_t(uchar) and
+ *         float are supported.
  * @param stream           cuda stream object.
- * @param inHeight         input image's height.
- * @param inWidth          input image's width.
- * @param inWidthStride    input image's width stride, it is `width * channels`
+ * @param height           input array's height.
+ * @param width            input array's width.
+ * @param inWidthStride    input array's width stride, it is `width * channels`
  *                         for cudaMalloc() allocated data, `pitch / sizeof(T)`
  *                         for 2D cudaMallocPitch() allocated data.
- * @param inData           input image data.
+ * @param inData           input array data.
  * @param minVal           pointer to the returned minimum value.
  * @param maxVal           pointer to the returned maximum value.
  * @param minIdxX          pointer to the returned minimum column index.
  * @param minIdxY          pointer to the returned minimum row index.
  * @param maxIdxX          pointer to the returned maximum column index.
  * @param maxIdxY          pointer to the returned maximum row index.
- * @param maskWidthStride  the width stride of mask image, similar to
+ * @param maskWidthStride  the width stride of mask array, similar to
  *                         inWidthStride.
  * @param mask             specified array region.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
  *       2 inData and mask have the same height, width and channels.
- *       3 The function only works with single channel arrays.
+ *       3 The function only works with single-channel arrays.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -103,8 +103,8 @@ namespace cuda {
  */
 template <typename T>
 ppl::common::RetCode MinMaxLoc(cudaStream_t stream,
-                               int inHeight,
-                               int inWidth,
+                               int height,
+                               int width,
                                int inWidthStride,
                                const T* inData,
                                T* minVal,

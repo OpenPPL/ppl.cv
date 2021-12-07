@@ -31,60 +31,59 @@ namespace cuda {
 #define MAX_BLOCKS 256
 #define UCHAR_MIN 0
 
-static __device__ unsigned int count = 0;
-__shared__ bool isLastBlockDone;
+static __device__ uint count = 0;
 
 __DEVICE__
 void checkMinMax1(uchar value, int index, int element_x, int element_y,
-                  uchar* minVals, uchar* maxVals, int* minIdxXs, int* minIdxYs,
-                  int* maxIdxXs, int* maxIdxYs) {
-  if (value < minVals[index]) {
-    minVals[index]  = value;
-    minIdxXs[index] = element_x;
-    minIdxYs[index] = element_y;
+                  uchar* min_vals, uchar* max_vals, int* min_loc_xs,
+                  int* min_loc_ys, int* max_loc_xs, int* max_loc_ys) {
+  if (value < min_vals[index]) {
+    min_vals[index]  = value;
+    min_loc_xs[index] = element_x;
+    min_loc_ys[index] = element_y;
   }
 
-  if (value > maxVals[index]) {
-    maxVals[index]  = value;
-    maxIdxXs[index] = element_x;
-    maxIdxYs[index] = element_y;
+  if (value > max_vals[index]) {
+    max_vals[index]  = value;
+    max_loc_xs[index] = element_x;
+    max_loc_ys[index] = element_y;
   }
 }
 
 __DEVICE__
 void checkMinMax1(float value, int index, int element_x, int element_y,
-                  float* minVals, float* maxVals, int* minIdxXs, int* minIdxYs,
-                  int* maxIdxXs, int* maxIdxYs) {
-  if (value < minVals[index]) {
-    minVals[index]  = value;
-    minIdxXs[index] = element_x;
-    minIdxYs[index] = element_y;
+                  float* min_vals, float* max_vals, int* min_loc_xs,
+                  int* min_loc_ys, int* max_loc_xs, int* max_loc_ys) {
+  if (value < min_vals[index]) {
+    min_vals[index]  = value;
+    min_loc_xs[index] = element_x;
+    min_loc_ys[index] = element_y;
   }
 
-  if (value > maxVals[index]) {
-    maxVals[index]  = value;
-    maxIdxXs[index] = element_x;
-    maxIdxYs[index] = element_y;
+  if (value > max_vals[index]) {
+    max_vals[index]  = value;
+    max_loc_xs[index] = element_x;
+    max_loc_ys[index] = element_y;
   }
 }
 
 __DEVICE__
-void checkMinMax2(int index1, int index2, uchar* minVals, uchar* maxVals,
-                  int* minIdxXs, int* minIdxYs, int* maxIdxXs, int* maxIdxYs) {
-  if (minVals[index2] < minVals[index1]) {
-    minVals[index1]  = minVals[index2];
-    minIdxXs[index1] = minIdxXs[index2];
-    minIdxYs[index1] = minIdxYs[index2];
+void checkMinMax2(int index0, int index1, uchar* min_vals, uchar* max_vals,
+                  int* min_loc_xs, int* min_loc_ys, int* max_loc_xs,
+                  int* max_loc_ys) {
+  if (min_vals[index1] < min_vals[index0]) {
+    min_vals[index0]  = min_vals[index1];
+    min_loc_xs[index0] = min_loc_xs[index1];
+    min_loc_ys[index0] = min_loc_ys[index1];
   }
-  else if (minVals[index2] == minVals[index1]) {
-    if (minIdxYs[index2] < minIdxYs[index1]) {
-      minIdxXs[index1] = minIdxXs[index2];
-      minIdxYs[index1] = minIdxYs[index2];
+  else if (min_vals[index1] == min_vals[index0]) {
+    if (min_loc_ys[index1] < min_loc_ys[index0]) {
+      min_loc_xs[index0] = min_loc_xs[index1];
+      min_loc_ys[index0] = min_loc_ys[index1];
     }
-    else if (minIdxYs[index2] == minIdxYs[index1]) {
-      if (minIdxXs[index2] < minIdxXs[index1]) {
-        minIdxXs[index1] = minIdxXs[index2];
-        minIdxYs[index1] = minIdxYs[index2];
+    else if (min_loc_ys[index1] == min_loc_ys[index0]) {
+      if (min_loc_xs[index1] < min_loc_xs[index0]) {
+        min_loc_xs[index0] = min_loc_xs[index1];
       }
     }
     else {
@@ -93,68 +92,19 @@ void checkMinMax2(int index1, int index2, uchar* minVals, uchar* maxVals,
   else {
   }
 
-  if (maxVals[index2] > maxVals[index1]) {
-    maxVals[index1]  = maxVals[index2];
-    maxIdxXs[index1] = maxIdxXs[index2];
-    maxIdxYs[index1] = maxIdxYs[index2];
+  if (max_vals[index1] > max_vals[index0]) {
+    max_vals[index0]  = max_vals[index1];
+    max_loc_xs[index0] = max_loc_xs[index1];
+    max_loc_ys[index0] = max_loc_ys[index1];
   }
-  else if (maxVals[index2] == maxVals[index1]) {
-    if (maxIdxYs[index2] < maxIdxYs[index1]) {
-      maxIdxXs[index1] = maxIdxXs[index2];
-      maxIdxYs[index1] = maxIdxYs[index2];
+  else if (max_vals[index1] == max_vals[index0]) {
+    if (max_loc_ys[index1] < max_loc_ys[index0]) {
+      max_loc_xs[index0] = max_loc_xs[index1];
+      max_loc_ys[index0] = max_loc_ys[index1];
     }
-    else if (maxIdxYs[index2] == maxIdxYs[index1]) {
-      if (maxIdxXs[index2] < maxIdxXs[index1]) {
-        maxIdxXs[index1] = maxIdxXs[index2];
-        maxIdxYs[index1] = maxIdxYs[index2];
-      }
-    }
-    else {
-    }
-  }
-  else {
-  }
-}
-
-__DEVICE__
-void checkMinMax2(int index1, int index2, float* minVals, float* maxVals,
-                  int* minIdxXs, int* minIdxYs, int* maxIdxXs, int* maxIdxYs) {
-  if (minVals[index2] < minVals[index1]) {
-    minVals[index1]  = minVals[index2];
-    minIdxXs[index1] = minIdxXs[index2];
-    minIdxYs[index1] = minIdxYs[index2];
-  }
-  else if (minVals[index2] == minVals[index1]) {
-    if (minIdxYs[index2] < minIdxYs[index1]) {
-      minIdxXs[index1] = minIdxXs[index2];
-      minIdxYs[index1] = minIdxYs[index2];
-    }
-    else if (minIdxYs[index2] == minIdxYs[index1]) {
-      if (minIdxXs[index2] < minIdxXs[index1]) {
-        minIdxXs[index1] = minIdxXs[index2];
-        minIdxYs[index1] = minIdxYs[index2];
-      }
-    }
-    else {
-    }
-  }
-  else {
-  }
-
-  if (maxVals[index2] > maxVals[index1]) {
-    maxVals[index1]  = maxVals[index2];
-    maxIdxXs[index1] = maxIdxXs[index2];
-    maxIdxYs[index1] = maxIdxYs[index2];
-  }
-  else if (maxVals[index2] == maxVals[index1]) {
-    if (maxIdxYs[index2] < maxIdxYs[index1]) {
-      maxIdxXs[index1] = maxIdxXs[index2];
-      maxIdxYs[index1] = maxIdxYs[index2];
-    }
-    else if (maxIdxYs[index2] == maxIdxYs[index1]) {
-      if (maxIdxXs[index2] < maxIdxXs[index1]) {
-        maxIdxXs[index1] = maxIdxXs[index2];
-        maxIdxYs[index1] = maxIdxYs[index2];
+    else if (max_loc_ys[index1] == max_loc_ys[index0]) {
+      if (max_loc_xs[index1] < max_loc_xs[index0]) {
+        max_loc_xs[index0] = max_loc_xs[index1];
       }
     }
     else {
@@ -165,240 +115,300 @@ void checkMinMax2(int index1, int index2, float* minVals, float* maxVals,
 }
 
 __DEVICE__
-void checkMinMax3(int gindex, int sindex, uchar* g_minVals, uchar* g_maxVals,
-                  int* g_minIdxXs, int* g_minIdxYs, int* g_maxIdxXs,
-                  int* g_maxIdxYs, uchar* minVals, uchar* maxVals,
-                  int* minIdxXs, int* minIdxYs, int* maxIdxXs, int* maxIdxYs) {
-  if (g_minVals[gindex] < minVals[sindex]) {
-    minVals[sindex]  = g_minVals[gindex];
-    minIdxXs[sindex] = g_minIdxXs[gindex];
-    minIdxYs[sindex] = g_minIdxYs[gindex];
+void checkMinMax2(int index0, int index1, float* min_vals, float* max_vals,
+                  int* min_loc_xs, int* min_loc_ys, int* max_loc_xs,
+                  int* max_loc_ys) {
+  if (min_vals[index1] < min_vals[index0]) {
+    min_vals[index0]  = min_vals[index1];
+    min_loc_xs[index0] = min_loc_xs[index1];
+    min_loc_ys[index0] = min_loc_ys[index1];
+  }
+  else if (min_vals[index1] == min_vals[index0]) {
+    if (min_loc_ys[index1] < min_loc_ys[index0]) {
+      min_loc_xs[index0] = min_loc_xs[index1];
+      min_loc_ys[index0] = min_loc_ys[index1];
+    }
+    else if (min_loc_ys[index1] == min_loc_ys[index0]) {
+      if (min_loc_xs[index1] < min_loc_xs[index0]) {
+        min_loc_xs[index0] = min_loc_xs[index1];
+      }
+    }
+    else {
+    }
+  }
+  else {
   }
 
-  if (g_maxVals[gindex] > maxVals[sindex]) {
-    maxVals[sindex]  = g_maxVals[gindex];
-    maxIdxXs[sindex] = g_maxIdxXs[gindex];
-    maxIdxYs[sindex] = g_maxIdxYs[gindex];
+  if (max_vals[index1] > max_vals[index0]) {
+    max_vals[index0]  = max_vals[index1];
+    max_loc_xs[index0] = max_loc_xs[index1];
+    max_loc_ys[index0] = max_loc_ys[index1];
+  }
+  else if (max_vals[index1] == max_vals[index0]) {
+    if (max_loc_ys[index1] < max_loc_ys[index0]) {
+      max_loc_xs[index0] = max_loc_xs[index1];
+      max_loc_ys[index0] = max_loc_ys[index1];
+    }
+    else if (max_loc_ys[index1] == max_loc_ys[index0]) {
+      if (max_loc_xs[index1] < max_loc_xs[index0]) {
+        max_loc_xs[index0] = max_loc_xs[index1];
+      }
+    }
+    else {
+    }
+  }
+  else {
   }
 }
 
 __DEVICE__
-void checkMinMax3(int gindex, int sindex, float* g_minVals, float* g_maxVals,
-                  int* g_minIdxXs, int* g_minIdxYs, int* g_maxIdxXs,
-                  int* g_maxIdxYs, float* minVals, float* maxVals,
-                  int* minIdxXs, int* minIdxYs, int* maxIdxXs, int* maxIdxYs) {
-  if (g_minVals[gindex] < minVals[sindex]) {
-    minVals[sindex]  = g_minVals[gindex];
-    minIdxXs[sindex] = g_minIdxXs[gindex];
-    minIdxYs[sindex] = g_minIdxYs[gindex];
+void checkMinMax3(int g_index, int sh_index, uchar* g_min_vals,
+                  uchar* g_max_vals, int* g_min_loc_xs, int* g_min_loc_ys,
+                  int* g_max_loc_xs, int* g_max_loc_ys, uchar* min_vals,
+                  uchar* max_vals, int* min_loc_xs, int* min_loc_ys,
+                  int* max_loc_xs, int* max_loc_ys) {
+  if (g_min_vals[g_index] < min_vals[sh_index]) {
+    min_vals[sh_index]  = g_min_vals[g_index];
+    min_loc_xs[sh_index] = g_min_loc_xs[g_index];
+    min_loc_ys[sh_index] = g_min_loc_ys[g_index];
   }
 
-  if (g_maxVals[gindex] > maxVals[sindex]) {
-    maxVals[sindex]  = g_maxVals[gindex];
-    maxIdxXs[sindex] = g_maxIdxXs[gindex];
-    maxIdxYs[sindex] = g_maxIdxYs[gindex];
+  if (g_max_vals[g_index] > max_vals[sh_index]) {
+    max_vals[sh_index]  = g_max_vals[g_index];
+    max_loc_xs[sh_index] = g_max_loc_xs[g_index];
+    max_loc_ys[sh_index] = g_max_loc_ys[g_index];
+  }
+}
+
+__DEVICE__
+void checkMinMax3(int g_index, int sh_index, float* g_min_vals,
+                  float* g_max_vals, int* g_min_loc_xs, int* g_min_loc_ys,
+                  int* g_max_loc_xs, int* g_max_loc_ys, float* min_vals,
+                  float* max_vals, int* min_loc_xs, int* min_loc_ys,
+                  int* max_loc_xs, int* max_loc_ys) {
+  if (g_min_vals[g_index] < min_vals[sh_index]) {
+    min_vals[sh_index]  = g_min_vals[g_index];
+    min_loc_xs[sh_index] = g_min_loc_xs[g_index];
+    min_loc_ys[sh_index] = g_min_loc_ys[g_index];
+  }
+
+  if (g_max_vals[g_index] > max_vals[sh_index]) {
+    max_vals[sh_index]  = g_max_vals[g_index];
+    max_loc_xs[sh_index] = g_max_loc_xs[g_index];
+    max_loc_ys[sh_index] = g_max_loc_ys[g_index];
   }
 }
 
 __global__
 void minMaxLocKernel(const uchar* src, int rows, int cols, int src_stride,
-                     const uchar* mask, bool using_mask, int blocks,
-                     uchar* g_minVals, uchar* g_maxVals, int* g_minIdxXs,
-                     int* g_minIdxYs, int* g_maxIdxXs, int* g_maxIdxYs,
-                     int* g_output) {
-  __shared__ uchar minVals[BLOCK_SIZE];
-  __shared__ uchar maxVals[BLOCK_SIZE];
-  __shared__ int minIdxXs[BLOCK_SIZE];
-  __shared__ int minIdxYs[BLOCK_SIZE];
-  __shared__ int maxIdxXs[BLOCK_SIZE];
-  __shared__ int maxIdxYs[BLOCK_SIZE];
+                     const uchar* mask, int mask_stride, uint blocks,
+                     int* buffer) {
+  __shared__ uchar min_vals[BLOCK_SIZE];
+  __shared__ uchar max_vals[BLOCK_SIZE];
+  __shared__ int min_loc_xs[BLOCK_SIZE];
+  __shared__ int min_loc_ys[BLOCK_SIZE];
+  __shared__ int max_loc_xs[BLOCK_SIZE];
+  __shared__ int max_loc_ys[BLOCK_SIZE];
 
-  unsigned int threadIdx_x = threadIdx.x;
-  unsigned int element_x = ((blockIdx.x << BLOCK_SHIFT) + threadIdx_x) << 2;
-  unsigned int element_y = blockIdx.y;
+  int threadIdx_x = threadIdx.x;
+  int element_x = ((blockIdx.x << BLOCK_SHIFT) + threadIdx_x) << 2;
+  int element_y = blockIdx.y;
 
-  minVals[threadIdx_x]  = UCHAR_MAX;
-  maxVals[threadIdx_x]  = UCHAR_MIN;
-  minIdxXs[threadIdx_x] = 0;
-  minIdxYs[threadIdx_x] = 0;
-  maxIdxXs[threadIdx_x] = 0;
-  maxIdxYs[threadIdx_x] = 0;
+  min_vals[threadIdx_x]  = UCHAR_MAX;
+  max_vals[threadIdx_x]  = UCHAR_MIN;
+  min_loc_xs[threadIdx_x] = 0;
+  min_loc_ys[threadIdx_x] = 0;
+  max_loc_xs[threadIdx_x] = 0;
+  max_loc_ys[threadIdx_x] = 0;
 
-  int offset;
-  uchar* src_start;
-  uchar* mask_start;
+  uchar* input;
+  uchar* mask_row;
   uchar value0, value1, value2, value3;
-  uchar mvalue0, mvalue1, mvalue2, mvalue3;
+  uchar mask_value0, mask_value1, mask_value2, mask_value3;
 
   for (; element_y < rows; element_y += gridDim.y) {
     if (element_x < cols) {
-      offset = element_y * src_stride;
-      src_start  = (uchar*)((uchar*)src + offset);
-      value0 = src_start[element_x];
-      value1 = src_start[element_x + 1];
-      value2 = src_start[element_x + 2];
-      value3 = src_start[element_x + 3];
+      input = (uchar*)((uchar*)src + element_y * src_stride);
+      value0 = input[element_x];
+      value1 = input[element_x + 1];
+      value2 = input[element_x + 2];
+      value3 = input[element_x + 3];
 
-      if (using_mask) {
-        mask_start = (uchar*)((uchar*)mask + offset);
-        mvalue0 = mask_start[element_x];
-        mvalue1 = mask_start[element_x + 1];
-        mvalue2 = mask_start[element_x + 2];
-        mvalue3 = mask_start[element_x + 3];
-        if (mvalue0 > 0) {
-          checkMinMax1(value0, threadIdx_x, element_x, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+      if (mask == nullptr) {
+        checkMinMax1(value0, threadIdx_x, element_x, element_y, min_vals,
+                     max_vals, min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
+        if (element_x < cols - 1) {
+          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (mvalue1 > 0 && element_x + 1 < cols) {
-          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (element_x < cols - 2) {
+          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (mvalue2 > 0 && element_x + 2 < cols) {
-          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
-        }
-        if (mvalue3 > 0 && element_x + 3 < cols) {
-          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (element_x < cols - 3) {
+          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
       }
       else {
-        checkMinMax1(value0, threadIdx_x, element_x, element_y, minVals,
-                     maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
-        if (element_x + 1 < cols) {
-          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
+        mask_value0 = mask_row[element_x];
+        mask_value1 = mask_row[element_x + 1];
+        mask_value2 = mask_row[element_x + 2];
+        mask_value3 = mask_row[element_x + 3];
+        if (mask_value0 > 0) {
+          checkMinMax1(value0, threadIdx_x, element_x, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (element_x + 2 < cols) {
-          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (mask_value1 > 0 && element_x < cols - 1) {
+          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (element_x + 3 < cols) {
-          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (mask_value2 > 0 && element_x < cols - 2) {
+          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
+        }
+        if (mask_value3 > 0 && element_x < cols - 3) {
+          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
       }
     }
   }
   __syncthreads();
 
-  // Do reduction in the shared memory.
 #if BLOCK_SIZE == 512
   if (threadIdx_x < 256) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 256, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 256, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
   __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 256
   if (threadIdx_x < 128) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 128, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 128, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
   __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 128
   if (threadIdx_x < 64) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 64, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 64, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
   __syncthreads();
 #endif
 
   if (threadIdx_x < 32) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 32, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 16, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 8, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 4, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 2, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 1, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 32, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 16, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 8, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 4, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 2, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 1, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
 
+  __shared__ bool is_last_block_done;
+  int block_size = blocks * sizeof(int);
+  uchar* g_min_vals = (uchar*)buffer;
+  uchar* g_max_vals = (uchar*)buffer + block_size;
+  int* g_min_loc_xs = (int*)((uchar*)buffer + 2 * block_size);
+  int* g_min_loc_ys = (int*)((uchar*)buffer + 3 * block_size);
+  int* g_max_loc_xs = (int*)((uchar*)buffer + 4 * block_size);
+  int* g_max_loc_ys = (int*)((uchar*)buffer + 5 * block_size);
+
   if (threadIdx_x == 0) {
-    offset = gridDim.x * blockIdx.y + blockIdx.x;
-    g_minVals[offset]  = minVals[0];
-    g_maxVals[offset]  = maxVals[0];
-    g_minIdxXs[offset] = minIdxXs[0];
-    g_minIdxYs[offset] = minIdxYs[0];
-    g_maxIdxXs[offset] = maxIdxXs[0];
-    g_maxIdxYs[offset] = maxIdxYs[0];
+    int offset = gridDim.x * blockIdx.y + blockIdx.x;
+    g_min_vals[offset]  = min_vals[0];
+    g_max_vals[offset]  = max_vals[0];
+    g_min_loc_xs[offset] = min_loc_xs[0];
+    g_min_loc_ys[offset] = min_loc_ys[0];
+    g_max_loc_xs[offset] = max_loc_xs[0];
+    g_max_loc_ys[offset] = max_loc_ys[0];
     __threadfence();
 
-    unsigned int value = atomicInc(&count, blocks);
-    isLastBlockDone = (value == (blocks - 1));
+    uint local_count = atomicInc(&count, blocks);
+    is_last_block_done = (local_count == (blocks - 1));
   }
   __syncthreads();
 
-  // Do the final reduction in a thread block.
-  if (isLastBlockDone) {
-    minVals[threadIdx_x]  = UCHAR_MAX;
-    maxVals[threadIdx_x]  = UCHAR_MIN;
-    minIdxXs[threadIdx_x] = 0;
-    minIdxYs[threadIdx_x] = 0;
-    maxIdxXs[threadIdx_x] = 0;
-    maxIdxYs[threadIdx_x] = 0;
+  if (is_last_block_done) {
+    min_vals[threadIdx_x]  = UCHAR_MAX;
+    max_vals[threadIdx_x]  = UCHAR_MIN;
+    min_loc_xs[threadIdx_x] = 0;
+    min_loc_ys[threadIdx_x] = 0;
+    max_loc_xs[threadIdx_x] = 0;
+    max_loc_ys[threadIdx_x] = 0;
 
     for (element_x = threadIdx_x; element_x < blocks; element_x += BLOCK_SIZE) {
-      checkMinMax3(element_x, threadIdx_x, g_minVals, g_maxVals, g_minIdxXs,
-                   g_minIdxYs, g_maxIdxXs, g_maxIdxYs, minVals, maxVals,
-                   minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax3(element_x, threadIdx_x, g_min_vals, g_max_vals, g_min_loc_xs,
+                   g_min_loc_ys, g_max_loc_xs, g_max_loc_ys, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 
 #if BLOCK_SIZE == 512
     if (threadIdx_x < 256) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 256, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 256, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 256
     if (threadIdx_x < 128) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 128, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 128, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 128
     if (threadIdx_x < 64) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 64, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 64, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 #endif
 
     if (threadIdx_x < 32) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 32, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 16, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 8, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 4, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 2, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 1, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 32, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 16, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 8, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 4, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 2, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 1, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
     }
 
     if (threadIdx_x == 0) {
-      g_output[0] = (int)minVals[0];
-      g_output[1] = (int)maxVals[0];
-      g_output[2] = minIdxXs[0];
-      g_output[3] = minIdxYs[0];
-      g_output[4] = maxIdxXs[0];
-      g_output[5] = maxIdxYs[0];
+      buffer[1] = (int)min_vals[0];
+      buffer[2] = (int)max_vals[0];
+      buffer[3] = min_loc_xs[0];
+      buffer[4] = min_loc_ys[0];
+      buffer[5] = max_loc_xs[0];
+      buffer[6] = max_loc_ys[0];
+
       count = 0;
     }
   }
@@ -406,282 +416,261 @@ void minMaxLocKernel(const uchar* src, int rows, int cols, int src_stride,
 
 __global__
 void minMaxLocKernel(const float* src, int rows, int cols, int src_stride,
-                     const uchar* mask, int mask_stride, bool using_mask,
-                     int blocks, float* g_minVals, float* g_maxVals,
-                     int* g_minIdxXs, int* g_minIdxYs, int* g_maxIdxXs,
-                     int* g_maxIdxYs, float* g_output) {
-  __shared__ float minVals[BLOCK_SIZE];
-  __shared__ float maxVals[BLOCK_SIZE];
-  __shared__ int minIdxXs[BLOCK_SIZE];
-  __shared__ int minIdxYs[BLOCK_SIZE];
-  __shared__ int maxIdxXs[BLOCK_SIZE];
-  __shared__ int maxIdxYs[BLOCK_SIZE];
+                     const uchar* mask, int mask_stride, uint blocks,
+                     float* buffer) {
+  __shared__ float min_vals[BLOCK_SIZE];
+  __shared__ float max_vals[BLOCK_SIZE];
+  __shared__ int min_loc_xs[BLOCK_SIZE];
+  __shared__ int min_loc_ys[BLOCK_SIZE];
+  __shared__ int max_loc_xs[BLOCK_SIZE];
+  __shared__ int max_loc_ys[BLOCK_SIZE];
 
-  unsigned int threadIdx_x = threadIdx.x;
-  unsigned int element_x = ((blockIdx.x << BLOCK_SHIFT) + threadIdx_x) << 2;
-  unsigned int element_y = blockIdx.y;
+  int threadIdx_x = threadIdx.x;
+  int element_x = ((blockIdx.x << BLOCK_SHIFT) + threadIdx_x) << 2;
+  int element_y = blockIdx.y;
 
-  minVals[threadIdx_x]  = FLT_MAX;
-  maxVals[threadIdx_x]  = FLT_MIN;
-  minIdxXs[threadIdx_x] = 0;
-  minIdxYs[threadIdx_x] = 0;
-  maxIdxXs[threadIdx_x] = 0;
-  maxIdxYs[threadIdx_x] = 0;
+  min_vals[threadIdx_x]  = FLT_MAX;
+  max_vals[threadIdx_x]  = FLT_MIN;
+  min_loc_xs[threadIdx_x] = 0;
+  min_loc_ys[threadIdx_x] = 0;
+  max_loc_xs[threadIdx_x] = 0;
+  max_loc_ys[threadIdx_x] = 0;
 
-  int offset;
-  float* src_start;
-  uchar* mask_start;
+  float* input;
+  uchar* mask_row;
   float value0, value1, value2, value3;
-  uchar mvalue0, mvalue1, mvalue2, mvalue3;
+  uchar mask_value0, mask_value1, mask_value2, mask_value3;
 
-  // Read data from the global memory and compare with data in shared memory.
   for (; element_y < rows; element_y += gridDim.y) {
     if (element_x < cols) {
-      offset = element_y * src_stride;
-      src_start  = (float*)((uchar*)src + offset);
-      value0 = src_start[element_x];
-      value1 = src_start[element_x + 1];
-      value2 = src_start[element_x + 2];
-      value3 = src_start[element_x + 3];
+      input  = (float*)((uchar*)src + element_y * src_stride);
+      value0 = input[element_x];
+      value1 = input[element_x + 1];
+      value2 = input[element_x + 2];
+      value3 = input[element_x + 3];
 
-      if (using_mask) {
-        mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-        mvalue0 = mask_start[element_x];
-        mvalue1 = mask_start[element_x + 1];
-        mvalue2 = mask_start[element_x + 2];
-        mvalue3 = mask_start[element_x + 3];
-        if (mvalue0 > 0) {
-          checkMinMax1(value0, threadIdx_x, element_x, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+      if (mask == nullptr) {
+        checkMinMax1(value0, threadIdx_x, element_x, element_y, min_vals,
+                     max_vals, min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
+        if (element_x < cols - 1) {
+          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (mvalue1 > 0 && element_x + 1 < cols) {
-          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (element_x < cols - 2) {
+          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (mvalue2 > 0 && element_x + 2 < cols) {
-          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
-        }
-        if (mvalue3 > 0 && element_x + 3 < cols) {
-          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (element_x < cols - 3) {
+          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
       }
       else {
-        checkMinMax1(value0, threadIdx_x, element_x, element_y, minVals,
-                     maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
-        if (element_x + 1 < cols) {
-          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
+        mask_value0 = mask_row[element_x];
+        mask_value1 = mask_row[element_x + 1];
+        mask_value2 = mask_row[element_x + 2];
+        mask_value3 = mask_row[element_x + 3];
+        if (mask_value0 > 0) {
+          checkMinMax1(value0, threadIdx_x, element_x, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (element_x + 2 < cols) {
-          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (mask_value1 > 0 && element_x < cols - 1) {
+          checkMinMax1(value1, threadIdx_x, element_x + 1, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
-        if (element_x + 3 < cols) {
-          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, minVals,
-                       maxVals, minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+        if (mask_value2 > 0 && element_x < cols - 2) {
+          checkMinMax1(value2, threadIdx_x, element_x + 2, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
+        }
+        if (mask_value3 > 0 && element_x < cols - 3) {
+          checkMinMax1(value3, threadIdx_x, element_x + 3, element_y, min_vals,
+                       max_vals, min_loc_xs, min_loc_ys, max_loc_xs,
+                       max_loc_ys);
         }
       }
     }
   }
   __syncthreads();
 
-  // Do reduction in the shared memory.
 #if BLOCK_SIZE == 512
   if (threadIdx_x < 256) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 256, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 256, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
   __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 256
   if (threadIdx_x < 128) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 128, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 128, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
   __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 128
   if (threadIdx_x < 64) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 64, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 64, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
   __syncthreads();
 #endif
 
   if (threadIdx_x < 32) {
-    checkMinMax2(threadIdx_x, threadIdx_x + 32, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 16, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 8, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 4, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 2, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
-    checkMinMax2(threadIdx_x, threadIdx_x + 1, minVals, maxVals, minIdxXs,
-                 minIdxYs, maxIdxXs, maxIdxYs);
+    checkMinMax2(threadIdx_x, threadIdx_x + 32, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 16, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 8, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 4, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 2, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
+    checkMinMax2(threadIdx_x, threadIdx_x + 1, min_vals, max_vals, min_loc_xs,
+                 min_loc_ys, max_loc_xs, max_loc_ys);
   }
 
+  __shared__ bool is_last_block_done;
+  int block_size = blocks * sizeof(float);
+  float* g_min_vals = (float*)buffer;
+  float* g_max_vals = (float*)((uchar*)buffer + block_size);
+  int* g_min_loc_xs = (int*)((uchar*)buffer + 2 * block_size);
+  int* g_min_loc_ys = (int*)((uchar*)buffer + 3 * block_size);
+  int* g_max_loc_xs = (int*)((uchar*)buffer + 4 * block_size);
+  int* g_max_loc_ys = (int*)((uchar*)buffer + 5 * block_size);
+
   if (threadIdx_x == 0) {
-    offset = gridDim.x * blockIdx.y + blockIdx.x;
-    g_minVals[offset]  = minVals[0];
-    g_maxVals[offset]  = maxVals[0];
-    g_minIdxXs[offset] = minIdxXs[0];
-    g_minIdxYs[offset] = minIdxYs[0];
-    g_maxIdxXs[offset] = maxIdxXs[0];
-    g_maxIdxYs[offset] = maxIdxYs[0];
+    int offset = gridDim.x * blockIdx.y + blockIdx.x;
+    g_min_vals[offset]  = min_vals[0];
+    g_max_vals[offset]  = max_vals[0];
+    g_min_loc_xs[offset] = min_loc_xs[0];
+    g_min_loc_ys[offset] = min_loc_ys[0];
+    g_max_loc_xs[offset] = max_loc_xs[0];
+    g_max_loc_ys[offset] = max_loc_ys[0];
     __threadfence();
 
-    unsigned int value = atomicInc(&count, blocks);
-    isLastBlockDone = (value == (blocks - 1));
+    uint local_count = atomicInc(&count, blocks);
+    is_last_block_done = (local_count == (blocks - 1));
   }
   __syncthreads();
 
-  // Do the final reduction in a thread block.
-  if (isLastBlockDone) {
-    minVals[threadIdx_x]  = FLT_MAX;
-    maxVals[threadIdx_x]  = FLT_MIN;
-    minIdxXs[threadIdx_x] = 0;
-    minIdxYs[threadIdx_x] = 0;
-    maxIdxXs[threadIdx_x] = 0;
-    maxIdxYs[threadIdx_x] = 0;
+  if (is_last_block_done) {
+    min_vals[threadIdx_x]  = FLT_MAX;
+    max_vals[threadIdx_x]  = FLT_MIN;
+    min_loc_xs[threadIdx_x] = 0;
+    min_loc_ys[threadIdx_x] = 0;
+    max_loc_xs[threadIdx_x] = 0;
+    max_loc_ys[threadIdx_x] = 0;
 
     for (element_x = threadIdx_x; element_x < blocks; element_x += BLOCK_SIZE) {
-      checkMinMax3(element_x, threadIdx_x, g_minVals, g_maxVals, g_minIdxXs,
-                   g_minIdxYs, g_maxIdxXs, g_maxIdxYs, minVals, maxVals,
-                   minIdxXs, minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax3(element_x, threadIdx_x, g_min_vals, g_max_vals, g_min_loc_xs,
+                   g_min_loc_ys, g_max_loc_xs, g_max_loc_ys, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 
 #if BLOCK_SIZE == 512
     if (threadIdx_x < 256) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 256, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 256, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 256
     if (threadIdx_x < 128) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 128, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 128, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 #endif
 
 #if BLOCK_SIZE >= 128
     if (threadIdx_x < 64) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 64, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 64, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
     }
     __syncthreads();
 #endif
 
     if (threadIdx_x < 32) {
-      checkMinMax2(threadIdx_x, threadIdx_x + 32, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 16, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 8, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 4, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 2, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
-      checkMinMax2(threadIdx_x, threadIdx_x + 1, minVals, maxVals, minIdxXs,
-                   minIdxYs, maxIdxXs, maxIdxYs);
+      checkMinMax2(threadIdx_x, threadIdx_x + 32, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 16, min_vals, max_vals,
+                   min_loc_xs, min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 8, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 4, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 2, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
+      checkMinMax2(threadIdx_x, threadIdx_x + 1, min_vals, max_vals, min_loc_xs,
+                   min_loc_ys, max_loc_xs, max_loc_ys);
     }
 
     if (threadIdx_x == 0) {
-      g_output[0] = minVals[0];
-      g_output[1] = maxVals[0];
-      g_output[2] = (float)minIdxXs[0];
-      g_output[3] = (float)minIdxYs[0];
-      g_output[4] = (float)maxIdxXs[0];
-      g_output[5] = (float)maxIdxYs[0];
+      buffer[1] = min_vals[0];
+      buffer[2] = max_vals[0];
+      buffer[3] = (float)min_loc_xs[0];
+      buffer[4] = (float)min_loc_ys[0];
+      buffer[5] = (float)max_loc_xs[0];
+      buffer[6] = (float)max_loc_ys[0];
+
       count = 0;
     }
   }
 }
 
 RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
-                  const uchar* mask, int mask_stride, uchar* minVal,
-                  uchar* maxVal, int* minIdxX, int* minIdxY, int* maxIdxX,
-                  int* maxIdxY, cudaStream_t stream) {
+                  const uchar* mask, int mask_stride, uchar* min_val,
+                  uchar* max_val, int* min_loc_x, int* min_loc_y,
+                  int* max_loc_x, int* max_loc_y, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(rows > 1 && cols > 1);
-  PPL_ASSERT(src_stride  >= cols * (int)sizeof(uchar));
-  PPL_ASSERT(mask_stride >= 0);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(uchar));
   if (mask != nullptr) {
     PPL_ASSERT(mask_stride >= cols * (int)sizeof(uchar));
   }
-  PPL_ASSERT(minVal != nullptr);
-  PPL_ASSERT(maxVal != nullptr);
-  PPL_ASSERT(minIdxX != nullptr);
-  PPL_ASSERT(minIdxY != nullptr);
-  PPL_ASSERT(maxIdxX != nullptr);
-  PPL_ASSERT(maxIdxY != nullptr);
+  PPL_ASSERT(min_val != nullptr);
+  PPL_ASSERT(max_val != nullptr);
+  PPL_ASSERT(min_loc_x != nullptr);
+  PPL_ASSERT(min_loc_y != nullptr);
+  PPL_ASSERT(max_loc_x != nullptr);
+  PPL_ASSERT(max_loc_y != nullptr);
 
-  // Each thread processes 4 consecutive elements.
-  int col_threads = divideUp(cols, 4, 2);
   dim3 block, grid;
   block.x = BLOCK_SIZE;
   block.y = 1;
-  grid.x  = divideUp(col_threads, BLOCK_SIZE, BLOCK_SHIFT);
-  // run about MAX_BLOCKS thread blocks on a GPU.
-  int gy  = MAX_BLOCKS / grid.x;
-  grid.y  = (gy < rows) ? gy : rows;
+  grid.x  = divideUp(divideUp(cols, 4, 2), BLOCK_SIZE, BLOCK_SHIFT);
+  int grid_y = MAX_BLOCKS / grid.x;
+  grid.y = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  uchar* g_minVals;
-  uchar* g_maxVals;
-  int* g_minIdxXs;
-  int* g_minIdxYs;
-  int* g_maxIdxXs;
-  int* g_maxIdxYs;
-  cudaMalloc(&g_minVals, blocks * sizeof(uchar));
-  cudaMalloc(&g_maxVals, blocks * sizeof(uchar));
-  cudaMalloc(&g_minIdxXs, blocks * sizeof(int));
-  cudaMalloc(&g_minIdxYs, blocks * sizeof(int));
-  cudaMalloc(&g_maxIdxXs, blocks * sizeof(int));
-  cudaMalloc(&g_maxIdxYs, blocks * sizeof(int));
-
-  int* g_output;
-  cudaMalloc(&g_output, 6 * sizeof(int));
-
-  bool using_mask;
-  if (mask != nullptr) {
-    using_mask = true;
-  }
-  else {
-    using_mask = false;
-  }
+  int buffer_size = blocks * sizeof(int) * 6;
+  int* buffer;
+  cudaMalloc(&buffer, buffer_size);
 
   minMaxLocKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-      mask, using_mask, blocks, g_minVals, g_maxVals, g_minIdxXs, g_minIdxYs,
-      g_maxIdxXs, g_maxIdxYs, g_output);
+      mask, mask_stride, blocks, buffer);
 
-  int values[6];
-  cudaMemcpy(values, g_output, 6 * sizeof(int), cudaMemcpyDeviceToHost);
-  *minVal = (uchar)values[0];
-  *maxVal = (uchar)values[1];
-  *minIdxX = values[2];
-  *minIdxY = values[3];
-  *maxIdxX = values[4];
-  *maxIdxY = values[5];
+  int results[7];
+  cudaMemcpy(results, buffer, 7 * sizeof(int), cudaMemcpyDeviceToHost);
+  *min_val = (uchar)results[1];
+  *max_val = (uchar)results[2];
+  *min_loc_x = results[3];
+  *min_loc_y = results[4];
+  *max_loc_x = results[5];
+  *max_loc_y = results[6];
 
-  cudaFree(g_minVals);
-  cudaFree(g_maxVals);
-  cudaFree(g_minIdxXs);
-  cudaFree(g_minIdxYs);
-  cudaFree(g_maxIdxXs);
-  cudaFree(g_maxIdxYs);
-  cudaFree(g_output);
+  cudaFree(buffer);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -693,79 +682,47 @@ RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
 }
 
 RetCode minMaxLoc(const float* src, int rows, int cols, int src_stride,
-                  const uchar* mask, int mask_stride, float* minVal,
-                  float* maxVal, int* minIdxX, int* minIdxY, int* maxIdxX,
-                  int* maxIdxY, cudaStream_t stream) {
+                  const uchar* mask, int mask_stride, float* min_val,
+                  float* max_val, int* min_loc_x, int* min_loc_y,
+                  int* max_loc_x, int* max_loc_y, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(rows > 1 && cols > 1);
-  PPL_ASSERT(src_stride  >= cols * (int)sizeof(float));
-  PPL_ASSERT(mask_stride >= 0);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(float));
   if (mask != nullptr) {
     PPL_ASSERT(mask_stride >= cols * (int)sizeof(uchar));
   }
-  PPL_ASSERT(minVal != nullptr);
-  PPL_ASSERT(maxVal != nullptr);
-  PPL_ASSERT(minIdxX != nullptr);
-  PPL_ASSERT(minIdxY != nullptr);
-  PPL_ASSERT(maxIdxX != nullptr);
-  PPL_ASSERT(maxIdxY != nullptr);
+  PPL_ASSERT(min_val != nullptr);
+  PPL_ASSERT(max_val != nullptr);
+  PPL_ASSERT(min_loc_x != nullptr);
+  PPL_ASSERT(min_loc_y != nullptr);
+  PPL_ASSERT(max_loc_x != nullptr);
+  PPL_ASSERT(max_loc_y != nullptr);
 
-  // Each thread processes 4 consecutive elements.
-  int col_threads = divideUp(cols, 4, 2);
   dim3 block, grid;
   block.x = BLOCK_SIZE;
   block.y = 1;
-  grid.x  = divideUp(col_threads, BLOCK_SIZE, BLOCK_SHIFT);
-  // run about MAX_BLOCKS thread blocks on a GPU.
-  int gy  = MAX_BLOCKS / grid.x;
-  grid.y  = (gy < rows) ? gy : rows;
+  grid.x  = divideUp(divideUp(cols, 4, 2), BLOCK_SIZE, BLOCK_SHIFT);
+  int grid_y  = MAX_BLOCKS / grid.x;
+  grid.y = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  float* g_minVals;
-  float* g_maxVals;
-  int* g_minIdxXs;
-  int* g_minIdxYs;
-  int* g_maxIdxXs;
-  int* g_maxIdxYs;
-  cudaMalloc(&g_minVals, blocks * sizeof(float));
-  cudaMalloc(&g_maxVals, blocks * sizeof(float));
-  cudaMalloc(&g_minIdxXs, blocks * sizeof(int));
-  cudaMalloc(&g_minIdxYs, blocks * sizeof(int));
-  cudaMalloc(&g_maxIdxXs, blocks * sizeof(int));
-  cudaMalloc(&g_maxIdxYs, blocks * sizeof(int));
-
-  float* g_output;
-  cudaMalloc(&g_output, 6 * sizeof(float));
-
-  bool using_mask;
-  if (mask != nullptr) {
-    using_mask = true;
-    PPL_ASSERT(mask_stride > 0);
-  }
-  else {
-    using_mask = false;
-  }
+  int buffer_size = blocks * sizeof(float) * 6;
+  float* buffer;
+  cudaMalloc(&buffer, buffer_size);
 
   minMaxLocKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-      mask, mask_stride, using_mask, blocks, g_minVals, g_maxVals, g_minIdxXs,
-      g_minIdxYs, g_maxIdxXs, g_maxIdxYs, g_output);
+      mask, mask_stride, blocks, buffer);
 
-  float values[6];
-  cudaMemcpy(values, g_output, 6 * sizeof(float), cudaMemcpyDeviceToHost);
-  *minVal = values[0];
-  *maxVal = values[1];
-  *minIdxX = (int)values[2];
-  *minIdxY = (int)values[3];
-  *maxIdxX = (int)values[4];
-  *maxIdxY = (int)values[5];
+  float results[7];
+  cudaMemcpy(results, buffer, 7 * sizeof(float), cudaMemcpyDeviceToHost);
+  *min_val = results[1];
+  *max_val = results[2];
+  *min_loc_x = (int)results[3];
+  *min_loc_y = (int)results[4];
+  *max_loc_x = (int)results[5];
+  *max_loc_y = (int)results[6];
 
-  cudaFree(g_minVals);
-  cudaFree(g_maxVals);
-  cudaFree(g_minIdxXs);
-  cudaFree(g_minIdxYs);
-  cudaFree(g_maxIdxXs);
-  cudaFree(g_maxIdxYs);
-  cudaFree(g_output);
+  cudaFree(buffer);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {

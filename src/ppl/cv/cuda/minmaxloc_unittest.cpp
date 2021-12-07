@@ -94,44 +94,44 @@ bool PplCvCudaMinMaxLocTest<T>::apply() {
   cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
   double min_value0, max_value0;
-  cv::Point minLoc, maxLoc;
+  cv::Point min_loc, max_loc;
   T min_value1, min_value2;
   T max_value1, max_value2;
-  int min_index_x, min_index_y, max_index_x, max_index_y;
-  int min_index_x2, min_index_y2, max_index_x2, max_index_y2;
+  int min_index_x0, min_index_y0, max_index_x0, max_index_y0;
+  int min_index_x1, min_index_y1, max_index_x1, max_index_y1;
   if (is_masked == kUnmasked) {
-    cv::minMaxLoc(src, &min_value0, &max_value0, &minLoc, &maxLoc);
+    cv::minMaxLoc(src, &min_value0, &max_value0, &min_loc, &max_loc);
     MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                 (T*)gpu_src.data, &min_value1, &max_value1, &min_index_x,
-                 &min_index_y, &max_index_x, &max_index_y);
+                 (T*)gpu_src.data, &min_value1, &max_value1, &min_index_x0,
+                 &min_index_y0, &max_index_x0, &max_index_y0);
     MinMaxLoc<T>(0, size.height, size.width, size.width, gpu_input,
-                 &min_value2, &max_value2, &min_index_x2, &min_index_y2,
-                 &max_index_x2, &max_index_y2);
+                 &min_value2, &max_value2, &min_index_x1, &min_index_y1,
+                 &max_index_x1, &max_index_y1);
   }
   else {
-    cv::minMaxLoc(src, &min_value0, &max_value0, &minLoc, &maxLoc, mask);
+    cv::minMaxLoc(src, &min_value0, &max_value0, &min_loc, &max_loc, mask);
     MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                 (T*)gpu_src.data, &min_value1, &max_value1, &min_index_x,
-                 &min_index_y, &max_index_x, &max_index_y,
+                 (T*)gpu_src.data, &min_value1, &max_value1, &min_index_x0,
+                 &min_index_y0, &max_index_x0, &max_index_y0,
                  gpu_mask0.step, gpu_mask0.data);
     MinMaxLoc<T>(0, size.height, size.width, size.width, gpu_input, &min_value2,
-                 &max_value2, &min_index_x2, &min_index_y2, &max_index_x2,
-                 &max_index_y2, size.width, gpu_mask1);
+                 &max_value2, &min_index_x1, &min_index_y1, &max_index_x1,
+                 &max_index_y1, size.width, gpu_mask1);
   }
 
   bool identity0 = false;
   if (fabs(min_value0 - min_value1) < EPSILON_E5 &&
       fabs(max_value0 - max_value1) < EPSILON_E5 &&
-      minLoc.x == min_index_x && minLoc.y == min_index_y &&
-      maxLoc.x == max_index_x && maxLoc.y == max_index_y) {
+      min_loc.x == min_index_x0 && min_loc.y == min_index_y0 &&
+      max_loc.x == max_index_x0 && max_loc.y == max_index_y0) {
     identity0 = true;
   }
 
   bool identity1 = false;
   if (fabs(min_value0 - min_value2) < EPSILON_E5 &&
       fabs(max_value0 - max_value2) < EPSILON_E5 &&
-      minLoc.x == min_index_x2 && minLoc.y == min_index_y2 &&
-      maxLoc.x == max_index_x2 && maxLoc.y == max_index_y2) {
+      min_loc.x == min_index_x1 && min_loc.y == min_index_y1 &&
+      max_loc.x == max_index_x1 && max_loc.y == max_index_y1) {
     identity1 = true;
   }
 
