@@ -1,7 +1,7 @@
 set(opencv_INCLUDE_DIRECTORIES )
 set(opencv_LIBRARIES )
 
-set(BUILD_LIST "core,imgproc,features2d,flann,imgcodecs,video,calib3d" CACHE INTERNAL "")
+set(BUILD_LIST "ximgproc,core,imgproc,features2d,flann,imgcodecs,video,calib3d" CACHE INTERNAL "")
 
 # --------------------------------------------------------------------------- #
 
@@ -29,7 +29,12 @@ endif()
 
 hpcc_populate_dep(opencv)
 
+FetchContent_GetProperties(opencv_contrib)
+if(NOT opencv_contrib_POPULATED)
+    FetchContent_Populate(opencv_contrib)
+endif()
 list(APPEND opencv_INCLUDE_DIRECTORIES
+    ${opencv_contrib_SOURCE_DIR}/modules/ximgproc/include
     ${opencv_SOURCE_DIR}/modules/features2d/include
     ${opencv_SOURCE_DIR}/modules/flann/include
     ${opencv_SOURCE_DIR}/modules/imgcodecs/include
@@ -38,4 +43,5 @@ list(APPEND opencv_INCLUDE_DIRECTORIES
     ${opencv_SOURCE_DIR}/include
     ${opencv_SOURCE_DIR}/modules/core/include
     ${opencv_SOURCE_DIR}/modules/imgproc/include)
-list(APPEND opencv_LIBRARIES opencv_imgproc opencv_core)
+list(APPEND opencv_LIBRARIES opencv_ximgproc opencv_imgproc opencv_core )
+set(OPENCV_EXTRA_MODULES_PATH "${HPCC_DEPS_DIR}/opencv_contrib/modules" CACHE INTERNAL "")

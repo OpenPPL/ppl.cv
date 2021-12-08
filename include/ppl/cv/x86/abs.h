@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_HPC_PPL_CV_X86_CONVERTTO_H_
-#define __ST_HPC_PPL_CV_X86_CONVERTTO_H_
+#ifndef __ST_HPC_PPL_CV_X86_ABS_H_
+#define __ST_HPC_PPL_CV_X86_ABS_H_
 
 #include "ppl/common/retcode.h"
 
@@ -25,45 +25,40 @@ namespace cv {
 namespace x86 {
 
 /**
-* @brief Calculates the per-element sum of two arrays
-* @tparam Tsrc The data type of input image, currently only \a uint8 and \a float are supported.
+* @brief Calculates an absolute value of each matrix element.
+* @tparam T The data type of input and output image, currently only \a float is supported.
 * @tparam nc The number of channels of input image and output image, 1, 3 and 4 are supported.
-* @tparam Tdst The data type of output image, currently only \a float and \a uint8 are supported.
 * @param height            input image's height
 * @param width             input image's width
-* @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+* @param inWidthStride     input image's width stride, usually it equals to `width * nc`
 * @param inData            input image data
-* @param scale             coeffcient to mutiply
-* @param outWidthStride    output image's width stride, usually it equals to `width * channels`
+* @param outWidthStride    output image's width stride, usually it equals to `width * nc`
 * @param outData           output image data
 * @warning All input parameters must be valid, or undefined behaviour may occur.
-* @remark The fllowing table show which data type and channels are supported.
+* @remark The following table show which data type and channels are supported.
 * <table>
 * <tr><th>Data type(T)<th>channels
-* <tr><td>float<td>1<td>uint8_t
-* <tr><td>float<td>3<td>uint8_t
-* <tr><td>float<td>4<td>uint8_t
-* <tr><td>uint8_t<td>1<td>float
-* <tr><td>uint8_t<td>3<td>float
-* <tr><td>uint8_t<td>4<td>float
+* <tr><td>float<td>1
+* <tr><td>float<td>3
+* <tr><td>float<td>4
 * </table>
 * <table>
 * <caption align="left">Requirements</caption>
-* <tr><td>X86 platforms supported<td> All
-* <tr><td>Header files<td> #include &lt;ppl/cv/x86/convertto.h&gt;
+* <tr><td>x86 platforms supported<td> All
+* <tr><td>Header files<td> #include &lt;ppl/cv/x86/abs.h&gt;
 * <tr><td>Project<td> ppl.cv
 * @since ppl.cv-v1.0.0
 * ###Example
 * @code{.cpp}
-* #include <ppl/cv/x86/convertto.h>
+* #include <ppl/cv/x86/abs.h>
 * int32_t main(int32_t argc, char** argv) {
 *     const int32_t W = 640;
 *     const int32_t H = 480;
 *     const int32_t C = 3;
 *     float* dev_iImage = (float*)malloc(W * H * C * sizeof(float));
-*     float* dev_oImage = (float*)malloc(W * H * C * sizeof(uint8_t));
+*     float* dev_oImage = (float*)malloc(W * H * C * sizeof(float));
 *
-*     ppl::cv::x86::ConvertTo<float, 3, uint8_t>(H, W, W * C, dev_iImage, 1.0f, W * C, dev_oImage);
+*     ppl::cv::x86::Abs<float, 3>(H, W, W * C, dev_iImage, W * C, dev_oImage);
 *
 *     free(dev_iImage);
 *     free(dev_oImage);
@@ -71,17 +66,17 @@ namespace x86 {
 * }
 * @endcode
 ***************************************************************************************************/
-template <typename TSrc, int32_t channels, typename TDst>
-::ppl::common::RetCode ConvertTo(
+
+template <typename T, int32_t nc>
+::ppl::common::RetCode Abs(
     int32_t height,
     int32_t width,
     int32_t inWidthStride,
-    const TSrc* inData,
-    float scale,
+    const T *inData,
     int32_t outWidthStride,
-    TDst* outData);
+    T *outData);
 
 }
 }
 } // namespace ppl::cv::x86
-#endif //! __ST_HPC_PPL_CV_X86_CONVERTTO_H_
+#endif //! __ST_HPC_PPL_CV_X86_ABS_H_
