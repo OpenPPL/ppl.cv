@@ -144,16 +144,6 @@ BENCHMARK_TEMPLATE(BM_Integral_ppl_cuda, uchar, int)->Args({width, height})->  \
 // RUN_BENCHMARK1(1280, 720)
 // RUN_BENCHMARK1(1920, 1080)
 
-#define RUN_OPENCV_CUDA_FUNCTIONS(tsrc, tdst)                                  \
-BENCHMARK_TEMPLATE(BM_Integral_opencv_cuda, tsrc, tdst)->Args({320, 240})->    \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Integral_opencv_cuda, tsrc, tdst)->Args({640, 480})->    \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Integral_opencv_cuda, tsrc, tdst)->Args({1280, 720})->   \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Integral_opencv_cuda, tsrc, tdst)->Args({1920, 1080})->  \
-                   UseManualTime()->Iterations(10);
-
 #define RUN_OPENCV_X86_FUNCTIONS(tsrc, tdst)                                   \
 BENCHMARK_TEMPLATE(BM_Integral_opencv_x86_cuda, tsrc, tdst)->Args({320, 240}); \
 BENCHMARK_TEMPLATE(BM_Integral_opencv_x86_cuda, tsrc, tdst)->Args({640, 480}); \
@@ -170,7 +160,6 @@ BENCHMARK_TEMPLATE(BM_Integral_ppl_cuda, tsrc, tdst)->Args({1280, 720})->      \
 BENCHMARK_TEMPLATE(BM_Integral_ppl_cuda, tsrc, tdst)->Args({1920, 1080})->     \
                    UseManualTime()->Iterations(10);
 
-RUN_OPENCV_CUDA_FUNCTIONS(uchar, int)
 RUN_OPENCV_X86_FUNCTIONS(uchar, int)
 RUN_OPENCV_X86_FUNCTIONS(float, float)
 
