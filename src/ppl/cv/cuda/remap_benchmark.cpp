@@ -29,12 +29,7 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
-enum InterpolationTypes {
-  kInterLinear,
-  kInterNearest,
-};
-
-template <typename T, int channels, InterpolationTypes inter_type,
+template <typename T, int channels, InterpolationType inter_type,
           BorderType border_type>
 void BM_Remap_ppl_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
@@ -69,29 +64,18 @@ void BM_Remap_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    RemapLinear<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
+    Remap<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
         (T*)gpu_src.data, dst_height, dst_width, gpu_dst.step / sizeof(T),
-        (T*)gpu_dst.data, gpu_map_x, gpu_map_y, border_type);
+        (T*)gpu_dst.data, gpu_map_x, gpu_map_y, inter_type, border_type);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (inter_type == kInterLinear) {
-        RemapLinear<T, channels>(0, src.rows, src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_map_x, gpu_map_y,
-            border_type);
-      }
-      else if (inter_type == kInterNearest) {
-        RemapNearestPoint<T, channels>(0, src.rows, src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_map_x, gpu_map_y,
-            border_type);
-      }
-      else {
-      }
+      Remap<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
+          (T*)gpu_src.data, dst_height, dst_width, gpu_dst.step / sizeof(T),
+          (T*)gpu_dst.data, gpu_map_x, gpu_map_y, inter_type, border_type);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -107,7 +91,7 @@ void BM_Remap_ppl_cuda(benchmark::State &state) {
   cudaFree(gpu_map_y);
 }
 
-template <typename T, int channels, InterpolationTypes inter_type,
+template <typename T, int channels, InterpolationType inter_type,
           BorderType border_type>
 void BM_Remap_opencv_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
@@ -153,11 +137,11 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (inter_type == kInterLinear) {
+      if (inter_type == INTERPOLATION_TYPE_LINEAR) {
         cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y,
                         cv::INTER_LINEAR, cv_border);
       }
-      else if (inter_type == kInterNearest) {
+      else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
         cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y,
                         cv::INTER_NEAREST, cv_border);
       }
@@ -173,7 +157,7 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename T, int channels, InterpolationTypes inter_type,
+template <typename T, int channels, InterpolationType inter_type,
           BorderType border_type>
 void BM_Remap_opencv_x86_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
@@ -203,10 +187,10 @@ void BM_Remap_opencv_x86_cuda(benchmark::State &state) {
   }
 
   for (auto _ : state) {
-    if (inter_type == kInterLinear) {
+    if (inter_type == INTERPOLATION_TYPE_LINEAR) {
       cv::remap(src, dst, map_x, map_y, cv::INTER_LINEAR, cv_border);
     }
-    else if (inter_type == kInterNearest) {
+    else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
       cv::remap(src, dst, map_x, map_y, cv::INTER_NEAREST, cv_border);
     }
     else {
@@ -236,43 +220,79 @@ BENCHMARK_TEMPLATE(BM_Remap_ppl_cuda, float, channels, inter_type,             \
                    border_type)->Args({src_width, src_height, dst_width,       \
                    dst_height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(c1, kInterLinear, BORDER_TYPE_CONSTANT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterLinear, BORDER_TYPE_CONSTANT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c1, kInterLinear, BORDER_TYPE_REPLICATE, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterLinear, BORDER_TYPE_REPLICATE, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c1, kInterLinear, BORDER_TYPE_TRANSPARENT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterLinear, BORDER_TYPE_TRANSPARENT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterLinear, BORDER_TYPE_CONSTANT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterLinear, BORDER_TYPE_CONSTANT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterLinear, BORDER_TYPE_REPLICATE, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterLinear, BORDER_TYPE_REPLICATE, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterLinear, BORDER_TYPE_TRANSPARENT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterLinear, BORDER_TYPE_TRANSPARENT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterLinear, BORDER_TYPE_CONSTANT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterLinear, BORDER_TYPE_CONSTANT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterLinear, BORDER_TYPE_REPLICATE, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterLinear, BORDER_TYPE_REPLICATE, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterLinear, BORDER_TYPE_TRANSPARENT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterLinear, BORDER_TYPE_TRANSPARENT, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 1280, 960)
 
-// RUN_BENCHMARK(c1, kInterNearest, BORDER_TYPE_CONSTANT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterNearest, BORDER_TYPE_CONSTANT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c1, kInterNearest, BORDER_TYPE_REPLICATE, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterNearest, BORDER_TYPE_REPLICATE, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c1, kInterNearest, BORDER_TYPE_TRANSPARENT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterNearest, BORDER_TYPE_TRANSPARENT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterNearest, BORDER_TYPE_CONSTANT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterNearest, BORDER_TYPE_CONSTANT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterNearest, BORDER_TYPE_REPLICATE, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterNearest, BORDER_TYPE_REPLICATE, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterNearest, BORDER_TYPE_TRANSPARENT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterNearest, BORDER_TYPE_TRANSPARENT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterNearest, BORDER_TYPE_CONSTANT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterNearest, BORDER_TYPE_CONSTANT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterNearest, BORDER_TYPE_REPLICATE, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterNearest, BORDER_TYPE_REPLICATE, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterNearest, BORDER_TYPE_TRANSPARENT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterNearest, BORDER_TYPE_TRANSPARENT, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_CONSTANT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_CONSTANT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_REPLICATE,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_REPLICATE,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_CONSTANT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_CONSTANT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_REPLICATE,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_REPLICATE,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_CONSTANT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_CONSTANT,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_REPLICATE,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_REPLICATE,
+//               640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, BORDER_TYPE_TRANSPARENT,
+//               640, 480, 1280, 960)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, inter_type, border_type)               \
 BENCHMARK_TEMPLATE(BM_Remap_opencv_cuda, type, c1, inter_type, border_type)->  \
@@ -314,28 +334,52 @@ BENCHMARK_TEMPLATE(BM_Remap_ppl_cuda, type, c4, inter_type, border_type)->     \
                    Args({640, 480, 1280, 960})->UseManualTime()->              \
                    Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kInterLinear, BORDER_TYPE_CONSTANT)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kInterLinear, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kInterLinear, BORDER_TYPE_TRANSPARENT)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kInterNearest, BORDER_TYPE_CONSTANT)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kInterNearest, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kInterNearest, BORDER_TYPE_TRANSPARENT)
-RUN_OPENCV_TYPE_FUNCTIONS(float, kInterLinear, BORDER_TYPE_CONSTANT)
-RUN_OPENCV_TYPE_FUNCTIONS(float, kInterLinear, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(float, kInterLinear, BORDER_TYPE_TRANSPARENT)
-RUN_OPENCV_TYPE_FUNCTIONS(float, kInterNearest, BORDER_TYPE_CONSTANT)
-RUN_OPENCV_TYPE_FUNCTIONS(float, kInterNearest, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_TYPE_FUNCTIONS(float, kInterNearest, BORDER_TYPE_TRANSPARENT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_LINEAR,
+                          BORDER_TYPE_CONSTANT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_LINEAR,
+                          BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_LINEAR,
+                          BORDER_TYPE_TRANSPARENT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_NEAREST_POINT,
+                          BORDER_TYPE_CONSTANT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_NEAREST_POINT,
+                          BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_NEAREST_POINT,
+                          BORDER_TYPE_TRANSPARENT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_LINEAR,
+                          BORDER_TYPE_CONSTANT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_LINEAR,
+                          BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_LINEAR,
+                          BORDER_TYPE_TRANSPARENT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_NEAREST_POINT,
+                          BORDER_TYPE_CONSTANT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_NEAREST_POINT,
+                          BORDER_TYPE_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_NEAREST_POINT,
+                          BORDER_TYPE_TRANSPARENT)
 
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, kInterLinear, BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, kInterLinear, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, kInterLinear, BORDER_TYPE_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, kInterNearest, BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, kInterNearest, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, kInterNearest, BORDER_TYPE_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, kInterLinear, BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, kInterLinear, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, kInterLinear, BORDER_TYPE_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, kInterNearest, BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, kInterNearest, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, kInterNearest, BORDER_TYPE_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_LINEAR,
+                               BORDER_TYPE_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_LINEAR,
+                               BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_LINEAR,
+                               BORDER_TYPE_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_LINEAR,
+                               BORDER_TYPE_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_LINEAR,
+                               BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_LINEAR,
+                               BORDER_TYPE_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_TRANSPARENT)

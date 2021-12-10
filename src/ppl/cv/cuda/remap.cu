@@ -24,89 +24,113 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
+template <typename T>
 __global__
-void remapLinearKernel(int src_rows, int src_cols, int src_stride,
-                       const uchar* src, int dst_rows, int dst_cols,
-                       int channels, int dst_stride, uchar* dst,
-                       const float* map_x, const float* map_y,
-                       BorderType border_type, uchar border_value) {
+void remapLinearKernel(const T* src, int src_rows, int src_cols,
+                       int channels, int src_stride, const float* map_x,
+                       const float* map_y, T* dst, int dst_rows,
+                       int dst_cols, int dst_stride, BorderType border_type,
+                       T border_value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= dst_rows || element_x >= dst_cols) {
     return;
   }
 
-  int idxXY = element_y * dst_cols + element_x;
-  int idxDst = element_y * dst_stride + element_x * channels;
-  float mapx = map_x[idxXY];
-  float mapy = map_y[idxXY];
-  int sx0 = (int)(mapx);
-  int sy0 = (int)(mapy);
-  float ax0 = (float)(mapx-sx0);
-  float ay0 = (float)(mapy-sy0);
+  int dst_xy = element_y * dst_cols + element_x;
+  int dst_index = element_y * dst_stride + element_x * channels;
+  float float_x = map_x[dst_xy];
+  float float_y = map_y[dst_xy];
+  int int_x = (int)(float_x);
+  int int_y = (int)(float_y);
+  float fractional_x = (float)(float_x - int_x);
+  float fractional_y = (float)(float_y - int_y);
 
-  float v0, v1, v2, v3;
+  float value0, value1, value2, value3;
   float tab[4];
-  float taby[2], tabx[2];
-  taby[0] = 1.0f - ay0;  //1-u
-  taby[1] = ay0;		     //u
-  tabx[0] = 1.0f - ax0;  //1-v
-  tabx[1] = ax0;		     //v
-  tab[0] = taby[0] * tabx[0];
-  tab[1] = taby[0] * tabx[1];
-  tab[2] = taby[1] * tabx[0];
-  tab[3] = taby[1] * tabx[1];
+  float tab_y[2], tab_x[2];
+  tab_y[0] = 1.0f - fractional_y;
+  tab_y[1] = fractional_y;
+  tab_x[0] = 1.0f - fractional_x;
+  tab_x[1] = fractional_x;
+  tab[0] = tab_y[0] * tab_x[0];
+  tab[1] = tab_y[0] * tab_x[1];
+  tab[2] = tab_y[1] * tab_x[0];
+  tab[3] = tab_y[1] * tab_x[1];
 
   if (border_type == BORDER_TYPE_CONSTANT) {
-    bool flag0 = sx0 >= 0 && sx0 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag1 = sx0+1 >= 0 && sx0+1 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag2 = sx0 >= 0 && sx0 < src_cols && sy0+1 >= 0 && sy0+1 < src_rows;
-    bool flag3 = sx0+1 >= 0 && sx0+1 < src_cols && sy0+1 >= 0 &&
-                  sy0+1 < src_rows;
-    int position1 = sy0 * src_stride + sx0*channels;
-    int position2 = (sy0+1) * src_stride + sx0*channels;
-    for (int k = 0; k < channels; k++) {
-      v0 = flag0 ? src[position1 + k] : border_value;
-      v1 = flag1 ? src[position1+ channels + k] : border_value;
-      v2 = flag2 ? src[position2 + k] : border_value;
-      v3 = flag3 ? src[position2+ channels + k] : border_value;
-      float sum = v0 * tab[0] +  v1 * tab[1] +  v2 * tab[2] +  v3 * tab[3];
-      dst[idxDst + k] = saturate_cast(sum);
+    bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag2 = int_x >= 0 && int_x < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
+    bool flag3 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
+    int position0 = int_y * src_stride + int_x * channels;
+    int position1 = (int_y + 1) * src_stride + int_x * channels;
+    for (int i = 0; i < channels; i++) {
+      value0 = flag0 ? src[position0 + i] : border_value;
+      value1 = flag1 ? src[position0 + channels + i] : border_value;
+      value2 = flag2 ? src[position1 + i] : border_value;
+      value3 = flag3 ? src[position1 + channels + i] : border_value;
+      float sum = value0 * tab[0] + value1 * tab[1] + value2 * tab[2] +
+                  value3 * tab[3];
+      if (sizeof(T) == 1) {
+        dst[dst_index + i] = saturate_cast(sum);
+      }
+      else {
+        dst[dst_index + i] = sum;
+      }
     }
   }
   else if (border_type == BORDER_TYPE_REPLICATE) {
-    int sx1 = sx0 + 1;
-    int sy1 = sy0 + 1;
-    sx0 = clip(sx0, 0, src_cols - 1);
-    sx1 = clip(sx1, 0, src_cols - 1);
-    sy0 = clip(sy0, 0, src_rows - 1);
-    sy1 = clip(sy1, 0, src_rows - 1);
-    const uchar* t0 = src + sy0 * src_stride + sx0 * channels;
-    const uchar* t1 = src + sy0 * src_stride + sx1 * channels;
-    const uchar* t2 = src + sy1 * src_stride + sx0 * channels;
-    const uchar* t3 = src + sy1 * src_stride + sx1 * channels;
-    for (int k = 0; k < channels; ++k) {
-      float sum = t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] +
-                  t3[k] * tab[3];
-      dst[idxDst + k] = saturate_cast(sum);
+    int int_x1 = int_x + 1;
+    int int_y1 = int_y + 1;
+    int_x  = clip(int_x, 0, src_cols - 1);
+    int_x1 = clip(int_x1, 0, src_cols - 1);
+    int_y  = clip(int_y, 0, src_rows - 1);
+    int_y1 = clip(int_y1, 0, src_rows - 1);
+    const T* src0 = src + int_y * src_stride + int_x * channels;
+    const T* src1 = src + int_y * src_stride + int_x1 * channels;
+    const T* src2 = src + int_y1 * src_stride + int_x * channels;
+    const T* src3 = src + int_y1 * src_stride + int_x1 * channels;
+    for (int i = 0; i < channels; ++i) {
+      float sum = src0[i] * tab[0] + src1[i] * tab[1] + src2[i] * tab[2] +
+                  src3[i] * tab[3];
+      if (sizeof(T) == 1) {
+        dst[dst_index + i] = saturate_cast(sum);
+      }
+      else {
+        dst[dst_index + i] = sum;
+      }
     }
   }
   else if (border_type == BORDER_TYPE_TRANSPARENT) {
-    bool flag0 = sx0 >= 0 && sx0 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag1 = sx0+1 >= 0 && sx0+1 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag2 = sx0 >= 0 && sx0 < src_cols && sy0+1 >= 0 && sy0+1 < src_rows;
-    bool flag3 = sx0+1 >= 0 && sx0+1 < src_cols && sy0+1 >= 0 &&
-                  sy0+1 < src_rows;
+    bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag2 = int_x >= 0 && int_x < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
+    bool flag3 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
     if (flag0 && flag1 && flag2 && flag3) {
-      int position1 = (sy0 * src_stride + sx0 * channels);
-      int position2 = ((sy0+1) * src_stride + sx0 * channels);
-      for (int k = 0; k < channels; k++) {
-        v0 = src[position1 + k];
-        v1 = src[position1 + channels + k];
-        v2 = src[position2 + k];
-        v3 = src[position2 + channels +k];
-        float sum = v0 * tab[0] +  v1 * tab[1] +  v2 * tab[2] +  v3 * tab[3];
-        dst[idxDst + k] = saturate_cast(sum);
+      int position0 = (int_y * src_stride + int_x * channels);
+      int position1 = ((int_y + 1) * src_stride + int_x * channels);
+      for (int i = 0; i < channels; i++) {
+        value0 = src[position0 + i];
+        value1 = src[position0 + channels + i];
+        value2 = src[position1 + i];
+        value3 = src[position1 + channels +i];
+        float sum = value0 * tab[0] + value1 * tab[1] + value2 * tab[2] +
+                    value3 * tab[3];
+        if (sizeof(T) == 1) {
+          dst[dst_index + i] = saturate_cast(sum);
+        }
+        else {
+          dst[dst_index + i] = sum;
+        }
       }
     }
   }
@@ -114,329 +138,51 @@ void remapLinearKernel(int src_rows, int src_cols, int src_stride,
   }
 }
 
+template <typename T>
 __global__
-void remapLinearKernel(int src_rows, int src_cols, int src_stride,
-                       const float* src, int dst_rows, int dst_cols,
-                       int channels, int dst_stride, float* dst,
-                       const float* map_x, const float* map_y,
-                       BorderType border_type, float border_value) {
+void remapNPKernel(const T* src, int src_rows, int src_cols, int channels,
+                   int src_stride, const float* map_x, const float* map_y,
+                   T* dst, int dst_rows, int dst_cols, int dst_stride,
+                   BorderType border_type, T border_value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= dst_rows || element_x >= dst_cols) {
     return;
   }
 
-  int idxXY = element_y * dst_cols + element_x;
-  int idxDst = element_y * dst_stride + element_x * channels;
-  float mapx = map_x[idxXY];
-  float mapy = map_y[idxXY];
-  int sx0 = (int)(mapx);
-  int sy0 = (int)(mapy);
-  float ax0 = (float)(mapx-sx0);
-  float ay0 = (float)(mapy-sy0);
-
-  float tab[4];
-  float taby[2], tabx[2];
-  float v0, v1, v2, v3;
-  taby[0] = 1.0f - ay0;  //1-u
-  taby[1] = ay0;		     //u
-  tabx[0] = 1.0f - ax0;  //1-v
-  tabx[1] = ax0;		     //v
-  tab[0] = taby[0] * tabx[0];
-  tab[1] = taby[0] * tabx[1];
-  tab[2] = taby[1] * tabx[0];
-  tab[3] = taby[1] * tabx[1];
+  int dst_xy = element_y * dst_cols + element_x;
+  int dst_index = element_y * dst_stride + element_x * channels;
+  float float_x = map_x[dst_xy];
+  float float_y = map_y[dst_xy];
+  int int_x = __float2int_rn(float_x);
+  int int_y = __float2int_rn(float_y);
 
   if (border_type == BORDER_TYPE_CONSTANT) {
-    bool flag0 = sx0 >= 0 && sx0 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag1 = sx0+1 >= 0 && sx0+1 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag2 = sx0 >= 0 && sx0 < src_cols && sy0+1 >= 0 && sy0+1 < src_rows;
-    bool flag3 = sx0+1 >= 0 && sx0+1 < src_cols && sy0+1 >= 0 &&
-                  sy0+1 < src_rows;
-    int position1 = sy0 * src_stride + sx0*channels;
-    int position2 = (sy0+1) * src_stride + sx0*channels;
-    for (int k = 0; k < channels; k++) {
-      v0 = flag0 ? src[position1 + k] : border_value;
-      v1 = flag1 ? src[position1+ channels + k] : border_value;
-      v2 = flag2 ? src[position2 + k] : border_value;
-      v3 = flag3 ? src[position2+ channels + k] : border_value;
-      float sum = v0 * tab[0] +  v1 * tab[1] +  v2 * tab[2] +  v3 * tab[3];
-      dst[idxDst + k] = sum;
-    }
-  }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
-    int sx1 = sx0 + 1;
-    int sy1 = sy0 + 1;
-    sx0 = clip(sx0, 0, src_cols - 1);
-    sx1 = clip(sx1, 0, src_cols - 1);
-    sy0 = clip(sy0, 0, src_rows - 1);
-    sy1 = clip(sy1, 0, src_rows - 1);
-    const float* t0 = src + sy0 * src_stride + sx0 * channels;
-    const float* t1 = src + sy0 * src_stride + sx1 * channels;
-    const float* t2 = src + sy1 * src_stride + sx0 * channels;
-    const float* t3 = src + sy1 * src_stride + sx1 * channels;
-    for (int k = 0; k < channels; ++k) {
-      float sum = t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] +
-                  t3[k] * tab[3];
-      dst[idxDst + k] = sum;
-    }
-  }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
-    bool flag0 = sx0 >= 0 && sx0 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag1 = sx0+1 >= 0 && sx0+1 < src_cols && sy0 >= 0 && sy0 < src_rows;
-    bool flag2 = sx0 >= 0 && sx0 < src_cols && sy0+1 >= 0 && sy0+1 < src_rows;
-    bool flag3 = sx0+1 >= 0 && sx0+1 < src_cols && sy0+1 >= 0 &&
-                 sy0+1 < src_rows;
-    if (flag0 && flag1 && flag2 && flag3) {
-      int position1 = (sy0 * src_stride + sx0 * channels);
-      int position2 = ((sy0+1) * src_stride + sx0 * channels);
-      for (int k = 0; k < channels; k++) {
-        v0 = src[position1 + k];
-        v1 = src[position1 + channels + k];
-        v2 = src[position2 + k];
-        v3 = src[position2 + channels +k];
-        float sum = v0 * tab[0] +  v1 * tab[1] +  v2 * tab[2] +  v3 * tab[3];
-        dst[idxDst + k] = sum;
-      }
-    }
-  }
-  else {
-  }
-}
-
-RetCode RemapLinear(int src_rows, int src_cols, int src_stride,
-                    const uchar* src, int dst_rows, int dst_cols, int channels,
-                    int dst_stride, uchar* dst, const float* map_x,
-                    const float* map_y, BorderType border_type,
-                    uchar border_value, cudaStream_t stream) {
-  PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(map_x != nullptr);
-  PPL_ASSERT(map_y != nullptr);
-  PPL_ASSERT(src_rows > 0 && src_cols > 0);
-  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
-  PPL_ASSERT(src_stride >= src_cols * channels);
-  PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
-
-  dim3 block, grid;
-  block.x = kBlockDimX1;
-  block.y = kBlockDimY1;
-  grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
-  grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
-
-  remapLinearKernel<<<grid, block, 0, stream>>>(src_rows, src_cols, src_stride,
-                                                src, dst_rows, dst_cols,
-                                                channels, dst_stride, dst,
-                                                map_x, map_y, border_type,
-                                                border_value);
-}
-
-RetCode RemapLinear(int src_rows, int src_cols, int src_stride,
-                    const float* src, int dst_rows, int dst_cols, int channels,
-                    int dst_stride, float* dst, const float* map_x,
-                    const float* map_y, BorderType border_type,
-                    float border_value, cudaStream_t stream) {
-  PPL_ASSERT(src != nullptr);
-  PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(map_x != nullptr);
-  PPL_ASSERT(map_y != nullptr);
-  PPL_ASSERT(src_rows > 0 && src_cols > 0);
-  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
-  PPL_ASSERT(src_stride >= src_cols * channels);
-  PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
-
-  dim3 block, grid;
-  block.x = kBlockDimX1;
-  block.y = kBlockDimY1;
-  grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
-  grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
-
-  remapLinearKernel<<<grid, block, 0, stream>>>(src_rows, src_cols, src_stride,
-                                                src, dst_rows, dst_cols,
-                                                channels, dst_stride, dst,
-                                                map_x, map_y, border_type,
-                                                border_value);
-}
-
-template <>
-RetCode RemapLinear<uchar, 1>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              uchar* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              BorderType border_type,
-                              uchar borderValue) {
-  RetCode code = RemapLinear(inHeight, inWidth, inWidthStride, inData,
-                             outHeight, outWidth, 1, outWidthStride, outData,
-                             mapX, mapY, border_type, borderValue, stream);
-
-  return code;
-}
-
-template <>
-RetCode RemapLinear<uchar, 3>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              uchar* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              BorderType border_type,
-                              uchar borderValue) {
-  RetCode code = RemapLinear(inHeight, inWidth, inWidthStride, inData,
-                             outHeight, outWidth, 3, outWidthStride, outData,
-                             mapX, mapY, border_type, borderValue, stream);
-
-  return code;
-}
-
-template <>
-RetCode RemapLinear<uchar, 4>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              uchar* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              BorderType border_type,
-                              uchar borderValue) {
-  RetCode code = RemapLinear(inHeight, inWidth, inWidthStride, inData,
-                             outHeight, outWidth, 4, outWidthStride, outData,
-                             mapX, mapY, border_type, borderValue, stream);
-
-  return code;
-}
-
-template <>
-RetCode RemapLinear<float, 1>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const float* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              float* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              BorderType border_type,
-                              float borderValue) {
-  RetCode code = RemapLinear(inHeight, inWidth, inWidthStride, inData,
-                             outHeight, outWidth, 1, outWidthStride, outData,
-                             mapX, mapY, border_type, borderValue, stream);
-
-  return code;
-}
-
-template <>
-RetCode RemapLinear<float, 3>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const float* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              float* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              BorderType border_type,
-                              float borderValue) {
-  RetCode code = RemapLinear(inHeight, inWidth, inWidthStride, inData,
-                             outHeight, outWidth, 3, outWidthStride, outData,
-                             mapX, mapY, border_type, borderValue, stream);
-
-  return code;
-}
-
-template <>
-RetCode RemapLinear<float, 4>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const float* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              float* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              BorderType border_type,
-                              float borderValue) {
-  RetCode code = RemapLinear(inHeight, inWidth, inWidthStride, inData,
-                             outHeight, outWidth, 4, outWidthStride, outData,
-                             mapX, mapY, border_type, borderValue, stream);
-
-  return code;
-}
-
-__global__
-void remapNPKernel(int src_rows, int src_cols, int src_stride,
-                   const uchar* src, int dst_rows, int dst_cols, int channels,
-                   int dst_stride, uchar* dst, const float* map_x,
-                   const float* map_y, BorderType border_type,
-                   uchar border_value) {
-  int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
-  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
-    return;
-  }
-
-  int idxXY = element_y * dst_cols + element_x;
-  int idxDst = element_y * dst_stride + element_x * channels;
-  float mapx = map_x[idxXY];
-  float mapy = map_y[idxXY];
-  int sx = __float2int_rn(mapx);
-  int sy = __float2int_rn(mapy);
-
-  if (border_type == BORDER_TYPE_CONSTANT) {
-    int idxSrc = sy * src_stride + sx * channels;
-    if (sx >= 0 && sx < src_cols && sy >= 0 && sy < src_rows) {
-      for (int k = 0; k < channels; k++) {
-        dst[idxDst + k] = src[idxSrc + k];
+    int src_index = int_y * src_stride + int_x * channels;
+    if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
+      for (int i = 0; i < channels; i++) {
+        dst[dst_index + i] = src[src_index + i];
       }
     }
     else {
-      for (int k = 0; k < channels; k++) {
-        dst[idxDst + k] = border_value;
+      for (int i = 0; i < channels; i++) {
+        dst[dst_index + i] = border_value;
       }
     }
   }
   else if (border_type == BORDER_TYPE_REPLICATE) {
-    sx = clip(sx, 0, src_cols - 1);
-    sy = clip(sy, 0, src_rows - 1);
-    int idxSrc = sy * src_stride + sx * channels;
-    for (int k = 0; k < channels; ++k) {
-      dst[idxDst + k] = src[idxSrc + k];
+    int_x = clip(int_x, 0, src_cols - 1);
+    int_y = clip(int_y, 0, src_rows - 1);
+    int src_index = int_y * src_stride + int_x * channels;
+    for (int i = 0; i < channels; ++i) {
+      dst[dst_index + i] = src[src_index + i];
     }
   }
   else if (border_type == BORDER_TYPE_TRANSPARENT) {
-    if (sx >= 0 && sx < src_cols && sy >= 0 && sy < src_rows) {
-      int idxSrc = sy * src_stride + sx * channels;
-      for (int k = 0; k < channels; k++) {
-        dst[idxDst + k] = src[idxSrc + k];
+    if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
+      int src_index = int_y * src_stride + int_x * channels;
+      for (int i = 0; i < channels; i++) {
+        dst[dst_index + i] = src[src_index + i];
       }
     }
   }
@@ -444,72 +190,22 @@ void remapNPKernel(int src_rows, int src_cols, int src_stride,
   }
 }
 
-__global__
-void remapNPKernel(int src_rows, int src_cols, int src_stride,
-                   const float* src, int dst_rows, int dst_cols, int channels,
-                   int dst_stride, float* dst, const float* map_x,
-                   const float* map_y, BorderType border_type,
-                   float border_value) {
-  int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
-  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
-    return;
-  }
-
-  int idxXY = element_y * dst_cols + element_x;
-  int idxDst = element_y * dst_stride + element_x * channels;
-  float mapx = map_x[idxXY];
-  float mapy = map_y[idxXY];
-  int sx = __float2int_rn(mapx);
-  int sy = __float2int_rn(mapy);
-
-  if (border_type == BORDER_TYPE_CONSTANT) {
-    int idxSrc = sy * src_stride + sx * channels;
-    if (sx >= 0 && sx < src_cols && sy >= 0 && sy < src_rows) {
-      for (int k = 0; k < channels; k++) {
-        dst[idxDst + k] = src[idxSrc + k];
-      }
-    }
-    else {
-      for (int k = 0; k < channels; k++) {
-        dst[idxDst + k] = border_value;
-      }
-    }
-  }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
-    sx = clip(sx, 0, src_cols - 1);
-    sy = clip(sy, 0, src_rows - 1);
-    int idxSrc = sy * src_stride + sx * channels;
-    for (int k = 0; k < channels; ++k) {
-      dst[idxDst + k] = src[idxSrc + k];
-    }
-  }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
-    if (sx >= 0 && sx < src_cols && sy >= 0 && sy < src_rows) {
-      int idxSrc = sy * src_stride + sx * channels;
-      for (int k = 0; k < channels; k++) {
-        dst[idxDst + k] = src[idxSrc + k];
-      }
-    }
-  }
-  else {
-  }
-}
-
-RetCode RemapNP(int src_rows, int src_cols, int src_stride, const uchar* src,
-                int dst_rows, int dst_cols, int channels, int dst_stride,
-                uchar* dst, const float* map_x, const float* map_y,
-                BorderType border_type, uchar border_value,
-                cudaStream_t stream) {
+RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
+              int src_stride, const float* map_x, const float* map_y,
+              uchar* dst, int dst_rows, int dst_cols, int dst_stride,
+              InterpolationType interpolation, BorderType border_type,
+              uchar border_value, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(map_x != nullptr);
-  PPL_ASSERT(map_y != nullptr);
-  PPL_ASSERT(src_rows > 0 && src_cols > 0);
-  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(src_rows >= 1 && src_cols >= 1);
+  PPL_ASSERT(dst_rows >= 1 && dst_cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(map_x != nullptr);
+  PPL_ASSERT(map_y != nullptr);
+  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
+             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
   PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
              border_type == BORDER_TYPE_REPLICATE ||
              border_type == BORDER_TYPE_TRANSPARENT);
@@ -520,26 +216,36 @@ RetCode RemapNP(int src_rows, int src_cols, int src_stride, const uchar* src,
   grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  remapNPKernel<<<grid, block, 0, stream>>>(src_rows, src_cols, src_stride,
-                                            src, dst_rows, dst_cols, channels,
-                                            dst_stride, dst, map_x, map_y,
-                                            border_type, border_value);
+  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+    remapLinearKernel<uchar><<<grid, block, 0, stream>>>(src, src_rows,
+        src_cols, channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+        dst_stride, border_type, border_value);
+  }
+  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+    remapNPKernel<uchar><<<grid, block, 0, stream>>>(src, src_rows, src_cols,
+        channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols, dst_stride,
+        border_type, border_value);
+  }
+  else {
+  }
 }
 
-RetCode RemapNP(int src_rows, int src_cols, int src_stride, const float* src,
-                int dst_rows, int dst_cols, int channels, int dst_stride,
-                float* dst, const float* map_x, const float* map_y,
-                BorderType border_type, float border_value,
-                cudaStream_t stream) {
+RetCode remap(const float* src, int src_rows, int src_cols, int channels,
+              int src_stride, const float* map_x, const float* map_y,
+              float* dst, int dst_rows, int dst_cols, int dst_stride,
+              InterpolationType interpolation, BorderType border_type,
+              float border_value, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(map_x != nullptr);
-  PPL_ASSERT(map_y != nullptr);
-  PPL_ASSERT(src_rows > 0 && src_cols > 0);
-  PPL_ASSERT(dst_rows > 0 && dst_cols > 0);
+  PPL_ASSERT(src_rows >= 1 && src_cols >= 1);
+  PPL_ASSERT(dst_rows >= 1 && dst_cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(map_x != nullptr);
+  PPL_ASSERT(map_y != nullptr);
+  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
+             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
   PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
              border_type == BORDER_TYPE_REPLICATE ||
              border_type == BORDER_TYPE_TRANSPARENT);
@@ -550,134 +256,148 @@ RetCode RemapNP(int src_rows, int src_cols, int src_stride, const float* src,
   grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  remapNPKernel<<<grid, block, 0, stream>>>(src_rows, src_cols, src_stride,
-                                            src, dst_rows, dst_cols, channels,
-                                            dst_stride, dst, map_x, map_y,
-                                            border_type, border_value);
+  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+    remapLinearKernel<float><<<grid, block, 0, stream>>>(src, src_rows,
+        src_cols, channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+        dst_stride, border_type, border_value);
+  }
+  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+    remapNPKernel<float><<<grid, block, 0, stream>>>(src, src_rows, src_cols,
+        channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols, dst_stride,
+        border_type, border_value);
+  }
+  else {
+  }
 }
 
 template <>
-RetCode RemapNearestPoint<uchar, 1>(cudaStream_t stream,
-                                    int inHeight,
-                                    int inWidth,
-                                    int inWidthStride,
-                                    const uchar* inData,
-                                    int outHeight,
-                                    int outWidth,
-                                    int outWidthStride,
-                                    uchar* outData,
-                                    const float* mapX,
-                                    const float* mapY,
-                                    BorderType border_type,
-                                    uchar borderValue) {
-  RetCode code = RemapNP(inHeight, inWidth, inWidthStride, inData, outHeight,
-                         outWidth, 1, outWidthStride, outData, mapX, mapY,
-                         border_type, borderValue, stream);
+RetCode Remap<uchar, 1>(cudaStream_t stream,
+                              int inHeight,
+                              int inWidth,
+                              int inWidthStride,
+                              const uchar* inData,
+                              int outHeight,
+                              int outWidth,
+                              int outWidthStride,
+                              uchar* outData,
+                              const float* mapX,
+                              const float* mapY,
+                              InterpolationType interpolation,
+                              BorderType border_type,
+                              uchar borderValue) {
+  RetCode code = remap(inData, inHeight, inWidth, 1, inWidthStride, mapX, mapY,
+                       outData, outHeight, outWidth, outWidthStride,
+                       interpolation, border_type, borderValue, stream);
 
   return code;
 }
 
 template <>
-RetCode RemapNearestPoint<uchar, 3>(cudaStream_t stream,
-                                    int inHeight,
-                                    int inWidth,
-                                    int inWidthStride,
-                                    const uchar* inData,
-                                    int outHeight,
-                                    int outWidth,
-                                    int outWidthStride,
-                                    uchar* outData,
-                                    const float* mapX,
-                                    const float* mapY,
-                                    BorderType border_type,
-                                    uchar borderValue) {
-  RetCode code = RemapNP(inHeight, inWidth, inWidthStride, inData, outHeight,
-                         outWidth, 3, outWidthStride, outData, mapX, mapY,
-                         border_type, borderValue, stream);
+RetCode Remap<uchar, 3>(cudaStream_t stream,
+                              int inHeight,
+                              int inWidth,
+                              int inWidthStride,
+                              const uchar* inData,
+                              int outHeight,
+                              int outWidth,
+                              int outWidthStride,
+                              uchar* outData,
+                              const float* mapX,
+                              const float* mapY,
+                              InterpolationType interpolation,
+                              BorderType border_type,
+                              uchar borderValue) {
+  RetCode code = remap(inData, inHeight, inWidth, 3, inWidthStride, mapX, mapY,
+                       outData, outHeight, outWidth, outWidthStride,
+                       interpolation, border_type, borderValue, stream);
 
   return code;
 }
 
 template <>
-RetCode RemapNearestPoint<uchar, 4>(cudaStream_t stream,
-                                    int inHeight,
-                                    int inWidth,
-                                    int inWidthStride,
-                                    const uchar* inData,
-                                    int outHeight,
-                                    int outWidth,
-                                    int outWidthStride,
-                                    uchar* outData,
-                                    const float* mapX,
-                                    const float* mapY,
-                                    BorderType border_type,
-                                    uchar borderValue) {
-  RetCode code = RemapNP(inHeight, inWidth, inWidthStride, inData, outHeight,
-                         outWidth, 4, outWidthStride, outData, mapX, mapY,
-                         border_type, borderValue, stream);
+RetCode Remap<uchar, 4>(cudaStream_t stream,
+                              int inHeight,
+                              int inWidth,
+                              int inWidthStride,
+                              const uchar* inData,
+                              int outHeight,
+                              int outWidth,
+                              int outWidthStride,
+                              uchar* outData,
+                              const float* mapX,
+                              const float* mapY,
+                              InterpolationType interpolation,
+                              BorderType border_type,
+                              uchar borderValue) {
+  RetCode code = remap(inData, inHeight, inWidth, 4, inWidthStride, mapX, mapY,
+                       outData, outHeight, outWidth, outWidthStride,
+                       interpolation, border_type, borderValue, stream);
 
   return code;
 }
 
 template <>
-RetCode RemapNearestPoint<float, 1>(cudaStream_t stream,
-                                    int inHeight,
-                                    int inWidth,
-                                    int inWidthStride,
-                                    const float* inData,
-                                    int outHeight,
-                                    int outWidth,
-                                    int outWidthStride,
-                                    float* outData,
-                                    const float* mapX,
-                                    const float* mapY,
-                                    BorderType border_type,
-                                    float borderValue) {
-  RetCode code = RemapNP(inHeight, inWidth, inWidthStride, inData, outHeight,
-                         outWidth, 1, outWidthStride, outData, mapX, mapY,
-                         border_type, borderValue, stream);
+RetCode Remap<float, 1>(cudaStream_t stream,
+                              int inHeight,
+                              int inWidth,
+                              int inWidthStride,
+                              const float* inData,
+                              int outHeight,
+                              int outWidth,
+                              int outWidthStride,
+                              float* outData,
+                              const float* mapX,
+                              const float* mapY,
+                              InterpolationType interpolation,
+                              BorderType border_type,
+                              float borderValue) {
+  RetCode code = remap(inData, inHeight, inWidth, 1, inWidthStride, mapX, mapY,
+                       outData, outHeight, outWidth, outWidthStride,
+                       interpolation, border_type, borderValue, stream);
 
   return code;
 }
 
 template <>
-RetCode RemapNearestPoint<float, 3>(cudaStream_t stream,
-                                    int inHeight,
-                                    int inWidth,
-                                    int inWidthStride,
-                                    const float* inData,
-                                    int outHeight,
-                                    int outWidth,
-                                    int outWidthStride,
-                                    float* outData,
-                                    const float* mapX,
-                                    const float* mapY,
-                                    BorderType border_type,
-                                    float borderValue) {
-  RetCode code = RemapNP(inHeight, inWidth, inWidthStride, inData, outHeight,
-                         outWidth, 3, outWidthStride, outData, mapX, mapY,
-                         border_type, borderValue, stream);
+RetCode Remap<float, 3>(cudaStream_t stream,
+                              int inHeight,
+                              int inWidth,
+                              int inWidthStride,
+                              const float* inData,
+                              int outHeight,
+                              int outWidth,
+                              int outWidthStride,
+                              float* outData,
+                              const float* mapX,
+                              const float* mapY,
+                              InterpolationType interpolation,
+                              BorderType border_type,
+                              float borderValue) {
+  RetCode code = remap(inData, inHeight, inWidth, 3, inWidthStride, mapX, mapY,
+                       outData, outHeight, outWidth, outWidthStride,
+                       interpolation, border_type, borderValue, stream);
 
   return code;
 }
 
 template <>
-RetCode RemapNearestPoint<float, 4>(cudaStream_t stream,
-                                    int inHeight,
-                                    int inWidth,
-                                    int inWidthStride,
-                                    const float* inData,
-                                    int outHeight,
-                                    int outWidth,
-                                    int outWidthStride,
-                                    float* outData,
-                                    const float* mapX,
-                                    const float* mapY,
-                                    BorderType border_type,
-                                    float borderValue) {
-  RetCode code = RemapNP(inHeight, inWidth, inWidthStride, inData, outHeight,
-                         outWidth, 4, outWidthStride, outData, mapX, mapY,
-                         border_type, borderValue, stream);
+RetCode Remap<float, 4>(cudaStream_t stream,
+                              int inHeight,
+                              int inWidth,
+                              int inWidthStride,
+                              const float* inData,
+                              int outHeight,
+                              int outWidth,
+                              int outWidthStride,
+                              float* outData,
+                              const float* mapX,
+                              const float* mapY,
+                              InterpolationType interpolation,
+                              BorderType border_type,
+                              float borderValue) {
+  RetCode code = remap(inData, inHeight, inWidth, 4, inWidthStride, mapX, mapY,
+                       outData, outHeight, outWidth, outWidthStride,
+                       interpolation, border_type, borderValue, stream);
 
   return code;
 }
