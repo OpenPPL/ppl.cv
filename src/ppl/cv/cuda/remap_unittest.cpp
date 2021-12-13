@@ -62,11 +62,11 @@ inline std::string convertToStringResize(const Parameters& parameters) {
   }
 
   BorderType border_type = (BorderType)std::get<2>(parameters);
-  if (border_type == BORDER_TYPE_REPLICATE) {
-    formatted << "BORDER_REPLICATE" << "_";
-  }
-  else if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_TYPE_CONSTANT) {
     formatted << "BORDER_CONSTANT" << "_";
+  }
+  else if (border_type == BORDER_TYPE_REPLICATE) {
+    formatted << "BORDER_REPLICATE" << "_";
   }
   else if (border_type == BORDER_TYPE_TRANSPARENT) {
     formatted << "BORDER_TRANSPARENT" << "_";

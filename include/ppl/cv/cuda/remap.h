@@ -27,8 +27,7 @@ namespace cv {
 namespace cuda {
 
 /**
- * @brief Applies a generic geometrical transformation to an image with the
- *        bilinear interpolation method.
+ * @brief Applies a generic geometrical transformation to an image.
  * @tparam T The data type of input and output image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
@@ -52,7 +51,8 @@ namespace cuda {
  * @param border_type      ways to deal with border. BORDER_TYPE_CONSTANT,
  *                         BORDER_TYPE_REPLICATE and BORDER_TYPE_TRANSPARENT are
  *                         supported now.
- * @param borderValue      border value for BORDER_TYPE_CONSTANT.
+ * @param borderValue      value used in case of a constant border; by default,
+ *                         it is 0.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.

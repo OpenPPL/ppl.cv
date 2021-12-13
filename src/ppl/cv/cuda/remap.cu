@@ -228,6 +228,14 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   }
   else {
   }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
 }
 
 RetCode remap(const float* src, int src_rows, int src_cols, int channels,
@@ -268,6 +276,14 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
   }
   else {
   }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
 }
 
 template <>

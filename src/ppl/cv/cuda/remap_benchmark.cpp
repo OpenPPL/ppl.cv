@@ -111,6 +111,14 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_map_x(map_x);
   cv::cuda::GpuMat gpu_map_y(map_y);
 
+  int cv_iterpolation;
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    cv_iterpolation = cv::INTER_LINEAR;
+  }
+  else {
+    cv_iterpolation = cv::INTER_NEAREST;
+  }
+
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
@@ -129,7 +137,7 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y, cv::INTER_LINEAR,
+    cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y, cv_iterpolation,
                     cv_border);
   }
   cudaDeviceSynchronize();
@@ -137,16 +145,8 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (inter_type == INTERPOLATION_TYPE_LINEAR) {
-        cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y,
-                        cv::INTER_LINEAR, cv_border);
-      }
-      else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
-        cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y,
-                        cv::INTER_NEAREST, cv_border);
-      }
-      else {
-      }
+      cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y,
+                      cv_iterpolation, cv_border);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -173,6 +173,14 @@ void BM_Remap_opencv_x86_cuda(benchmark::State &state) {
                              CV_MAKETYPE(cv::DataType<float>::depth, 1));
   cv::Mat dst(dst_height, dst_width, src.type());
 
+  int cv_iterpolation;
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    cv_iterpolation = cv::INTER_LINEAR;
+  }
+  else {
+    cv_iterpolation = cv::INTER_NEAREST;
+  }
+
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
@@ -187,14 +195,7 @@ void BM_Remap_opencv_x86_cuda(benchmark::State &state) {
   }
 
   for (auto _ : state) {
-    if (inter_type == INTERPOLATION_TYPE_LINEAR) {
-      cv::remap(src, dst, map_x, map_y, cv::INTER_LINEAR, cv_border);
-    }
-    else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
-      cv::remap(src, dst, map_x, map_y, cv::INTER_NEAREST, cv_border);
-    }
-    else {
-    }
+    cv::remap(src, dst, map_x, map_y, cv_iterpolation, cv_border);
   }
   state.SetItemsProcessed(state.iterations() * 1);
 }
