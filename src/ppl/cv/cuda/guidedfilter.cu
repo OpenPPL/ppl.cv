@@ -1321,16 +1321,16 @@ void guidedFilter_1to1(const float* guide, int guide_stride, const float* src,
   cudaFree(buffer);
 }
 
-void filtering(const float* guide, int guide_stride, int guide_channels,
-               const float* src, int src_stride, int src_channels,
-               float* dst, int dst_stride, int rows, int cols, int radius,
+void filtering(const float* src, int rows, int cols, int src_channels,
+               int src_stride, const float* guide, int guide_channels,
+               int guide_stride, float* dst, int dst_stride, int radius,
                float eps, BorderType border_type, cudaStream_t stream) {
   if (guide_channels == 1) {
     if (src_channels == 1) {
       guidedFilter_1to1(guide, guide_stride, src, rows, cols, src_stride,
                         dst, dst_stride, radius, eps, border_type);
     }
-    else if (src_channels == 3) { // src_channels == 3
+    else if (src_channels == 3) {  // src_channels == 3
       float* buffer;
       size_t pitch;
       cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows * 6);
@@ -1366,7 +1366,7 @@ void filtering(const float* guide, int guide_stride, int guide_channels,
 
       cudaFree(buffer);
     }
-    else { // src_channels == 4
+    else {  // src_channels == 4
       float* buffer;
       size_t pitch;
       cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows * 8);
@@ -1421,21 +1421,24 @@ void filtering(const float* guide, int guide_stride, int guide_channels,
   }
 }
 
-RetCode guidedFilter(const uchar* guide, int guide_stride, int guide_channels,
-                     const uchar* src, int src_stride, int src_channels,
-                     uchar* dst, int dst_stride, int rows, int cols, int radius,
-                     float eps, BorderType border_type, cudaStream_t stream) {
-  PPL_ASSERT(guide != nullptr);
+RetCode guidedFilter(const uchar* src, int rows, int cols, int src_channels,
+                     int src_stride, const uchar* guide, int guide_channels,
+                     int guide_stride, uchar* dst, int dst_stride, int radius,
+                     float eps, BorderType border_type, cudaStream_t stream)
+{
   PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(guide != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(rows > 0 && cols > 0);
-  PPL_ASSERT(guide_stride > 0 && src_stride > 0 && dst_stride > 0);
-  PPL_ASSERT(guide_channels == 1 || guide_channels == 3);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));
+  PPL_ASSERT(guide_stride >= cols * guide_channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * src_channels * (int)sizeof(uchar));
+  PPL_ASSERT(guide_channels == 1);
   PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(radius > 0);
   PPL_ASSERT(eps > 0.0);
   PPL_ASSERT(border_type == BORDER_TYPE_REFLECT_101 ||
-         border_type == BORDER_TYPE_REFLECT);
+             border_type == BORDER_TYPE_REFLECT);
 
   float* fguide;
   float* fsrc;
@@ -1453,9 +1456,8 @@ RetCode guidedFilter(const uchar* guide, int guide_stride, int guide_channels,
   convertTo(src, rows, cols, src_channels, src_stride, fsrc, fsrc_stride,
             1, 0.0, stream);
 
-  filtering(fguide, fguide_stride, guide_channels, fsrc, fsrc_stride,
-            src_channels, fdst, fdst_stride, rows, cols, radius, eps,
-            border_type, stream);
+  filtering(fsrc, rows, cols, src_channels, fsrc_stride, fguide, guide_channels,
+            fguide_stride, fdst, fdst_stride, radius, eps, border_type, stream);
 
   convertTo(fdst, rows, cols, src_channels, fdst_stride, dst, dst_stride,
             1, 0.0, stream);
@@ -1473,24 +1475,27 @@ RetCode guidedFilter(const uchar* guide, int guide_stride, int guide_channels,
   return RC_SUCCESS;
 }
 
-RetCode guidedFilter(const float* guide, int guide_stride, int guide_channels,
-                     const float* src, int src_stride, int src_channels,
-                     float* dst, int dst_stride, int rows, int cols, int radius,
-                     float eps, BorderType border_type, cudaStream_t stream) {
-  PPL_ASSERT(guide != nullptr);
+RetCode guidedFilter(const float* src, int rows, int cols, int src_channels,
+                     int src_stride, const float* guide, int guide_channels,
+                     int guide_stride, float* dst, int dst_stride, int radius,
+                     float eps, BorderType border_type, cudaStream_t stream)
+{
   PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(guide != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(rows > 0 && cols > 0);
-  PPL_ASSERT(guide_stride > 0 && src_stride > 0 && dst_stride > 0);
-  PPL_ASSERT(guide_channels == 1 || guide_channels == 3);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(float));
+  PPL_ASSERT(guide_stride >= cols * guide_channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * src_channels * (int)sizeof(float));
+  PPL_ASSERT(guide_channels == 1);
   PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(radius > 0);
   PPL_ASSERT(eps > 0.0);
   PPL_ASSERT(border_type == BORDER_TYPE_REFLECT_101 ||
-         border_type == BORDER_TYPE_REFLECT);
+             border_type == BORDER_TYPE_REFLECT);
 
-  filtering(guide, guide_stride, guide_channels, src, src_stride, src_channels,
-            dst, dst_stride, rows, cols, radius, eps, border_type, stream);
+  filtering(src, rows, cols, src_channels, src_stride, guide, guide_channels,
+            guide_stride, dst, dst_stride, radius, eps, border_type, stream);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -1514,9 +1519,9 @@ RetCode GuidedFilter<uchar, 1, 1>(cudaStream_t stream,
                                   int radius,
                                   float eps,
                                   BorderType border_type) {
-  RetCode code = guidedFilter(guideData, guideWidthStride, 1, inData,
-                              inWidthStride, 1, outData, outWidthStride, height,
-                              width, radius, eps, border_type, stream);
+  RetCode code = guidedFilter(inData, height, width, 1, inWidthStride,
+                              guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
 
   return code;
 }
@@ -1534,9 +1539,9 @@ RetCode GuidedFilter<uchar, 3, 1>(cudaStream_t stream,
                                   int radius,
                                   float eps,
                                   BorderType border_type) {
-  RetCode code = guidedFilter(guideData, guideWidthStride, 1, inData,
-                              inWidthStride, 3, outData, outWidthStride, height,
-                              width, radius, eps, border_type, stream);
+  RetCode code = guidedFilter(inData, height, width, 3, inWidthStride,
+                              guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
 
   return code;
 }
@@ -1554,9 +1559,9 @@ RetCode GuidedFilter<uchar, 4, 1>(cudaStream_t stream,
                                   int radius,
                                   float eps,
                                   BorderType border_type) {
-  RetCode code = guidedFilter(guideData, guideWidthStride, 1, inData,
-                              inWidthStride, 4, outData, outWidthStride, height,
-                              width, radius, eps, border_type, stream);
+  RetCode code = guidedFilter(inData, height, width, 4, inWidthStride,
+                              guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
 
   return code;
 }
@@ -1577,9 +1582,9 @@ RetCode GuidedFilter<float, 1, 1>(cudaStream_t stream,
   inWidthStride    *= sizeof(float);
   guideWidthStride *= sizeof(float);
   outWidthStride   *= sizeof(float);
-  RetCode code = guidedFilter(guideData, guideWidthStride, 1, inData,
-                              inWidthStride, 1, outData, outWidthStride, height,
-                              width, radius, eps, border_type, stream);
+  RetCode code = guidedFilter(inData, height, width, 1, inWidthStride,
+                              guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
 
   return code;
 }
@@ -1600,9 +1605,9 @@ RetCode GuidedFilter<float, 3, 1>(cudaStream_t stream,
   inWidthStride    *= sizeof(float);
   guideWidthStride *= sizeof(float);
   outWidthStride   *= sizeof(float);
-  RetCode code = guidedFilter(guideData, guideWidthStride, 1, inData,
-                              inWidthStride, 3, outData, outWidthStride, height,
-                              width, radius, eps, border_type, stream);
+  RetCode code = guidedFilter(inData, height, width, 3, inWidthStride,
+                              guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
 
   return code;
 }
@@ -1623,9 +1628,9 @@ RetCode GuidedFilter<float, 4, 1>(cudaStream_t stream,
   inWidthStride    *= sizeof(float);
   guideWidthStride *= sizeof(float);
   outWidthStride   *= sizeof(float);
-  RetCode code = guidedFilter(guideData, guideWidthStride, 1, inData,
-                              inWidthStride, 4, outData, outWidthStride, height,
-                              width, radius, eps, border_type, stream);
+  RetCode code = guidedFilter(inData, height, width, 4, inWidthStride,
+                              guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
 
   return code;
 }

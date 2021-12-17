@@ -87,9 +87,9 @@ namespace cuda {
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   BitwiseAnd<uchar, 3>(stream, height, width,
- *                 input_pitch / sizeof(uchar), dev_input,
- *                 input_pitch / sizeof(uchar), dev_input,
- *                 output_pitch / sizeof(uchar), dev_output);
+ *                        input_pitch / sizeof(uchar), dev_input,
+ *                        input_pitch / sizeof(uchar), dev_input,
+ *                        output_pitch / sizeof(uchar), dev_output);
  *   cudaStreamSynchronize(stream);
  *
  *   cudaFree(dev_input);

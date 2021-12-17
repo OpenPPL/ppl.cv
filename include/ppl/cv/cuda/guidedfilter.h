@@ -29,7 +29,7 @@ namespace cuda {
 /**
  * @brief Uses a guidance image to perform edge-preserving smoothing on an image.
  * @tparam T The data type, used for input&guide&output image, currently only
- *         uchar and float are supported.
+ *         uint8_t(uchar) and float are supported.
  * @tparam srcCns The number of channels of input&output image, 1, 3 and 4
  *         are supported for now.
  * @tparam guideCns The number of channels of guide image, 1 is supported
@@ -55,8 +55,6 @@ namespace cuda {
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 The input and output must have the same height, width, channels and
- *         width stride.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
