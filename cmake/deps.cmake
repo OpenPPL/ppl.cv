@@ -7,13 +7,16 @@ include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${HPCC_DEPS_DIR})
 set(FETCHCONTENT_QUIET OFF)
 
+if(PPLCV_HOLD_DEPS)
+    set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+endif()
+
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG ba8f4bb547a53d296eda8db2ac13f7a983ccbe09
+    GIT_TAG 4ac9367ff6b2af7ad8adc4fb7ba1c0fa27793ae0
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
-    SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild
-    UPDATE_DISCONNECTED True)
+    SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
 
 FetchContent_GetProperties(hpcc)
 if(NOT hpcc_POPULATED)
@@ -34,10 +37,11 @@ hpcc_declare_pkg_dep(googletest
 
 set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable pplcommon tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable pplcommon benchmark")
+set(PPLCOMMON_HOLD_DEPS ${PPLCV_HOLD_DEPS})
 
 hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
-    dbb9a698c9efb9b3f1307bf256b99baf30b83bc5)
+    b4170a465164977f19cd53bae8f00d9a6edbd804)
 
 # --------------------------------------------------------------------------- #
 

@@ -8,6 +8,7 @@ include(cmake/deps.cmake)
 option(PPLCV_INSTALL "install ppl.cv libs and headers" ON)
 option(PPLCV_BUILD_TESTS "build tests" OFF)
 option(PPLCV_BUILD_BENCHMARK "build benchmark" OFF)
+option(PPLCV_HOLD_DEPS "don't update dependencies" OFF)
 
 # --------------------------------------------------------------------------- #
 
