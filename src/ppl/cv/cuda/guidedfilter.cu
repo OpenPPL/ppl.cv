@@ -36,12 +36,12 @@ RetCode convertTo(const float* src, int rows, int cols, int channels,
                   int src_stride, uchar* dst, int dst_stride, float alpha,
                   float beta, cudaStream_t stream);
 
-/******************************** add() *********************************/
+/********************************* add() ***********************************/
 
 __global__
-void addKernel1(const float* src0, const float* src1, float* dst, int rows,
-                int cols, int src0_stride, int src1_stride, int dst_stride,
-                int src0_pitch, int src1_pitch, int dst_pitch) {
+void addKernel(const float* src0, int rows, int cols, int src0_stride,
+               int src0_offset, const float* src1, int src1_stride,
+               int src1_offset, float* dst, int dst_stride, int dst_offset) {
   int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -49,43 +49,11 @@ void addKernel1(const float* src0, const float* src1, float* dst, int rows,
   }
 
   int offset = element_y * src0_stride;
-  const float* input0 = (float*)((uchar*)src0 + src0_pitch + offset);
-  const float* input1 = (float*)((uchar*)src1 + src1_pitch + offset);
-  float* output  = (float*)((uchar*)dst + dst_pitch + element_y * dst_stride);
+  const float* input0 = (float*)((uchar*)src0 + src0_offset + offset);
+  const float* input1 = (float*)((uchar*)src1 + src1_offset + offset);
+  float* output = (float*)((uchar*)dst + dst_offset + element_y * dst_stride);
 
-  float input_value00, input_value01;
-  float input_value10, input_value11;
-  float output_value0, output_value1;
-
-  input_value00 = input0[element_x];
-  input_value01 = input0[element_x + 1];
-
-  input_value10 = input1[element_x];
-  input_value11 = input1[element_x + 1];
-
-  output_value0 = input_value00 + input_value10;
-  output_value1 = input_value01 + input_value11;
-
-  output[element_x]     = output_value0;
-  output[element_x + 1] = output_value1;
-}
-
-__global__
-void addKernel2(const float* src0, const float* src1, float* dst, int rows,
-                int cols, int src0_stride, int src1_stride, int dst_stride,
-                int src0_pitch, int src1_pitch, int dst_pitch) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * src0_stride;
-  const float* input0 = (float*)((uchar*)src0 + src0_pitch + offset);
-  const float* input1 = (float*)((uchar*)src1 + src1_pitch + offset);
-  float* output  = (float*)((uchar*)dst + dst_pitch + element_y * dst_stride);
-
-  if (blockIdx.x < gridDim.x - 1) {
+  if (element_x < cols - 1) {
     float input_value00, input_value01;
     float input_value10, input_value11;
     float output_value0, output_value1;
@@ -103,41 +71,28 @@ void addKernel2(const float* src0, const float* src1, float* dst, int rows,
     output[element_x + 1] = output_value1;
   }
   else {
-    float input_value00, input_value01;
-    float input_value10, input_value11;
-    float output_value0, output_value1;
+    float input_value0, input_value1, output_value;
+    input_value0 = input0[element_x];
+    input_value1 = input1[element_x];
 
-    input_value00 = input0[element_x];
-    if (element_x != cols - 1) {
-      input_value01 = input0[element_x + 1];
-    }
+    output_value = input_value0 + input_value1;
 
-    input_value10 = input1[element_x];
-    if (element_x != cols - 1) {
-      input_value11 = input1[element_x + 1];
-    }
-
-    output_value0 = input_value00 + input_value10;
-    if (element_x != cols - 1) {
-      output_value1 = input_value01 + input_value11;
-    }
-
-    output[element_x] = output_value0;
-    if (element_x != cols - 1) {
-      output[element_x + 1] = output_value1;
-    }
+    output[element_x] = output_value;
   }
 }
 
-RetCode add(const float* src0, const float* src1, float* dst, int rows,
-        int cols, int dst_stride, int src0_pitch, int src1_pitch,
-        int dst_pitch, int channels, cudaStream_t stream) {
+RetCode add(const float* src0, int rows, int cols, int channels,
+            int src0_offset, const float* src1, int src1_offset, float* dst,
+            int dst_stride, int dst_offset, cudaStream_t stream) {
   PPL_ASSERT(src0 != nullptr);
   PPL_ASSERT(src1 != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
-  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src0_offset >= 0);
+  PPL_ASSERT(src1_offset >= 0);
+  PPL_ASSERT(dst_offset >= 0);
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -146,17 +101,8 @@ RetCode add(const float* src0, const float* src1, float* dst, int rows,
   grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  int padded_stride = roundUp(cols, 2, 1) * channels * sizeof(float);
-  if (dst_stride >= padded_stride) {
-    addKernel1<<<grid, block, 0, stream>>>(src0, src1, dst, rows, columns,
-                                            dst_stride, dst_stride, dst_stride,
-                                            src0_pitch, src1_pitch, dst_pitch);
-  }
-  else {
-    addKernel2<<<grid, block, 0, stream>>>(src0, src1, dst, rows, columns,
-                                            dst_stride, dst_stride, dst_stride,
-                                            src0_pitch, src1_pitch, dst_pitch);
-  }
+  addKernel<<<grid, block, 0, stream>>>(src0, rows, columns, dst_stride,
+      src0_offset, src1, dst_stride, src1_offset, dst, dst_stride, dst_offset);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -167,11 +113,11 @@ RetCode add(const float* src0, const float* src1, float* dst, int rows,
   return RC_SUCCESS;
 }
 
-/***************************** add_scalar() ******************************/
+/******************************* addScalar() *******************************/
 
 __global__
-void add_scalarKernel(float* dst, int rows, int columns, int stride,
-                      int dst_pitch, float value) {
+void addScalarKernel(float* dst, int rows, int columns, int stride,
+                     int dst_offset, float value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= rows || element_x >= columns) {
@@ -179,19 +125,20 @@ void add_scalarKernel(float* dst, int rows, int columns, int stride,
   }
 
   int offset = element_y * stride;
-  float* output = (float*)((uchar*)dst + dst_pitch + offset);
-  float output0 = output[element_x];
-  output0 += value;
+  float* output = (float*)((uchar*)dst + dst_offset + offset);
+  float result = output[element_x];
+  result += value;
 
-  output[element_x] = output0;
+  output[element_x] = result;
 }
 
-RetCode add_scalar(float* dst, int rows, int cols, int stride, int dst_pitch,
-                   int channels, float value, cudaStream_t stream) {
+RetCode addScalar(float* dst, int rows, int cols, int channels, int stride,
+                  int dst_offset, float value, cudaStream_t stream) {
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
-  PPL_ASSERT(stride > 0);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_offset >= 0);
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -200,8 +147,8 @@ RetCode add_scalar(float* dst, int rows, int cols, int stride, int dst_pitch,
   grid.x  = divideUp(columns, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  add_scalarKernel<<<grid, block, 0, stream>>>(dst, rows, columns, stride,
-                                                dst_pitch, value);
+  addScalarKernel<<<grid, block, 0, stream>>>(dst, rows, columns, stride,
+                                              dst_offset, value);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -212,13 +159,13 @@ RetCode add_scalar(float* dst, int rows, int cols, int stride, int dst_pitch,
   return RC_SUCCESS;
 }
 
-/***************************** multiply() ******************************/
+/****************************** multiply() ********************************/
 
 __global__
-void multiplyKernel1(const float* src0, int src0_pitch, const float* src1,
-                     int src1_pitch, float* dst, int dst_pitch,
-                     int rows, int cols, int src0_stride, int src1_stride,
-                     int dst_stride, double scale) {
+void multiplyKernel(const float* src0, int rows, int cols, int src0_stride,
+                    int src0_offset, const float* src1, int src1_stride,
+                    int src1_offset, float* dst, int dst_stride, int dst_offset,
+                    float scale) {
   int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -226,50 +173,11 @@ void multiplyKernel1(const float* src0, int src0_pitch, const float* src1,
   }
 
   int offset = element_y * src0_stride;
-  const float* input0 = (float*)((uchar*)src0 + src0_pitch + offset);
-  const float* input1 = (float*)((uchar*)src1 + src1_pitch + offset);
-  float* output  = (float*)((uchar*)dst + dst_pitch + element_y * dst_stride);
+  const float* input0 = (float*)((uchar*)src0 + src0_offset + offset);
+  const float* input1 = (float*)((uchar*)src1 + src1_offset + offset);
+  float* output = (float*)((uchar*)dst + dst_offset + element_y * dst_stride);
 
-  float input_value00, input_value01;
-  float input_value10, input_value11;
-  float output_value0, output_value1;
-
-  input_value00 = input0[element_x];
-  input_value01 = input0[element_x + 1];
-
-  input_value10 = input1[element_x];
-  input_value11 = input1[element_x + 1];
-
-  if (scale == 1) {
-    output_value0 = input_value00 * input_value10;
-    output_value1 = input_value01 * input_value11;
-  }
-  else {
-    output_value0 = input_value00 * input_value10 * scale;
-    output_value1 = input_value01 * input_value11 * scale;
-  }
-
-  output[element_x]     = output_value0;
-  output[element_x + 1] = output_value1;
-}
-
-__global__
-void multiplyKernel2(const float* src0, int src0_pitch, const float* src1,
-                     int src1_pitch, float* dst, int dst_pitch,
-                     int rows, int cols, int src0_stride, int src1_stride,
-                     int dst_stride, double scale) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * src0_stride;
-  const float* input0 = (float*)((uchar*)src0 + src0_pitch + offset);
-  const float* input1 = (float*)((uchar*)src1 + src1_pitch + offset);
-  float* output  = (float*)((uchar*)dst + dst_pitch + element_y * dst_stride);
-
-  if (blockIdx.x < gridDim.x - 1) {
+  if (element_x < cols - 1) {
     float input_value00, input_value01;
     float input_value10, input_value11;
     float output_value0, output_value1;
@@ -280,7 +188,7 @@ void multiplyKernel2(const float* src0, int src0_pitch, const float* src1,
     input_value10 = input1[element_x];
     input_value11 = input1[element_x + 1];
 
-    if (scale == 1) {
+    if (scale == 1.f) {
       output_value0 = input_value00 * input_value10;
       output_value1 = input_value01 * input_value11;
     }
@@ -293,52 +201,36 @@ void multiplyKernel2(const float* src0, int src0_pitch, const float* src1,
     output[element_x + 1] = output_value1;
   }
   else {
-    float input_value00, input_value01;
-    float input_value10, input_value11;
-    float output_value0, output_value1;
+    float input_value0, input_value1, output_value;
+    input_value0 = input0[element_x];
+    input_value1 = input1[element_x];
 
-    input_value00 = input0[element_x];
-    if (element_x != cols - 1) {
-      input_value01 = input0[element_x + 1];
-    }
-
-    input_value10 = input1[element_x];
-    if (element_x != cols - 1) {
-      input_value11 = input1[element_x + 1];
-    }
-
-    if (scale == 1) {
-      output_value0 = input_value00 * input_value10;
-      if (element_x != cols - 1) {
-        output_value1 = input_value01 * input_value11;
-      }
+    if (scale == 1.f) {
+      output_value = input_value0 * input_value1;
     }
     else {
-      output_value0 = input_value00 * input_value10 * scale;
-      if (element_x != cols - 1) {
-        output_value1 = input_value01 * input_value11 * scale;
-      }
+      output_value = input_value0 * input_value1 * scale;
     }
 
-    output[element_x]     = output_value0;
-    if (element_x != cols - 1) {
-      output[element_x + 1] = output_value1;
-    }
+    output[element_x] = output_value;
   }
 }
 
-RetCode multiply(cudaStream_t stream, int rows, int cols, int channels,
-                 int src0_stride, int src0_pitch, const float* src0,
-                 int src1_stride, int src1_pitch, const float* src1,
-                 int dst_stride, int dst_pitch, float* dst, double scale) {
+RetCode multiply(const float* src0, int rows, int cols, int channels,
+                 int src0_stride, int src0_offset, const float* src1,
+                 int src1_stride, int src1_offset, float* dst, int dst_stride,
+                 int dst_offset, float scale, cudaStream_t stream) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
-  PPL_ASSERT(src0 != nullptr);
-  PPL_ASSERT(src1 != nullptr);
-  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src0_offset >= 0);
+  PPL_ASSERT(src1_offset >= 0);
+  PPL_ASSERT(dst_offset >= 0);
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -347,21 +239,9 @@ RetCode multiply(cudaStream_t stream, int rows, int cols, int channels,
   grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  int padded_stride = roundUp(cols, 2, 1) * channels * sizeof(float);
-  if (dst_stride >= padded_stride) {
-    multiplyKernel1<<<grid, block, 0, stream>>>(src0, src0_pitch, src1,
-                                                 src1_pitch, dst, dst_pitch,
-                                                 rows, columns,
-                                                 src0_stride, src1_stride,
-                                                 dst_stride, scale);
-  }
-  else {
-    multiplyKernel2<<<grid, block, 0, stream>>>(src0, src0_pitch, src1,
-                                                 src1_pitch, dst, dst_pitch,
-                                                 rows, columns,
-                                                 src0_stride, src1_stride,
-                                                 dst_stride, scale);
-  }
+  multiplyKernel<<<grid, block, 0, stream>>>(src0, rows, columns, src0_stride,
+      src0_offset, src1, src1_stride, src1_offset, dst, dst_stride, dst_offset,
+      scale);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -372,13 +252,13 @@ RetCode multiply(cudaStream_t stream, int rows, int cols, int channels,
   return RC_SUCCESS;
 }
 
-/***************************** divide() ******************************/
+/******************************* divide() ********************************/
 
 __global__
-void divideKernel1(const float* src0, int src0_pitch, const float* src1,
-                   int src1_pitch, float* dst, int dst_pitch,
-                   int rows, int cols, int src0_stride, int src1_stride,
-                   int dst_stride, double scale) {
+void divideKernel(const float* src0, int rows, int cols, int src0_stride,
+                  int src0_offset, const float* src1, int src1_stride,
+                  int src1_offset, float* dst, int dst_stride, int dst_offset,
+                  float scale) {
   int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -386,52 +266,11 @@ void divideKernel1(const float* src0, int src0_pitch, const float* src1,
   }
 
   int offset = element_y * src0_stride;
-  const float* input0 = (float*)((uchar*)src0 + src0_pitch + offset);
-  const float* input1 = (float*)((uchar*)src1 + src1_pitch + offset);
-  float* output  = (float*)((uchar*)dst + dst_pitch + element_y * dst_stride);
+  const float* input0 = (float*)((uchar*)src0 + src0_offset + offset);
+  const float* input1 = (float*)((uchar*)src1 + src1_offset + offset);
+  float* output = (float*)((uchar*)dst + dst_offset + element_y * dst_stride);
 
-  float input_value00, input_value01;
-  float input_value10, input_value11;
-  float output_value0, output_value1;
-
-  input_value00 = input0[element_x];
-  input_value01 = input0[element_x + 1];
-
-  input_value10 = input1[element_x];
-  input_value11 = input1[element_x + 1];
-
-  if (scale == 1) {
-    output_value0 = input_value10 == 0 ? 0 : input_value00 / input_value10;
-    output_value1 = input_value11 == 0 ? 0 : input_value01 / input_value11;
-  }
-  else {
-    output_value0 = input_value10 == 0 ? 0 :
-                      scale * input_value00 / input_value10;
-    output_value1 = input_value11 == 0 ? 0 :
-                      scale * input_value01 / input_value11;
-  }
-
-  output[element_x]     = output_value0;
-  output[element_x + 1] = output_value1;
-}
-
-__global__
-void divideKernel2(const float* src0, int src0_pitch, const float* src1,
-                   int src1_pitch, float* dst, int dst_pitch,
-                   int rows, int cols, int src0_stride, int src1_stride,
-                   int dst_stride, double scale) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * src0_stride;
-  const float* input0 = (float*)((uchar*)src0 + src0_pitch + offset);
-  const float* input1 = (float*)((uchar*)src1 + src1_pitch + offset);
-  float* output  = (float*)((uchar*)dst + dst_pitch + element_y * dst_stride);
-
-  if (blockIdx.x < gridDim.x - 1) {
+  if (element_x < cols - 1) {
     float input_value00, input_value01;
     float input_value10, input_value11;
     float output_value0, output_value1;
@@ -442,69 +281,52 @@ void divideKernel2(const float* src0, int src0_pitch, const float* src1,
     input_value10 = input1[element_x];
     input_value11 = input1[element_x + 1];
 
-    if (scale == 1) {
+    if (scale == 1.f) {
       output_value0 = input_value10 == 0 ? 0 : input_value00 / input_value10;
       output_value1 = input_value11 == 0 ? 0 : input_value01 / input_value11;
     }
     else {
       output_value0 = input_value10 == 0 ? 0 :
-                        scale * input_value00 / input_value10;
+                      scale * input_value00 / input_value10;
       output_value1 = input_value11 == 0 ? 0 :
-                        scale * input_value01 / input_value11;
+                      scale * input_value01 / input_value11;
     }
 
     output[element_x]     = output_value0;
     output[element_x + 1] = output_value1;
   }
   else {
-    float input_value00, input_value01;
-    float input_value10, input_value11;
-    float output_value0, output_value1;
+    float input_value0, input_value1, output_value;
+    input_value0 = input0[element_x];
+    input_value1 = input1[element_x];
 
-    input_value00 = input0[element_x];
-    if (element_x != cols - 1) {
-      input_value01 = input0[element_x + 1];
-    }
-
-    input_value10 = input1[element_x];
-    if (element_x != cols - 1) {
-      input_value11 = input1[element_x + 1];
-    }
-
-    if (scale == 1) {
-      output_value0 = input_value10 == 0 ? 0 : input_value00 / input_value10;
-      if (element_x != cols - 1) {
-        output_value1 = input_value11 == 0 ? 0 : input_value01 / input_value11;
-      }
+    if (scale == 1.f) {
+      output_value = input_value1 == 0 ? 0 : input_value0 / input_value1;
     }
     else {
-      output_value0 = input_value10 == 0 ? 0 :
-                        scale * input_value00 / input_value10;
-      if (element_x != cols - 1) {
-        output_value1 = input_value11 == 0 ? 0 :
-                        scale * input_value01 / input_value11;
-      }
+      output_value = input_value1 == 0 ? 0 :
+                     scale * input_value0 / input_value1;
     }
 
-    output[element_x] = output_value0;
-    if (element_x != cols - 1) {
-      output[element_x + 1] = output_value1;
-    }
+    output[element_x] = output_value;
   }
 }
 
-RetCode divide(cudaStream_t stream, int rows, int cols, int channels,
-               int src0_stride, int src0_pitch, const float* src0,
-               int src1_stride, int src1_pitch, const float* src1,
-               int dst_stride, int dst_pitch, float* dst, double scale) {
+RetCode divide(const float* src0, int rows, int cols, int channels,
+               int src0_stride, int src0_offset, const float* src1,
+               int src1_stride, int src1_offset, float* dst, int dst_stride,
+               int dst_offset, float scale, cudaStream_t stream) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
-  PPL_ASSERT(src0 != nullptr);
-  PPL_ASSERT(src1 != nullptr);
-  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(src0_offset >= 0);
+  PPL_ASSERT(src1_offset >= 0);
+  PPL_ASSERT(dst_offset >= 0);
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -513,21 +335,9 @@ RetCode divide(cudaStream_t stream, int rows, int cols, int channels,
   grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  int padded_stride = roundUp(cols, 2, 1) * channels * sizeof(float);
-  if (dst_stride >= padded_stride) {
-    divideKernel1<<<grid, block, 0, stream>>>(src0, src0_pitch, src1,
-                                               src1_pitch, dst, dst_pitch,
-                                               rows, columns,
-                                               src0_stride, src1_stride,
-                                               dst_stride, scale);
-  }
-  else {
-    divideKernel2<<<grid, block, 0, stream>>>(src0, src0_pitch, src1,
-                                               src1_pitch, dst, dst_pitch,
-                                               rows, columns,
-                                               src0_stride, src1_stride,
-                                               dst_stride, scale);
-  }
+  divideKernel<<<grid, block, 0, stream>>>(src0, rows, columns, src0_stride,
+      src0_offset, src1, src1_stride, src1_offset, dst, dst_stride, dst_offset,
+      scale);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -538,40 +348,43 @@ RetCode divide(cudaStream_t stream, int rows, int cols, int channels,
   return RC_SUCCESS;
 }
 
-/***************************** subtract() ******************************/
+/******************************* subtract() ********************************/
 
 __global__
-void subtractKernel(const float* src1, const float* src2, float* dst,
-                    int rows, int columns, int stride, int src1_pitch,
-                    int src2_pitch, int dst_pitch) {
+void subtractKernel(const float* src0, int rows, int cols, int stride,
+                    int src0_offset, const float* src1, int src1_offset,
+                    float* dst, int dst_offset) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
-  if (element_y >= rows || element_x >= columns) {
+  if (element_y >= rows || element_x >= cols) {
     return;
   }
 
   int offset = element_y * stride;
-  float* input1 = (float*)((uchar*)src1 + src1_pitch + offset);
-  float value10 = input1[element_x];
+  float* input0 = (float*)((uchar*)src0 + src0_offset + offset);
+  float* input1 = (float*)((uchar*)src1 + src1_offset + offset);
+  float* output = (float*)((uchar*)dst + dst_offset + offset);
 
-  float* input2 = (float*)((uchar*)src2 + src2_pitch + offset);
-  float value20 = input2[element_x];
+  float value0 = input0[element_x];
+  float value1 = input1[element_x];
+  float result = value0 - value1;
 
-  float output0 = value10 - value20;
-
-  float* output = (float*)((uchar*)dst + dst_pitch + offset);
-  output[element_x] = output0;
+  output[element_x] = result;
 }
 
-RetCode subtract(const float* src1, const float* src2, float* dst, int rows,
-                 int cols, int stride, int src1_pitch, int src2_pitch,
-                 int dst_pitch, int channels, cudaStream_t stream) {
+RetCode subtract(const float* src0, int rows, int cols, int channels,
+                 int stride, int src0_offset, const float* src1,
+                 int src1_offset, float* dst, int dst_offset,
+                 cudaStream_t stream) {
+  PPL_ASSERT(src0 != nullptr);
   PPL_ASSERT(src1 != nullptr);
-  PPL_ASSERT(src2 != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
-  PPL_ASSERT(stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src0_offset >= 0);
+  PPL_ASSERT(src1_offset >= 0);
+  PPL_ASSERT(dst_offset >= 0);
 
   int columns = cols * channels;
   dim3 block, grid;
@@ -580,9 +393,8 @@ RetCode subtract(const float* src1, const float* src2, float* dst, int rows,
   grid.x  = divideUp(columns, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  subtractKernel<<<grid, block, 0, stream>>>(src1, src2, dst, rows, columns,
-                                              stride, src1_pitch, src2_pitch,
-                                              dst_pitch);
+  subtractKernel<<<grid, block, 0, stream>>>(src0, rows, columns, stride,
+      src0_offset, src1, src1_offset, dst, dst_offset);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -593,330 +405,639 @@ RetCode subtract(const float* src1, const float* src2, float* dst, int rows,
   return RC_SUCCESS;
 }
 
-/***************************** boxfilter() ******************************/
+/******************************* boxFilter() ********************************/
 
-template<int BSY,int BSX,int nc>
+#define RADIUS 8
+#define SMALL_KSIZE RADIUS * 2 + 1
+
+template <typename Tsrc, typename Tdst, typename BorderInterpolation>
 __global__
-void boxFilterKernel21(int height , int width, int inWidthStride, int in_pitch,
-                       const float* in_buf, int radiusX, int radiusY,
-                       bool normal, int outWidthStride, int out_pitch,
-                       float* out_buf) {
-  float* src = (float*)((uchar*)in_buf + in_pitch);
-  float *dst = (float*)((uchar*)out_buf + out_pitch);
-  float sum;
-  int bx = blockIdx.x;
-  int by = blockIdx.y;
-  int tx = threadIdx.x;
-  int ty = threadIdx.y;
+void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
+                    int src_offset, int radius_x, int radius_y,
+                    bool is_x_symmetric, bool is_y_symmetric, bool normalize,
+                    float weight, Tdst* dst, int dst_stride, int dst_offset,
+                    BorderInterpolation interpolation) {
+  __shared__ float data[kDimY0 * 3][(kDimX0 << 2)];
 
-  int j = bx * blockDim.x + tx;
-  int i = by * blockDim.y + ty;
-  float weight = 1.f/((2*radiusY+1)*(2*radiusX+1));
-  extern __shared__ float pixels[];
-  int stride = BSX + 2 * radiusX;
-  if (bx>0 && by >0 && by<gridDim.y-2 && bx<gridDim.x-2) {
-      int Idx = i* inWidthStride + j * nc ;
-      int idxDst = i* outWidthStride + j * nc;
-      //center
-      for(int k=0;k<nc;k++) {
-        pixels[((ty+radiusY)*stride+(tx+radiusX))*nc+k] = src[Idx+k];
+  int element_x = ((blockIdx.x << kShiftX0) + threadIdx.x) << 2;
+  int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
+
+  int bottom = element_x - radius_x;
+  int top    = element_x + radius_x;
+  if (!is_x_symmetric) {
+    top -= 1;
+  }
+
+  int data_index, row_index;
+  Tsrc* input;
+  float4 value;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+  bool isnt_border_block = true;
+  data_index = radius_x >> (kShiftX0 + 2);
+  if (blockIdx.x <= data_index) isnt_border_block = false;
+  data_index = (cols - radius_x) >> (kShiftX0 + 2);
+  if (blockIdx.x >= data_index) isnt_border_block = false;
+
+  if (threadIdx.y < radius_y && element_x < cols) {
+    row_index = interpolation(rows, radius_y, element_y - radius_y);
+    input = (Tsrc*)((uchar*)src + src_offset + row_index * src_stride);
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        sum += value;
       }
-
-      //left & right
-      if(tx<radiusX){
-          int idx2 = i*inWidthStride + (j - radiusX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY)*stride+tx)*nc+k] = src[idx2+k];
-          }
-
-          idx2 = i*inWidthStride + (j + BSX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY)*stride+(tx+BSX+radiusX))*nc+k] = src[idx2+k];
-          }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius_x, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 3);
+        value.w = input[data_index];
+        sum += value;
       }
+    }
+    data_index = threadIdx.x << 2;
+    data[threadIdx.y][data_index] = sum.x;
+    data[threadIdx.y][data_index + 1] = sum.y;
+    data[threadIdx.y][data_index + 2] = sum.z;
+    data[threadIdx.y][data_index + 3] = sum.w;
+  }
 
-      //upper & down
-      if(ty<radiusY){
-          int idx2 = (i-radiusY)*inWidthStride + j * nc;
-          for(int k=0;k<nc;k++){
-              pixels[(ty*stride+(radiusX+tx))*nc+k] = src[idx2+k];
-          }
+  if (element_y < rows && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    input = (Tsrc*)((uchar*)src + src_offset + element_y * src_stride);
 
-          idx2 = (i+BSY)*inWidthStride + j * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+BSY+radiusY)*stride+(radiusX+tx))*nc+k] = src[idx2+k];
-          }
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        sum += value;
       }
-      //four corners
-      if(ty<radiusY && tx<radiusX){
-          int idx2 = (i-radiusY)*inWidthStride + (j-radiusX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[(ty*stride+(tx))*nc+k] = src[idx2+k];
-          }
-
-          idx2 = (i-radiusY)*inWidthStride + (j+BSX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[(ty*stride+(tx+BSX+radiusX))*nc+k] = src[idx2+k];
-          }
-
-          idx2 = (i+BSY)*inWidthStride + (j-radiusX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY+BSY)*stride+tx)*nc+k] = src[idx2+k];
-          }
-
-          idx2 = (i+BSY)*inWidthStride + (j+BSX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY+BSY)*stride+(tx+radiusX+BSX))*nc+k] = src[idx2+k];
-          }
-
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius_x, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 3);
+        value.w = input[data_index];
+        sum += value;
       }
-      __syncthreads();
+    }
+    data_index = threadIdx.x << 2;
+    data[radius_y + threadIdx.y][data_index] = sum.x;
+    data[radius_y + threadIdx.y][data_index + 1] = sum.y;
+    data[radius_y + threadIdx.y][data_index + 2] = sum.z;
+    data[radius_y + threadIdx.y][data_index + 3] = sum.w;
+  }
 
-      for(int k=0;k<nc;k++){
-          sum = 0;
-          for(int l=0;l<(2*radiusY+1);l++)
-              for(int m=0;m<(2*radiusX+1);m++){
-              int ki = l-radiusY;
-              int kj = m-radiusX;
-              int x,y;
-              y = ki + ty + radiusY;
-              x = kj + tx + radiusX;
-              sum += pixels[(y*stride+x)*nc+k];
-          }
-          if(normal)
-              dst[idxDst+k] = weight * sum;
-          else dst[idxDst+k] = sum;
-      }//k
+  if (threadIdx.y < radius_y && element_x < cols) {
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+    if (blockIdx.y != gridDim.y - 1) {
+      row_index = interpolation(rows, radius_y,
+                                ((blockIdx.y + 1) << kShiftY0) + threadIdx.y);
+    }
+    else {
+      row_index = interpolation(rows, radius_y, rows + threadIdx.y);
+    }
+    input = (Tsrc*)((uchar*)src + src_offset + row_index * src_stride);
+
+    if (isnt_border_block) {
+      for (int i = bottom; i <= top; i++) {
+        value.x = input[i];
+        value.y = input[i + 1];
+        value.z = input[i + 2];
+        value.w = input[i + 3];
+        sum += value;
+      }
+    }
+    else {
+      for (int i = bottom; i <= top; i++) {
+        data_index = interpolation(cols, radius_x, i);
+        value.x = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 1);
+        value.y = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 2);
+        value.z = input[data_index];
+        data_index = interpolation(cols, radius_x, i + 3);
+        value.w = input[data_index];
+        sum += value;
+      }
+    }
+
+    data_index = threadIdx.x << 2;
+    if (blockIdx.y != gridDim.y - 1) {
+      row_index = radius_y + kDimY0 + threadIdx.y;
+    }
+    else {
+      row_index = radius_y + (rows - (blockIdx.y << kShiftY0)) + threadIdx.y;
+    }
+    data[row_index][data_index] = sum.x;
+    data[row_index][data_index + 1] = sum.y;
+    data[row_index][data_index + 2] = sum.z;
+    data[row_index][data_index + 3] = sum.w;
+  }
+  __syncthreads();
+
+  if (element_y < rows && element_x < cols) {
+    top = (radius_y << 1) + 1;
+    if (!is_y_symmetric) {
+      top -= 1;
+    }
+    sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+    for (int i = 0; i < top; i++) {
+      data_index = threadIdx.x << 2;
+      value.x = data[i + threadIdx.y][data_index];
+      value.y = data[i + threadIdx.y][data_index + 1];
+      value.z = data[i + threadIdx.y][data_index + 2];
+      value.w = data[i + threadIdx.y][data_index + 3];
+      sum += value;
+    }
+
+    if (normalize) {
+      sum.x *= weight;
+      sum.y *= weight;
+      sum.z *= weight;
+      sum.w *= weight;
+    }
+
+    Tdst* output = (Tdst*)((uchar*)dst + dst_offset + element_y * dst_stride);
+    if (sizeof(Tdst) == 1) {
+      if (element_x < cols - 3) {
+        output[element_x]     = saturate_cast(sum.x);
+        output[element_x + 1] = saturate_cast(sum.y);
+        output[element_x + 2] = saturate_cast(sum.z);
+        output[element_x + 3] = saturate_cast(sum.w);
+      }
+      else {
+        output[element_x] = saturate_cast(sum.x);
+        if (element_x < cols - 1) {
+          output[element_x + 1] = saturate_cast(sum.y);
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = saturate_cast(sum.z);
+        }
+      }
+    }
+    else {
+      if (element_x < cols - 3) {
+        output[element_x]     = sum.x;
+        output[element_x + 1] = sum.y;
+        output[element_x + 2] = sum.z;
+        output[element_x + 3] = sum.w;
+      }
+      else {
+        output[element_x] = sum.x;
+        if (element_x < cols - 1) {
+          output[element_x + 1] = sum.y;
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = sum.z;
+        }
+      }
+    }
+  }
+}
+
+template <typename Tsrc, typename Tsrc4, typename BorderInterpolation>
+__global__
+void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
+                     int src_offset, int radius_x, bool is_x_symmetric,
+                     float* dst, int dst_stride,
+                     BorderInterpolation interpolation) {
+  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_x >= cols || element_y >= rows) {
+    return;
+  }
+
+  int origin_x = element_x - radius_x;
+  int top_x    = element_x + radius_x;
+  if (!is_x_symmetric) {
+    top_x -= 1;
+  }
+
+  int data_index;
+  Tsrc* input;
+  Tsrc4 value;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+  bool isnt_border_block = true;
+  data_index = radius_x >> (kBlockShiftX1 + 2);
+  if (blockIdx.x <= data_index) isnt_border_block = false;
+  data_index = (cols - radius_x) >> (kBlockShiftX1 + 2);
+  if (blockIdx.x >= data_index) isnt_border_block = false;
+
+  input = (Tsrc*)((uchar*)src + src_offset + element_y * src_stride);
+  if (isnt_border_block) {
+    for (int i = origin_x; i <= top_x; i++) {
+      value.x = input[i];
+      value.y = input[i + 1];
+      value.z = input[i + 2];
+      value.w = input[i + 3];
+      sum += value;
+    }
   }
   else {
-    //处理边界
-    int flag = i<height && j<width;
-    bool flag1 = (by==0 && flag);//上边
-    bool flag2 = (bx==0 && by>0 && flag );//左侧
-    bool flag3 = (bx>=gridDim.x-2 && by>0 && flag); //右侧
-    bool flag4 = (by>=gridDim.y-2 && bx>0 && flag);//下侧
-    int index;
-    if(flag1 || flag2 ||flag3 ||flag4) {
-      int idxDst = i* outWidthStride + j*nc;
-      for(int k=0; k<nc; k++) {
-        sum = 0;
-        for(int l=0;l<(2*radiusY+1);l++) {
-          for(int m=0;m<(2*radiusX+1);m++) {
-            int ki = l-radiusY;
-            int kj = m-radiusX;
-            int x,y;
-            index = ki + i;
-            if(index<0) {
-                y = -index;
-            }else if(index > height -1) {
-                y = (height -1)-(index-(height-1));
-            }else {
-                y = ki + i;
-            }
-            index = kj + j;
-            if (index < 0) {
-                x = -index;
-            } else if(index > width -1) {
-                x = (width -1) - (index-(width-1));
-            } else {
-                x = kj + j;
-            }
-            sum += src[y*inWidthStride+ x * nc + k];
-          }// l&m
-        }
-
-        if (normal) {
-            dst[idxDst+k] = weight * sum;
-        }
-        else {
-            dst[idxDst+k] = sum;
-        }
-      }//k
-    }//if
+    for (int i = origin_x; i <= top_x; i++) {
+      data_index = interpolation(cols, radius_x, i);
+      value.x = input[data_index];
+      data_index = interpolation(cols, radius_x, i + 1);
+      value.y = input[data_index];
+      data_index = interpolation(cols, radius_x, i + 2);
+      value.z = input[data_index];
+      data_index = interpolation(cols, radius_x, i + 3);
+      value.w = input[data_index];
+      sum += value;
+    }
   }
-}
 
-template<int BSY,int BSX,int nc>
-__global__
-void boxFilterKernel22(int height , int width, int inWidthStride, int in_pitch,
-                       const float* in_buf, int radiusX, int radiusY,
-                       bool normal, int outWidthStride, int out_pitch,
-                       float * out_buf) {
-  float* src = (float*)((uchar*)in_buf + in_pitch);
-  float *dst = (float*)((uchar*)out_buf + out_pitch);
-  float sum;
-  int bx = blockIdx.x;
-  int by = blockIdx.y;
-  int tx = threadIdx.x;
-  int ty = threadIdx.y;
-
-  int j = bx * blockDim.x + tx;
-  int i = by * blockDim.y + ty;
-  float weight = 1.f/((2*radiusY+1)*(2*radiusX+1));
-  extern __shared__ float pixels[];
-  int stride = BSX + 2 * radiusX;
-  if(bx>0 && by >0 && by<gridDim.y-2 && bx<gridDim.x-2) {
-      int Idx = i* inWidthStride + j * nc ;
-      int idxDst = i* outWidthStride + j * nc;
-      //center
-      for(int k=0;k<nc;k++) {
-        pixels[((ty+radiusY)*stride+(tx+radiusX))*nc+k] = src[Idx+k];
-      }
-
-      //left & right
-      if(tx<radiusX){
-          int idx2 = i*inWidthStride + (j - radiusX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY)*stride+tx)*nc+k] = src[idx2+k];
-          }
-
-          idx2 = i*inWidthStride + (j + BSX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY)*stride+(tx+BSX+radiusX))*nc+k] = src[idx2+k];
-          }
-      }
-
-      //upper & down
-      if(ty<radiusY){
-          int idx2 = (i-radiusY)*inWidthStride + j * nc;
-          for(int k=0;k<nc;k++){
-              pixels[(ty*stride+(radiusX+tx))*nc+k] = src[idx2+k];
-          }
-
-          idx2 = (i+BSY)*inWidthStride + j * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+BSY+radiusY)*stride+(radiusX+tx))*nc+k] = src[idx2+k];
-          }
-      }
-      //four corners
-      if(ty<radiusY && tx<radiusX){
-          int idx2 = (i-radiusY)*inWidthStride + (j-radiusX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[(ty*stride+(tx))*nc+k] = src[idx2+k];
-          }
-
-          idx2 = (i-radiusY)*inWidthStride + (j+BSX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[(ty*stride+(tx+BSX+radiusX))*nc+k] = src[idx2+k];
-          }
-
-          idx2 = (i+BSY)*inWidthStride + (j-radiusX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY+BSY)*stride+tx)*nc+k] = src[idx2+k];
-          }
-
-          idx2 = (i+BSY)*inWidthStride + (j+BSX) * nc;
-          for(int k=0;k<nc;k++){
-              pixels[((ty+radiusY+BSY)*stride+(tx+radiusX+BSX))*nc+k] = src[idx2+k];
-          }
-
-      }
-      __syncthreads();
-
-      for(int k=0;k<nc;k++){
-          sum = 0;
-          for(int l=0;l<(2*radiusY+1);l++)
-              for(int m=0;m<(2*radiusX+1);m++){
-              int ki = l-radiusY;
-              int kj = m-radiusX;
-              int x,y;
-              y = ki + ty + radiusY;
-              x = kj + tx + radiusX;
-              sum += pixels[(y*stride+x)*nc+k];
-          }
-          if(normal)
-              dst[idxDst+k] = weight * sum;
-          else dst[idxDst+k] = sum;
-      }//k
+  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+  if (element_x < cols - 3) {
+    output[element_x]     = sum.x;
+    output[element_x + 1] = sum.y;
+    output[element_x + 2] = sum.z;
+    output[element_x + 3] = sum.w;
   }
   else {
-    //处理边界
-    int flag = i<height && j<width;
-    bool flag1 = (by==0 && flag);//上边
-    bool flag2 = (bx==0 && by>0 && flag );//左侧
-    bool flag3 = (bx>=gridDim.x-2 && by>0 && flag); //右侧
-    bool flag4 = (by>=gridDim.y-2 && bx>0 && flag);//下侧
-    int index;
-    if(flag1 || flag2 ||flag3 ||flag4) {
-      int idxDst = i* outWidthStride + j*nc;
-      for(int k=0; k<nc; k++) {
-        sum = 0;
-        for(int l=0;l<(2*radiusY+1);l++) {
-          for(int m=0;m<(2*radiusX+1);m++) {
-            int ki = l-radiusY;
-            int kj = m-radiusX;
-            int x,y;
-            index = ki + i;
-            if(index<0) {
-                y = -index - 1;
-            }else if(index > height -1) {
-                y = height-(index-(height-1));
-            }else {
-                y = ki + i;
-            }
-            index = kj + j;
-            if (index < 0) {
-                x = -index - 1;
-            } else if(index > width -1) {
-                x = width - (index-(width-1));
-            } else {
-                x = kj + j;
-            }
-            sum += src[y*inWidthStride+ x * nc + k];
-          }// l&m
-        }
-
-        if (normal) {
-            dst[idxDst+k] = weight * sum;
-        }
-        else {
-            dst[idxDst+k] = sum;
-        }
-      }//k
-    }//if
+    output[element_x] = sum.x;
+    if (element_x < cols - 1) {
+      output[element_x + 1] = sum.y;
+    }
+    if (element_x < cols - 2) {
+      output[element_x + 2] = sum.z;
+    }
   }
 }
 
-void BoxFilter2(cudaStream_t stream,
-                int height,
-                int width,
-                int inWidthStride,
-                int in_pitch,
-                const float* inData,
-                int kernelx_len,
-                int kernely_len,
-                bool normalize,
-                int outWidthStride,
-                int out_pitch,
-                float* outData,
-                BorderType border_type) {
-  const int BX = 32;
-  const int BY = 32;
-  const int radiusX = kernelx_len>>1;
-  const int radiusY = kernely_len>>1;
-  dim3 block(BX,BY);
-  dim3 grid;
-  grid.x = (width + BX-1)/BX;
-  grid.y = (height + BY-1)/BY;
-  int smem = (BY + 2 * radiusY) * (BX + 2 * radiusX) * 1 * sizeof(float);
+template <typename Tdst, typename BorderInterpolation>
+__global__
+void colSharedKernel(const float* src, int rows, int cols4, int cols,
+                     int src_stride, int radius_y, bool is_y_symmetric,
+                     bool normalize, float weight, Tdst* dst, int dst_stride,
+                     int dst_offset, BorderInterpolation interpolation) {
+  __shared__ float4 data[kDimY0 * 3][kDimX0];
 
-  if (border_type == ppl::cv::BORDER_TYPE_REFLECT_101) {
-    boxFilterKernel21<BY, BX, 1><<<grid, block, smem, stream>>>
-      (height, width, inWidthStride, in_pitch, inData, radiusX, radiusY, normalize,
-       outWidthStride, out_pitch, outData);
-  } else if(border_type == ppl::cv::BORDER_TYPE_REFLECT) {
-    boxFilterKernel22<BY, BX, 1><<<grid, block, smem, stream>>>
-      (height, width, inWidthStride, in_pitch, inData, radiusX, radiusY, normalize,
-       outWidthStride, out_pitch, outData);
+  int element_x = (blockIdx.x << kShiftX0) + threadIdx.x;
+  int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
+  if (element_x >= cols4) {
+    return;
+  }
+
+  float4* input;
+  float4 value;
+  int index;
+  int ksize_y = (radius_y << 1) + 1;
+  if (!is_y_symmetric) {
+    ksize_y -= 1;
+  }
+
+  if (threadIdx.y < radius_y) {
+    if (blockIdx.y == 0) {
+      index = interpolation(rows, radius_y, element_y - radius_y);
+    }
+    else {
+      index = element_y - radius_y;
+    }
+    input = (float4*)((uchar*)src + index * src_stride);
+    value = input[element_x];
+    data[threadIdx.y][threadIdx.x] = value;
+  }
+
+  if (element_y < rows) {
+    input = (float4*)((uchar*)src + element_y * src_stride);
+    value = input[element_x];
+    data[radius_y + threadIdx.y][threadIdx.x] = value;
+  }
+
+  if (threadIdx.y < radius_y) {
+    index = (rows - radius_y) >> kShiftY0;
+    if (blockIdx.y >= index) {
+      if (blockIdx.y != gridDim.y - 1) {
+        index = interpolation(rows, radius_y, element_y + kDimY0);
+        input = (float4*)((uchar*)src + index * src_stride);
+        value = input[element_x];
+        data[radius_y + kDimY0 + threadIdx.y][threadIdx.x] = value;
+      }
+      else {
+        index = interpolation(rows, radius_y, rows + threadIdx.y);
+        input = (float4*)((uchar*)src + index * src_stride);
+        value = input[element_x];
+        index = rows - (blockIdx.y << kShiftY0);
+        data[radius_y + index + threadIdx.y][threadIdx.x] = value;
+      }
+    }
+    else {
+      index = element_y + kDimY0;
+      input = (float4*)((uchar*)src + index * src_stride);
+      value = input[element_x];
+      data[radius_y + kDimY0 + threadIdx.y][threadIdx.x] = value;
+    }
+  }
+  __syncthreads();
+
+  if (element_y >= rows) {
+    return;
+  }
+
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+  for (index = 0; index < ksize_y; index++) {
+    sum += data[threadIdx.y + index][threadIdx.x];
+  }
+
+  if (normalize) {
+    sum.x *= weight;
+    sum.y *= weight;
+    sum.z *= weight;
+    sum.w *= weight;
+  }
+
+  Tdst* output = (Tdst*)((uchar*)dst + dst_offset + element_y * dst_stride);
+  index = element_x << 2;
+  if (element_x < cols4 - 1) {
+    if (sizeof(Tdst) == 1) {
+      output[index] = saturate_cast(sum.x);
+      output[index + 1] = saturate_cast(sum.y);
+      output[index + 2] = saturate_cast(sum.z);
+      output[index + 3] = saturate_cast(sum.w);
+    }
+    else {
+      output[index] = sum.x;
+      output[index + 1] = sum.y;
+      output[index + 2] = sum.z;
+      output[index + 3] = sum.w;
+    }
+  }
+  else {
+    if (sizeof(Tdst) == 1) {
+      output[index] = saturate_cast(sum.x);
+      if (index < cols - 1) {
+        output[index + 1] = saturate_cast(sum.y);
+      }
+      if (index < cols - 2) {
+        output[index + 2] = saturate_cast(sum.z);
+      }
+      if (index < cols - 3) {
+        output[index + 3] = saturate_cast(sum.w);
+      }
+    }
+    else {
+      output[index] = sum.x;
+      if (index < cols - 1) {
+        output[index + 1] = sum.y;
+      }
+      if (index < cols - 2) {
+        output[index + 2] = sum.z;
+      }
+      if (index < cols - 3) {
+        output[index + 3] = sum.w;
+      }
+    }
   }
 }
 
-/***************************** SplitXChannels() ******************************/
+template <typename Tdst, typename BorderInterpolation>
+__global__
+void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
+                     int radius_y, bool is_y_symmetric, bool normalize,
+                     float weight, Tdst* dst, int dst_stride, int dst_offset,
+                     BorderInterpolation interpolation) {
+  __shared__ Tdst data[kBlockDimY1][kBlockDimX1 << 2];
+
+  int element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_x >= cols || element_y >= rows) {
+    return;
+  }
+
+  int origin_y = element_y - radius_y;
+  int top_y    = element_y + radius_y;
+  if (!is_y_symmetric) {
+    top_y -= 1;
+  }
+
+  int data_index;
+  float* input;
+  float value;
+  float sum = 0.f;
+
+  bool isnt_border_block = true;
+  data_index = radius_y >> kBlockShiftY1;
+  if (blockIdx.y <= data_index) isnt_border_block = false;
+  data_index = (rows - radius_y) >> kBlockShiftY1;
+  if (blockIdx.y >= data_index) isnt_border_block = false;
+
+  if (isnt_border_block) {
+    for (int i = origin_y; i <= top_y; i++) {
+      input = (float*)((uchar*)src + i * src_stride);
+      value = input[element_x];
+      sum += value;
+    }
+  }
+  else {
+    for (int i = origin_y; i <= top_y; i++) {
+      data_index = interpolation(rows, radius_y, i);
+      input = (float*)((uchar*)src + data_index * src_stride);
+      value = input[element_x];
+      sum += value;
+    }
+  }
+
+  if (normalize) {
+    sum *= weight;
+  }
+
+  if (sizeof(Tdst) == 1) {
+    data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
+  }
+  __syncthreads();
+
+  Tdst* output = (Tdst*)((uchar*)dst + dst_offset + element_y * dst_stride);
+  if (sizeof(Tdst) == 1) {
+    if (threadIdx.x < kBlockDimX1) {
+      element_x = (((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2);
+      data_index = threadIdx.x << 2;
+      if (element_x < cols - 3) {
+        output[element_x]     = data[threadIdx.y][data_index];
+        output[element_x + 1] = data[threadIdx.y][data_index + 1];
+        output[element_x + 2] = data[threadIdx.y][data_index + 2];
+        output[element_x + 3] = data[threadIdx.y][data_index + 3];
+      }
+      else if (element_x < cols) {
+        output[element_x] = data[threadIdx.y][data_index];
+        if (element_x < cols - 1) {
+          output[element_x + 1] = data[threadIdx.y][data_index + 1];
+        }
+        if (element_x < cols - 2) {
+          output[element_x + 2] = data[threadIdx.y][data_index + 2];
+        }
+      }
+      else {
+      }
+    }
+  }
+  else {
+    output[element_x] = sum;
+  }
+}
+
+#define RUN_CHANNEL1_SMALL_KERNELS(Tsrc, Tdst, Interpolation)                  \
+Interpolation interpolation;                                                   \
+rowColC1Kernel<Tsrc, Tdst, Interpolation><<<grid, block, 0, stream>>>(src,     \
+    rows, cols, src_stride, src_offset, radius_x, radius_y, is_x_symmetric,    \
+    is_y_symmetric, normalize, weight, dst, dst_stride, dst_offset,            \
+    interpolation);
+
+#define RUN_KERNELS(Tsrc, Tdst, Interpolation)                                 \
+Interpolation interpolation;                                                   \
+rowBatch4Kernel<Tsrc, Tsrc ## 4, Interpolation><<<grid, block, 0, stream>>>(   \
+    src, rows, cols, src_stride, src_offset, radius_x, is_x_symmetric, buffer, \
+    pitch, interpolation);                                                     \
+if (ksize_x <= 33 && ksize_y <= 33) {                                          \
+  colSharedKernel<Tdst, Interpolation><<<grid1, block1, 0, stream>>>(buffer,   \
+      rows, columns4, columns, pitch, radius_y, is_y_symmetric, normalize,     \
+      weight, dst, dst_stride, dst_offset, interpolation);                     \
+}                                                                              \
+else {                                                                         \
+  colBatch4Kernel<Tdst, Interpolation><<<grid2, block2, 0, stream>>>(buffer,   \
+      rows, columns, pitch, radius_y, is_y_symmetric, normalize, weight, dst,  \
+      dst_stride, dst_offset, interpolation);                                  \
+}
+
+RetCode boxFilter(const float* src, int rows, int cols, int channels,
+                  int src_stride, int src_offset, int ksize_x, int ksize_y,
+                  bool normalize, float* dst, int dst_stride, int dst_offset,
+                  BorderType border_type, cudaStream_t stream) {
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1);
+  PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src_offset >= 0);
+  PPL_ASSERT(dst_offset >= 0);
+  PPL_ASSERT(ksize_x > 0);
+  PPL_ASSERT(ksize_y > 0);
+  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
+             border_type == BORDER_TYPE_REFLECT ||
+             border_type == BORDER_TYPE_REFLECT_101 ||
+             border_type == BORDER_TYPE_DEFAULT);
+
+  cudaError_t code;
+  if (ksize_x == 1 && ksize_y == 1 && src_stride == dst_stride) {
+    if (src != dst) {
+      code = cudaMemcpyAsync(dst, src, rows * src_stride,
+                             cudaMemcpyDeviceToDevice);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
+    }
+    return RC_SUCCESS;
+  }
+
+  int radius_x = ksize_x >> 1;
+  int radius_y = ksize_y >> 1;
+  bool is_x_symmetric = ksize_x & 1;
+  bool is_y_symmetric = ksize_y & 1;
+  float weight = 1.0 / (ksize_x * ksize_y);
+
+  if (ksize_x <= SMALL_KSIZE && ksize_y <= SMALL_KSIZE && channels == 1) {
+    dim3 block, grid;
+    block.x = kDimX0;
+    block.y = kDimY0;
+    grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
+    grid.y = divideUp(rows, kDimY0, kShiftY0);
+
+    if (border_type == BORDER_TYPE_REPLICATE) {
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, ReplicateBorder);
+    }
+    else if (border_type == BORDER_TYPE_REFLECT) {
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, ReflectBorder);
+    }
+    else {
+      RUN_CHANNEL1_SMALL_KERNELS(float, float, Reflect101Border);
+    }
+
+    code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
+  dim3 block, grid;
+  block.x = kBlockDimX1;
+  block.y = kBlockDimY1;
+  grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
+  grid.y = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+
+  dim3 block1, grid1;
+  block1.x = kDimX0;
+  block1.y = kDimY0;
+  int columns = cols * channels;
+  int columns4 = divideUp(columns, 4, 2);
+  grid1.x = divideUp(columns4, kDimX0, kShiftX0);
+  grid1.y = divideUp(rows, kDimY0, kShiftY0);
+
+  dim3 block2, grid2;
+  block2.x = (kBlockDimX1 << 2);
+  block2.y = kBlockDimY1;
+  grid2.x  = divideUp(columns, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
+  grid2.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+
+  float* buffer;
+  size_t pitch;
+  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                         rows);
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
+
+  if (border_type == BORDER_TYPE_REPLICATE) {
+    RUN_KERNELS(float, float, ReplicateBorder);
+  }
+  else if (border_type == BORDER_TYPE_REFLECT) {
+    RUN_KERNELS(float, float, ReflectBorder);
+  }
+  else {
+    RUN_KERNELS(float, float, Reflect101Border);
+  }
+
+  cudaFree(buffer);
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
+}
+
+/***************************** splitChannels() ******************************/
 
 __global__
-void split3ChannelsKernel(const float* src, float* dst, int dst0_array_pitch,
-                          int dst1_array_pitch, int dst2_array_pitch,
-                          int rows, int cols, int src_stride, int dst_stride) {
+void split3ChannelsKernel(const float* src, int rows, int cols, int src_stride,
+                          float* dst, int dst_stride, int dst0_offset,
+                          int dst1_offset, int dst2_offset) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -925,29 +1046,30 @@ void split3ChannelsKernel(const float* src, float* dst, int dst0_array_pitch,
 
   int input_x = element_x * 3;
   float* input = (float*)((uchar*)src + element_y * src_stride);
-  float value0, value1, value2;
-  value0 = input[input_x];
-  value1 = input[input_x + 1];
-  value2 = input[input_x + 2];
+  float value0 = input[input_x];
+  float value1 = input[input_x + 1];
+  float value2 = input[input_x + 2];
 
   int offset = element_y * dst_stride;
-  float* output0 = (float*)((uchar*)dst + dst0_array_pitch + offset);
-  float* output1 = (float*)((uchar*)dst + dst1_array_pitch + offset);
-  float* output2 = (float*)((uchar*)dst + dst2_array_pitch + offset);
+  float* output0 = (float*)((uchar*)dst + dst0_offset + offset);
+  float* output1 = (float*)((uchar*)dst + dst1_offset + offset);
+  float* output2 = (float*)((uchar*)dst + dst2_offset + offset);
   output0[element_x] = value0;
   output1[element_x] = value1;
   output2[element_x] = value2;
 }
 
-RetCode split3Channels(const float* src, float* dst, int dst0_array_pitch,
-                    int dst1_array_pitch, int dst2_array_pitch,
-                    int rows, int cols, int src_stride, int dst_stride,
-                    cudaStream_t stream) {
-  PPL_ASSERT(src  != nullptr);
+RetCode split3Channels(const float* src, int rows, int cols, int src_stride,
+                       float* dst, int dst_stride, int dst0_offset,
+                       int dst1_offset, int dst2_offset, cudaStream_t stream) {
+  PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(rows > 1 && cols > 1);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(src_stride >= cols * 3 * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * (int)sizeof(float));
+  PPL_ASSERT(dst0_offset >= 0);
+  PPL_ASSERT(dst1_offset >= 0);
+  PPL_ASSERT(dst2_offset >= 0);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -955,8 +1077,8 @@ RetCode split3Channels(const float* src, float* dst, int dst0_array_pitch,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  split3ChannelsKernel<<<grid, block, 0, stream>>>(src, dst, dst0_array_pitch,
-      dst1_array_pitch, dst2_array_pitch, rows, cols, src_stride, dst_stride);
+  split3ChannelsKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+      dst, dst_stride, dst0_offset, dst1_offset, dst2_offset);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -968,10 +1090,9 @@ RetCode split3Channels(const float* src, float* dst, int dst0_array_pitch,
 }
 
 __global__
-void split4ChannelsKernel(const float* src, float* dst, int dst0_array_pitch,
-                          int dst1_array_pitch, int dst2_array_pitch,
-                          int dst3_array_pitch, int rows, int cols,
-                          int src_stride, int dst_stride) {
+void split4ChannelsKernel(const float* src, int rows, int cols, int src_stride,
+                          float* dst, int dst_stride, int dst0_offset,
+                          int dst1_offset, int dst2_offset, int dst3_offset) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -980,32 +1101,35 @@ void split4ChannelsKernel(const float* src, float* dst, int dst0_array_pitch,
 
   int input_x = element_x << 2;
   float* input = (float*)((uchar*)src + element_y * src_stride);
-  float value0, value1, value2, value3;
-  value0 = input[input_x];
-  value1 = input[input_x + 1];
-  value2 = input[input_x + 2];
-  value3 = input[input_x + 3];
+  float value0 = input[input_x];
+  float value1 = input[input_x + 1];
+  float value2 = input[input_x + 2];
+  float value3 = input[input_x + 3];
 
   int offset = element_y * dst_stride;
-  float* output0 = (float*)((uchar*)dst + dst0_array_pitch + offset);
-  float* output1 = (float*)((uchar*)dst + dst1_array_pitch + offset);
-  float* output2 = (float*)((uchar*)dst + dst2_array_pitch + offset);
-  float* output3 = (float*)((uchar*)dst + dst3_array_pitch + offset);
+  float* output0 = (float*)((uchar*)dst + dst0_offset + offset);
+  float* output1 = (float*)((uchar*)dst + dst1_offset + offset);
+  float* output2 = (float*)((uchar*)dst + dst2_offset + offset);
+  float* output3 = (float*)((uchar*)dst + dst3_offset + offset);
   output0[element_x] = value0;
   output1[element_x] = value1;
   output2[element_x] = value2;
   output3[element_x] = value3;
 }
 
-RetCode split4Channels(const float* src, float* dst, int dst0_array_pitch,
-                       int dst1_array_pitch, int dst2_array_pitch,
-                       int dst3_array_pitch, int rows, int cols, int src_stride,
-                       int dst_stride, cudaStream_t stream) {
-  PPL_ASSERT(src  != nullptr);
+RetCode split4Channels(const float* src, int rows, int cols, int src_stride,
+                       float* dst, int dst_stride, int dst0_offset,
+                       int dst1_offset, int dst2_offset, int dst3_offset,
+                       cudaStream_t stream) {
+  PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(rows > 1 && cols > 1);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(src_stride >= cols * 4 * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * (int)sizeof(float));
+  PPL_ASSERT(dst0_offset >= 0);
+  PPL_ASSERT(dst1_offset >= 0);
+  PPL_ASSERT(dst2_offset >= 0);
+  PPL_ASSERT(dst3_offset >= 0);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -1013,9 +1137,8 @@ RetCode split4Channels(const float* src, float* dst, int dst0_array_pitch,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  split4ChannelsKernel<<<grid, block, 0, stream>>>(src, dst, dst0_array_pitch,
-    dst1_array_pitch, dst2_array_pitch, dst3_array_pitch, rows, cols,
-    src_stride, dst_stride);
+  split4ChannelsKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+      dst, dst_stride, dst0_offset, dst1_offset, dst2_offset, dst3_offset);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -1026,13 +1149,12 @@ RetCode split4Channels(const float* src, float* dst, int dst0_array_pitch,
   return RC_SUCCESS;
 }
 
-/***************************** MergeXChannels() ******************************/
+/***************************** mergeChannels() ******************************/
 
 __global__
-void merge3ChannelsKernel(const float* src, int src0_array_pitch,
-                          int src1_array_pitch, int src2_array_pitch, int rows,
-                          int cols, int src_stride, float* dst,
-                          int dst_stride) {
+void merge3ChannelsKernel(const float* src, int rows, int cols, int src_stride,
+                          int src0_offset, int src1_offset, int src2_offset,
+                          float* dst, int dst_stride) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -1040,9 +1162,9 @@ void merge3ChannelsKernel(const float* src, int src0_array_pitch,
   }
 
   int offset = element_y * src_stride;
-  float* input0 = (float*)((uchar*)src + src0_array_pitch + offset);
-  float* input1 = (float*)((uchar*)src + src1_array_pitch + offset);
-  float* input2 = (float*)((uchar*)src + src2_array_pitch + offset);
+  float* input0 = (float*)((uchar*)src + src0_offset + offset);
+  float* input1 = (float*)((uchar*)src + src1_offset + offset);
+  float* input2 = (float*)((uchar*)src + src2_offset + offset);
   float value0  = input0[element_x];
   float value1  = input1[element_x];
   float value2  = input2[element_x];
@@ -1054,15 +1176,17 @@ void merge3ChannelsKernel(const float* src, int src0_array_pitch,
   output[element_x + 2] = value2;
 }
 
-RetCode merge3Channels(const float* src, int src0_array_pitch,
-                       int src1_array_pitch, int src2_array_pitch,
-                       int rows, int cols, int src_stride, float* dst,
-                       int dst_stride, cudaStream_t stream) {
+RetCode merge3Channels(const float* src, int rows, int cols, int src_stride,
+                       int src0_offset, int src1_offset, int src2_offset,
+                       float* dst, int dst_stride, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(rows > 1 && cols > 1);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(src_stride >= cols * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * 3 * (int)sizeof(float));
+  PPL_ASSERT(src0_offset >= 0);
+  PPL_ASSERT(src1_offset >= 0);
+  PPL_ASSERT(src2_offset >= 0);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -1070,9 +1194,8 @@ RetCode merge3Channels(const float* src, int src0_array_pitch,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  merge3ChannelsKernel<<<grid, block, 0, stream>>>(src, src0_array_pitch,
-    src1_array_pitch, src2_array_pitch, rows, cols, src_stride, dst,
-    dst_stride);
+  merge3ChannelsKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+      src0_offset, src1_offset, src2_offset, dst, dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -1084,10 +1207,9 @@ RetCode merge3Channels(const float* src, int src0_array_pitch,
 }
 
 __global__
-void merge4ChannelsKernel(const float* src, int src0_array_pitch,
-                          int src1_array_pitch, int src2_array_pitch,
-                          int src3_array_pitch, int rows, int cols,
-                          int src_stride, float* dst, int dst_stride) {
+void merge4ChannelsKernel(const float* src, int rows, int cols, int src_stride,
+                          int src0_offset, int src1_offset, int src2_offset,
+                          int src3_offset, float* dst, int dst_stride) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -1095,10 +1217,10 @@ void merge4ChannelsKernel(const float* src, int src0_array_pitch,
   }
 
   int offset = element_y * src_stride;
-  float* input0 = (float*)((uchar*)src + src0_array_pitch + offset);
-  float* input1 = (float*)((uchar*)src + src1_array_pitch + offset);
-  float* input2 = (float*)((uchar*)src + src2_array_pitch + offset);
-  float* input3 = (float*)((uchar*)src + src3_array_pitch + offset);
+  float* input0 = (float*)((uchar*)src + src0_offset + offset);
+  float* input1 = (float*)((uchar*)src + src1_offset + offset);
+  float* input2 = (float*)((uchar*)src + src2_offset + offset);
+  float* input3 = (float*)((uchar*)src + src3_offset + offset);
 
   float value0  = input0[element_x];
   float value1  = input1[element_x];
@@ -1114,15 +1236,19 @@ void merge4ChannelsKernel(const float* src, int src0_array_pitch,
   output[element_x + 3] = value3;
 }
 
-RetCode merge4Channels(const float* src, int src0_array_pitch,
-                       int src1_array_pitch, int src2_array_pitch,
-                       int src3_array_pitch, int rows, int cols, int src_stride,
-                       float* dst, int dst_stride, cudaStream_t stream) {
+RetCode merge4Channels(const float* src, int rows, int cols, int src_stride,
+                       int src0_offset, int src1_offset, int src2_offset,
+                       int src3_offset, float* dst, int dst_stride,
+                       cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst  != nullptr);
-  PPL_ASSERT(rows > 1 && cols > 1);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(src_stride >= cols * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * 4 * (int)sizeof(float));
+  PPL_ASSERT(src0_offset >= 0);
+  PPL_ASSERT(src1_offset >= 0);
+  PPL_ASSERT(src2_offset >= 0);
+  PPL_ASSERT(src3_offset >= 0);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -1130,9 +1256,8 @@ RetCode merge4Channels(const float* src, int src0_array_pitch,
   grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  merge4ChannelsKernel<<<grid, block, 0, stream>>>(src, src0_array_pitch,
-    src1_array_pitch, src2_array_pitch, src3_array_pitch, rows, cols,
-    src_stride, dst, dst_stride);
+  merge4ChannelsKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
+      src0_offset, src1_offset, src2_offset, src3_offset, dst, dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -1150,15 +1275,15 @@ RetCode merge4Channels(const float* src, int src0_array_pitch,
  * input image: 1 channel.
  * output image: 1 channel.
  */
-void guidedFilter_1to1(const float* guide, int guide_stride, const float* src,
-                       int src_rows, int src_cols, int src_stride, float* dst,
-                       int dst_stride, int radius, double eps,
-                       BorderType border_type) {
+void guidedFilter_1to1(const float* src, int src_rows, int src_cols,
+                       int src_stride, const float* guide, int guide_stride,
+                       float* dst, int dst_stride, int radius, double eps,
+                       BorderType border_type, cudaStream_t stream) {
   float* buffer;
   size_t pitch;
   cudaMallocPitch(&buffer, &pitch, src_cols * sizeof(float), src_rows * 8);
 
-  int array_pitch = pitch * src_rows;
+  int offset = pitch * src_rows;
   float* II = buffer;
   float* IP = buffer;
   float* meanI = buffer;
@@ -1167,83 +1292,78 @@ void guidedFilter_1to1(const float* guide, int guide_stride, const float* src,
   float* meanIP = buffer;
   float* varI = buffer;
   float* covIP = buffer;
-  int IP_array_pitch     = array_pitch;
-  int meanI_array_pitch  = array_pitch * 2;
-  int meanP_array_pitch  = array_pitch * 3;
-  int meanII_array_pitch = array_pitch * 4;
-  int meanIP_array_pitch = array_pitch * 5;
-  int varI_array_pitch   = array_pitch * 6;
-  int covIP_array_pitch  = array_pitch * 7;
+  int IP_offset     = offset;
+  int meanI_offset  = offset * 2;
+  int meanP_offset  = offset * 3;
+  int meanII_offset = offset * 4;
+  int meanIP_offset = offset * 5;
+  int varI_offset   = offset * 6;
+  int covIP_offset  = offset * 7;
 
-  multiply(0, src_rows, src_cols, 1, guide_stride, 0, guide, guide_stride, 0,
-           guide, pitch, 0, II, 1.0);
-  multiply(0, src_rows, src_cols, 1, guide_stride, 0, guide, src_stride, 0, src,
-           pitch, IP_array_pitch, IP, 1.0);
+  multiply(guide, src_rows, src_cols, 1, guide_stride, 0, guide, guide_stride,
+           0, II, pitch, 0, 1.f, stream);
+  multiply(guide, src_rows, src_cols, 1, guide_stride, 0, src, src_stride, 0,
+           IP, pitch, IP_offset, 1.f, stream);
 
   int side_length = (radius << 1) + 1;
-  int src_width = src_stride / sizeof(float);
-  int buffer_width = pitch / sizeof(float);
-  BoxFilter2(0, src_rows, src_cols, src_width, 0, guide, side_length,
-             side_length, true, buffer_width, meanI_array_pitch, meanI,
-             border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, 0, src, side_length, side_length,
-             true, buffer_width, meanP_array_pitch, meanP, border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, 0, II, side_length, side_length,
-             true, buffer_width, meanII_array_pitch, meanII, border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, IP_array_pitch, IP, side_length,
-             side_length, true, buffer_width, meanIP_array_pitch, meanIP,
-             border_type);
+  boxFilter(guide, src_rows, src_cols, 1, src_stride, 0, side_length,
+            side_length, true, meanI, pitch, meanI_offset, border_type, stream);
+  boxFilter(src, src_rows, src_cols, 1, src_stride, 0, side_length, side_length,
+            true, meanP, pitch, meanP_offset, border_type, stream);
+  boxFilter(II, src_rows, src_cols, 1, src_stride, 0, side_length, side_length,
+            true, meanII, pitch, meanII_offset, border_type, stream);
+  boxFilter(IP, src_rows, src_cols, 1, src_stride, IP_offset, side_length,
+            side_length, true, meanIP, pitch, meanIP_offset, border_type,
+            stream);
 
   float* meanII_mul = II;
   float* meanIP_mul = IP;
-  multiply(0, src_rows, src_cols, 1, pitch, meanI_array_pitch, meanI, pitch,
-           meanI_array_pitch, meanI, pitch, 0, meanII_mul, 1.0);
-  multiply(0, src_rows, src_cols, 1, pitch, meanI_array_pitch, meanI, pitch,
-           meanP_array_pitch, meanP, pitch, IP_array_pitch, meanIP_mul, 1.0);
-  subtract(meanII, meanII_mul, varI, src_rows, src_cols, pitch,
-           meanII_array_pitch, 0, varI_array_pitch, 1, 0);
-  subtract(meanIP, meanIP_mul, covIP, src_rows, src_cols, pitch,
-           meanIP_array_pitch, IP_array_pitch, covIP_array_pitch, 1, 0);
+  multiply(meanI, src_rows, src_cols, 1, pitch, meanI_offset, meanI, pitch,
+           meanI_offset,  meanII_mul, pitch, 0, 1.f, stream);
+  multiply(meanI, src_rows, src_cols, 1, pitch, meanI_offset, meanP, pitch,
+           meanP_offset, meanIP_mul, pitch, IP_offset, 1.f, stream);
+  subtract(meanII, src_rows, src_cols, 1, pitch, meanII_offset, meanII_mul, 0,
+           varI, varI_offset, stream);
+  subtract(meanIP, src_rows, src_cols, 1, pitch, meanIP_offset, meanIP_mul,
+           IP_offset, covIP, covIP_offset, stream);
 
   float* a = meanII;
   float* b = meanIP;
   float* aMeanI = covIP;
-  add_scalar(varI, src_rows, src_cols, pitch, varI_array_pitch, 1, eps, 0);
-  divide(0, src_rows, src_cols, 1, pitch, covIP_array_pitch, covIP, pitch,
-         varI_array_pitch, varI, pitch, meanII_array_pitch, a, 1);
-  multiply(0, src_rows, src_cols, 1, pitch, meanII_array_pitch, a, pitch,
-           meanI_array_pitch, meanI, pitch, covIP_array_pitch, aMeanI, 1.0);
-  subtract(meanP, aMeanI, b, src_rows, src_cols, pitch, meanP_array_pitch,
-           covIP_array_pitch, meanIP_array_pitch, 1, 0);
+  addScalar(varI, src_rows, src_cols, 1, pitch, varI_offset, eps, stream);
+  divide(covIP, src_rows, src_cols, 1, pitch, covIP_offset, varI, pitch,
+         varI_offset, a, pitch, meanII_offset, 1.f, stream);
+  multiply(a, src_rows, src_cols, 1, pitch, meanII_offset, meanI, pitch,
+           meanI_offset, aMeanI, pitch, covIP_offset, 1.f, stream);
+  subtract(meanP, src_rows, src_cols, 1, pitch, meanP_offset, aMeanI,
+           covIP_offset, b, meanIP_offset, stream);
 
   float* meanA = II;
   float* meanB = IP;
-  BoxFilter2(0, src_rows, src_cols, src_width, meanII_array_pitch, a,
-             side_length, side_length, true, buffer_width, 0, meanA,
-             border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, meanIP_array_pitch, b,
-             side_length, side_length, true, buffer_width, IP_array_pitch,
-             meanB, border_type);
+  boxFilter(a, src_rows, src_cols, 1, src_stride, meanII_offset, side_length,
+            side_length, true, meanA, pitch, 0, border_type, stream);
+  boxFilter(b, src_rows, src_cols, 1, src_stride, meanIP_offset, side_length,
+            side_length, true, meanB, pitch, IP_offset, border_type, stream);
 
   float* meanAI = meanI;
-  multiply(0, src_rows, src_cols, 1, pitch, 0, meanA, guide_stride, 0, guide,
-           pitch, meanI_array_pitch, meanAI, 1.0);
-  add(meanAI, meanB, dst, src_rows, src_cols, dst_stride, meanI_array_pitch,
-      IP_array_pitch, 0, 1, 0);
+  multiply(meanA, src_rows, src_cols, 1, pitch, 0, guide, guide_stride, 0,
+           meanAI, pitch, meanI_offset, 1.f, stream);
+  add(meanAI, src_rows, src_cols, 1, meanI_offset, meanB, IP_offset, dst,
+      dst_stride, 0, stream);
 
   cudaFree(buffer);
 }
 
-void guidedFilter_1to1(const float* guide, int guide_stride, const float* src,
-                       int src_rows, int src_cols, int src_stride,
-                       int src_array_pitch, float* dst, int dst_stride,
-                       int dst_array_pitch, int radius, double eps,
-                       BorderType border_type) {
+void guidedFilter_1to1(const float* src, int src_rows, int src_cols,
+                       int src_stride, int src_offset, const float* guide,
+                       int guide_stride, float* dst, int dst_stride,
+                       int dst_offset, int radius, double eps,
+                       BorderType border_type, cudaStream_t stream) {
   float* buffer;
   size_t pitch;
   cudaMallocPitch(&buffer, &pitch, src_cols * sizeof(float), src_rows * 8);
 
-  int array_pitch = pitch * src_rows;
+  int offset = pitch * src_rows;
   float* II = buffer;
   float* IP = buffer;
   float* meanI = buffer;
@@ -1252,71 +1372,64 @@ void guidedFilter_1to1(const float* guide, int guide_stride, const float* src,
   float* meanIP = buffer;
   float* varI = buffer;
   float* covIP = buffer;
-  int IP_array_pitch     = array_pitch;
-  int meanI_array_pitch  = array_pitch * 2;
-  int meanP_array_pitch  = array_pitch * 3;
-  int meanII_array_pitch = array_pitch * 4;
-  int meanIP_array_pitch = array_pitch * 5;
-  int varI_array_pitch   = array_pitch * 6;
-  int covIP_array_pitch  = array_pitch * 7;
+  int IP_offset     = offset;
+  int meanI_offset  = offset * 2;
+  int meanP_offset  = offset * 3;
+  int meanII_offset = offset * 4;
+  int meanIP_offset = offset * 5;
+  int varI_offset   = offset * 6;
+  int covIP_offset  = offset * 7;
 
-  multiply(0, src_rows, src_cols, 1, guide_stride, 0, guide, guide_stride, 0,
-           guide, pitch, 0, II, 1.0);
-  multiply(0, src_rows, src_cols, 1, guide_stride, 0, guide, src_stride,
-           src_array_pitch, src,
-           pitch, IP_array_pitch, IP, 1.0);
+  multiply(guide, src_rows, src_cols, 1, guide_stride, 0, guide, guide_stride,
+           0, II, pitch, 0, 1.f, stream);
+  multiply(guide, src_rows, src_cols, 1, guide_stride, 0, src, src_stride,
+           src_offset, IP, pitch, IP_offset, 1.f, stream);
 
   int side_length = (radius << 1) + 1;
-  int src_width = src_stride / sizeof(float);
-  int buffer_width = pitch / sizeof(float);
-  BoxFilter2(0, src_rows, src_cols, src_width, 0, guide, side_length,
-             side_length, true, buffer_width, meanI_array_pitch, meanI,
-             border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, src_array_pitch, src, side_length,
-             side_length, true, buffer_width, meanP_array_pitch, meanP,
-             border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, 0, II, side_length, side_length,
-             true, buffer_width, meanII_array_pitch, meanII, border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, IP_array_pitch, IP, side_length,
-             side_length, true, buffer_width, meanIP_array_pitch, meanIP,
-             border_type);
+  boxFilter(guide, src_rows, src_cols, 1, src_stride, 0, side_length,
+            side_length, true, meanI, pitch, meanI_offset, border_type, stream);
+  boxFilter(src, src_rows, src_cols, 1, src_stride, src_offset, side_length,
+            side_length, true, meanP, pitch, meanP_offset, border_type, stream);
+  boxFilter(II, src_rows, src_cols, 1, src_stride, 0, side_length, side_length,
+            true, meanII, pitch, meanII_offset, border_type, stream);
+  boxFilter(IP, src_rows, src_cols, 1, src_stride, IP_offset, side_length,
+            side_length, true, meanIP, pitch, meanIP_offset, border_type,
+            stream);
 
   float* meanII_mul = II;
   float* meanIP_mul = IP;
-  multiply(0, src_rows, src_cols, 1, pitch, meanI_array_pitch, meanI, pitch,
-           meanI_array_pitch, meanI, pitch, 0, meanII_mul, 1.0);
-  multiply(0, src_rows, src_cols, 1, pitch, meanI_array_pitch, meanI, pitch,
-           meanP_array_pitch, meanP, pitch, IP_array_pitch, meanIP_mul, 1.0);
-  subtract(meanII, meanII_mul, varI, src_rows, src_cols, pitch,
-           meanII_array_pitch, 0, varI_array_pitch, 1, 0);
-  subtract(meanIP, meanIP_mul, covIP, src_rows, src_cols, pitch,
-           meanIP_array_pitch, IP_array_pitch, covIP_array_pitch, 1, 0);
+  multiply(meanI, src_rows, src_cols, 1, pitch, meanI_offset, meanI, pitch,
+           meanI_offset, meanII_mul, pitch, 0, 1.f, stream);
+  multiply(meanI, src_rows, src_cols, 1, pitch, meanI_offset, meanP, pitch,
+           meanP_offset, meanIP_mul, pitch, IP_offset, 1.f, stream);
+  subtract(meanII, src_rows, src_cols, 1, pitch, meanII_offset, meanII_mul, 0,
+           varI, varI_offset, stream);
+  subtract(meanIP, src_rows, src_cols, 1, pitch, meanIP_offset, meanIP_mul,
+           IP_offset, covIP, covIP_offset, stream);
 
   float* a = meanII;
   float* b = meanIP;
   float* aMeanI = covIP;
-  add_scalar(varI, src_rows, src_cols, pitch, varI_array_pitch, 1, eps, 0);
-  divide(0, src_rows, src_cols, 1, pitch, covIP_array_pitch, covIP, pitch,
-         varI_array_pitch, varI, pitch, meanII_array_pitch, a, 1);
-  multiply(0, src_rows, src_cols, 1, pitch, meanII_array_pitch, a, pitch,
-           meanI_array_pitch, meanI, pitch, covIP_array_pitch, aMeanI, 1.0);
-  subtract(meanP, aMeanI, b, src_rows, src_cols, pitch, meanP_array_pitch,
-           covIP_array_pitch, meanIP_array_pitch, 1, 0);
+  addScalar(varI, src_rows, src_cols, 1, pitch, varI_offset, eps, stream);
+  divide(covIP, src_rows, src_cols, 1, pitch, covIP_offset, varI, pitch,
+         varI_offset, a, pitch, meanII_offset, 1.f, stream);
+  multiply(a, src_rows, src_cols, 1, pitch, meanII_offset, meanI, pitch,
+           meanI_offset, aMeanI, pitch, covIP_offset, 1.f, stream);
+  subtract(meanP, src_rows, src_cols, 1, pitch, meanP_offset, aMeanI,
+           covIP_offset, b, meanIP_offset, stream);
 
   float* meanA = II;
   float* meanB = IP;
-  BoxFilter2(0, src_rows, src_cols, src_width, meanII_array_pitch, a,
-             side_length, side_length, true, buffer_width, 0, meanA,
-             border_type);
-  BoxFilter2(0, src_rows, src_cols, src_width, meanIP_array_pitch, b,
-             side_length, side_length, true, buffer_width, IP_array_pitch,
-             meanB, border_type);
+  boxFilter(a, src_rows, src_cols, 1, src_stride, meanII_offset, side_length,
+            side_length, true, meanA, pitch, 0, border_type, stream);
+  boxFilter(b, src_rows, src_cols, 1, src_stride, meanIP_offset, side_length,
+            side_length, true, meanB, pitch, IP_offset, border_type, stream);
 
   float* meanAI = meanI;
-  multiply(0, src_rows, src_cols, 1, pitch, 0, meanA, guide_stride, 0, guide,
-           pitch, meanI_array_pitch, meanAI, 1.0);
-  add(meanAI, meanB, dst, src_rows, src_cols, dst_stride, meanI_array_pitch,
-      IP_array_pitch, dst_array_pitch, 1, 0);
+  multiply(meanA, src_rows, src_cols, 1, pitch, 0, guide, guide_stride, 0,
+           meanAI, pitch, meanI_offset, 1.f, stream);
+  add(meanAI, src_rows, src_cols, 1, meanI_offset, meanB, IP_offset, dst,
+      dst_stride, dst_offset, stream);
 
   cudaFree(buffer);
 }
@@ -1327,42 +1440,41 @@ void filtering(const float* src, int rows, int cols, int src_channels,
                float eps, BorderType border_type, cudaStream_t stream) {
   if (guide_channels == 1) {
     if (src_channels == 1) {
-      guidedFilter_1to1(guide, guide_stride, src, rows, cols, src_stride,
-                        dst, dst_stride, radius, eps, border_type);
+      guidedFilter_1to1(src, rows, cols, src_stride, guide, guide_stride,
+                        dst, dst_stride, radius, eps, border_type, stream);
     }
     else if (src_channels == 3) {  // src_channels == 3
       float* buffer;
       size_t pitch;
       cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows * 6);
 
-      int array_pitch = pitch * rows;
+      int offset = pitch * rows;
       float* src0 = buffer;
       float* src1 = buffer;
       float* src2 = buffer;
       float* dst0 = buffer;
       float* dst1 = buffer;
       float* dst2 = buffer;
-      size_t src0_array_pitch = 0;
-      size_t src1_array_pitch = array_pitch;
-      size_t src2_array_pitch = array_pitch * 2;
-      size_t dst0_array_pitch = array_pitch * 3;
-      size_t dst1_array_pitch = array_pitch * 4;
-      size_t dst2_array_pitch = array_pitch * 5;
+      size_t src0_offset = 0;
+      size_t src1_offset = offset;
+      size_t src2_offset = offset * 2;
+      size_t dst0_offset = offset * 3;
+      size_t dst1_offset = offset * 4;
+      size_t dst2_offset = offset * 5;
 
-      split3Channels(src, buffer, 0, src1_array_pitch, src2_array_pitch,
-                     rows, cols, src_stride, pitch, stream);
-      guidedFilter_1to1(guide, guide_stride, src0, rows, cols,
-                        pitch, src0_array_pitch, dst0, pitch,
-                        dst0_array_pitch, radius, eps, border_type);
-      guidedFilter_1to1(guide, guide_stride, src1, rows, cols,
-                        pitch, src1_array_pitch, dst1, pitch,
-                        dst1_array_pitch, radius, eps, border_type);
-      guidedFilter_1to1(guide, guide_stride, src2, rows, cols,
-                        pitch, src2_array_pitch, dst2, pitch,
-                        dst2_array_pitch, radius, eps, border_type);
-      merge3Channels(buffer, dst0_array_pitch, dst1_array_pitch,
-                     dst2_array_pitch, rows, cols, pitch, dst,
-                     dst_stride, stream);
+      split3Channels(src, rows, cols, src_stride, buffer, pitch, 0, src1_offset,
+                     src2_offset, stream);
+      guidedFilter_1to1(src0, rows, cols, pitch, src0_offset, guide,
+                        guide_stride, dst0, pitch, dst0_offset, radius, eps,
+                        border_type, stream);
+      guidedFilter_1to1(src1, rows, cols, pitch, src1_offset, guide,
+                        guide_stride, dst1, pitch, dst1_offset, radius, eps,
+                        border_type, stream);
+      guidedFilter_1to1(src2, rows, cols, pitch, src2_offset, guide,
+                        guide_stride, dst2, pitch, dst2_offset, radius, eps,
+                        border_type, stream);
+      merge3Channels(buffer, rows, cols, pitch, dst0_offset, dst1_offset,
+                     dst2_offset, dst, dst_stride, stream);
 
       cudaFree(buffer);
     }
@@ -1371,7 +1483,7 @@ void filtering(const float* src, int rows, int cols, int src_channels,
       size_t pitch;
       cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows * 8);
 
-      int array_pitch = pitch * rows;
+      int offset = pitch * rows;
       float* src0 = buffer;
       float* src1 = buffer;
       float* src2 = buffer;
@@ -1380,33 +1492,31 @@ void filtering(const float* src, int rows, int cols, int src_channels,
       float* dst1 = buffer;
       float* dst2 = buffer;
       float* dst3 = buffer;
-      size_t src0_array_pitch = 0;
-      size_t src1_array_pitch = array_pitch;
-      size_t src2_array_pitch = array_pitch * 2;
-      size_t src3_array_pitch = array_pitch * 3;
-      size_t dst0_array_pitch = array_pitch * 4;
-      size_t dst1_array_pitch = array_pitch * 5;
-      size_t dst2_array_pitch = array_pitch * 6;
-      size_t dst3_array_pitch = array_pitch * 7;
+      size_t src0_offset = 0;
+      size_t src1_offset = offset;
+      size_t src2_offset = offset * 2;
+      size_t src3_offset = offset * 3;
+      size_t dst0_offset = offset * 4;
+      size_t dst1_offset = offset * 5;
+      size_t dst2_offset = offset * 6;
+      size_t dst3_offset = offset * 7;
 
-      split4Channels(src, buffer, 0, src1_array_pitch, src2_array_pitch,
-                     src3_array_pitch, rows, cols, src_stride, pitch,
-                     stream);
-      guidedFilter_1to1(guide, guide_stride, src0, rows, cols,
-                        pitch, src0_array_pitch, dst0, pitch,
-                        dst0_array_pitch, radius, eps, border_type);
-      guidedFilter_1to1(guide, guide_stride, src1, rows, cols,
-                        pitch, src1_array_pitch, dst1, pitch,
-                        dst1_array_pitch, radius, eps, border_type);
-      guidedFilter_1to1(guide, guide_stride, src2, rows, cols,
-                        pitch, src2_array_pitch, dst2, pitch,
-                        dst2_array_pitch, radius, eps, border_type);
-      guidedFilter_1to1(guide, guide_stride, src3, rows, cols,
-                        pitch, src3_array_pitch, dst3, pitch,
-                        dst3_array_pitch, radius, eps, border_type);
-      merge4Channels(buffer, dst0_array_pitch, dst1_array_pitch,
-                     dst2_array_pitch, dst3_array_pitch, rows, cols,
-                     pitch, dst, dst_stride, stream);
+      split4Channels(src, rows, cols, src_stride, buffer, pitch, 0, src1_offset,
+                     src2_offset, src3_offset, stream);
+      guidedFilter_1to1(src0, rows, cols, pitch, src0_offset, guide,
+                        guide_stride, dst0, pitch, dst0_offset, radius, eps,
+                        border_type, stream);
+      guidedFilter_1to1(src1, rows, cols, pitch, src1_offset, guide,
+                        guide_stride, dst1, pitch, dst1_offset, radius, eps,
+                        border_type, stream);
+      guidedFilter_1to1(src2, rows, cols, pitch, src2_offset, guide,
+                        guide_stride, dst2, pitch, dst2_offset, radius, eps,
+                        border_type, stream);
+      guidedFilter_1to1(src3, rows, cols, pitch, src3_offset, guide,
+                        guide_stride, dst3, pitch, dst3_offset, radius, eps,
+                        border_type, stream);
+      merge4Channels(buffer, rows, cols, pitch, dst0_offset, dst1_offset,
+                     dst2_offset, dst3_offset, dst, dst_stride, stream);
 
       cudaFree(buffer);
     }
@@ -1424,8 +1534,7 @@ void filtering(const float* src, int rows, int cols, int src_channels,
 RetCode guidedFilter(const uchar* src, int rows, int cols, int src_channels,
                      int src_stride, const uchar* guide, int guide_channels,
                      int guide_stride, uchar* dst, int dst_stride, int radius,
-                     float eps, BorderType border_type, cudaStream_t stream)
-{
+                     float eps, BorderType border_type, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(guide != nullptr);
   PPL_ASSERT(dst != nullptr);
@@ -1478,8 +1587,7 @@ RetCode guidedFilter(const uchar* src, int rows, int cols, int src_channels,
 RetCode guidedFilter(const float* src, int rows, int cols, int src_channels,
                      int src_stride, const float* guide, int guide_channels,
                      int guide_stride, float* dst, int dst_stride, int radius,
-                     float eps, BorderType border_type, cudaStream_t stream)
-{
+                     float eps, BorderType border_type, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(guide != nullptr);
   PPL_ASSERT(dst != nullptr);

@@ -234,7 +234,7 @@ template <typename Tsrc, typename Tsrcn, typename Tbufn, typename Tdst,
           typename Tdstn, typename BorderInterpolation>
 __global__
 void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
-                    int radius_x, int radius_y,  bool is_x_symmetric,
+                    int radius_x, int radius_y, bool is_x_symmetric,
                     bool is_y_symmetric, bool normalize, float weight,
                     Tdst* dst, int dst_stride,
                     BorderInterpolation interpolation) {

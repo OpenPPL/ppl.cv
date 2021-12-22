@@ -49,9 +49,9 @@ namespace cuda {
  * @param outData          output image data.
  * @param radius	         radius of the guided filter.
  * @param eps	             regularization term of the guided filter.
- * @param border_type      Image boundary type. BORDER_TYPE_REFLECT,
- *                         BORDER_TYPE_REFLECT_101 or BORDER_TYPE_DEFAULT are
- *                         supported now.
+ * @param border_type      ways to deal with border. BORDER_TYPE_REPLICATE,
+ *                         BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
+ *                         BORDER_TYPE_DEFAULT are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
