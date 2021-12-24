@@ -142,7 +142,7 @@ void morphRowKernel0(const T1* src, int rows, int cols, int src_stride,
 
   T0 result;
   result = morphRowDevice0<T0, T1, Morphology>(src, src_stride, element_y,
-             bottom_x, top_x, morphology_swap);
+               bottom_x, top_x, morphology_swap);
 
   T0* output = (T0*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = result;
