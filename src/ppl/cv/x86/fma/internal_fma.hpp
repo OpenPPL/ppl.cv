@@ -198,6 +198,32 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
     const double *M,
     T delta);
 
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_linear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T *dst,
+    const T *src,
+    const double M[][3],
+    T delta);
+
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_nearest(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T *dst,
+    const T *src,
+    const double M[][3],
+    T delta);
+
 template <typename T, int32_t nc>
 ::ppl::common::RetCode splitAOS2SOA(
     int32_t height,
