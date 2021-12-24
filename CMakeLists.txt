@@ -29,6 +29,10 @@ if(HPCC_USE_CUDA)
     include(cmake/cuda.cmake)
 endif()
 
+if(HPCC_USE_AARCH64)
+    include(cmake/aarch64.cmake)
+endif()
+
 hpcc_populate_dep(pplcommon)
 
 list(FILTER PPLCV_SRC EXCLUDE REGEX "(.*)_unittest\\.cpp$")
