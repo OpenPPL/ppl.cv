@@ -72,7 +72,6 @@ namespace aarch64 {
 * @endcode
 ***************************************************************************************************/
 
-
 template <typename T, int32_t nc>
 ::ppl::common::RetCode Flip(
     int32_t height,
@@ -83,8 +82,8 @@ template <typename T, int32_t nc>
     T *outData,
     int32_t flipCode);
 
-} //! namespace aarch64
-} //! namespace cv
-} //! namespace ppl
+}
+}
+} // namespace ppl::cv::aarch64
 
 #endif //!__ST_HPC_PPL_CV_ARRCH64_FLIP_H_

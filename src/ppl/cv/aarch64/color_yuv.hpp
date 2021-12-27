@@ -122,25 +122,25 @@ struct YUV4202RGBA_u8 {
             int32_t guv = (1 << (ITUR_BT_601_SHIFT - 1)) + ITUR_BT_601_CVG * v + ITUR_BT_601_CUG * u;
             int32_t buv = (1 << (ITUR_BT_601_SHIFT - 1)) + ITUR_BT_601_CUB * u;
 
-            int32_t y00        = std::max(0, int32_t(y1[2 * i]) - 16) * ITUR_BT_601_CY;
+            int32_t y00    = std::max(0, int32_t(y1[2 * i]) - 16) * ITUR_BT_601_CY;
             row1[2 - bIdx] = sat_cast((y00 + ruv) >> ITUR_BT_601_SHIFT);
             row1[1]        = sat_cast((y00 + guv) >> ITUR_BT_601_SHIFT);
             row1[bIdx]     = sat_cast((y00 + buv) >> ITUR_BT_601_SHIFT);
             row1[3]        = uint8_t(0xff);
 
-            int32_t y01        = std::max(0, int32_t(y1[2 * i + 1]) - 16) * ITUR_BT_601_CY;
+            int32_t y01    = std::max(0, int32_t(y1[2 * i + 1]) - 16) * ITUR_BT_601_CY;
             row1[6 - bIdx] = sat_cast((y01 + ruv) >> ITUR_BT_601_SHIFT);
             row1[5]        = sat_cast((y01 + guv) >> ITUR_BT_601_SHIFT);
             row1[4 + bIdx] = sat_cast((y01 + buv) >> ITUR_BT_601_SHIFT);
             row1[7]        = uint8_t(0xff);
 
-            int32_t y10        = std::max(0, int32_t(y2[2 * i]) - 16) * ITUR_BT_601_CY;
+            int32_t y10    = std::max(0, int32_t(y2[2 * i]) - 16) * ITUR_BT_601_CY;
             row2[2 - bIdx] = sat_cast((y10 + ruv) >> ITUR_BT_601_SHIFT);
             row2[1]        = sat_cast((y10 + guv) >> ITUR_BT_601_SHIFT);
             row2[bIdx]     = sat_cast((y10 + buv) >> ITUR_BT_601_SHIFT);
             row2[3]        = uint8_t(0xff);
 
-            int32_t y11        = std::max(0, int32_t(y2[2 * i + 1]) - 16) * ITUR_BT_601_CY;
+            int32_t y11    = std::max(0, int32_t(y2[2 * i + 1]) - 16) * ITUR_BT_601_CY;
             row2[6 - bIdx] = sat_cast((y11 + ruv) >> ITUR_BT_601_SHIFT);
             row2[5]        = sat_cast((y11 + guv) >> ITUR_BT_601_SHIFT);
             row2[4 + bIdx] = sat_cast((y11 + buv) >> ITUR_BT_601_SHIFT);

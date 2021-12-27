@@ -24,7 +24,7 @@
 #define CV_PI 3.1415926535897932384626433832795
 
 namespace ppl {
-namespace cv { 
+namespace cv {
 namespace aarch64 {
 
 ::ppl::common::RetCode GetRotationMatrix2D(
@@ -32,15 +32,15 @@ namespace aarch64 {
     float center_x,
     double angle,
     double scale,
-    double* out_data) {
-
+    double* out_data)
+{
     if (nullptr == out_data) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
     angle *= CV_PI / 180.0;
     double alpha = std::cos(angle) * scale;
-    double beta = std::sin(angle) * scale;
+    double beta  = std::sin(angle) * scale;
 
     out_data[0] = alpha;
     out_data[1] = beta;
@@ -52,6 +52,6 @@ namespace aarch64 {
     return ppl::common::RC_SUCCESS;
 }
 
-} //! namespace aarch64
-} //! namespace cv
-} //! namespace ppl
+}
+}
+} // namespace ppl::cv::aarch64

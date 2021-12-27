@@ -24,12 +24,13 @@
 #include <vector>
 #include <random>
 
-template<typename T, int32_t nc, ppl::cv::BorderType border_type>
-void CopymakeborderTest(int32_t height, int32_t width, int32_t padding, float diff) {
-    int32_t input_height = height;
-    int32_t input_width = width;
+template <typename T, int32_t nc, ppl::cv::BorderType border_type>
+void CopymakeborderTest(int32_t height, int32_t width, int32_t padding, float diff)
+{
+    int32_t input_height  = height;
+    int32_t input_width   = width;
     int32_t output_height = height + 2 * padding;
-    int32_t output_width = width + 2 * padding;
+    int32_t output_width  = width + 2 * padding;
     std::unique_ptr<T[]> src(new T[input_height * input_width * nc]);
     std::unique_ptr<T[]> dst_ref(new T[output_height * output_width * nc]);
     std::unique_ptr<T[]> dst(new T[output_height * output_width * nc]);
@@ -48,23 +49,19 @@ void CopymakeborderTest(int32_t height, int32_t width, int32_t padding, float di
     } else if (border_type == ppl::cv::BORDER_TYPE_REFLECT101) {
         cv_border_type = cv::BORDER_REFLECT101;
     }
-    ppl::cv::aarch64::CopyMakeBorder<T, nc>(input_height, input_width, input_width * nc, src.get(), output_height, 
-                                          output_width, output_width * nc, dst.get(), border_type);
-    cv::copyMakeBorder(src_opencv, dst_opencv, padding, padding, padding, padding, cv_border_type);                                       
-    checkResult<T, nc>(dst_ref.get(), dst.get(),
-                    output_height, output_width,
-                    output_width * nc, output_width * nc,
-                    diff);
+    ppl::cv::aarch64::CopyMakeBorder<T, nc>(input_height, input_width, input_width * nc, src.get(), output_height, output_width, output_width * nc, dst.get(), border_type);
+    cv::copyMakeBorder(src_opencv, dst_opencv, padding, padding, padding, padding, cv_border_type);
+    checkResult<T, nc>(dst_ref.get(), dst.get(), output_height, output_width, output_width * nc, output_width * nc, diff);
 }
 
-#define R(name, dtype, nc, border_type, diff) \
-    TEST(name, aarch64) \
-    { \
-        CopymakeborderTest<dtype, nc, border_type>(240, 320, 1, diff); \
-        CopymakeborderTest<dtype, nc, border_type>(241, 321, 2, diff); \
-        CopymakeborderTest<dtype, nc, border_type>(480, 640, 3, diff); \
+#define R(name, dtype, nc, border_type, diff)                           \
+    TEST(name, aarch64)                                                 \
+    {                                                                   \
+        CopymakeborderTest<dtype, nc, border_type>(240, 320, 1, diff);  \
+        CopymakeborderTest<dtype, nc, border_type>(241, 321, 2, diff);  \
+        CopymakeborderTest<dtype, nc, border_type>(480, 640, 3, diff);  \
         CopymakeborderTest<dtype, nc, border_type>(720, 1280, 4, diff); \
-    } \
+    }
 
 R(copymakeborder_u8c1_constant_aarch64, uint8_t, 1, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
 R(copymakeborder_u8c3_constant_aarch64, uint8_t, 3, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
@@ -91,4 +88,3 @@ R(copymakeborder_fp32c4_reflect_aarch64, float, 4, ppl::cv::BORDER_TYPE_REFLECT,
 R(copymakeborder_fp32c1_reflect101_aarch64, float, 1, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
 R(copymakeborder_fp32c3_reflect101_aarch64, float, 3, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
 R(copymakeborder_fp32c4_reflect101_aarch64, float, 4, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
-

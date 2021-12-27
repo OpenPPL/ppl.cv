@@ -59,8 +59,8 @@ namespace aarch64 {
     double scale,
     double* out_data);
 
-} //! namespace aarch64
-} //! namespace cv
-} //! namespace ppl
+}
+}
+} // namespace ppl::cv::aarch64
 
 #endif //! __ST_HPC_PPL_CV_AARCH64_GET_ROTATION_MATRIX2D_H_
