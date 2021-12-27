@@ -23,7 +23,8 @@
 
 namespace {
 
-void BM_getAffineTransform_ppl_aarch64(benchmark::State &state) {
+void BM_getAffineTransform_ppl_aarch64(benchmark::State &state)
+{
     double src[6], dst[6];
     double mat[6];
     double inverse_mat[6];
@@ -49,7 +50,8 @@ void BM_getAffineTransform_ppl_aarch64(benchmark::State &state) {
 BENCHMARK(BM_getAffineTransform_ppl_aarch64);
 
 #ifdef PPLCV_BENCHMARK_OPENCV
-void BM_getAffineTransform_opencv_aarch64(benchmark::State &state) {
+void BM_getAffineTransform_opencv_aarch64(benchmark::State &state)
+{
     cv::Point2f srcTri[3];
     cv::Point2f dstTri[3];
     srcTri[0] = cv::Point2f(5, 9);
@@ -67,4 +69,4 @@ void BM_getAffineTransform_opencv_aarch64(benchmark::State &state) {
 
 BENCHMARK(BM_getAffineTransform_opencv_aarch64);
 #endif //! PPLCV_BENCHMARK_OPENCV
-}
+} // namespace

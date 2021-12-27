@@ -49,7 +49,7 @@ namespace aarch64 {
 #define COEFF_G  (8663)
 #define COEFF_B  (-17705)
 
-inline void prefetch(const void* ptr, size_t offset = 32 * 10) 
+inline void prefetch(const void* ptr, size_t offset = 32 * 10)
 {
 #if defined __GNUC__
     __builtin_prefetch(reinterpret_cast<const char*>(ptr) + offset);

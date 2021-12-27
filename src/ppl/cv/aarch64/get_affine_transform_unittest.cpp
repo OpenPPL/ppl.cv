@@ -24,7 +24,7 @@
 #include "ppl/cv/debug.h"
 
 #define CHECK_RESULT(a, b) \
-        EXPECT_LT(abs(a-b), diff_THR);
+    EXPECT_LT(abs(a - b), diff_THR);
 
 TEST(GetAffineTransform, aarch64)
 {
@@ -52,7 +52,7 @@ TEST(GetAffineTransform, aarch64)
         inverse_mat);
     double ref_mat[6] = {0.351903, -0.178713, 26.848907, 0.119502, 0.487167, 14.017985};
     double ref_inv[6] = {2.526904, 0.926974, -80.838928, -0.619846, 1.825297, -8.944791};
-    double diff_THR = 1e-4;
+    double diff_THR   = 1e-4;
     for (int32_t i = 0; i < 6; i++) {
         CHECK_RESULT(ref_mat[i], mat[i]);
     }

@@ -80,23 +80,23 @@ void resizeNearestPoint<uint8_t, uint8_t, 1>(
 {
     int32_t x, y;
     int32_t* x_ofs = (int32_t*)malloc(outWidth * sizeof(int32_t));
-    double fx  = (double)outWidth / inWidth;
-    double fy  = (double)outHeight / inHeight;
-    double ifx = 1.0f / fx;
-    double ify = 1.0f / fy;
+    double fx      = (double)outWidth / inWidth;
+    double fy      = (double)outHeight / inHeight;
+    double ifx     = 1.0f / fx;
+    double ify     = 1.0f / fy;
     for (x = 0; x < outWidth; x++) {
         int32_t sx = img_floor(x * ifx);
         x_ofs[x]   = std::min(sx, inWidth - 1);
     }
     for (y = 0; y + 4 <= outHeight; y += 4) {
-        uint8_t* D0 = outData + y * outWidthStride;
-        uint8_t* D1 = outData + (y + 1) * outWidthStride;
-        uint8_t* D2 = outData + (y + 2) * outWidthStride;
-        uint8_t* D3 = outData + (y + 3) * outWidthStride;
-        int32_t sy0 = std::min(int32_t(y * ify), inHeight - 1);
-        int32_t sy1 = std::min(int32_t((y + 1) * ify), inHeight - 1);
-        int32_t sy2 = std::min(int32_t((y + 2) * ify), inHeight - 1);
-        int32_t sy3 = std::min(int32_t((y + 3) * ify), inHeight - 1);
+        uint8_t* D0       = outData + y * outWidthStride;
+        uint8_t* D1       = outData + (y + 1) * outWidthStride;
+        uint8_t* D2       = outData + (y + 2) * outWidthStride;
+        uint8_t* D3       = outData + (y + 3) * outWidthStride;
+        int32_t sy0       = std::min(int32_t(y * ify), inHeight - 1);
+        int32_t sy1       = std::min(int32_t((y + 1) * ify), inHeight - 1);
+        int32_t sy2       = std::min(int32_t((y + 2) * ify), inHeight - 1);
+        int32_t sy3       = std::min(int32_t((y + 3) * ify), inHeight - 1);
         const uint8_t* S0 = inData + sy0 * inWidthStride;
         const uint8_t* S1 = inData + sy1 * inWidthStride;
         const uint8_t* S2 = inData + sy2 * inWidthStride;
@@ -117,8 +117,8 @@ void resizeNearestPoint<uint8_t, uint8_t, 1>(
         }
     }
     for (; y < outHeight; y++) {
-        uint8_t* D = outData + y * outWidthStride;
-        int32_t sy = std::min(int32_t(y * ify), inHeight - 1);
+        uint8_t* D       = outData + y * outWidthStride;
+        int32_t sy       = std::min(int32_t(y * ify), inHeight - 1);
         const uint8_t* S = inData + sy * inWidthStride;
         for (x = 0; x + 4 <= outWidth; x += 4) {
             int32_t x0 = x_ofs[x];
@@ -148,10 +148,10 @@ void resizeNearestPoint<uint8_t, uint8_t, 3>(
 {
     int32_t x, y;
     int32_t* x_ofs   = (int32_t*)malloc(outWidth * sizeof(int32_t));
-    double fx  = (double)outWidth / inWidth;
-    double fy  = (double)outHeight / inHeight;
-    double ifx = 1.0f / fx;
-    double ify = 1.0f / fy;
+    double fx        = (double)outWidth / inWidth;
+    double fy        = (double)outHeight / inHeight;
+    double ifx       = 1.0f / fx;
+    double ify       = 1.0f / fy;
     const int32_t nc = 3;
     for (x = 0; x < outWidth; x++) {
         int32_t sx = img_floor(x * ifx);
@@ -197,10 +197,10 @@ void resizeNearestPoint<uint8_t, uint8_t, 4>(
 {
     int32_t x, y;
     int32_t* x_ofs   = (int32_t*)malloc(outWidth * sizeof(int32_t));
-    double fx  = (double)outWidth / inWidth;
-    double fy  = (double)outHeight / inHeight;
-    double ifx = 1.0f / fx;
-    double ify = 1.0f / fy;
+    double fx        = (double)outWidth / inWidth;
+    double fy        = (double)outHeight / inHeight;
+    double ifx       = 1.0f / fx;
+    double ify       = 1.0f / fy;
     const int32_t nc = 4;
     for (x = 0; x < outWidth; x++) {
         int32_t sx = img_floor(x * ifx);
@@ -211,11 +211,11 @@ void resizeNearestPoint<uint8_t, uint8_t, 4>(
         int32_t sy       = std::min(int32_t(y * ify), inHeight - 1);
         const uint8_t* S = inData + sy * inWidthStride;
         for (x = 0; x + 4 <= outWidth; x += 4) {
-            int32_t x0 = x_ofs[x];
-            int32_t x1 = x_ofs[x + 1];
-            int32_t x2 = x_ofs[x + 2];
-            int32_t x3 = x_ofs[x + 3];
-            int32_t xd = x * nc;
+            int32_t x0                 = x_ofs[x];
+            int32_t x1                 = x_ofs[x + 1];
+            int32_t x2                 = x_ofs[x + 2];
+            int32_t x3                 = x_ofs[x + 3];
+            int32_t xd                 = x * nc;
             *((int32_t*)(D + xd))      = *((int32_t*)(S + x0));
             *((int32_t*)(D + xd + 4))  = *((int32_t*)(S + x1));
             *((int32_t*)(D + xd + 8))  = *((int32_t*)(S + x2));
@@ -259,10 +259,10 @@ bool img_resize_bilinear_neon_shrink2_u8(
                 prefetch_l1(row1, j * 2 + 256);
                 uint8x8x2_t q1 = vld2_u8(row2 + 2 * j);
                 prefetch_l1(row2, j * 2 + 256);
-                uint8x8_t q00 = q0.val[0];
-                uint8x8_t q01 = q0.val[1];
-                uint8x8_t q10 = q1.val[0];
-                uint8x8_t q11 = q1.val[1];
+                uint8x8_t q00      = q0.val[0];
+                uint8x8_t q01      = q0.val[1];
+                uint8x8_t q10      = q1.val[0];
+                uint8x8_t q11      = q1.val[1];
                 uint16x8_t res_u16 = vaddq_u16(vaddq_u16(vaddl_u8(q00, q01), vaddl_u8(q10, q11)), vdupq_n_u16(2));
                 uint8x8_t res_u8   = vqmovn_u16(vshrq_n_u16(res_u16, 2));
                 vst1_u8(dst + i * dst_stride + j, res_u8);
@@ -276,9 +276,9 @@ bool img_resize_bilinear_neon_shrink2_u8(
     } else if (cn == 3) {
         uint8x8_t tbl = {0, 1, 2, 4, 5, 6, 0, 0};
         for (int32_t i = 0; i < dsth; i++) {
-            const uint8_t* row1 = src + (2 * i) * src_stride;
-            const uint8_t* row2 = src + (2 * i + 1) * src_stride;
-            int32_t j = 0;
+            const uint8_t* row1             = src + (2 * i) * src_stride;
+            const uint8_t* row2             = src + (2 * i + 1) * src_stride;
+            int32_t j                       = 0;
             int32_t dstw_not_cross_boundary = dstw;
             if (i == dsth - 1) dstw_not_cross_boundary = dstw - 1;
             for (; j <= dstw_not_cross_boundary - 2; j += 2) {
@@ -527,7 +527,7 @@ bool img_resize_bilinear_neon_shrink4_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (4 * i + 1) * src_stride;
             const uint8_t* row2 = src + (4 * i + 2) * src_stride;
-            int32_t j = 0;
+            int32_t j           = 0;
             for (; j < dstw; j++) {
                 for (int32_t c = 0; c < cn; c++) {
                     dst[i * dst_stride + j * cn + c] = (row1[j * 4 * cn + 1 * cn + c] + row1[j * 4 * cn + 2 * cn + c] +
@@ -693,7 +693,7 @@ bool img_resize_bilinear_neon_shrink6_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (6 * i + 2) * src_stride;
             const uint8_t* row2 = src + (6 * i + 3) * src_stride;
-            int32_t j = 0;
+            int32_t j           = 0;
             for (; j < dstw; j++) {
                 for (int32_t c = 0; c < cn; c++) {
                     dst[i * dst_stride + j * cn + c] = (row1[j * 6 * cn + 2 * cn + c] + row1[j * 6 * cn + 3 * cn + c] +

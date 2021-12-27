@@ -85,7 +85,7 @@ struct YUV4202RGB_u8_neon {
         int32_t stride) const
     {
         const uint8_t* y2 = y1 + stride;
-        int32_t i           = 0;
+        int32_t i         = 0;
         for (; i <= width / 2 - 8; i += 8, row1 += 6 * 8, row2 += 6 * 8) {
             uint8x8x3_t v_dst1;
             uint8x8x3_t v_dst2;
@@ -155,22 +155,22 @@ struct YUV4202RGB_u8_neon {
             int32_t guv = (1 << (ITUR_BT_601_SHIFT - 1)) + ITUR_BT_601_CVG * v + ITUR_BT_601_CUG * u;
             int32_t buv = (1 << (ITUR_BT_601_SHIFT - 1)) + ITUR_BT_601_CUB * u;
 
-            int32_t y00        = MAX(0, int32_t(y1[2 * i]) - 16) * ITUR_BT_601_CY;
+            int32_t y00    = MAX(0, int32_t(y1[2 * i]) - 16) * ITUR_BT_601_CY;
             row1[2 - bIdx] = sat_cast((y00 + ruv) >> ITUR_BT_601_SHIFT);
             row1[1]        = sat_cast((y00 + guv) >> ITUR_BT_601_SHIFT);
             row1[bIdx]     = sat_cast((y00 + buv) >> ITUR_BT_601_SHIFT);
 
-            int32_t y01        = MAX(0, int32_t(y1[2 * i + 1]) - 16) * ITUR_BT_601_CY;
+            int32_t y01    = MAX(0, int32_t(y1[2 * i + 1]) - 16) * ITUR_BT_601_CY;
             row1[5 - bIdx] = sat_cast((y01 + ruv) >> ITUR_BT_601_SHIFT);
             row1[4]        = sat_cast((y01 + guv) >> ITUR_BT_601_SHIFT);
             row1[3 + bIdx] = sat_cast((y01 + buv) >> ITUR_BT_601_SHIFT);
 
-            int32_t y10        = MAX(0, int32_t(y2[2 * i]) - 16) * ITUR_BT_601_CY;
+            int32_t y10    = MAX(0, int32_t(y2[2 * i]) - 16) * ITUR_BT_601_CY;
             row2[2 - bIdx] = sat_cast((y10 + ruv) >> ITUR_BT_601_SHIFT);
             row2[1]        = sat_cast((y10 + guv) >> ITUR_BT_601_SHIFT);
             row2[bIdx]     = sat_cast((y10 + buv) >> ITUR_BT_601_SHIFT);
 
-            int32_t y11        = MAX(0, int32_t(y2[2 * i + 1]) - 16) * ITUR_BT_601_CY;
+            int32_t y11    = MAX(0, int32_t(y2[2 * i + 1]) - 16) * ITUR_BT_601_CY;
             row2[5 - bIdx] = sat_cast((y11 + ruv) >> ITUR_BT_601_SHIFT);
             row2[4]        = sat_cast((y11 + guv) >> ITUR_BT_601_SHIFT);
             row2[3 + bIdx] = sat_cast((y11 + buv) >> ITUR_BT_601_SHIFT);
@@ -334,10 +334,10 @@ struct RGBtoYUV420p_u8_neon {
         getUV(r00_hi_s32, g00_hi_s32, b00_hi_s32, u1_s32, v1_s32);
 
         int32x4x2_t u_unpack = vuzpq_s32(u0_s32, u1_s32);
-        u_s32 = u_unpack.val[0];
+        u_s32                = u_unpack.val[0];
 
         int32x4x2_t v_unpack = vuzpq_s32(v0_s32, v1_s32);
-        v_s32 = v_unpack.val[0];
+        v_s32                = v_unpack.val[0];
     }
 
     void convert_per_2rows(
@@ -451,10 +451,10 @@ struct RGBtoYUV420p_u8_neon {
 
             const int32_t shifted16 = (16 << ITUR_BT_601_SHIFT);
             const int32_t halfShift = (1 << (ITUR_BT_601_SHIFT - 1));
-            int32_t y00 = ITUR_BT_601_CRY * r00 + ITUR_BT_601_CGY * g00 + ITUR_BT_601_CBY * b00 + halfShift + shifted16;
-            int32_t y01 = ITUR_BT_601_CRY * r01 + ITUR_BT_601_CGY * g01 + ITUR_BT_601_CBY * b01 + halfShift + shifted16;
-            int32_t y10 = ITUR_BT_601_CRY * r10 + ITUR_BT_601_CGY * g10 + ITUR_BT_601_CBY * b10 + halfShift + shifted16;
-            int32_t y11 = ITUR_BT_601_CRY * r11 + ITUR_BT_601_CGY * g11 + ITUR_BT_601_CBY * b11 + halfShift + shifted16;
+            int32_t y00             = ITUR_BT_601_CRY * r00 + ITUR_BT_601_CGY * g00 + ITUR_BT_601_CBY * b00 + halfShift + shifted16;
+            int32_t y01             = ITUR_BT_601_CRY * r01 + ITUR_BT_601_CGY * g01 + ITUR_BT_601_CBY * b01 + halfShift + shifted16;
+            int32_t y10             = ITUR_BT_601_CRY * r10 + ITUR_BT_601_CGY * g10 + ITUR_BT_601_CBY * b10 + halfShift + shifted16;
+            int32_t y11             = ITUR_BT_601_CRY * r11 + ITUR_BT_601_CGY * g11 + ITUR_BT_601_CBY * b11 + halfShift + shifted16;
 
             y[2 * k + 0]           = sat_cast(y00 >> ITUR_BT_601_SHIFT);
             y[2 * k + 1]           = sat_cast(y01 >> ITUR_BT_601_SHIFT);

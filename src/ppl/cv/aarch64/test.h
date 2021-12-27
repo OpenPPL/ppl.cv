@@ -22,6 +22,7 @@
 #include <cmath>
 #include <float.h>
 #include <random>
+#include <iostream>
 
 #define USE_QUANTIZED
 

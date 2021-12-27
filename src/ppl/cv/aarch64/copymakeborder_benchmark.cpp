@@ -21,21 +21,21 @@
 #include <memory>
 namespace {
 
-template<typename T, int32_t nc, ppl::cv::BorderType border_type>
-void BM_Copymakeborder_ppl_aarch64(benchmark::State &state) {
-    int32_t width = state.range(0);
-    int32_t height = state.range(1);
-    int32_t padding = 2; 
-    int32_t input_height = height;
-    int32_t input_width = width;
+template <typename T, int32_t nc, ppl::cv::BorderType border_type>
+void BM_Copymakeborder_ppl_aarch64(benchmark::State &state)
+{
+    int32_t width         = state.range(0);
+    int32_t height        = state.range(1);
+    int32_t padding       = 2;
+    int32_t input_height  = height;
+    int32_t input_width   = width;
     int32_t output_height = height + 2 * padding;
-    int32_t output_width = width + 2 * padding;
+    int32_t output_width  = width + 2 * padding;
     std::unique_ptr<T[]> src(new T[input_width * input_height * nc]);
     std::unique_ptr<T[]> dst(new T[output_width * output_height * nc]);
     ppl::cv::debug::randomFill<T>(src.get(), input_width * input_height * nc, 0, 255);
     for (auto _ : state) {
-        ppl::cv::aarch64::CopyMakeBorder<T, nc>(input_height, input_width, input_width * nc, src.get(), output_height, 
-                                          output_width, output_width * nc, dst.get(), border_type);
+        ppl::cv::aarch64::CopyMakeBorder<T, nc>(input_height, input_width, input_width * nc, src.get(), output_height, output_width, output_width * nc, dst.get(), border_type);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }
@@ -71,15 +71,16 @@ BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_T
 
 #ifdef PPLCV_BENCHMARK_OPENCV
 
-template<typename T, int32_t nc, ppl::cv::BorderType border_type>
-void BM_Copymakeborder_opencv_aarch64(benchmark::State &state) {
-    int32_t width = state.range(0);
-    int32_t height = state.range(1);
-    int32_t padding = 2; 
-    int32_t input_height = height;
-    int32_t input_width = width;
+template <typename T, int32_t nc, ppl::cv::BorderType border_type>
+void BM_Copymakeborder_opencv_aarch64(benchmark::State &state)
+{
+    int32_t width         = state.range(0);
+    int32_t height        = state.range(1);
+    int32_t padding       = 2;
+    int32_t input_height  = height;
+    int32_t input_width   = width;
     int32_t output_height = height + 2 * padding;
-    int32_t output_width = width + 2 * padding;
+    int32_t output_width  = width + 2 * padding;
     std::unique_ptr<T[]> src(new T[input_width * input_height * nc]);
     std::unique_ptr<T[]> dst(new T[output_width * output_height * nc]);
     std::unique_ptr<T[]> dst_ref(new T[output_height * output_width * nc]);
@@ -97,7 +98,7 @@ void BM_Copymakeborder_opencv_aarch64(benchmark::State &state) {
         cv_border_type = cv::BORDER_REFLECT101;
     }
     for (auto _ : state) {
-        cv::copyMakeBorder(src_opencv, dst_opencv, padding, padding, padding, padding, cv_border_type); 
+        cv::copyMakeBorder(src_opencv, dst_opencv, padding, padding, padding, padding, cv_border_type);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }
@@ -130,4 +131,4 @@ BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDE
 BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 #endif //! PPLCV_BENCHMARK_OPENCV
-}
+} // namespace

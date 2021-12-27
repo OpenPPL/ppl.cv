@@ -73,20 +73,20 @@ namespace aarch64 {
  * }
  * @endcode
  ***************************************************************************************************/
-template<typename T, int32_t channels>
+template <typename T, int32_t channels>
 ::ppl::common::RetCode CopyMakeBorder(
-    int32_t srcHeight, 
-    int32_t srcWidth, 
-    int32_t srcWidthStride, 
+    int32_t srcHeight,
+    int32_t srcWidth,
+    int32_t srcWidthStride,
     const T* src,
     int32_t dstHeight,
-    int32_t dstWidth, 
+    int32_t dstWidth,
     int32_t dstWidthStride,
-    T* dst,  
-    BorderType border_type, 
+    T* dst,
+    BorderType border_type,
     T border_value = 0);
 
-} //! namespace aarch64
-} //! namespace cv
-} //! namespace ppl
+}
+}
+} // namespace ppl::cv::aarch64
 #endif //! __ST_HPC_PPL_CV_AARCH64_COPYMAKEBORDER_H_

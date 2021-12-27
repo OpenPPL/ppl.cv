@@ -59,9 +59,8 @@ void GetAffineTransform(
     double *mat,
     double *inverse_mat);
 
-} //! namespace aarch64
-} //! namespace cv
-} //! namespace ppl
+}
+}
+} // namespace ppl::cv::aarch64
 
 #endif //!__ST_HPC_PPL_CV_ARRCH64_GET_AFFINE_TRANSFORM_H_
-

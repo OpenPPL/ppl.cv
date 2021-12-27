@@ -28,7 +28,7 @@ struct Size_p {
     int outHeight;
 };
 
-template<typename T, int c>
+template <typename T, int c>
 class Resize : public ::testing::TestWithParam<std::tuple<Size_p, float>> {
 public:
     using ResizeParam = std::tuple<Size_p, float>;
@@ -40,8 +40,9 @@ public:
     {
     }
 
-    void Linearapply(const ResizeParam &param) {
-        Size_p size = std::get<0>(param);
+    void Linearapply(const ResizeParam &param)
+    {
+        Size_p size      = std::get<0>(param);
         const float diff = std::get<1>(param);
         std::cout << __FUNCTION__ << std::endl;
 
@@ -53,7 +54,7 @@ public:
         cv::Mat src_opencv(size.inHeight, size.inWidth, CV_MAKETYPE(cv::DataType<T>::depth, c), src.get(), sizeof(T) * size.inWidth * c);
         cv::Mat dst_opencv(size.outHeight, size.outWidth, CV_MAKETYPE(cv::DataType<T>::depth, c), dst_ref.get(), sizeof(T) * size.outWidth * c);
 
-        cv::resize(src_opencv, dst_opencv, cv::Size(size.outWidth, size.outHeight), 0, 0,cv::INTER_LINEAR);
+        cv::resize(src_opencv, dst_opencv, cv::Size(size.outWidth, size.outHeight), 0, 0, cv::INTER_LINEAR);
 
         ppl::cv::aarch64::ResizeLinear<T, c>(
             size.inHeight,
@@ -75,8 +76,9 @@ public:
             diff);
     }
 
-    void NearestPointapply(const ResizeParam &param) {
-        Size_p size = std::get<0>(param);
+    void NearestPointapply(const ResizeParam &param)
+    {
+        Size_p size      = std::get<0>(param);
         const float diff = std::get<1>(param);
         std::cout << __FUNCTION__ << std::endl;
 
@@ -88,8 +90,8 @@ public:
         cv::Mat src_opencv(size.inHeight, size.inWidth, CV_MAKETYPE(cv::DataType<T>::depth, c), src.get(), sizeof(T) * size.inWidth * c);
         cv::Mat dst_opencv(size.outHeight, size.outWidth, CV_MAKETYPE(cv::DataType<T>::depth, c), dst_ref.get(), sizeof(T) * size.outWidth * c);
 
-        cv::resize(src_opencv, dst_opencv, cv::Size(size.outWidth, size.outHeight), 0, 0,cv::INTER_NEAREST);
- 
+        cv::resize(src_opencv, dst_opencv, cv::Size(size.outWidth, size.outHeight), 0, 0, cv::INTER_NEAREST);
+
         ppl::cv::aarch64::ResizeNearestPoint<T, c>(
             size.inHeight,
             size.inWidth,
@@ -110,8 +112,9 @@ public:
             diff);
     }
 
-    void Areaapply(const ResizeParam &param) {
-        Size_p size = std::get<0>(param);
+    void Areaapply(const ResizeParam &param)
+    {
+        Size_p size      = std::get<0>(param);
         const float diff = std::get<1>(param);
         std::cout << __FUNCTION__ << std::endl;
 
@@ -123,7 +126,7 @@ public:
         cv::Mat src_opencv(size.inHeight, size.inWidth, CV_MAKETYPE(cv::DataType<T>::depth, c), src.get(), sizeof(T) * size.inWidth * c);
         cv::Mat dst_opencv(size.outHeight, size.outWidth, CV_MAKETYPE(cv::DataType<T>::depth, c), dst_ref.get(), sizeof(T) * size.outWidth * c);
 
-        cv::resize(src_opencv, dst_opencv, cv::Size(size.outWidth, size.outHeight), 0, 0,cv::INTER_AREA);
+        cv::resize(src_opencv, dst_opencv, cv::Size(size.outWidth, size.outHeight), 0, 0, cv::INTER_AREA);
 
         ppl::cv::aarch64::ResizeArea<T, c>(
             size.inHeight,
@@ -146,15 +149,13 @@ public:
     }
 };
 
-#define R1(name, t, c, diff)\
-    using name = Resize<t, c>;\
-    TEST_P(name, abc)\
-    {\
-        this->Linearapply(GetParam());\
-    }\
-    INSTANTIATE_TEST_CASE_P(standard, name,\
-        ::testing::Combine(::testing::Values(Size_p{320, 240, 640, 480}, Size_p{640, 480, 320, 240}, Size_p{1080, 1920, 270, 480}, Size_p{1080, 1920, 180, 320}),\
-                           ::testing::Values(diff)));
+#define R1(name, t, c, diff)           \
+    using name = Resize<t, c>;         \
+    TEST_P(name, abc)                  \
+    {                                  \
+        this->Linearapply(GetParam()); \
+    }                                  \
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size_p{320, 240, 640, 480}, Size_p{640, 480, 320, 240}, Size_p{1080, 1920, 270, 480}, Size_p{1080, 1920, 180, 320}), ::testing::Values(diff)));
 R1(ResizeLinear_f32c1, float, 1, 1e-1f)
 R1(ResizeLinear_f32c3, float, 3, 1e-1f)
 R1(ResizeLinear_f32c4, float, 4, 1e-1f)
@@ -163,15 +164,13 @@ R1(ResizeLinear_u8c1, uint8_t, 1, 2.01f)
 R1(ResizeLinear_u8c3, uint8_t, 3, 1.01f)
 R1(ResizeLinear_u8c4, uint8_t, 4, 2.01f)
 
-#define R2(name, t, c, diff)\
-    using name = Resize<t, c>;\
-    TEST_P(name, abc)\
-    {\
-        this->NearestPointapply(GetParam());\
-    }\
-    INSTANTIATE_TEST_CASE_P(standard, name,\
-        ::testing::Combine(::testing::Values(Size_p{320, 240, 640, 480}, Size_p{640, 480, 320, 240}),\
-                           ::testing::Values(diff)));
+#define R2(name, t, c, diff)                 \
+    using name = Resize<t, c>;               \
+    TEST_P(name, abc)                        \
+    {                                        \
+        this->NearestPointapply(GetParam()); \
+    }                                        \
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size_p{320, 240, 640, 480}, Size_p{640, 480, 320, 240}), ::testing::Values(diff)));
 R2(ResizeNearestPoint_f32c1, float, 1, 1e-5f)
 R2(ResizeNearestPoint_f32c3, float, 3, 1e-5f)
 R2(ResizeNearestPoint_f32c4, float, 4, 1e-5f)
@@ -180,15 +179,13 @@ R2(ResizeNearestPoint_u8c1, uint8_t, 1, 1.01f)
 R2(ResizeNearestPoint_u8c3, uint8_t, 3, 1.01f)
 R2(ResizeNearestPoint_u8c4, uint8_t, 4, 1.01f)
 
-#define R3(name, t, c, diff)\
-    using name = Resize<t, c>;\
-    TEST_P(name, abc)\
-    {\
-        this->Areaapply(GetParam());\
-    }\
-    INSTANTIATE_TEST_CASE_P(standard, name,\
-        ::testing::Combine(::testing::Values(Size_p{320, 240, 640, 480}, Size_p{640, 480, 320, 240}),\
-                           ::testing::Values(diff)));
+#define R3(name, t, c, diff)         \
+    using name = Resize<t, c>;       \
+    TEST_P(name, abc)                \
+    {                                \
+        this->Areaapply(GetParam()); \
+    }                                \
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size_p{320, 240, 640, 480}, Size_p{640, 480, 320, 240}), ::testing::Values(diff)));
 
 R3(ResizeArea_u8c1, uint8_t, 1, 1.01f)
 R3(ResizeArea_u8c3, uint8_t, 3, 1.01f)

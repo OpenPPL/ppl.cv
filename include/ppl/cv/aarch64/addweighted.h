@@ -91,9 +91,8 @@ template <typename T, int32_t nc>
     int32_t outWidthStride,
     T *outData);
 
-} //! namespace aarch64
-} //! namespace cv
-} //! namespace ppl
+}
+}
+} // namespace ppl::cv::aarch64
 
 #endif //!__ST_HPC_PPL_CV_AARCH64_ADDWEIGHTED_H_
-

@@ -40,8 +40,8 @@ template <int32_t dcn, int32_t bIdx, int32_t uIdx>
     const uint8_t *y = inData;
     const uint8_t *u = y + inWidthStride * height;
     const uint8_t *v = y + inWidthStride * (height + height / 4) + (width / 2) * ((height % 4) / 2);
-    int32_t ustepIdx     = 0;
-    int32_t vstepIdx     = height % 4 == 2 ? 1 : 0;
+    int32_t ustepIdx = 0;
+    int32_t vstepIdx = height % 4 == 2 ? 1 : 0;
 
     if (uIdx == 1) { std::swap(u, v); }
     if (dcn == 3) {
@@ -131,9 +131,9 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride               = inWidthStride;
-    int32_t uStride               = inWidthStride >> 1;
-    int32_t vStride               = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *uptr = inData + inWidthStride * height;
     const uint8_t *vptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -203,9 +203,9 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride               = inWidthStride;
-    int32_t uStride               = inWidthStride >> 1;
-    int32_t vStride               = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *uptr = inData + inWidthStride * height;
     const uint8_t *vptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -277,12 +277,12 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *u_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *u_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *v_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<0, 3, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
@@ -311,13 +311,13 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = ystride;
-    uint8_t *y_ptr = outy;
-    int32_t uStride          = ustride;
-    uint8_t *u_ptr = outu;
-    int32_t vStride          = vstride;
-    uint8_t *v_ptr = outv;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = ystride;
+    uint8_t *y_ptr    = outy;
+    int32_t uStride   = ustride;
+    uint8_t *u_ptr    = outu;
+    int32_t vStride   = vstride;
+    uint8_t *v_ptr    = outv;
     bgr_to_yuv420_uchar_video_range<0, 3, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
 #else
     RGBtoYUV420p<3, 0>(height, width, inWidthStride, inData, ystride, ustride, vstride, outy, outu, outv);
@@ -338,12 +338,12 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *u_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *u_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *v_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<0, 4, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
@@ -372,13 +372,13 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = ystride;
-    uint8_t *y_ptr = outy;
-    int32_t uStride          = ustride;
-    uint8_t *u_ptr = outu;
-    int32_t vStride          = vstride;
-    uint8_t *v_ptr = outv;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = ystride;
+    uint8_t *y_ptr    = outy;
+    int32_t uStride   = ustride;
+    uint8_t *u_ptr    = outu;
+    int32_t vStride   = vstride;
+    uint8_t *v_ptr    = outv;
     bgr_to_yuv420_uchar_video_range<0, 4, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
 #else
     RGBtoYUV420p<4, 0>(height, width, inWidthStride, inData, ystride, ustride, vstride, outy, outu, outv);
@@ -399,12 +399,12 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *v_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *v_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *u_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<0, 3, YUV_YV12>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
@@ -430,12 +430,12 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *v_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *v_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *u_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<0, 4, YUV_YV12>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
@@ -471,9 +471,9 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride               = inWidthStride;
-    int32_t uStride               = inWidthStride >> 1;
-    int32_t vStride               = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *vptr = inData + inWidthStride * height;
     const uint8_t *uptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -512,9 +512,9 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride               = inWidthStride;
-    int32_t uStride               = inWidthStride >> 1;
-    int32_t vStride               = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *vptr = inData + inWidthStride * height;
     const uint8_t *uptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -562,9 +562,9 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride               = inWidthStride;
-    int32_t uStride               = inWidthStride >> 1;
-    int32_t vStride               = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *uptr = inData + inWidthStride * height;
     const uint8_t *vptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -635,9 +635,9 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride               = inWidthStride;
-    int32_t uStride               = inWidthStride >> 1;
-    int32_t vStride               = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *uptr = inData + inWidthStride * height;
     const uint8_t *vptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -710,9 +710,9 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride = inWidthStride;
-    int32_t uStride = inWidthStride >> 1;
-    int32_t vStride = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *vptr = inData + inWidthStride * height;
     const uint8_t *uptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -760,9 +760,9 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride = inWidthStride;
-    int32_t uStride = inWidthStride >> 1;
-    int32_t vStride = inWidthStride >> 1;
+    int32_t yStride     = inWidthStride;
+    int32_t uStride     = inWidthStride >> 1;
+    int32_t vStride     = inWidthStride >> 1;
     const uint8_t *yptr = inData;
     const uint8_t *vptr = inData + inWidthStride * height;
     const uint8_t *uptr = inData + inWidthStride * height + inWidthStride * height / 4;
@@ -808,12 +808,12 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *u_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *u_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *v_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<2, 3, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
@@ -842,13 +842,13 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = ystride;
-    uint8_t *y_ptr = outy;
-    int32_t uStride          = ustride;
-    uint8_t *u_ptr = outu;
-    int32_t vStride          = vstride;
-    uint8_t *v_ptr = outv;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = ystride;
+    uint8_t *y_ptr    = outy;
+    int32_t uStride   = ustride;
+    uint8_t *u_ptr    = outu;
+    int32_t vStride   = vstride;
+    uint8_t *v_ptr    = outv;
     bgr_to_yuv420_uchar_video_range<2, 3, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
 #else
     RGBtoYUV420p<3, 2>(height, width, inWidthStride, inData, ystride, ustride, vstride, outy, outu, outv);
@@ -869,12 +869,12 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *u_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *u_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *v_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<2, 4, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
@@ -903,13 +903,13 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = ystride;
-    uint8_t *y_ptr = outy;
-    int32_t uStride          = ustride;
-    uint8_t *u_ptr = outu;
-    int32_t vStride          = vstride;
-    uint8_t *v_ptr = outv;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = ystride;
+    uint8_t *y_ptr    = outy;
+    int32_t uStride   = ustride;
+    uint8_t *u_ptr    = outu;
+    int32_t vStride   = vstride;
+    uint8_t *v_ptr    = outv;
     bgr_to_yuv420_uchar_video_range<2, 4, YUV_I420>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
 #else
     RGBtoYUV420p<4, 2>(height, width, inWidthStride, inData, ystride, ustride, vstride, outy, outu, outv);
@@ -931,12 +931,12 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *v_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *v_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *u_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<2, 3, YUV_YV12>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);
@@ -963,12 +963,12 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t rgbStride        = inWidthStride;
-    int32_t yStride          = outWidthStride;
-    uint8_t *y_ptr = outData;
-    int32_t uStride          = outWidthStride >> 1;
-    uint8_t *v_ptr = outData + outWidthStride * height;
-    int32_t vStride          = outWidthStride >> 1;
+    int32_t rgbStride = inWidthStride;
+    int32_t yStride   = outWidthStride;
+    uint8_t *y_ptr    = outData;
+    int32_t uStride   = outWidthStride >> 1;
+    uint8_t *v_ptr    = outData + outWidthStride * height;
+    int32_t vStride   = outWidthStride >> 1;
     ;
     uint8_t *u_ptr = outData + outWidthStride * height + outWidthStride * height / 4;
     bgr_to_yuv420_uchar_video_range<2, 4, YUV_YV12>(height, width, rgbStride, inData, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr);

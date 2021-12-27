@@ -41,7 +41,6 @@ void FlipTest(int32_t height, int32_t width, int32_t flipCode)
     checkResult<T, nc>(dst.get(), dst_opencv.get(), height, width, width * nc, width * nc, 1.01f);
 }
 
-
 TEST(FLIP_FP32, aarch64)
 {
     FlipTest<float, 1>(640, 720, 0);
@@ -63,7 +62,7 @@ TEST(FLIP_FP32, aarch64)
     FlipTest<float, 2>(101, 101, 0);
     FlipTest<float, 2>(101, 101, 1);
     FlipTest<float, 2>(101, 101, -1);
-    
+
     FlipTest<float, 3>(101, 101, 0);
     FlipTest<float, 3>(101, 101, 1);
     FlipTest<float, 3>(101, 101, -1);
@@ -94,7 +93,7 @@ TEST(FLIP_UINT8, aarch64)
     FlipTest<uint8_t, 2>(101, 101, 0);
     FlipTest<uint8_t, 2>(101, 101, 1);
     FlipTest<uint8_t, 2>(101, 101, -1);
-    
+
     FlipTest<uint8_t, 3>(101, 101, 0);
     FlipTest<uint8_t, 3>(101, 101, 1);
     FlipTest<uint8_t, 3>(101, 101, -1);

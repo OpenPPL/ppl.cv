@@ -23,13 +23,13 @@
 
 namespace {
 
-void BM_GetRotationMatrix2D_ppl_aarch64(benchmark::State &state) {
+void BM_GetRotationMatrix2D_ppl_aarch64(benchmark::State &state)
+{
     double angle = state.range(0) / 2;
     double scale = state.range(1) / 2;
     std::unique_ptr<double[]> dst(new double[6]);
     for (auto _ : state) {
         ppl::cv::aarch64::GetRotationMatrix2D(320, 360, angle, scale, dst.get());
-    
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }
@@ -37,7 +37,8 @@ void BM_GetRotationMatrix2D_ppl_aarch64(benchmark::State &state) {
 BENCHMARK(BM_GetRotationMatrix2D_ppl_aarch64)->Args({30, 1})->Args({45, 1})->Args({90, 1})->Args({-30, 1})->Args({-45, 1})->Args({-90, 1});
 
 #ifdef PPLCV_BENCHMARK_OPENCV
-void BM_GetRotationMatrix2D_opencv_aarch64(benchmark::State &state) {
+void BM_GetRotationMatrix2D_opencv_aarch64(benchmark::State &state)
+{
     double angle = state.range(0) / 2;
     double scale = state.range(1) / 2;
     cv::Point2f center;
@@ -51,4 +52,4 @@ void BM_GetRotationMatrix2D_opencv_aarch64(benchmark::State &state) {
 
 BENCHMARK(BM_GetRotationMatrix2D_opencv_aarch64)->Args({30, 1})->Args({45, 1})->Args({90, 1})->Args({-30, 1})->Args({-45, 1})->Args({-90, 1});
 #endif //! PPLCV_BENCHMARK_OPENCV
-}
+} // namespace
