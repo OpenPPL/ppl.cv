@@ -19,7 +19,6 @@
 #include "ppl/cv/aarch64/test.h"
 #include <opencv2/imgproc.hpp>
 #include <memory>
-#include <iostream>
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
 
@@ -82,22 +81,6 @@ public:
             dst.get(),
             (ppl::cv::BorderType)borderType,
             border_value);
-
-        // std::cout<<std::endl;
-        // for(int i = 0 ; i < height; i++){
-        //     for (int j = 0; j < width * nc; j++){
-        //         std::cout << *(dst.get() + i * width * nc + j) << " ";
-        //     }
-        //     std::cout<<std::endl;
-        // }
-
-        // std::cout<<std::endl;
-        // for(int i = 0 ; i < height; i++){
-        //     for (int j = 0; j < width * nc; j++){
-        //         std::cout << *(dst_ref.get() + i * width * nc + j) << " ";
-        //     }
-        //     std::cout<<std::endl;
-        // }
 
         checkResult<T, nc>(
             dst_ref.get(),

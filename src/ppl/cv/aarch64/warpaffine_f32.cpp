@@ -25,15 +25,13 @@
 #include <limits.h>
 #include <algorithm>
 #include <cmath>
-#include <iostream>
-#include <assert.h>
 
 namespace ppl {
 namespace cv {
 namespace aarch64 {
 
 template <typename _Tp>
-static inline _Tp *alignPtr(_Tp *ptr, int n = (int)sizeof(_Tp))
+static inline _Tp *alignPtr(_Tp *ptr, int32_t n = (int32_t)sizeof(_Tp))
 {
     return (_Tp *)(((size_t)ptr + n - 1) & -n);
 }
@@ -57,12 +55,12 @@ inline const T round_up(const T &a, const T &b)
     return (a + b - static_cast<T>(1)) / b * b;
 }
 
-const int AB_BITS                = 10;
-const int AB_SCALE               = 1 << AB_BITS;
-const int INTER_BITS             = 5;
-const int INTER_TAB_SIZE         = 1 << INTER_BITS;
-const int INTER_REMAP_COEF_BITS  = 15;
-const int INTER_REMAP_COEF_SCALE = 1 << INTER_REMAP_COEF_BITS;
+const int32_t AB_BITS                = 10;
+const int32_t AB_SCALE               = 1 << AB_BITS;
+const int32_t INTER_BITS             = 5;
+const int32_t INTER_TAB_SIZE         = 1 << INTER_BITS;
+const int32_t INTER_REMAP_COEF_BITS  = 15;
+const int32_t INTER_REMAP_COEF_SCALE = 1 << INTER_REMAP_COEF_BITS;
 
 template <typename T>
 inline T clip(T value, T min_value, T max_value)
@@ -70,34 +68,34 @@ inline T clip(T value, T min_value, T max_value)
     return HPC::utils::min(HPC::utils::max(value, min_value), max_value);
 }
 
-template <typename T, int cn>
+template <typename T, int32_t cn>
 ::ppl::common::RetCode warpAffine_nearest(
     T *dst,
     const T *src,
-    int inHeight,
-    int inWidth,
-    int inWidthStride,
-    int outHeight,
-    int outWidth,
-    int outWidthStride,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
     const float *M,
-    int borderMode,
+    int32_t borderMode,
     float borderValue = 0.0f)
 {
-    const int BLOCK_SIZE = 32;
-    int _map[BLOCK_SIZE * BLOCK_SIZE + 32];
-    int *map = alignPtr(_map, 16);
+    const int32_t BLOCK_SIZE = 32;
+    int32_t _map[BLOCK_SIZE * BLOCK_SIZE + 32];
+    int32_t *map = alignPtr(_map, 16);
 
-    int round_delta = AB_SCALE >> 1;
+    int32_t round_delta = AB_SCALE >> 1;
 
     float32x4_t v_m1 = vdupq_n_f32(M[1]);
     float32x4_t v_m2 = vdupq_n_f32(M[2]);
     float32x4_t v_m4 = vdupq_n_f32(M[4]);
     float32x4_t v_m5 = vdupq_n_f32(M[5]);
 
-    int *adelta = (int *)malloc(outWidth * sizeof(int));
-    int *bdelta = (int *)malloc(outWidth * sizeof(int));
-    for (int x = 0; x < outWidth; ++x) {
+    int32_t *adelta = (int32_t *)malloc(outWidth * sizeof(int32_t));
+    int32_t *bdelta = (int32_t *)malloc(outWidth * sizeof(int32_t));
+    for (int32_t x = 0; x < outWidth; ++x) {
         adelta[x] = rint(M[0] * x * AB_SCALE);
         bdelta[x] = rint(M[3] * x * AB_SCALE);
     }
@@ -110,20 +108,20 @@ template <typename T, int cn>
         int32x4_t v_inWidthStride = vdupq_n_s32(inWidthStride);
         int32x4_t v_round_delta   = vdupq_n_s32(round_delta);
         float32x4_t v_AB_SCALE    = vdupq_n_f32(AB_SCALE);
-        for (int i = 0; i < outHeight; i += BLOCK_SIZE) {
+        for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
             size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
-            for (int j = 0; j < outWidth; j += BLOCK_SIZE) {
+            for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
                 size_t blockWidth = std::min<size_t>(BLOCK_SIZE, inWidth - j);
 
                 // compute table
                 for (size_t y = 0; y < blockHeight; ++y) {
-                    int *map_row = getRowPtr(&map[0], blockWidth, y);
+                    int32_t *map_row = getRowPtr(&map[0], blockWidth, y);
                     size_t x = 0, dsty = y + i;
                     float32x4_t v_y  = vdupq_n_f32(dsty);
                     float32x4_t v_yx = vmlaq_f32(v_m2, v_m1, v_y), v_yy = vmlaq_f32(v_m5, v_m4, v_y);
 
                     for (; x + 4 <= blockWidth; x += 4) {
-                        int dstx              = x + j;
+                        int32_t dstx          = x + j;
                         int32x4_t X0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
                         int32x4_t Y0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
                         int32x4_t srcX        = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
@@ -135,19 +133,19 @@ template <typename T, int cn>
                     }
 
                     for (; x < blockWidth; ++x) {
-                        int dstx   = x + j;
-                        int X0     = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
-                        int Y0     = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
-                        int srcX   = (X0 + adelta[dstx]) >> AB_BITS;
-                        int srcY   = (Y0 + bdelta[dstx]) >> AB_BITS;
-                        srcX       = clip(srcX, 0, inWidth - 1);
-                        srcY       = clip(srcY, 0, inHeight - 1);
-                        map_row[x] = srcY * inWidthStride + srcX * cn;
+                        int32_t dstx = x + j;
+                        int32_t X0   = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
+                        int32_t Y0   = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
+                        int32_t srcX = (X0 + adelta[dstx]) >> AB_BITS;
+                        int32_t srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
+                        srcX         = clip(srcX, 0, inWidth - 1);
+                        srcY         = clip(srcY, 0, inHeight - 1);
+                        map_row[x]   = srcY * inWidthStride + srcX * cn;
                     }
                 }
                 for (size_t y = 0; y < blockHeight; ++y) {
-                    const int *map_row = getRowPtr(map, blockWidth, y);
-                    float *dst_row     = getRowPtr(dst, outWidthStride, i + y) + j * cn;
+                    const int32_t *map_row = getRowPtr(map, blockWidth, y);
+                    float *dst_row         = getRowPtr(dst, outWidthStride, i + y) + j * cn;
 
                     for (size_t x = 0; x < blockWidth; x++) {
                         if (cn == 1)
@@ -168,20 +166,20 @@ template <typename T, int cn>
         int32x4_t v_inWidthStride = vdupq_n_s32(inWidthStride);
         int32x4_t v_round_delta   = vdupq_n_s32(round_delta);
         float32x4_t v_AB_SCALE    = vdupq_n_f32(AB_SCALE);
-        for (int i = 0; i < outHeight; i += BLOCK_SIZE) {
+        for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
             size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
-            for (int j = 0; j < outWidth; j += BLOCK_SIZE) {
+            for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
                 size_t blockWidth = std::min<size_t>(BLOCK_SIZE, inWidth - j);
 
                 // compute table
                 for (size_t y = 0; y < blockHeight; ++y) {
-                    int *map_row = getRowPtr(&map[0], blockWidth, y);
+                    int32_t *map_row = getRowPtr(&map[0], blockWidth, y);
                     size_t x = 0, dsty = y + i;
                     float32x4_t v_y  = vdupq_n_f32(dsty);
                     float32x4_t v_yx = vmlaq_f32(v_m2, v_m1, v_y), v_yy = vmlaq_f32(v_m5, v_m4, v_y);
 
                     for (; x + 4 <= blockWidth; x += 4) {
-                        int dstx              = x + j;
+                        int32_t dstx          = x + j;
                         int32x4_t X0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
                         int32x4_t Y0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
                         int32x4_t srcX        = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
@@ -195,11 +193,11 @@ template <typename T, int cn>
                     }
 
                     for (; x < blockWidth; ++x) {
-                        int dstx = x + j;
-                        int X0   = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
-                        int Y0   = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
-                        int srcX = (X0 + adelta[dstx]) >> AB_BITS;
-                        int srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
+                        int32_t dstx = x + j;
+                        int32_t X0   = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
+                        int32_t Y0   = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
+                        int32_t srcX = (X0 + adelta[dstx]) >> AB_BITS;
+                        int32_t srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
                         if ((unsigned)(srcX - 0) <= (unsigned)(inWidth - 1 - 0) && (unsigned)(srcY - 0) <= (unsigned)(inHeight - 1 - 0))
                             map_row[x] = srcY * inWidthStride + srcX * cn;
                         else
@@ -207,8 +205,8 @@ template <typename T, int cn>
                     }
                 }
                 for (size_t y = 0; y < blockHeight; ++y) {
-                    const int *map_row = getRowPtr(map, blockWidth, y);
-                    float *dst_row     = getRowPtr(dst, outWidthStride, i + y) + j * cn;
+                    const int32_t *map_row = getRowPtr(map, blockWidth, y);
+                    float *dst_row         = getRowPtr(dst, outWidthStride, i + y) + j * cn;
 
                     for (size_t x = 0; x < blockWidth; x++) {
                         if (cn == 1)
@@ -235,20 +233,20 @@ template <typename T, int cn>
         int32x4_t v_inWidthStride = vdupq_n_s32(inWidthStride);
         int32x4_t v_round_delta   = vdupq_n_s32(round_delta);
         float32x4_t v_AB_SCALE    = vdupq_n_f32(AB_SCALE);
-        for (int i = 0; i < outHeight; i += BLOCK_SIZE) {
+        for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
             size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
-            for (int j = 0; j < outWidth; j += BLOCK_SIZE) {
+            for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
                 size_t blockWidth = std::min<size_t>(BLOCK_SIZE, inWidth - j);
 
                 // compute table
                 for (size_t y = 0; y < blockHeight; ++y) {
-                    int *map_row = getRowPtr(&map[0], blockWidth, y);
+                    int32_t *map_row = getRowPtr(&map[0], blockWidth, y);
                     size_t x = 0, dsty = y + i;
                     float32x4_t v_y  = vdupq_n_f32(dsty);
                     float32x4_t v_yx = vmlaq_f32(v_m2, v_m1, v_y), v_yy = vmlaq_f32(v_m5, v_m4, v_y);
 
                     for (; x + 4 <= blockWidth; x += 4) {
-                        int dstx              = x + j;
+                        int32_t dstx          = x + j;
                         int32x4_t X0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
                         int32x4_t Y0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
                         int32x4_t srcX        = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
@@ -262,11 +260,11 @@ template <typename T, int cn>
                     }
 
                     for (; x < blockWidth; ++x) {
-                        int dstx = x + j;
-                        int X0   = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
-                        int Y0   = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
-                        int srcX = (X0 + adelta[dstx]) >> AB_BITS;
-                        int srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
+                        int32_t dstx = x + j;
+                        int32_t X0   = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
+                        int32_t Y0   = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
+                        int32_t srcX = (X0 + adelta[dstx]) >> AB_BITS;
+                        int32_t srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
                         if ((unsigned)(srcX - 0) <= (unsigned)(inWidth - 1 - 0) && (unsigned)(srcY - 0) <= (unsigned)(inHeight - 1 - 0))
                             map_row[x] = srcY * inWidthStride + srcX * cn;
                         else
@@ -274,8 +272,8 @@ template <typename T, int cn>
                     }
                 }
                 for (size_t y = 0; y < blockHeight; ++y) {
-                    const int *map_row = getRowPtr(map, blockWidth, y);
-                    float *dst_row     = getRowPtr(dst, outWidthStride, i + y) + j * cn;
+                    const int32_t *map_row = getRowPtr(map, blockWidth, y);
+                    float *dst_row         = getRowPtr(dst, outWidthStride, i + y) + j * cn;
 
                     for (size_t x = 0; x < blockWidth; x++) {
                         if (map_row[x] < 0)
@@ -300,9 +298,9 @@ template <typename T, int cn>
 static void initTab_linear_short(float *short_tab)
 {
     float scale = 1.f / INTER_TAB_SIZE;
-    for (int i = 0; i < INTER_TAB_SIZE; ++i) {
+    for (int32_t i = 0; i < INTER_TAB_SIZE; ++i) {
         float vy = i * scale;
-        for (int j = 0; j < INTER_TAB_SIZE; ++j, short_tab += 4) {
+        for (int32_t j = 0; j < INTER_TAB_SIZE; ++j, short_tab += 4) {
             float vx     = j * scale;
             short_tab[0] = static_cast<float>(HPC::utils::saturate_cast<uint16_t>((1 - vy) * (1 - vx) * INTER_REMAP_COEF_SCALE));
             short_tab[1] = static_cast<float>(HPC::utils::saturate_cast<uint16_t>((1 - vy) * vx * INTER_REMAP_COEF_SCALE));
@@ -312,28 +310,40 @@ static void initTab_linear_short(float *short_tab)
     }
 }
 
-::ppl::common::RetCode warpAffine_linear_float(float *dst, const float *src, int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, const float *M, int cn, int borderMode, float borderValue = 0.0f)
+::ppl::common::RetCode warpAffine_linear_float(
+    float *dst,
+    const float *src,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    const float *M,
+    int32_t cn,
+    int32_t borderMode,
+    float borderValue = 0.0f)
 {
     float *_short_tab = (float *)malloc(INTER_TAB_SIZE * INTER_TAB_SIZE * 8 * sizeof(float) + 16);
     float *short_tab  = alignPtr(_short_tab, 16);
     initTab_linear_short(short_tab);
 
-    int round_delta = AB_SCALE / INTER_TAB_SIZE / 2;
+    int32_t round_delta = AB_SCALE / INTER_TAB_SIZE / 2;
 
-    int *adelta = (int *)malloc(outWidth * sizeof(int));
-    int *bdelta = (int *)malloc(outWidth * sizeof(int));
-    for (int i = 0; i < outWidth; ++i) {
+    int32_t *adelta = (int32_t *)malloc(outWidth * sizeof(int32_t));
+    int32_t *bdelta = (int32_t *)malloc(outWidth * sizeof(int32_t));
+    for (int32_t i = 0; i < outWidth; ++i) {
         adelta[i] = rint(M[0] * i * AB_SCALE);
         bdelta[i] = rint(M[3] * i * AB_SCALE);
     }
-    const int BLOCK_SZ = 64;
-    int _XY_INT[BLOCK_SZ * BLOCK_SZ * 4 + 16];
-    int *XY_INT = alignPtr(_XY_INT, 16);
-    short _XY_DEC[BLOCK_SZ * BLOCK_SZ + 16];
-    short *XY_DEC             = alignPtr(_XY_DEC, 16);
-    int bh0                   = std::min<int>(BLOCK_SZ / 2, outHeight);
-    int bw0                   = std::min<int>(BLOCK_SZ * BLOCK_SZ / bh0, outWidth);
-    bh0                       = std::min<int>(BLOCK_SZ * BLOCK_SZ / bw0, outHeight);
+    const int32_t BLOCK_SZ = 64;
+    int32_t _XY_INT[BLOCK_SZ * BLOCK_SZ * 4 + 16];
+    int32_t *XY_INT = alignPtr(_XY_INT, 16);
+    int16_t _XY_DEC[BLOCK_SZ * BLOCK_SZ + 16];
+    int16_t *XY_DEC           = alignPtr(_XY_DEC, 16);
+    int32_t bh0               = std::min<int32_t>(BLOCK_SZ / 2, outHeight);
+    int32_t bw0               = std::min<int32_t>(BLOCK_SZ * BLOCK_SZ / bh0, outWidth);
+    bh0                       = std::min<int32_t>(BLOCK_SZ * BLOCK_SZ / bw0, outHeight);
     int32x4_t v_inWidthStride = vdupq_n_s32(inWidthStride);
     int32x4_t v_cn            = vdupq_n_s32(cn);
 
@@ -342,19 +352,19 @@ static void initTab_linear_short(float *short_tab)
     int32x4_t max_width  = vdupq_n_s32(inWidth - 1);
     int32x4_t max_height = vdupq_n_s32(inHeight - 1);
     if (borderMode != BORDER_TYPE_REPLICATE) {
-        for (int y = 0; y < outHeight; y += bh0) {
-            int bh = std::min<int>(bh0, outHeight - y);
-            for (int x = 0; x < outWidth; x += bw0) {
-                int bw = std::min<int>(bw0, outWidth - x);
-                for (int y1 = 0; y1 < bh; ++y1) {
-                    int *xy_int_p   = XY_INT + y1 * bw * 4;
-                    short *xy_dec_p = XY_DEC + y1 * bw;
-                    int x_int       = (int)((M[1] * (y + y1) + M[2]) * AB_SCALE) + round_delta;
-                    int y_int       = (int)((M[4] * (y + y1) + M[5]) * AB_SCALE) + round_delta;
+        for (int32_t y = 0; y < outHeight; y += bh0) {
+            int32_t bh = std::min<int32_t>(bh0, outHeight - y);
+            for (int32_t x = 0; x < outWidth; x += bw0) {
+                int32_t bw = std::min<int32_t>(bw0, outWidth - x);
+                for (int32_t y1 = 0; y1 < bh; ++y1) {
+                    int32_t *xy_int_p = XY_INT + y1 * bw * 4;
+                    int16_t *xy_dec_p = XY_DEC + y1 * bw;
+                    int32_t x_int     = (int32_t)((M[1] * (y + y1) + M[2]) * AB_SCALE) + round_delta;
+                    int32_t y_int     = (int32_t)((M[4] * (y + y1) + M[5]) * AB_SCALE) + round_delta;
 
                     int32x4_t m_X_int = vdupq_n_s32(x_int);
                     int32x4_t m_Y_int = vdupq_n_s32(y_int);
-                    int x1            = 0;
+                    int32_t x1        = 0;
                     for (; x1 <= bw - 8; x1 += 8) {
                         int32x4_t tx0, tx1, ty0, ty1;
                         tx0 = vaddq_s32(m_X_int, vld1q_s32(adelta + x + x1));
@@ -413,10 +423,10 @@ static void initTab_linear_short(float *short_tab)
                         vst4q_s32(xy_int_p + (x1 + 4) * 4, dst1);
                     }
                     for (; x1 < bw; ++x1) {
-                        int x_value = (x_int + adelta[x + x1]) >> (AB_BITS - INTER_BITS);
-                        int y_value = (y_int + bdelta[x + x1]) >> (AB_BITS - INTER_BITS);
-                        short src_x = HPC::utils::saturate_cast<uint16_t>(x_value >> INTER_BITS);
-                        short src_y = HPC::utils::saturate_cast<uint16_t>(y_value >> INTER_BITS);
+                        int32_t x_value = (x_int + adelta[x + x1]) >> (AB_BITS - INTER_BITS);
+                        int32_t y_value = (y_int + bdelta[x + x1]) >> (AB_BITS - INTER_BITS);
+                        int16_t src_x   = HPC::utils::saturate_cast<uint16_t>(x_value >> INTER_BITS);
+                        int16_t src_y   = HPC::utils::saturate_cast<uint16_t>(y_value >> INTER_BITS);
                         bool flag[4];
                         flag[0]              = (src_x >= 0 && src_x < inWidth && src_y >= 0 && src_y < inHeight);
                         flag[1]              = (src_x + 1 >= 0 && src_x + 1 < inWidth && src_y >= 0 && src_y < inHeight);
@@ -431,14 +441,14 @@ static void initTab_linear_short(float *short_tab)
                     }
                 }
                 float32x4_t v_border = vdupq_n_f32(borderValue);
-                for (int y1 = 0; y1 < bh; ++y1) {
+                for (int32_t y1 = 0; y1 < bh; ++y1) {
                     float32x4_t v_scale = vdupq_n_f32(INTER_REMAP_COEF_SCALE);
-                    int dstY            = y1 + y;
-                    int *xy_int_p       = XY_INT + y1 * bw * 4;
-                    short *xy_dec_p     = XY_DEC + y1 * bw;
-                    for (int x1 = 0; x1 < bw; x1 += 4) {
-                        int dstX     = x1 + x;
-                        int dstIndex = dstY * outWidthStride + dstX * cn;
+                    int32_t dstY        = y1 + y;
+                    int32_t *xy_int_p   = XY_INT + y1 * bw * 4;
+                    int16_t *xy_dec_p   = XY_DEC + y1 * bw;
+                    for (int32_t x1 = 0; x1 < bw; x1 += 4) {
+                        int32_t dstX     = x1 + x;
+                        int32_t dstIndex = dstY * outWidthStride + dstX * cn;
 
                         if (borderMode == BORDER_TYPE_CONSTANT) {
                             float32x4_t p_s_t0 = vld1q_f32(short_tab + xy_dec_p[x1]);
@@ -728,18 +738,18 @@ static void initTab_linear_short(float *short_tab)
         }
     } else {
         int32x4_t v_zero4 = vdupq_n_s32(0);
-        for (int y = 0; y < outHeight; y += bh0) {
-            int bh = std::min<int>(bh0, outHeight - y);
-            for (int x = 0; x < outWidth; x += bw0) {
-                int bw = std::min<int>(bw0, outWidth - x);
-                for (int y1 = 0; y1 < bh; ++y1) {
-                    int *xy_int_p     = XY_INT + y1 * bw * 4;
-                    short *xy_dec_p   = XY_DEC + y1 * bw;
-                    int x_int         = (int)((M[1] * (y + y1) + M[2]) * AB_SCALE) + round_delta;
-                    int y_int         = (int)((M[4] * (y + y1) + M[5]) * AB_SCALE) + round_delta;
+        for (int32_t y = 0; y < outHeight; y += bh0) {
+            int32_t bh = std::min<int32_t>(bh0, outHeight - y);
+            for (int32_t x = 0; x < outWidth; x += bw0) {
+                int32_t bw = std::min<int32_t>(bw0, outWidth - x);
+                for (int32_t y1 = 0; y1 < bh; ++y1) {
+                    int32_t *xy_int_p = XY_INT + y1 * bw * 4;
+                    int16_t *xy_dec_p = XY_DEC + y1 * bw;
+                    int32_t x_int     = (int32_t)((M[1] * (y + y1) + M[2]) * AB_SCALE) + round_delta;
+                    int32_t y_int     = (int32_t)((M[4] * (y + y1) + M[5]) * AB_SCALE) + round_delta;
                     int32x4_t m_X_int = vdupq_n_s32(x_int);
                     int32x4_t m_Y_int = vdupq_n_s32(y_int);
-                    int x1            = 0;
+                    int32_t x1        = 0;
                     for (; x1 <= bw - 8; x1 += 8) {
                         int32x4_t tx0, tx1, ty0, ty1;
                         tx0 = vaddq_s32(m_X_int, vld1q_s32(adelta + x + x1));
@@ -789,17 +799,17 @@ static void initTab_linear_short(float *short_tab)
                         vst4q_s32(xy_int_p + (x1 + 4) * 4, dst1);
                     }
                     for (; x1 < bw; ++x1) {
-                        int x_value  = (x_int + adelta[x + x1]) >> (AB_BITS - INTER_BITS);
-                        int y_value  = (y_int + bdelta[x + x1]) >> (AB_BITS - INTER_BITS);
-                        xy_dec_p[x1] = ((short)((y_value & (INTER_TAB_SIZE - 1)) * INTER_TAB_SIZE +
-                                                (x_value & (INTER_TAB_SIZE - 1))))
+                        int32_t x_value = (x_int + adelta[x + x1]) >> (AB_BITS - INTER_BITS);
+                        int32_t y_value = (y_int + bdelta[x + x1]) >> (AB_BITS - INTER_BITS);
+                        xy_dec_p[x1]    = ((int16_t)((y_value & (INTER_TAB_SIZE - 1)) * INTER_TAB_SIZE +
+                                                  (x_value & (INTER_TAB_SIZE - 1))))
                                        << 2;
                         x_value              = HPC::utils::saturate_cast<uint16_t>(x_value >> INTER_BITS);
                         y_value              = HPC::utils::saturate_cast<uint16_t>(y_value >> INTER_BITS);
-                        int sx0              = clip(x_value, 0, inWidth - 1);
-                        int sy0              = clip(y_value, 0, inHeight - 1);
-                        int sx1              = clip((x_value + 1), 0, inWidth - 1);
-                        int sy1              = clip((y_value + 1), 0, inHeight - 1);
+                        int32_t sx0          = clip(x_value, 0, inWidth - 1);
+                        int32_t sy0          = clip(y_value, 0, inHeight - 1);
+                        int32_t sx1          = clip((x_value + 1), 0, inWidth - 1);
+                        int32_t sy1          = clip((y_value + 1), 0, inHeight - 1);
                         xy_int_p[x1 * 4]     = sy0 * inWidthStride + sx0 * cn;
                         xy_int_p[x1 * 4 + 1] = sy0 * inWidthStride + sx1 * cn;
                         xy_int_p[x1 * 4 + 2] = sy1 * inWidthStride + sx0 * cn;
@@ -807,12 +817,12 @@ static void initTab_linear_short(float *short_tab)
                     }
                 }
                 float32x4_t v_scale = vdupq_n_f32(INTER_REMAP_COEF_SCALE);
-                for (int y1 = 0; y1 < bh; ++y1) {
-                    int dstY        = y1 + y;
-                    int x1          = 0;
-                    int *xy_int_p   = XY_INT + ((y1 * bw) << 2);
-                    int dstIndex    = dstY * outWidthStride + x * cn;
-                    short *xy_dec_p = XY_DEC + y1 * bw;
+                for (int32_t y1 = 0; y1 < bh; ++y1) {
+                    int32_t dstY      = y1 + y;
+                    int32_t x1        = 0;
+                    int32_t *xy_int_p = XY_INT + ((y1 * bw) << 2);
+                    int32_t dstIndex  = dstY * outWidthStride + x * cn;
+                    int16_t *xy_dec_p = XY_DEC + y1 * bw;
 
                     if (cn == 1) {
                         for (; x1 < bw; x1 += 4) {
@@ -847,7 +857,7 @@ static void initTab_linear_short(float *short_tab)
                             dstIndex++;
                         }
                     } else if (cn == 4) {
-                        for (int x1 = 0; x1 < bw; ++x1) {
+                        for (int32_t x1 = 0; x1 < bw; ++x1) {
                             float32x4_t p_s_t = vld1q_f32(short_tab + xy_dec_p[x1]);
                             float32x4x4_t sum = {vld1q_f32(src + xy_int_p[(x1 << 2)]),
                                                  vld1q_f32(src + xy_int_p[(x1 << 2) + 1]),
@@ -861,7 +871,7 @@ static void initTab_linear_short(float *short_tab)
                             dstIndex += 4;
                         }
                     } else {
-                        for (int x1 = 0; x1 < bw; ++x1) {
+                        for (int32_t x1 = 0; x1 < bw; ++x1) {
                             float32x4_t p_s_t = vld1q_f32(short_tab + xy_dec_p[x1]);
                             float32x4x4_t sum = {vld1q_f32(src + xy_int_p[(x1 << 2)]),
                                                  vld1q_f32(src + xy_int_p[(x1 << 2) + 1]),
@@ -890,103 +900,157 @@ static void initTab_linear_short(float *short_tab)
 
 template <>
 ::ppl::common::RetCode WarpAffineNearestPoint<float, 1>(
-    int inHeight,
-    int inWidth,
-    int inWidthStride,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
     const float *inData,
-    int outHeight,
-    int outWidth,
-    int outWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
     float *outData,
     const float *affineMatrix,
     BorderType border_type,
     float borderValue)
 {
+    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+        return ppl::common::RC_INVALID_VALUE;
+    }
     return warpAffine_nearest<float, 1>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
 }
 
 template <>
 ::ppl::common::RetCode WarpAffineNearestPoint<float, 3>(
-    int inHeight,
-    int inWidth,
-    int inWidthStride,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
     const float *inData,
-    int outHeight,
-    int outWidth,
-    int outWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
     float *outData,
     const float *affineMatrix,
     BorderType border_type,
     float borderValue)
 {
+    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+        return ppl::common::RC_INVALID_VALUE;
+    }
     return warpAffine_nearest<float, 3>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
 }
 
 template <>
 ::ppl::common::RetCode WarpAffineNearestPoint<float, 4>(
-    int inHeight,
-    int inWidth,
-    int inWidthStride,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
     const float *inData,
-    int outHeight,
-    int outWidth,
-    int outWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
     float *outData,
     const float *affineMatrix,
     BorderType border_type,
     float borderValue)
 {
+    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+        return ppl::common::RC_INVALID_VALUE;
+    }
     return warpAffine_nearest<float, 4>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
 }
 
 template <>
 ::ppl::common::RetCode WarpAffineLinear<float, 1>(
-    int inHeight,
-    int inWidth,
-    int inWidthStride,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
     const float *inData,
-    int outHeight,
-    int outWidth,
-    int outWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
     float *outData,
     const float *affineMatrix,
     BorderType border_type,
     float borderValue)
 {
+    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+        return ppl::common::RC_INVALID_VALUE;
+    }
     return warpAffine_linear_float(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 1, border_type, borderValue);
 }
 
 template <>
 ::ppl::common::RetCode WarpAffineLinear<float, 3>(
-    int inHeight,
-    int inWidth,
-    int inWidthStride,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
     const float *inData,
-    int outHeight,
-    int outWidth,
-    int outWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
     float *outData,
     const float *affineMatrix,
     BorderType border_type,
     float borderValue)
 {
+    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+        return ppl::common::RC_INVALID_VALUE;
+    }
     return warpAffine_linear_float(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 3, border_type, borderValue);
 }
 
 template <>
 ::ppl::common::RetCode WarpAffineLinear<float, 4>(
-    int inHeight,
-    int inWidth,
-    int inWidthStride,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
     const float *inData,
-    int outHeight,
-    int outWidth,
-    int outWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
     float *outData,
     const float *affineMatrix,
     BorderType border_type,
     float borderValue)
 {
+    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+        return ppl::common::RC_INVALID_VALUE;
+    }
     return warpAffine_linear_float(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 4, border_type, borderValue);
 }
 

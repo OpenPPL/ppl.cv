@@ -17,8 +17,6 @@
 
 #include "ppl/cv/aarch64/arithmetic.h"
 #include "ppl/cv/aarch64/morph.hpp"
-
-#include <assert.h>
 #include <stdio.h>
 #include <cmath>
 #include <float.h>
@@ -26,7 +24,6 @@
 #include <arm_neon.h>
 #include "ppl/common/log.h"
 #include "common.hpp"
-#include <iostream>
 
 namespace ppl {
 namespace cv {
@@ -92,7 +89,7 @@ inline void MorphRow(uint8x16_t &tprev, uint8x16_t &tcurr, uint8x16_t &tnext, co
 }
 
 template <class morphOp, typename T, int32_t nc, int32_t kernel_len>
-inline void MorphRowLast(uint8x16_t &tprev, uint8x16_t &tcurr, uint8x16_t &tnext, const T *srcCenterRow, int32_t srcStride, T *drow, int32_t rowIdx, int32_t rowIdxInv, int32_t colIdx, int32_t colIdxInv, uchar borderValue = 0)
+inline void MorphRowLast(uint8x16_t &tprev, uint8x16_t &tcurr, uint8x16_t &tnext, const T *srcCenterRow, int32_t srcStride, T *drow, int32_t rowIdx, int32_t rowIdxInv, int32_t colIdx, int32_t colIdxInv, uint8_t borderValue = 0)
 {
     uint8x16_t v_border = vdupq_n_u8(borderValue);
 
@@ -398,7 +395,7 @@ inline void MorphRowLast(uint8x16_t &tprev, uint8x16_t &tcurr, uint8x16_t &tnext
 }
 
 template <class morphOp, int32_t nc, int32_t kernel_len>
-inline void MorphFirstCol(uint8x16_t &tcurr, uint8x16_t &tnext, const uchar *srcCenterRow, int32_t srcStride, int32_t rowIdx, int32_t rowIdxInv, uchar borderValue = 0)
+inline void MorphFirstCol(uint8x16_t &tcurr, uint8x16_t &tnext, const uint8_t *srcCenterRow, int32_t srcStride, int32_t rowIdx, int32_t rowIdxInv, uint8_t borderValue = 0)
 {
     uint8x16_t v_border = vdupq_n_u8(borderValue);
     morphOp vop;
@@ -432,26 +429,26 @@ void morph_u8(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue)
+    uint8_t borderValue)
 {
-    constexpr int32_t v_elem         = VLEN / sizeof(uchar);
+    constexpr int32_t v_elem         = VLEN / sizeof(uint8_t);
     constexpr int32_t kernel_radius  = (kernel_len - 1) / 2;
     constexpr int32_t radius_vec_num = (nc * kernel_radius - 1) / v_elem + 1;
 
     uint8x16_t tcurr, tprev, tnext;
     uint8x16_t v_border = vdupq_n_u8(borderValue);
 
-    for (int y = 0; y < height; y++) {
-        const uchar *srow = getRowPtr(srcBase, srcStride, y);
-        uchar *drow       = getRowPtr(dstBase, dstStride, y);
+    for (int32_t y = 0; y < height; y++) {
+        const uint8_t *srow = getRowPtr(srcBase, srcStride, y);
+        uint8_t *drow       = getRowPtr(dstBase, dstStride, y);
         MorphFirstCol<morphOp, nc, kernel_len>(tcurr, tnext, srow, srcStride, y, height - 1 - y, borderValue);
         tprev     = v_border;
         int32_t x = v_elem;
-        for (int i = 0; i < nc; i++) {
+        for (int32_t i = 0; i < nc; i++) {
             prefetch(srow + (i + 1) * srcStride);
             prefetch(srow - (i + 1) * srcStride);
         }
@@ -460,10 +457,10 @@ void morph_u8(
         for (; x < width * nc - v_elem * radius_vec_num; x += v_elem) {
             tprev = tcurr;
             tcurr = tnext;
-            MorphRow<morphOp, uchar, nc, kernel_len>(tprev, tcurr, tnext, srow + x, srcStride, drow, y, height - 1 - y, x - v_elem, width * nc - 1 - (x - v_elem), borderValue);
+            MorphRow<morphOp, uint8_t, nc, kernel_len>(tprev, tcurr, tnext, srow + x, srcStride, drow, y, height - 1 - y, x - v_elem, width * nc - 1 - (x - v_elem), borderValue);
             drow += v_elem;
         }
-        MorphRowLast<morphOp, uchar, nc, kernel_len>(tprev, tcurr, tnext, srow + x, srcStride, drow, y, height - 1 - y, x - v_elem, width * nc - 1 - (x - v_elem), borderValue);
+        MorphRowLast<morphOp, uint8_t, nc, kernel_len>(tprev, tcurr, tnext, srow + x, srcStride, drow, y, height - 1 - y, x - v_elem, width * nc - 1 - (x - v_elem), borderValue);
     }
 }
 
@@ -471,111 +468,111 @@ template void morph_u8<DilateVecOp, 1, 3>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<DilateVecOp, 1, 5>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<DilateVecOp, 3, 3>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<DilateVecOp, 3, 5>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<DilateVecOp, 4, 3>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<DilateVecOp, 4, 5>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 
 template void morph_u8<ErodeVecOp, 1, 3>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<ErodeVecOp, 1, 5>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<ErodeVecOp, 3, 3>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<ErodeVecOp, 3, 5>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<ErodeVecOp, 4, 3>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 template void morph_u8<ErodeVecOp, 4, 5>(
     const int32_t height,
     const int32_t width,
     int32_t srcStride,
-    const uchar *srcBase,
+    const uint8_t *srcBase,
     int32_t dstStride,
-    uchar *dstBase,
+    uint8_t *dstBase,
     BorderType border_type,
-    uchar borderValue);
+    uint8_t borderValue);
 }
 }
 } // namespace ppl::cv::aarch64

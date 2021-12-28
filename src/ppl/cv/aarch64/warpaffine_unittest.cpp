@@ -22,8 +22,8 @@
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
 
-template <typename T, int val>
-static void randomRangeData(T *data, const size_t num, int maxNum = 255)
+template <typename T, int32_t val>
+static void randomRangeData(T *data, const size_t num, int32_t maxNum = 255)
 {
     size_t tmp;
 
@@ -34,9 +34,9 @@ static void randomRangeData(T *data, const size_t num, int maxNum = 255)
 }
 
 template <typename T, ppl::cv::InterpolationType inter_mode, int32_t nc>
-class WarpAffine : public ::testing::TestWithParam<std::tuple<int, int, int, float>> {
+class WarpAffine : public ::testing::TestWithParam<std::tuple<int32_t, int32_t, int32_t, float>> {
 public:
-    using WarpAffineParam = std::tuple<int, int, int, float>;
+    using WarpAffineParam = std::tuple<int32_t, int32_t, int32_t, float>;
     WarpAffine()
     {
     }
@@ -47,9 +47,9 @@ public:
 
     void Linearapply(const WarpAffineParam &param)
     {
-        int width      = std::get<0>(param);
-        int height     = std::get<1>(param);
-        int borderType = std::get<2>(param);
+        int32_t width      = std::get<0>(param);
+        int32_t height     = std::get<1>(param);
+        int32_t borderType = std::get<2>(param);
         float diff     = std::get<3>(param);
 
         std::unique_ptr<T[]> src(new T[width * height * nc]);
@@ -66,8 +66,8 @@ public:
         cv::Mat dst_opencv(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), dst_ref.get(), sizeof(T) * width * nc);
         cv::Mat affineMatrix_opencv(2, 3, CV_32FC1, affineMatrix0.get());
 
-        T border_value;
-        ppl::cv::debug::randomFill<T>(&border_value, 1, 0, 255);
+        double border_value;
+        ppl::cv::debug::randomFill<double>(&border_value, 1, 0, 255);
 
         cv::Scalar borderValue = {border_value, border_value, border_value, border_value};
 
@@ -85,7 +85,7 @@ public:
                 dst.get(),
                 affineMatrix.get(),
                 (ppl::cv::BorderType)borderType,
-                border_value);
+                (T)border_value);
         }
         if (inter_mode == ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT) {
             cv::warpAffine(src_opencv, dst_opencv, affineMatrix_opencv, dst_opencv.size(), cv::WARP_INVERSE_MAP | cv::INTER_NEAREST, borderType, borderValue);
@@ -101,7 +101,7 @@ public:
                 dst.get(),
                 affineMatrix.get(),
                 (ppl::cv::BorderType)borderType,
-                border_value);
+                (T)border_value);
         }
 
         checkResult<T, nc>(
