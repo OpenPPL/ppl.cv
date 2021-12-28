@@ -50,12 +50,12 @@ BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, float, c1, k5x5)->Args({320, 240})->Arg
 BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, float, c3, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, float, c4, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uchar, c1, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uchar, c3, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uchar, c4, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uchar, c1, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uchar, c3, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uchar, c4, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uint8_t, c1, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uint8_t, c3, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uint8_t, c4, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uint8_t, c1, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uint8_t, c3, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_ppl_aarch64, uint8_t, c4, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
 #ifdef PPLCV_BENCHMARK_OPENCV
 template <typename T, int32_t nc, int32_t kernel_size>
@@ -85,12 +85,12 @@ BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, float, c1, k5x5)->Args({320, 240})->
 BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, float, c3, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, float, c4, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uchar, c1, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uchar, c3, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uchar, c4, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uchar, c1, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uchar, c3, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uchar, c4, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uint8_t, c1, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uint8_t, c3, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uint8_t, c4, k3x3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uint8_t, c1, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uint8_t, c3, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Erode_opencv_aarch64, uint8_t, c4, k5x5)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
 #endif //! PPLCV_BENCHMARK_OPENCV
 } // namespace

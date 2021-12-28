@@ -145,37 +145,85 @@ inline uint8x16_t divSaturate(uint8x16_t v0, uint8x16_t v1)
 }
 
 template <>
-::ppl::common::RetCode Div<float, 1>(int32_t height, int32_t width, int32_t inWidthStride0, const float *inData0, int32_t inWidthStride1, const float *inData1, int32_t outWidthStride, float *outData)
+::ppl::common::RetCode Div<float, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData)
 {
     return div_f32(height, width, 1, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Div<float, 3>(int32_t height, int32_t width, int32_t inWidthStride0, const float *inData0, int32_t inWidthStride1, const float *inData1, int32_t outWidthStride, float *outData)
+::ppl::common::RetCode Div<float, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData)
 {
     return div_f32(height, width, 3, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Div<float, 4>(int32_t height, int32_t width, int32_t inWidthStride0, const float *inData0, int32_t inWidthStride1, const float *inData1, int32_t outWidthStride, float *outData)
+::ppl::common::RetCode Div<float, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData)
 {
     return div_f32(height, width, 4, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Div<uint8_t, 1>(int32_t height, int32_t width, int32_t inWidthStride0, const uint8_t *inData0, int32_t inWidthStride1, const uint8_t *inData1, int32_t outWidthStride, uint8_t *outData)
+::ppl::common::RetCode Div<uint8_t, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const uint8_t *inData0,
+    int32_t inWidthStride1,
+    const uint8_t *inData1,
+    int32_t outWidthStride,
+    uint8_t *outData)
 {
     return div_u8(height, width, 1, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Div<uint8_t, 3>(int32_t height, int32_t width, int32_t inWidthStride0, const uint8_t *inData0, int32_t inWidthStride1, const uint8_t *inData1, int32_t outWidthStride, uint8_t *outData)
+::ppl::common::RetCode Div<uint8_t, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const uint8_t *inData0,
+    int32_t inWidthStride1,
+    const uint8_t *inData1,
+    int32_t outWidthStride,
+    uint8_t *outData)
 {
     return div_u8(height, width, 3, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Div<uint8_t, 4>(int32_t height, int32_t width, int32_t inWidthStride0, const uint8_t *inData0, int32_t inWidthStride1, const uint8_t *inData1, int32_t outWidthStride, uint8_t *outData)
+::ppl::common::RetCode Div<uint8_t, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const uint8_t *inData0,
+    int32_t inWidthStride1,
+    const uint8_t *inData1,
+    int32_t outWidthStride,
+    uint8_t *outData)
 {
     return div_u8(height, width, 4, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }

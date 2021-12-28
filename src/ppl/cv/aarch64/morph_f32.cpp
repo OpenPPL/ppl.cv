@@ -17,8 +17,6 @@
 
 #include "ppl/cv/aarch64/arithmetic.h"
 #include "ppl/cv/aarch64/morph.hpp"
-
-#include <assert.h>
 #include <stdio.h>
 #include <cmath>
 #include <float.h>
@@ -26,7 +24,6 @@
 #include <arm_neon.h>
 #include "ppl/common/log.h"
 #include "common.hpp"
-#include <iostream>
 
 namespace ppl {
 namespace cv {

@@ -129,37 +129,85 @@ namespace aarch64 {
 }
 
 template <>
-::ppl::common::RetCode Mul<float, 1>(int32_t height, int32_t width, int32_t inWidthStride0, const float *inData0, int32_t inWidthStride1, const float *inData1, int32_t outWidthStride, float *outData)
+::ppl::common::RetCode Mul<float, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData)
 {
     return mul_f32(height, width, 1, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Mul<float, 3>(int32_t height, int32_t width, int32_t inWidthStride0, const float *inData0, int32_t inWidthStride1, const float *inData1, int32_t outWidthStride, float *outData)
+::ppl::common::RetCode Mul<float, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData)
 {
     return mul_f32(height, width, 3, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Mul<float, 4>(int32_t height, int32_t width, int32_t inWidthStride0, const float *inData0, int32_t inWidthStride1, const float *inData1, int32_t outWidthStride, float *outData)
+::ppl::common::RetCode Mul<float, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData)
 {
     return mul_f32(height, width, 4, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Mul<uint8_t, 1>(int32_t height, int32_t width, int32_t inWidthStride0, const uint8_t *inData0, int32_t inWidthStride1, const uint8_t *inData1, int32_t outWidthStride, uint8_t *outData)
+::ppl::common::RetCode Mul<uint8_t, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const uint8_t *inData0,
+    int32_t inWidthStride1,
+    const uint8_t *inData1,
+    int32_t outWidthStride,
+    uint8_t *outData)
 {
     return mul_u8(height, width, 1, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Mul<uint8_t, 3>(int32_t height, int32_t width, int32_t inWidthStride0, const uint8_t *inData0, int32_t inWidthStride1, const uint8_t *inData1, int32_t outWidthStride, uint8_t *outData)
+::ppl::common::RetCode Mul<uint8_t, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const uint8_t *inData0,
+    int32_t inWidthStride1,
+    const uint8_t *inData1,
+    int32_t outWidthStride,
+    uint8_t *outData)
 {
     return mul_u8(height, width, 3, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Mul<uint8_t, 4>(int32_t height, int32_t width, int32_t inWidthStride0, const uint8_t *inData0, int32_t inWidthStride1, const uint8_t *inData1, int32_t outWidthStride, uint8_t *outData)
+::ppl::common::RetCode Mul<uint8_t, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const uint8_t *inData0,
+    int32_t inWidthStride1,
+    const uint8_t *inData1,
+    int32_t outWidthStride,
+    uint8_t *outData)
 {
     return mul_u8(height, width, 4, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }

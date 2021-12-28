@@ -23,8 +23,8 @@
 #include "ppl/cv/types.h"
 
 namespace {
-template <typename T, int val>
-void randomRangeData(T* data, const size_t num, int maxNum = 255)
+template <typename T, int32_t val>
+void randomRangeData(T* data, const size_t num, int32_t maxNum = 255)
 {
     size_t tmp;
 
@@ -34,30 +34,30 @@ void randomRangeData(T* data, const size_t num, int maxNum = 255)
     }
 }
 
-template <typename T, int channels, int mode, int borderType>
+template <typename T, int32_t channels, int32_t mode, int32_t borderType>
 class WarpAffineBenchmark {
 public:
     T* dev_iImage;
     T* dev_oImage;
-    int inHeight;
-    int inWidth;
-    int outHeight;
-    int outWidth;
+    int32_t inHeight;
+    int32_t inWidth;
+    int32_t outHeight;
+    int32_t outWidth;
     float affineMatrix0[6];
     float* affineMatrix;
     cv::Mat src_opencv;
     cv::Mat dst_opencv;
     cv::Mat affineMatrix_opencv;
 
-    WarpAffineBenchmark(int inWidth, int inHeight, int outWidth, int outHeight)
+    WarpAffineBenchmark(int32_t inWidth, int32_t inHeight, int32_t outWidth, int32_t outHeight)
         : inHeight(inHeight)
         , inWidth(inWidth)
         , outHeight(outHeight)
         , outWidth(outWidth)
         , affineMatrix0{0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f}
     {
-        const int N0 = inWidth * inHeight * channels;
-        const int N1 = outWidth * outHeight * channels;
+        const int32_t N0 = inWidth * inHeight * channels;
+        const int32_t N1 = outWidth * outHeight * channels;
         dev_iImage   = (T*)malloc(N0 * sizeof(T));
         dev_oImage   = (T*)malloc(N1 * sizeof(T));
         memset(dev_iImage, 0, N0 * sizeof(T));
@@ -122,7 +122,7 @@ public:
 
 using namespace ppl::cv;
 
-template <typename T, int channels, int mode, int borderType>
+template <typename T, int32_t channels, int32_t mode, int32_t borderType>
 static void BM_WarpAffine_ppl_arm(benchmark::State& state)
 {
     WarpAffineBenchmark<T, channels, mode, borderType> bm(state.range(0), state.range(1), state.range(2), state.range(3));
@@ -132,7 +132,7 @@ static void BM_WarpAffine_ppl_arm(benchmark::State& state)
     state.SetItemsProcessed(state.iterations());
 }
 
-template <typename T, int channels, int mode, int borderType>
+template <typename T, int32_t channels, int32_t mode, int32_t borderType>
 static void BM_WarpAffine_opencv_arm(benchmark::State& state)
 {
     WarpAffineBenchmark<T, channels, mode, borderType> bm(state.range(0), state.range(1), state.range(2), state.range(3));

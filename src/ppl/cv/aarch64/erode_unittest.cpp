@@ -58,18 +58,18 @@ public:
         std::unique_ptr<T[]> src(new T[width * height * nc]);
         std::unique_ptr<T[]> dst_ref(new T[width * height * nc]);
         std::unique_ptr<T[]> dst(new T[width * height * nc]);
-        std::unique_ptr<uchar[]> kernel(new uchar[kernel_size * kernel_size]);
+        std::unique_ptr<uint8_t[]> kernel(new uint8_t[kernel_size * kernel_size]);
         ppl::cv::debug::randomFill<T>(src.get(), width * height * nc, 0, 255);
         ppl::cv::debug::randomFill<T>(dst.get(), width * height * nc, 1, 1);
         ppl::cv::debug::randomFill<T>(dst_ref.get(), width * height * nc, 1, 1);
-        ppl::cv::debug::randomFill<uchar>(kernel.get(), kernel_size * kernel_size, 1, 1);
+        ppl::cv::debug::randomFill<uint8_t>(kernel.get(), kernel_size * kernel_size, 1, 1);
         memcpy(dst.get(), dst_ref.get(), width * height * nc * sizeof(T));
         cv::Mat src_opencv(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), src.get(), sizeof(T) * width * nc);
         cv::Mat dst_opencv(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), dst_ref.get(), sizeof(T) * width * nc);
         cv::Mat kernel_opencv(kernel_size, kernel_size, CV_8U, kernel.get());
 
-        T border_value;
-        ppl::cv::debug::randomFill<T>(&border_value, 1, 0, 255);
+        double border_value;
+        ppl::cv::debug::randomFill<double>(&border_value, 1, 0, 255);
         cv::Scalar borderValue = {border_value, border_value, border_value, border_value};
 
         cv::erode(src_opencv, dst_opencv, kernel_opencv, cv::Point(-1, -1), 1, borderType, borderValue);
@@ -85,28 +85,7 @@ public:
             width * nc,
             dst.get(),
             (ppl::cv::BorderType)borderType,
-            border_value);
-
-        // for(int i = 0 ; i < height; i++){
-        //     for (int j = 0; j < width * nc; j++){
-        //         if (*(dst.get() + i * width * nc + j) != *(dst_ref.get() + i * width * nc + j))
-        //             std::cout << i <<"," << j << std::endl;
-        //         // std::cout << *(dst.get() + i * width * nc + j) << " ";
-        //     }
-        //     // std::cout<<std::endl;
-        // }
-
-        // std::cout<<std::endl;
-        // for(int i = 0 ; i < height; i++){
-        //     for (int j = 0; j < width * nc; j++){
-        //         std::cout << static_cast<int>(*(dst.get() + i * width * nc + j)) << " ";
-        //     }
-        //     std::cout<<std::endl;
-        //     for (int j = 0; j < width * nc; j++){
-        //         // std::cout << static_cast<int>(*(dst_ref.get() + i * width * nc + j)) << " ";
-        //     }
-        //     std::cout<<std::endl;
-        // }
+            (T)border_value);
 
         checkResult<T, nc>(
             dst_ref.get(),
