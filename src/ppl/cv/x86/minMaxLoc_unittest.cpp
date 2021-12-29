@@ -23,11 +23,6 @@
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
 
-struct Size {
-    int width;
-    int height;
-};
-
 template <typename T>
 class MinMaxLoc_ : public ::testing::TestWithParam<Size> {
 public:

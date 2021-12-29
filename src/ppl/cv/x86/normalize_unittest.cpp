@@ -23,11 +23,6 @@
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
 
-struct Size {
-    int width;
-    int height;
-};
-
 template <typename Tsrc, int c>
 class Normalize : public ::testing::TestWithParam<std::tuple<Size, double, double, ppl::cv::NormTypes, int>> {
 public:
