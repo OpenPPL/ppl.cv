@@ -23,11 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "ppl/common/retcode.h"
 
-struct Size {
-    int width;
-    int height;
-};
-
 template <typename Tsrc, int c, typename Tdst>
 class Sobel : public ::testing::TestWithParam<std::tuple<Size, int, int, int, double, double>> {
 public:

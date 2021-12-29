@@ -34,11 +34,6 @@ void randomRangeData(T *data, const size_t num, int maxNum = 255)
     }
 }
 
-struct Size {
-    int width;
-    int height;
-};
-
 template <typename T, int c>
 class Rotate : public ::testing::TestWithParam<std::tuple<Size, int, float>> {
 public:
