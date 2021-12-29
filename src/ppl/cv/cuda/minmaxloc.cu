@@ -31,7 +31,7 @@ namespace cuda {
 #define MAX_BLOCKS 256
 #define UCHAR_MIN 0
 
-static __device__ uint count = 0;
+static __device__ uint block_count = 0;
 
 __DEVICE__
 void checkMinMax1(uchar value, int index, int element_x, int element_y,
@@ -342,7 +342,7 @@ void minMaxLocKernel(const uchar* src, int rows, int cols, int src_stride,
     g_max_loc_ys[offset] = max_loc_ys[0];
     __threadfence();
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     is_last_block_done = (local_count == (blocks - 1));
   }
   __syncthreads();
@@ -409,7 +409,7 @@ void minMaxLocKernel(const uchar* src, int rows, int cols, int src_stride,
       buffer[5] = max_loc_xs[0];
       buffer[6] = max_loc_ys[0];
 
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -557,7 +557,7 @@ void minMaxLocKernel(const float* src, int rows, int cols, int src_stride,
     g_max_loc_ys[offset] = max_loc_ys[0];
     __threadfence();
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     is_last_block_done = (local_count == (blocks - 1));
   }
   __syncthreads();
@@ -624,7 +624,7 @@ void minMaxLocKernel(const float* src, int rows, int cols, int src_stride,
       buffer[5] = (float)max_loc_xs[0];
       buffer[6] = (float)max_loc_ys[0];
 
-      count = 0;
+      block_count = 0;
     }
   }
 }
