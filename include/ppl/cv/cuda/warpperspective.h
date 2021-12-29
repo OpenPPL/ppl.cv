@@ -83,12 +83,12 @@ namespace cuda {
  *   int dst_height = 480;
  *   int channels = 3;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *   float affine_matrix[9] = {0.05f, 0.33f, 0.9f, 0.25f, 0.2f, 0.7f, 0.33f,
  *                             0.9f, 0.25f};
@@ -96,13 +96,14 @@ namespace cuda {
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   WarpPerspective<float, 3>(stream, src_height, src_width,
- *       input_pitch / sizeof(float), dev_input, dst_height, dst_width,
- *       output_pitch / sizeof(float), dev_output, affine_matrix,
+ *       input_pitch / sizeof(float), gpu_input, dst_height, dst_width,
+ *       output_pitch / sizeof(float), gpu_output, affine_matrix,
  *       ppl::cv::INTERPOLATION_TYPE_LINEAR);
- *       cudaStreamSynchronize(stream);
+ *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

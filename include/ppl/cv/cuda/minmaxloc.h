@@ -75,12 +75,12 @@ namespace cuda {
  *   int height = 480;
  *   int channels = 1;
  *
- *   float* dev_input;
- *   float* dev_mask;
+ *   float* gpu_input;
+ *   float* gpu_mask;
  *   size_t input_pitch, mask_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_mask, &mask_pitch,
+ *   cudaMallocPitch(&gpu_mask, &mask_pitch,
  *                   width * channels * sizeof(uchar), height);
  *
  *   float min_value, max_value;
@@ -89,13 +89,14 @@ namespace cuda {
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   MinMaxLoc<float>(stream, height, width, input_pitch / sizeof(float),
- *                    dev_input, &min_value, &max_value, &min_index_x,
+ *                    gpu_input, &min_value, &max_value, &min_index_x,
  *                    &min_index_y, &max_index_x, &max_index_y,
- *                    mask_pitch / sizeof(float), dev_mask);
+ *                    mask_pitch / sizeof(float), gpu_mask);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_mask);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_mask);
  *
  *   return 0;
  * }

@@ -84,30 +84,31 @@ namespace cuda {
  *   int dst_height = 240;
  *   int channels = 3;
  *
- *   float* dev_input;
- *   float* dev_output;
- *   float* dev_map_x;
- *   float* dev_map_y;
+ *   float* gpu_input;
+ *   float* gpu_output;
+ *   float* gpu_map_x;
+ *   float* gpu_map_y;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMalloc(&dev_map_x, dst_width * dst_height * channels * sizeof(float));
- *   cudaMalloc(&dev_map_y, dst_width * dst_height * channels * sizeof(float));
+ *   cudaMalloc(&gpu_map_x, dst_width * dst_height * channels * sizeof(float));
+ *   cudaMalloc(&gpu_map_y, dst_width * dst_height * channels * sizeof(float));
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Remap<float, 3>(stream, src_height, src_width, input_pitch / sizeof(float),
- *                   dev_input, dst_height, dst_width,
- *                   output_pitch / sizeof(float), dev_output, dev_map_x,
- *                   dev_map, ppl::cv::INTERPOLATION_TYPE_LINEAR);
+ *                   gpu_input, dst_height, dst_width,
+ *                   output_pitch / sizeof(float), gpu_output, gpu_map_x,
+ *                   gpu_map, ppl::cv::INTERPOLATION_TYPE_LINEAR);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
- *   cudaFree(dev_map_x);
- *   cudaFree(dev_map_y);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
+ *   cudaFree(gpu_map_x);
+ *   cudaFree(gpu_map_y);
  *
  *   return 0;
  * }

@@ -67,21 +67,22 @@ namespace cuda {
  *   int height = 480;
  *   int channels = 1;
  *
- *   uchar* dev_input;
- *   int* dev_output;
+ *   uchar* gpu_input;
+ *   int* gpu_output;
  *   size_t input_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(uchar), height);
- *   cudaMalloc(&dev_output, 256 * sizeof(int));
+ *   cudaMalloc(&gpu_output, 256 * sizeof(int));
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   CalcHist<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   dev_input, dev_output);
+ *                   gpu_input, gpu_output);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

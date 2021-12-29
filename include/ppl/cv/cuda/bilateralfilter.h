@@ -83,25 +83,26 @@ namespace cuda {
  *   float sigma_color = 10.f;
  *   float sigma_space = 10.f;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   BilateralFilter<float, 3>(stream, height, width,
- *                             input_pitch / sizeof(float), dev_input, diameter,
+ *                             input_pitch / sizeof(float), gpu_input, diameter,
  *                             sigma_color, sigma_space,
- *                             output_pitch / sizeof(float), dev_output,
+ *                             output_pitch / sizeof(float), gpu_output,
  *                             ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

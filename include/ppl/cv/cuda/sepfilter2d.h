@@ -96,27 +96,28 @@ namespace cuda {
  *   int channels = 3;
  *   int ksize = 3;
  *
- *   float* dev_input;
- *   float* dev_kernel;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_kernel;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMalloc(&dev_kernel, ksize * sizeof(float));
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMalloc(&gpu_kernel, ksize * sizeof(float));
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   SepFilter2D<float, float, 3>(stream, height, width,
- *       input_pitch / sizeof(float), dev_input, ksize, dev_kernel, dev_kernel,
- *       output_pitch / sizeof(float), dev_output, 0.f,
+ *       input_pitch / sizeof(float), gpu_input, ksize, gpu_kernel, gpu_kernel,
+ *       output_pitch / sizeof(float), gpu_output, 0.f,
  *       ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_kernel);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_kernel);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

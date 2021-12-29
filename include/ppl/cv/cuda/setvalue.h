@@ -76,21 +76,22 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 3;
  *
- *   float* dev_output;
- *   float* dev_mask;
+ *   float* gpu_output;
+ *   float* gpu_mask;
  *   size_t output_pitch, mask_pitch;
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_mask, &mask_pitch, width * sizeof(uchar), height);
+ *   cudaMallocPitch(&gpu_mask, &mask_pitch, width * sizeof(uchar), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   SetTo<float, 3, 1>(stream, height, width, output_pitch / sizeof(float),
- *                      dev_output, 5.f, mask_pitch / sizeof(uchar), dev_mask);
+ *                      gpu_output, 5.f, mask_pitch / sizeof(uchar), gpu_mask);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_output);
- *   cudaFree(dev_mask);
+ *   cudaFree(gpu_output);
+ *   cudaFree(gpu_mask);
  *
  *   return 0;
  * }
@@ -152,18 +153,19 @@ ppl::common::RetCode SetTo(cudaStream_t stream,
  *   int height   = 480;
  *   int channels = 3;
  *
- *   float* dev_output;
+ *   float* gpu_output;
  *   size_t output_pitch;
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Ones<float, 3>(stream, height, width, output_pitch / sizeof(float),
- *                  dev_output);
+ *                  gpu_output);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }
@@ -220,18 +222,19 @@ ppl::common::RetCode Ones(cudaStream_t stream,
  *   int height   = 480;
  *   int channels = 3;
  *
- *   float* dev_output;
+ *   float* gpu_output;
  *   size_t output_pitch;
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Zeros<float, 3>(stream, height, width, output_pitch / sizeof(float),
- *                   dev_output);
+ *                   gpu_output);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

@@ -84,25 +84,26 @@ namespace cuda {
  *   int dst_height = 480;
  *   int channels   = 3;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
  *   float affine_matrix[6] = {0.05f, 0.33f, 0.9f, 0.25f, 0.2f, 0.7f};
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   WarpAffine<float, 3>(stream, src_height, src_width,
- *       input_pitch / sizeof(float), dev_input, dst_height, dst_width,
- *       output_pitch / sizeof(float), dev_output, affine_matrix,
+ *       input_pitch / sizeof(float), gpu_input, dst_height, dst_width,
+ *       output_pitch / sizeof(float), gpu_output, affine_matrix,
  *       ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT, 0);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }
