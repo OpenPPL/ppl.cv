@@ -201,8 +201,8 @@ BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
 BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMasked)
 RUN_OPENCV_TYPE_FUNCTIONS(uchar, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMasked)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMasked)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMasked)

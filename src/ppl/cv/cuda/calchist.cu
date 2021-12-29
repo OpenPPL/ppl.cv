@@ -90,7 +90,7 @@ void unmaskedCalcHistKernel1(const uchar* src, int rows, int cols,
       input = (uint*)((uchar*)src + element_y * src_stride);
 
       uint value = input[element_x];
-      if (blockIdx.x < gridDim.x - 1) {
+      if (index_x < cols - 3) {
         atomicAdd(&local_histogram[(value >>  0) & 0xFFU], 1);
         atomicAdd(&local_histogram[(value >>  8) & 0xFFU], 1);
         atomicAdd(&local_histogram[(value >> 16) & 0xFFU], 1);
@@ -258,7 +258,7 @@ void maskedCalcHistKernel1(const uchar* src, int rows, int cols, int src_stride,
       uint src_value  = input[element_x];
       uint mask_value = mask_start[element_x];
 
-      if (blockIdx.x < gridDim.x - 1) {
+      if (index_x < cols - 3) {
         if ((mask_value >>  0) & 0xFFU) {
           atomicAdd(&local_histogram[(src_value >>  0) & 0xFFU], 1);
         }
@@ -391,15 +391,16 @@ RetCode calcHist(const uchar* src, int rows, int cols, int src_stride,
   }
 
   dim3 block, grid;
-  block.x = 256;
-  block.y = 1;
-  grid.x = divideUp(cols * rows, 256, 8);
-  if (grid.x > MAX_BLOCKS) {
-    grid.x = MAX_BLOCKS;
+  if (src_stride == cols) {
+    block.x = 256;
+    block.y = 1;
+    grid.x = divideUp(cols * rows, 256, 8);
+    if (grid.x > MAX_BLOCKS) {
+      grid.x = MAX_BLOCKS;
+    }
+    grid.y = 1;
   }
-  grid.y = 1;
-
-  if (src_stride != cols && (src_stride & 3) == 0) {
+  else {
     int columns = divideUp(cols, 4, 2);
     block.x = kBlockDimX1;
     block.y = kBlockDimY1;
