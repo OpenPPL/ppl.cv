@@ -28,9 +28,7 @@
 #include <vector>
 #include <limits.h>
 #include <immintrin.h>
-#ifdef _WIN32
-#include <algorithm>
-#endif
+
 namespace ppl {
 namespace cv {
 namespace x86 {
@@ -70,13 +68,13 @@ template <typename Tsrc, typename Tdst>
 inline Tdst bilinear_sample(Tsrc t[][2], float u, float v);
 
 template <>
-inline float bilinear_sample<uchar, float>(uchar t[][2], float u, float v)
+inline float bilinear_sample<uint8_t, float>(uint8_t t[][2], float u, float v)
 {
     float a0 = (1.0f - u) * (1.0f - v);
     float a1 = u * (1.0f - v);
     float a2 = (1.0f - u) * v;
     float a3 = u * v;
-    return (t[0][0] * a0 + t[1][0] * a1 + t[0][1] * a2 + t[1][1] * a3) * cvtScale<uchar, float>();
+    return (t[0][0] * a0 + t[1][0] * a1 + t[0][1] * a2 + t[1][1] * a3) * cvtScale<uint8_t, float>();
 }
 
 template <>
@@ -90,52 +88,62 @@ inline float bilinear_sample<float, float>(float t[][2], float u, float v)
 }
 
 template <>
-inline uchar bilinear_sample<uchar, uchar>(uchar t[][2], float u, float v)
+inline uint8_t bilinear_sample<uint8_t, uint8_t>(uint8_t t[][2], float u, float v)
 {
     float a0 = (1.0f - u) * (1.0f - v);
     float a1 = u * (1.0f - v);
     float a2 = (1.0f - u) * v;
     float a3 = u * v;
-    return std::min(std::max(static_cast<int>((t[0][0] * a0 + t[1][0] * a1 + t[0][1] * a2 + t[1][1] * a3) * cvtScale<uchar, uchar>()), 0), 255);
+    return std::min(std::max(static_cast<int32_t>((t[0][0] * a0 + t[1][0] * a1 + t[0][1] * a2 + t[1][1] * a3) * cvtScale<uint8_t, uint8_t>()), 0), 255);
 }
 
-template <typename T, int nc, ppl::cv::BorderType borderMode>
-::ppl::common::RetCode warpperspective_nearest(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, T* dst, const T* src, const double M[][3], T delta = 0)
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_nearest(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* dst,
+    const T* src,
+    const double M[][3],
+    T delta = 0)
 {
-    for (int i = 0; i < outHeight; i++) {
+    for (int32_t i = 0; i < outHeight; i++) {
         float baseW = M[2][1] * i + M[2][2];
         float baseX = M[0][1] * i + M[0][2];
         float baseY = M[1][1] * i + M[1][2];
-        for (int j = 0; j < outWidth; j++) {
-            float w = M[2][0] * j + baseW;
-            float x = M[0][0] * j + baseX;
-            float y = M[1][0] * j + baseY;
-            int sy  = static_cast<int>(std::round(y / w));
-            int sx  = static_cast<int>(std::round(x / w));
+        for (int32_t j = 0; j < outWidth; j++) {
+            float w    = M[2][0] * j + baseW;
+            float x    = M[0][0] * j + baseX;
+            float y    = M[1][0] * j + baseY;
+            int32_t sy = static_cast<int32_t>(std::round(y / w));
+            int32_t sx = static_cast<int32_t>(std::round(x / w));
             if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
-                int idxSrc = sy * inWidthStride + sx * nc;
-                int idxDst = i * outWidthStride + j * nc;
+                int32_t idxSrc = sy * inWidthStride + sx * nc;
+                int32_t idxDst = i * outWidthStride + j * nc;
                 if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    for (int i = 0; i < nc; i++)
+                    for (int32_t i = 0; i < nc; i++)
                         dst[idxDst + i] = src[idxSrc + i];
                 } else {
-                    for (int i = 0; i < nc; i++) {
+                    for (int32_t i = 0; i < nc; i++) {
                         dst[idxDst + i] = delta;
                     }
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                sx         = clip(sx, 0, inWidth - 1);
-                sy         = clip(sy, 0, inHeight - 1);
-                int idxSrc = sy * inWidthStride + sx * nc;
-                int idxDst = i * outWidthStride + j * nc;
-                for (int i = 0; i < nc; i++) {
+                sx             = clip(sx, 0, inWidth - 1);
+                sy             = clip(sy, 0, inHeight - 1);
+                int32_t idxSrc = sy * inWidthStride + sx * nc;
+                int32_t idxDst = i * outWidthStride + j * nc;
+                for (int32_t i = 0; i < nc; i++) {
                     dst[idxDst + i] = src[idxSrc + i];
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
                 if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    int idxSrc = sy * inWidthStride + sx * nc;
-                    int idxDst = i * outWidthStride + j * nc;
-                    for (int i = 0; i < nc; i++)
+                    int32_t idxSrc = sy * inWidthStride + sx * nc;
+                    int32_t idxDst = i * outWidthStride + j * nc;
+                    for (int32_t i = 0; i < nc; i++)
                         dst[idxDst + i] = src[idxSrc + i];
                 } else {
                     continue;
@@ -146,23 +154,33 @@ template <typename T, int nc, ppl::cv::BorderType borderMode>
     return ppl::common::RC_SUCCESS;
 }
 
-template <typename T, int nc, ppl::cv::BorderType borderMode>
-::ppl::common::RetCode warpperspective_linear(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, T* dst, const T* src, const double M[][3], T delta = 0)
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_linear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* dst,
+    const T* src,
+    const double M[][3],
+    T delta = 0)
 {
-    for (int i = 0; i < outHeight; i++) {
+    for (int32_t i = 0; i < outHeight; i++) {
         float baseW = M[2][1] * i + M[2][2];
         float baseX = M[0][1] * i + M[0][2];
         float baseY = M[1][1] * i + M[1][2];
-        for (int j = 0; j < outWidth; j++) {
-            float w = (M[2][0] * j + baseW);
-            float x = M[0][0] * j + baseX;
-            float y = M[1][0] * j + baseY;
-            y       = y / w;
-            x       = x / w;
-            int sx0 = (int)x;
-            int sy0 = (int)y;
-            float u = x - sx0;
-            float v = y - sy0;
+        for (int32_t j = 0; j < outWidth; j++) {
+            float w     = (M[2][0] * j + baseW);
+            float x     = M[0][0] * j + baseX;
+            float y     = M[1][0] * j + baseY;
+            y           = y / w;
+            x           = x / w;
+            int32_t sx0 = (int32_t)x;
+            int32_t sy0 = (int32_t)y;
+            float u     = x - sx0;
+            float v     = y - sy0;
 
             float tab[4];
             float taby[2], tabx[2];
@@ -177,27 +195,27 @@ template <typename T, int nc, ppl::cv::BorderType borderMode>
             tab[2] = taby[1] * tabx[0];
             tab[3] = taby[1] * tabx[1];
 
-            int idxDst = (i * outWidthStride + j * nc);
+            int32_t idxDst = (i * outWidthStride + j * nc);
 
             if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                for (int k = 0; k < nc; k++) {
-                    int position1 = (sy0 * inWidthStride + sx0 * nc);
-                    int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                    v0            = flag0 ? src[position1 + k] : delta;
-                    v1            = flag1 ? src[position1 + nc + k] : delta;
-                    v2            = flag2 ? src[position2 + k] : delta;
-                    v3            = flag3 ? src[position2 + nc + k] : delta;
-                    float sum     = 0;
+                for (int32_t k = 0; k < nc; k++) {
+                    int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                    int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                    v0                = flag0 ? src[position1 + k] : delta;
+                    v1                = flag1 ? src[position1 + nc + k] : delta;
+                    v2                = flag2 ? src[position2 + k] : delta;
+                    v3                = flag3 ? src[position2 + nc + k] : delta;
+                    float sum         = 0;
                     sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                int sx1     = sx0 + 1;
-                int sy1     = sy0 + 1;
+                int32_t sx1 = sx0 + 1;
+                int32_t sy1 = sy0 + 1;
                 sx0         = clip(sx0, 0, inWidth - 1);
                 sx1         = clip(sx1, 0, inWidth - 1);
                 sy0         = clip(sy0, 0, inHeight - 1);
@@ -206,7 +224,7 @@ template <typename T, int nc, ppl::cv::BorderType borderMode>
                 const T* t1 = src + sy0 * inWidthStride + sx1 * nc;
                 const T* t2 = src + sy1 * inWidthStride + sx0 * nc;
                 const T* t3 = src + sy1 * inWidthStride + sx1 * nc;
-                for (int k = 0; k < nc; ++k) {
+                for (int32_t k = 0; k < nc; ++k) {
                     float sum = 0;
                     sum += t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
@@ -217,14 +235,14 @@ template <typename T, int nc, ppl::cv::BorderType borderMode>
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 if (flag0 && flag1 && flag2 && flag3) {
-                    for (int k = 0; k < nc; k++) {
-                        int position1 = (sy0 * inWidthStride + sx0 * nc);
-                        int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        v0            = src[position1 + k];
-                        v1            = src[position1 + nc + k];
-                        v2            = src[position2 + k];
-                        v3            = src[position2 + nc + k];
-                        float sum     = 0;
+                    for (int32_t k = 0; k < nc; k++) {
+                        int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                        int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                        v0                = src[position1 + k];
+                        v1                = src[position1 + nc + k];
+                        v2                = src[position2 + k];
+                        v3                = src[position2 + nc + k];
+                        float sum         = 0;
                         sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                         dst[idxDst + k] = static_cast<T>(sum);
                     }
@@ -237,8 +255,19 @@ template <typename T, int nc, ppl::cv::BorderType borderMode>
     return ppl::common::RC_SUCCESS;
 }
 
-template <typename T, int nc>
-::ppl::common::RetCode WarpPerspectiveNearestPoint(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData, const double* affineMatrix, BorderType border_type, T border_value)
+template <typename T, int32_t nc>
+::ppl::common::RetCode WarpPerspectiveNearestPoint(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData,
+    const double* affineMatrix,
+    BorderType border_type,
+    T border_value)
 {
     double M[3][3];
     M[0][0] = affineMatrix[0];
@@ -270,8 +299,19 @@ template <typename T, int nc>
     return ppl::common::RC_SUCCESS;
 }
 
-template <typename T, int nc>
-::ppl::common::RetCode WarpPerspectiveLinear(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData, const double* affineMatrix, BorderType border_type, T border_value)
+template <typename T, int32_t nc>
+::ppl::common::RetCode WarpPerspectiveLinear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData,
+    const double* affineMatrix,
+    BorderType border_type,
+    T border_value)
 {
     double M[3][3];
     M[0][0] = affineMatrix[0];

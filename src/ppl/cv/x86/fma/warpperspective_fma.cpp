@@ -16,8 +16,8 @@
 // under the License.
 
 #include "ppl/cv/x86/fma/internal_fma.hpp"
+#include "ppl/cv/x86/util.hpp"
 #include "ppl/cv/types.h"
-#include <assert.h>
 #include <string.h>
 #include <cmath>
 #include <stdio.h>
@@ -40,23 +40,33 @@ static inline T clip(T x, T a, T b)
     return std::max(a, std::min(x, b));
 }
 
-template <typename T, int nc, ppl::cv::BorderType borderMode>
-::ppl::common::RetCode warpperspective_nearest(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, T* dst, const T* src, const double M[][3], T delta /* = 0*/)
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_nearest(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* dst,
+    const T* src,
+    const double M[][3],
+    T delta /* = 0*/)
 {
-    unsigned int cur_mode = _MM_GET_ROUNDING_MODE();
+    uint32_t cur_mode = _MM_GET_ROUNDING_MODE();
     _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
     __m256 base_seq_vec = _mm256_set_ps(7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f);
     __m256 m20_vec      = _mm256_set1_ps(M[2][0]);
     __m256 m10_vec      = _mm256_set1_ps(M[1][0]);
     __m256 m00_vec      = _mm256_set1_ps(M[0][0]);
-    for (int i = 0; i < outHeight; i++) {
+    for (int32_t i = 0; i < outHeight; i++) {
         float baseW      = M[2][1] * i + M[2][2];
         float baseX      = M[0][1] * i + M[0][2];
         float baseY      = M[1][1] * i + M[1][2];
         __m256 baseW_vec = _mm256_set1_ps(baseW);
         __m256 baseX_vec = _mm256_set1_ps(baseX);
         __m256 baseY_vec = _mm256_set1_ps(baseY);
-        for (int j = 0; j < outWidth; j += 8) {
+        for (int32_t j = 0; j < round_up(outWidth, 8); j += 8) {
             int32_t sx0_array[8];
             int32_t sy0_array[8];
             __m256 seq_vec          = _mm256_add_ps(base_seq_vec, _mm256_set1_ps(j));
@@ -70,33 +80,33 @@ template <typename T, int nc, ppl::cv::BorderType borderMode>
             __m256i sy0_vec         = _mm256_cvtps_epi32(y_vec);
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(sx0_array), sx0_vec);
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(sy0_array), sy0_vec);
-            for (int k = j; k < std::min(outWidth, j + 8); ++k) {
-                int sy = sy0_array[k - j];
-                int sx = sx0_array[k - j];
+            for (int32_t k = j; k < std::min(outWidth, j + 8); ++k) {
+                int32_t sy = sy0_array[k - j];
+                int32_t sx = sx0_array[k - j];
                 if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
-                    int idxSrc = sy * inWidthStride + sx * nc;
-                    int idxDst = i * outWidthStride + k * nc;
+                    int32_t idxSrc = sy * inWidthStride + sx * nc;
+                    int32_t idxDst = i * outWidthStride + k * nc;
                     if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                        for (int i = 0; i < nc; i++)
+                        for (int32_t i = 0; i < nc; i++)
                             dst[idxDst + i] = src[idxSrc + i];
                     } else {
-                        for (int i = 0; i < nc; i++) {
+                        for (int32_t i = 0; i < nc; i++) {
                             dst[idxDst + i] = delta;
                         }
                     }
                 } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                    sx         = clip(sx, 0, inWidth - 1);
-                    sy         = clip(sy, 0, inHeight - 1);
-                    int idxSrc = sy * inWidthStride + sx * nc;
-                    int idxDst = i * outWidthStride + k * nc;
-                    for (int i = 0; i < nc; i++) {
+                    sx             = clip(sx, 0, inWidth - 1);
+                    sy             = clip(sy, 0, inHeight - 1);
+                    int32_t idxSrc = sy * inWidthStride + sx * nc;
+                    int32_t idxDst = i * outWidthStride + k * nc;
+                    for (int32_t i = 0; i < nc; i++) {
                         dst[idxDst + i] = src[idxSrc + i];
                     }
                 } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
                     if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                        int idxSrc = sy * inWidthStride + sx * nc;
-                        int idxDst = i * outWidthStride + k * nc;
-                        for (int i = 0; i < nc; i++)
+                        int32_t idxSrc = sy * inWidthStride + sx * nc;
+                        int32_t idxDst = i * outWidthStride + k * nc;
+                        for (int32_t i = 0; i < nc; i++)
                             dst[idxDst + i] = src[idxSrc + i];
                     } else {
                         continue;
@@ -109,24 +119,34 @@ template <typename T, int nc, ppl::cv::BorderType borderMode>
     return ppl::common::RC_SUCCESS;
 }
 
-template <int nc, ppl::cv::BorderType borderMode>
-::ppl::common::RetCode warpperspective_linear(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta)
+template <int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_linear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    float* dst,
+    const float* src,
+    const double M[][3],
+    float delta)
 {
-    unsigned int cur_mode = _MM_GET_ROUNDING_MODE();
+    uint32_t cur_mode = _MM_GET_ROUNDING_MODE();
     _MM_SET_ROUNDING_MODE(_MM_ROUND_DOWN);
     __m256 base_seq_vec = _mm256_set_ps(7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f);
     __m256 one_vec      = _mm256_set1_ps(1.0f);
     __m256 m20_vec      = _mm256_set1_ps(M[2][0]);
     __m256 m10_vec      = _mm256_set1_ps(M[1][0]);
     __m256 m00_vec      = _mm256_set1_ps(M[0][0]);
-    for (int i = 0; i < outHeight; i++) {
+    for (int32_t i = 0; i < outHeight; i++) {
         float baseW      = M[2][1] * i + M[2][2];
         float baseX      = M[0][1] * i + M[0][2];
         float baseY      = M[1][1] * i + M[1][2];
         __m256 baseW_vec = _mm256_set1_ps(baseW);
         __m256 baseX_vec = _mm256_set1_ps(baseX);
         __m256 baseY_vec = _mm256_set1_ps(baseY);
-        for (int block_j = 0; block_j < outWidth / 8 * 8; block_j += 8) {
+        for (int32_t block_j = 0; block_j < outWidth / 8 * 8; block_j += 8) {
             int32_t sx0_array[8];
             int32_t sy0_array[8];
             float tab0_array[8];
@@ -154,21 +174,21 @@ template <int nc, ppl::cv::BorderType borderMode>
             _mm256_storeu_ps(tab3_array, _mm256_mul_ps(taby1_vec, tabx1_vec));
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(sx0_array), sx0_vec);
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(sy0_array), sy0_vec);
-            for (int j = block_j; j < block_j + 8; ++j) {
-                int idx      = j - block_j;
-                int sx0      = sx0_array[idx];
-                int sy0      = sy0_array[idx];
+            for (int32_t j = block_j; j < block_j + 8; ++j) {
+                int32_t idx  = j - block_j;
+                int32_t sx0  = sx0_array[idx];
+                int32_t sy0  = sy0_array[idx];
                 float tab[4] = {tab0_array[idx], tab1_array[idx], tab2_array[idx], tab3_array[idx]};
                 float v0, v1, v2, v3;
-                int idxDst = (i * outWidthStride + j * nc);
+                int32_t idxDst = (i * outWidthStride + j * nc);
                 if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
-                    bool flag0    = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                    bool flag1    = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                    bool flag2    = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                    bool flag3    = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                    int position1 = (sy0 * inWidthStride + sx0 * nc);
-                    int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                    for (int k = 0; k < nc; k++) {
+                    bool flag0        = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
+                    bool flag1        = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
+                    bool flag2        = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
+                    bool flag3        = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
+                    int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                    int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                    for (int32_t k = 0; k < nc; k++) {
                         v0              = flag0 ? src[position1 + k] : delta;
                         v1              = flag1 ? src[position1 + nc + k] : delta;
                         v2              = flag2 ? src[position2 + k] : delta;
@@ -177,8 +197,8 @@ template <int nc, ppl::cv::BorderType borderMode>
                         dst[idxDst + k] = static_cast<float>(sum);
                     }
                 } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                    int sx1         = sx0 + 1;
-                    int sy1         = sy0 + 1;
+                    int32_t sx1     = sx0 + 1;
+                    int32_t sy1     = sy0 + 1;
                     sx0             = clip(sx0, 0, inWidth - 1);
                     sx1             = clip(sx1, 0, inWidth - 1);
                     sy0             = clip(sy0, 0, inHeight - 1);
@@ -187,7 +207,7 @@ template <int nc, ppl::cv::BorderType borderMode>
                     const float* t1 = src + sy0 * inWidthStride + sx1 * nc;
                     const float* t2 = src + sy1 * inWidthStride + sx0 * nc;
                     const float* t3 = src + sy1 * inWidthStride + sx1 * nc;
-                    for (int k = 0; k < nc; ++k) {
+                    for (int32_t k = 0; k < nc; ++k) {
                         float sum       = tab[0] * t0[k] + tab[1] * t1[k] + tab[2] * t2[k] + tab[3] * t3[k];
                         dst[idxDst + k] = static_cast<float>(sum);
                     }
@@ -197,15 +217,15 @@ template <int nc, ppl::cv::BorderType borderMode>
                     bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                     bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                     if (flag0 && flag1 && flag2 && flag3) {
-                        for (int k = 0; k < nc; k++) {
-                            int position1   = (sy0 * inWidthStride + sx0 * nc);
-                            int position2   = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                            v0              = src[position1 + k];
-                            v1              = src[position1 + nc + k];
-                            v2              = src[position2 + k];
-                            v3              = src[position2 + nc + k];
-                            float sum       = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
-                            dst[idxDst + k] = static_cast<float>(sum);
+                        for (int32_t k = 0; k < nc; k++) {
+                            int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                            int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                            v0                = src[position1 + k];
+                            v1                = src[position1 + nc + k];
+                            v2                = src[position2 + k];
+                            v3                = src[position2 + nc + k];
+                            float sum         = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
+                            dst[idxDst + k]   = static_cast<float>(sum);
                         }
                     } else {
                         continue;
@@ -213,16 +233,16 @@ template <int nc, ppl::cv::BorderType borderMode>
                 }
             }
         }
-        for (int j = outWidth / 8 * 8; j < outWidth; j++) {
-            float w = (M[2][0] * j + baseW);
-            float x = M[0][0] * j + baseX;
-            float y = M[1][0] * j + baseY;
-            y       = y / w;
-            x       = x / w;
-            int sx0 = (int)x;
-            int sy0 = (int)y;
-            float u = x - sx0;
-            float v = y - sy0;
+        for (int32_t j = outWidth / 8 * 8; j < outWidth; j++) {
+            float w     = (M[2][0] * j + baseW);
+            float x     = M[0][0] * j + baseX;
+            float y     = M[1][0] * j + baseY;
+            y           = y / w;
+            x           = x / w;
+            int32_t sx0 = (int32_t)x;
+            int32_t sy0 = (int32_t)y;
+            float u     = x - sx0;
+            float v     = y - sy0;
 
             float tab[4];
             float taby[2], tabx[2];
@@ -232,30 +252,30 @@ template <int nc, ppl::cv::BorderType borderMode>
             tabx[0] = 1.0f - u;
             tabx[1] = u;
 
-            tab[0]     = taby[0] * tabx[0];
-            tab[1]     = taby[0] * tabx[1];
-            tab[2]     = taby[1] * tabx[0];
-            tab[3]     = taby[1] * tabx[1];
-            int idxDst = (i * outWidthStride + j * nc);
+            tab[0]         = taby[0] * tabx[0];
+            tab[1]         = taby[0] * tabx[1];
+            tab[2]         = taby[1] * tabx[0];
+            tab[3]         = taby[1] * tabx[1];
+            int32_t idxDst = (i * outWidthStride + j * nc);
 
             if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                for (int k = 0; k < nc; k++) {
-                    int position1   = (sy0 * inWidthStride + sx0 * nc);
-                    int position2   = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                    v0              = flag0 ? src[position1 + k] : delta;
-                    v1              = flag1 ? src[position1 + nc + k] : delta;
-                    v2              = flag2 ? src[position2 + k] : delta;
-                    v3              = flag3 ? src[position2 + nc + k] : delta;
-                    float sum       = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
-                    dst[idxDst + k] = static_cast<float>(sum);
+                for (int32_t k = 0; k < nc; k++) {
+                    int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                    int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                    v0                = flag0 ? src[position1 + k] : delta;
+                    v1                = flag1 ? src[position1 + nc + k] : delta;
+                    v2                = flag2 ? src[position2 + k] : delta;
+                    v3                = flag3 ? src[position2 + nc + k] : delta;
+                    float sum         = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
+                    dst[idxDst + k]   = static_cast<float>(sum);
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                int sx1         = sx0 + 1;
-                int sy1         = sy0 + 1;
+                int32_t sx1     = sx0 + 1;
+                int32_t sy1     = sy0 + 1;
                 sx0             = clip(sx0, 0, inWidth - 1);
                 sx1             = clip(sx1, 0, inWidth - 1);
                 sy0             = clip(sy0, 0, inHeight - 1);
@@ -264,7 +284,7 @@ template <int nc, ppl::cv::BorderType borderMode>
                 const float* t1 = src + sy0 * inWidthStride + sx1 * nc;
                 const float* t2 = src + sy1 * inWidthStride + sx0 * nc;
                 const float* t3 = src + sy1 * inWidthStride + sx1 * nc;
-                for (int k = 0; k < nc; ++k) {
+                for (int32_t k = 0; k < nc; ++k) {
                     float sum       = tab[0] * t0[k] + tab[1] * t1[k] + tab[2] * t2[k] + tab[3] * t3[k];
                     dst[idxDst + k] = static_cast<float>(sum);
                 }
@@ -274,15 +294,15 @@ template <int nc, ppl::cv::BorderType borderMode>
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 if (flag0 && flag1 && flag2 && flag3) {
-                    for (int k = 0; k < nc; k++) {
-                        int position1   = (sy0 * inWidthStride + sx0 * nc);
-                        int position2   = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        v0              = src[position1 + k];
-                        v1              = src[position1 + nc + k];
-                        v2              = src[position2 + k];
-                        v3              = src[position2 + nc + k];
-                        float sum       = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
-                        dst[idxDst + k] = static_cast<float>(sum);
+                    for (int32_t k = 0; k < nc; k++) {
+                        int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                        int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                        v0                = src[position1 + k];
+                        v1                = src[position1 + nc + k];
+                        v2                = src[position2 + k];
+                        v3                = src[position2 + nc + k];
+                        float sum         = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
+                        dst[idxDst + k]   = static_cast<float>(sum);
                     }
                 } else {
                     continue;
@@ -294,10 +314,20 @@ template <int nc, ppl::cv::BorderType borderMode>
     return ppl::common::RC_SUCCESS;
 }
 
-template <int nc, ppl::cv::BorderType borderMode>
-::ppl::common::RetCode warpperspective_linear(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta)
+template <int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_linear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* dst,
+    const uint8_t* src,
+    const double M[][3],
+    uint8_t delta)
 {
-    unsigned int cur_mode = _MM_GET_ROUNDING_MODE();
+    uint32_t cur_mode = _MM_GET_ROUNDING_MODE();
     _MM_SET_ROUNDING_MODE(_MM_ROUND_DOWN);
     __m256 base_seq_vec             = _mm256_set_ps(7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f);
     __m256 quantized_multiplier_vec = _mm256_set1_ps(QUANTIZED_MULTIPLIER);
@@ -306,20 +336,20 @@ template <int nc, ppl::cv::BorderType borderMode>
     __m256 m20_vec                  = _mm256_set1_ps(M[2][0]);
     __m256 m10_vec                  = _mm256_set1_ps(M[1][0]);
     __m256 m00_vec                  = _mm256_set1_ps(M[0][0]);
-    for (int i = 0; i < outHeight; i++) {
+    for (int32_t i = 0; i < outHeight; i++) {
         float baseW      = M[2][1] * i + M[2][2];
         float baseX      = M[0][1] * i + M[0][2];
         float baseY      = M[1][1] * i + M[1][2];
         __m256 baseW_vec = _mm256_set1_ps(baseW);
         __m256 baseX_vec = _mm256_set1_ps(baseX);
         __m256 baseY_vec = _mm256_set1_ps(baseY);
-        for (int block_j = 0; block_j < outWidth / 8 * 8; block_j += 8) {
+        for (int32_t block_j = 0; block_j < outWidth / 8 * 8; block_j += 8) {
             int32_t sx0_array[8];
             int32_t sy0_array[8];
-            int tab0_array[8];
-            int tab1_array[8];
-            int tab2_array[8];
-            int tab3_array[8];
+            int32_t tab0_array[8];
+            int32_t tab1_array[8];
+            int32_t tab2_array[8];
+            int32_t tab3_array[8];
             __m256 seq_vec          = _mm256_add_ps(base_seq_vec, _mm256_set1_ps(block_j));
             __m256 w_vec            = _mm256_fmadd_ps(m20_vec, seq_vec, baseW_vec);
             __m256 x_vec            = _mm256_fmadd_ps(m00_vec, seq_vec, baseX_vec);
@@ -341,53 +371,53 @@ template <int nc, ppl::cv::BorderType borderMode>
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(tab3_array), _mm256_cvtps_epi32(_mm256_mul_ps(_mm256_mul_ps(taby1_vec, tabx1_vec), quantized_multiplier_vec)));
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(sx0_array), sx0_vec);
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(sy0_array), sy0_vec);
-            for (int j = block_j; j < block_j + 8; ++j) {
-                int idx = j - block_j;
-                int sx0 = sx0_array[idx];
-                int sy0 = sy0_array[idx];
-                uchar v0, v1, v2, v3;
-                int idxDst = (i * outWidthStride + j * nc);
+            for (int32_t j = block_j; j < block_j + 8; ++j) {
+                int32_t idx = j - block_j;
+                int32_t sx0 = sx0_array[idx];
+                int32_t sy0 = sy0_array[idx];
+                uint8_t v0, v1, v2, v3;
+                int32_t idxDst = (i * outWidthStride + j * nc);
                 if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
                     bool all_valid = (sx0 >= 0 && sx0 < (inWidth - 1) && sy0 >= 0 && sy0 < (inHeight - 1));
                     if (all_valid) {
-                        int position1 = (sy0 * inWidthStride + sx0 * nc);
-                        int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        for (int k = 0; k < nc; k++) {
+                        int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                        int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                        for (int32_t k = 0; k < nc; k++) {
                             v0              = src[position1 + k];
                             v1              = src[position1 + nc + k];
                             v2              = src[position2 + k];
                             v3              = src[position2 + nc + k];
-                            int sum         = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                            dst[idxDst + k] = static_cast<uchar>(sum);
+                            int32_t sum     = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                            dst[idxDst + k] = static_cast<uint8_t>(sum);
                         }
                     } else {
                         bool all_invalid = (sx0 < -1 || sx0 >= inWidth || sy0 < -1 || sy0 >= inHeight);
                         if (all_invalid) {
                             v0 = delta;
-                            for (int k = 0; k < nc; k++) {
-                                int sum         = (tab0_array[idx] * v0 + tab1_array[idx] * v0 + tab2_array[idx] * v0 + tab3_array[idx] * v0 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                                dst[idxDst + k] = static_cast<uchar>(sum);
+                            for (int32_t k = 0; k < nc; k++) {
+                                int32_t sum     = (tab0_array[idx] * v0 + tab1_array[idx] * v0 + tab2_array[idx] * v0 + tab3_array[idx] * v0 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                                dst[idxDst + k] = static_cast<uint8_t>(sum);
                             }
                         } else {
-                            bool flag0    = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                            bool flag1    = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                            bool flag2    = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                            bool flag3    = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                            int position1 = (sy0 * inWidthStride + sx0 * nc);
-                            int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                            for (int k = 0; k < nc; k++) {
+                            bool flag0        = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
+                            bool flag1        = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
+                            bool flag2        = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
+                            bool flag3        = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
+                            int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                            int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                            for (int32_t k = 0; k < nc; k++) {
                                 v0              = flag0 ? src[position1 + k] : delta;
                                 v1              = flag1 ? src[position1 + nc + k] : delta;
                                 v2              = flag2 ? src[position2 + k] : delta;
                                 v3              = flag3 ? src[position2 + nc + k] : delta;
-                                int sum         = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                                dst[idxDst + k] = static_cast<uchar>(sum);
+                                int32_t sum     = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                                dst[idxDst + k] = static_cast<uint8_t>(sum);
                             }
                         }
                     }
                 } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                    int sx1            = sx0 + 1;
-                    int sy1            = sy0 + 1;
+                    int32_t sx1        = sx0 + 1;
+                    int32_t sy1        = sy0 + 1;
                     bool valid_for_all = (sx0 >= 0 && sx0 < (inWidth - 1) && sy0 >= 0 && sy0 < (inHeight - 1));
                     if (valid_for_all) {
                         sx1 = sx0 + 1;
@@ -398,10 +428,10 @@ template <int nc, ppl::cv::BorderType borderMode>
                         sy0 = clip(sy0, 0, inHeight - 1);
                         sy1 = clip(sy1, 0, inHeight - 1);
                     }
-                    const uchar* t0 = src + sy0 * inWidthStride + sx0 * nc;
-                    const uchar* t1 = src + sy0 * inWidthStride + sx1 * nc;
-                    const uchar* t2 = src + sy1 * inWidthStride + sx0 * nc;
-                    const uchar* t3 = src + sy1 * inWidthStride + sx1 * nc;
+                    const uint8_t* t0 = src + sy0 * inWidthStride + sx0 * nc;
+                    const uint8_t* t1 = src + sy0 * inWidthStride + sx1 * nc;
+                    const uint8_t* t2 = src + sy1 * inWidthStride + sx0 * nc;
+                    const uint8_t* t3 = src + sy1 * inWidthStride + sx1 * nc;
                     if (nc == 4) {
                         __m128i v0_vec             = _mm_cvtepu8_epi32(_mm_castps_si128(_mm_broadcast_ss(reinterpret_cast<const float*>(t0))));
                         __m128i v1_vec             = _mm_cvtepu8_epi32(_mm_castps_si128(_mm_broadcast_ss(reinterpret_cast<const float*>(t1))));
@@ -417,13 +447,13 @@ template <int nc, ppl::cv::BorderType borderMode>
                                                         QUANTIZED_BITS);
                         _mm_store_ss(reinterpret_cast<float*>(dst + idxDst), _mm_castsi128_ps(_mm_packus_epi16(_mm_packus_epi32(result, result), result)));
                     } else {
-                        for (int k = 0; k < nc; ++k) {
-                            uchar v0        = t0[k];
-                            uchar v1        = t1[k];
-                            uchar v2        = t2[k];
-                            uchar v3        = t3[k];
-                            int sum         = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                            dst[idxDst + k] = static_cast<uchar>(sum);
+                        for (int32_t k = 0; k < nc; ++k) {
+                            uint8_t v0      = t0[k];
+                            uint8_t v1      = t1[k];
+                            uint8_t v2      = t2[k];
+                            uint8_t v3      = t3[k];
+                            int32_t sum     = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                            dst[idxDst + k] = static_cast<uint8_t>(sum);
                         }
                     }
                 } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
@@ -432,15 +462,15 @@ template <int nc, ppl::cv::BorderType borderMode>
                     bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                     bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                     if (flag0 && flag1 && flag2 && flag3) {
-                        int position1 = (sy0 * inWidthStride + sx0 * nc);
-                        int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        for (int k = 0; k < nc; k++) {
+                        int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                        int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                        for (int32_t k = 0; k < nc; k++) {
                             v0              = src[position1 + k];
                             v1              = src[position1 + nc + k];
                             v2              = src[position2 + k];
                             v3              = src[position2 + nc + k];
-                            int sum         = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                            dst[idxDst + k] = static_cast<uchar>(sum);
+                            int32_t sum     = (tab0_array[idx] * v0 + tab1_array[idx] * v1 + tab2_array[idx] * v2 + tab3_array[idx] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                            dst[idxDst + k] = static_cast<uint8_t>(sum);
                         }
                     } else {
                         continue;
@@ -448,20 +478,20 @@ template <int nc, ppl::cv::BorderType borderMode>
                 }
             }
         }
-        for (int j = outWidth / 8 * 8; j < outWidth; j++) {
-            float w = (M[2][0] * j + baseW);
-            float x = M[0][0] * j + baseX;
-            float y = M[1][0] * j + baseY;
-            y       = y / w;
-            x       = x / w;
-            int sx0 = (int)x;
-            int sy0 = (int)y;
-            float u = x - sx0;
-            float v = y - sy0;
+        for (int32_t j = outWidth / 8 * 8; j < outWidth; j++) {
+            float w     = (M[2][0] * j + baseW);
+            float x     = M[0][0] * j + baseX;
+            float y     = M[1][0] * j + baseY;
+            y           = y / w;
+            x           = x / w;
+            int32_t sx0 = (int32_t)x;
+            int32_t sy0 = (int32_t)y;
+            float u     = x - sx0;
+            float v     = y - sy0;
 
             float tab[4];
             float taby[2], tabx[2];
-            uchar v0, v1, v2, v3;
+            uint8_t v0, v1, v2, v3;
             taby[0] = 1.0f - 1.0f * v;
             taby[1] = v;
             tabx[0] = 1.0f - u;
@@ -472,45 +502,45 @@ template <int nc, ppl::cv::BorderType borderMode>
             tab[2] = taby[1] * tabx[0];
             tab[3] = taby[1] * tabx[1];
 
-            int quantized_tab[4] = {static_cast<int>(tab[0] * QUANTIZED_BITS),
-                                    static_cast<int>(tab[1] * QUANTIZED_BITS),
-                                    static_cast<int>(tab[2] * QUANTIZED_BITS),
-                                    static_cast<int>(tab[3] * QUANTIZED_BITS)};
-            int idxDst           = (i * outWidthStride + j * nc);
+            int32_t quantized_tab[4] = {static_cast<int32_t>(tab[0] * QUANTIZED_BITS),
+                                        static_cast<int32_t>(tab[1] * QUANTIZED_BITS),
+                                        static_cast<int32_t>(tab[2] * QUANTIZED_BITS),
+                                        static_cast<int32_t>(tab[3] * QUANTIZED_BITS)};
+            int32_t idxDst           = (i * outWidthStride + j * nc);
 
             if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                for (int k = 0; k < nc; k++) {
-                    int position1   = (sy0 * inWidthStride + sx0 * nc);
-                    int position2   = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                    v0              = flag0 ? src[position1 + k] : delta;
-                    v1              = flag1 ? src[position1 + nc + k] : delta;
-                    v2              = flag2 ? src[position2 + k] : delta;
-                    v3              = flag3 ? src[position2 + nc + k] : delta;
-                    int sum         = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                    dst[idxDst + k] = static_cast<uchar>(sum);
+                for (int32_t k = 0; k < nc; k++) {
+                    int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                    int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                    v0                = flag0 ? src[position1 + k] : delta;
+                    v1                = flag1 ? src[position1 + nc + k] : delta;
+                    v2                = flag2 ? src[position2 + k] : delta;
+                    v3                = flag3 ? src[position2 + nc + k] : delta;
+                    int32_t sum       = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                    dst[idxDst + k]   = static_cast<uint8_t>(sum);
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                int sx1         = sx0 + 1;
-                int sy1         = sy0 + 1;
-                sx0             = clip(sx0, 0, inWidth - 1);
-                sx1             = clip(sx1, 0, inWidth - 1);
-                sy0             = clip(sy0, 0, inHeight - 1);
-                sy1             = clip(sy1, 0, inHeight - 1);
-                const uchar* t0 = src + sy0 * inWidthStride + sx0 * nc;
-                const uchar* t1 = src + sy0 * inWidthStride + sx1 * nc;
-                const uchar* t2 = src + sy1 * inWidthStride + sx0 * nc;
-                const uchar* t3 = src + sy1 * inWidthStride + sx1 * nc;
-                for (int k = 0; k < nc; ++k) {
-                    uchar v0        = t0[k];
-                    uchar v1        = t1[k];
-                    uchar v2        = t2[k];
-                    uchar v3        = t3[k];
-                    int sum         = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                    dst[idxDst + k] = static_cast<uchar>(sum);
+                int32_t sx1       = sx0 + 1;
+                int32_t sy1       = sy0 + 1;
+                sx0               = clip(sx0, 0, inWidth - 1);
+                sx1               = clip(sx1, 0, inWidth - 1);
+                sy0               = clip(sy0, 0, inHeight - 1);
+                sy1               = clip(sy1, 0, inHeight - 1);
+                const uint8_t* t0 = src + sy0 * inWidthStride + sx0 * nc;
+                const uint8_t* t1 = src + sy0 * inWidthStride + sx1 * nc;
+                const uint8_t* t2 = src + sy1 * inWidthStride + sx0 * nc;
+                const uint8_t* t3 = src + sy1 * inWidthStride + sx1 * nc;
+                for (int32_t k = 0; k < nc; ++k) {
+                    uint8_t v0      = t0[k];
+                    uint8_t v1      = t1[k];
+                    uint8_t v2      = t2[k];
+                    uint8_t v3      = t3[k];
+                    int32_t sum     = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                    dst[idxDst + k] = static_cast<uint8_t>(sum);
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
@@ -518,15 +548,15 @@ template <int nc, ppl::cv::BorderType borderMode>
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 if (flag0 && flag1 && flag2 && flag3) {
-                    for (int k = 0; k < nc; k++) {
-                        int position1   = (sy0 * inWidthStride + sx0 * nc);
-                        int position2   = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        v0              = src[position1 + k];
-                        v1              = src[position1 + nc + k];
-                        v2              = src[position2 + k];
-                        v3              = src[position2 + nc + k];
-                        int sum         = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
-                        dst[idxDst + k] = static_cast<uchar>(sum);
+                    for (int32_t k = 0; k < nc; k++) {
+                        int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                        int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                        v0                = src[position1 + k];
+                        v1                = src[position1 + nc + k];
+                        v2                = src[position2 + k];
+                        v3                = src[position2 + nc + k];
+                        int32_t sum       = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
+                        dst[idxDst + k]   = static_cast<uint8_t>(sum);
                     }
                 } else {
                     continue;
@@ -538,61 +568,71 @@ template <int nc, ppl::cv::BorderType borderMode>
     return ppl::common::RC_SUCCESS;
 }
 
-template <typename T, int nc, ppl::cv::BorderType borderMode>
-::ppl::common::RetCode warpperspective_linear(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, T* dst, const T* src, const double M[][3], T delta)
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_linear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* dst,
+    const T* src,
+    const double M[][3],
+    T delta)
 {
     return warpperspective_linear<nc, borderMode>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, dst, src, M, delta);
 }
 
-template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 1, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 2, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 3, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 4, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 1, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 2, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 3, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 4, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 1, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 2, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 3, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_linear<uchar, 4, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
 
-template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 1, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 2, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 3, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 4, BORDER_TYPE_CONSTANT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 1, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 2, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 3, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 4, BORDER_TYPE_TRANSPARENT>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 1, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 2, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 3, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
-template ::ppl::common::RetCode warpperspective_nearest<uchar, 4, BORDER_TYPE_REPLICATE>(int inHeight, int inWidth, int inWidthStride, int outHeight, int outWidth, int outWidthStride, uchar* dst, const uchar* src, const double M[][3], uchar delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
 }
 }
 }

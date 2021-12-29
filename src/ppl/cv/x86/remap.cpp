@@ -42,38 +42,49 @@ inline T clip(T value, T min_value, T max_value)
     return std::min(std::max(value, min_value), max_value);
 }
 
-template <typename T, int nc, ppl::cv::BorderType borderMode>
-void remap_nearest(int inHeight, int inWidth, int inWidthStride, const T* src, int outHeight, int outWidth, int outWidthStride, T* dst, const float* map_x, const float* map_y, T delta)
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+void remap_nearest(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* src,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* dst,
+    const float* map_x,
+    const float* map_y,
+    T delta)
 {
-    for (int i = 0; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
-            int idxDst = i * outWidthStride + j * nc;
-            int idxMap = i * outWidth + j;
-            float x    = map_x[idxMap];
-            float y    = map_y[idxMap];
-            int sy     = static_cast<int>(std::round(y));
-            int sx     = static_cast<int>(std::round(x));
+    for (int32_t i = 0; i < outHeight; i++) {
+        for (int32_t j = 0; j < outWidth; j++) {
+            int32_t idxDst = i * outWidthStride + j * nc;
+            int32_t idxMap = i * outWidth + j;
+            float x        = map_x[idxMap];
+            float y        = map_y[idxMap];
+            int32_t sy     = static_cast<int32_t>(std::round(y));
+            int32_t sx     = static_cast<int32_t>(std::round(x));
             if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
-                int idxSrc = sy * inWidthStride + sx * nc;
+                int32_t idxSrc = sy * inWidthStride + sx * nc;
                 if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    for (int i = 0; i < nc; i++)
+                    for (int32_t i = 0; i < nc; i++)
                         dst[idxDst + i] = src[idxSrc + i];
                 } else {
-                    for (int i = 0; i < nc; i++) {
+                    for (int32_t i = 0; i < nc; i++) {
                         dst[idxDst + i] = delta;
                     }
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                sx         = clip(sx, 0, inWidth - 1);
-                sy         = clip(sy, 0, inHeight - 1);
-                int idxSrc = sy * inWidthStride + sx * nc;
-                for (int i = 0; i < nc; i++) {
+                sx             = clip(sx, 0, inWidth - 1);
+                sy             = clip(sy, 0, inHeight - 1);
+                int32_t idxSrc = sy * inWidthStride + sx * nc;
+                for (int32_t i = 0; i < nc; i++) {
                     dst[idxDst + i] = src[idxSrc + i];
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
                 if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    int idxSrc = sy * inWidthStride + sx * nc;
-                    for (int i = 0; i < nc; i++) {
+                    int32_t idxSrc = sy * inWidthStride + sx * nc;
+                    for (int32_t i = 0; i < nc; i++) {
                         dst[idxDst + i] = src[idxSrc + i];
                     }
                 } else {
@@ -84,18 +95,29 @@ void remap_nearest(int inHeight, int inWidth, int inWidthStride, const T* src, i
     }
 }
 
-template <typename T, int nc, ppl::cv::BorderType borderMode>
-void remap_linear(int inHeight, int inWidth, int inWidthStride, const T* src, int outHeight, int outWidth, int outWidthStride, T* dst, const float* map_x, const float* map_y, T delta)
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+void remap_linear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* src,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* dst,
+    const float* map_x,
+    const float* map_y,
+    T delta)
 {
-    for (int i = 0; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
-            int idxMap = i * outWidth + j;
-            float x    = map_x[idxMap];
-            float y    = map_y[idxMap];
-            int sx0    = (int)x;
-            int sy0    = (int)y;
-            float u    = x - sx0;
-            float v    = y - sy0;
+    for (int32_t i = 0; i < outHeight; i++) {
+        for (int32_t j = 0; j < outWidth; j++) {
+            int32_t idxMap = i * outWidth + j;
+            float x        = map_x[idxMap];
+            float y        = map_y[idxMap];
+            int32_t sx0    = (int32_t)x;
+            int32_t sy0    = (int32_t)y;
+            float u        = x - sx0;
+            float v        = y - sy0;
 
             float tab[4];
             float taby[2], tabx[2];
@@ -110,27 +132,27 @@ void remap_linear(int inHeight, int inWidth, int inWidthStride, const T* src, in
             tab[2] = taby[1] * tabx[0];
             tab[3] = taby[1] * tabx[1];
 
-            int idxDst = (i * outWidthStride + j * nc);
+            int32_t idxDst = (i * outWidthStride + j * nc);
 
             if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                for (int k = 0; k < nc; k++) {
-                    int position1 = (sy0 * inWidthStride + sx0 * nc);
-                    int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                    v0            = flag0 ? src[position1 + k] : delta;
-                    v1            = flag1 ? src[position1 + nc + k] : delta;
-                    v2            = flag2 ? src[position2 + k] : delta;
-                    v3            = flag3 ? src[position2 + nc + k] : delta;
-                    float sum     = 0;
+                for (int32_t k = 0; k < nc; k++) {
+                    int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                    int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                    v0                = flag0 ? src[position1 + k] : delta;
+                    v1                = flag1 ? src[position1 + nc + k] : delta;
+                    v2                = flag2 ? src[position2 + k] : delta;
+                    v3                = flag3 ? src[position2 + nc + k] : delta;
+                    float sum         = 0;
                     sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                int sx1     = sx0 + 1;
-                int sy1     = sy0 + 1;
+                int32_t sx1 = sx0 + 1;
+                int32_t sy1 = sy0 + 1;
                 sx0         = clip(sx0, 0, inWidth - 1);
                 sx1         = clip(sx1, 0, inWidth - 1);
                 sy0         = clip(sy0, 0, inHeight - 1);
@@ -139,7 +161,7 @@ void remap_linear(int inHeight, int inWidth, int inWidthStride, const T* src, in
                 const T* t1 = src + sy0 * inWidthStride + sx1 * nc;
                 const T* t2 = src + sy1 * inWidthStride + sx0 * nc;
                 const T* t3 = src + sy1 * inWidthStride + sx1 * nc;
-                for (int k = 0; k < nc; ++k) {
+                for (int32_t k = 0; k < nc; ++k) {
                     float sum = 0;
                     sum += t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
@@ -150,14 +172,14 @@ void remap_linear(int inHeight, int inWidth, int inWidthStride, const T* src, in
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
                 if (flag0 && flag1 && flag2 && flag3) {
-                    for (int k = 0; k < nc; k++) {
-                        int position1 = (sy0 * inWidthStride + sx0 * nc);
-                        int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        v0            = src[position1 + k];
-                        v1            = src[position1 + nc + k];
-                        v2            = src[position2 + k];
-                        v3            = src[position2 + nc + k];
-                        float sum     = 0;
+                    for (int32_t k = 0; k < nc; k++) {
+                        int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
+                        int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
+                        v0                = src[position1 + k];
+                        v1                = src[position1 + nc + k];
+                        v2                = src[position2 + k];
+                        v3                = src[position2 + nc + k];
+                        float sum         = 0;
                         sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                         dst[idxDst + k] = static_cast<T>(sum);
                     }
@@ -169,95 +191,30 @@ void remap_linear(int inHeight, int inWidth, int inWidthStride, const T* src, in
     }
 }
 
-template <typename T, ppl::cv::BorderType borderMode>
-void remap_linear(int nc, int inHeight, int inWidth, int inWidthStride, const T* src, int outHeight, int outWidth, int outWidthStride, T* dst, const float* map_x, const float* map_y, T delta)
+template <typename T, int32_t nc>
+::ppl::common::RetCode RemapLinear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData,
+    const float* mapx,
+    const float* mapy,
+    BorderType border_type,
+    T border_value)
 {
-    for (int i = 0; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
-            int idxMap = i * outWidth + j;
-            float x    = map_x[idxMap];
-            float y    = map_y[idxMap];
-            int sx0    = (int)x;
-            int sy0    = (int)y;
-            float u    = x - sx0;
-            float v    = y - sy0;
-
-            float tab[4];
-            float taby[2], tabx[2];
-            float v0, v1, v2, v3;
-            taby[0] = 1.0f - 1.0f * v;
-            taby[1] = v;
-            tabx[0] = 1.0f - u;
-            tabx[1] = u;
-
-            tab[0] = taby[0] * tabx[0];
-            tab[1] = taby[0] * tabx[1];
-            tab[2] = taby[1] * tabx[0];
-            tab[3] = taby[1] * tabx[1];
-
-            int idxDst = (i * outWidthStride + j * nc);
-
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
-                bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                for (int k = 0; k < nc; k++) {
-                    int position1 = (sy0 * inWidthStride + sx0 * nc);
-                    int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                    v0            = flag0 ? src[position1 + k] : delta;
-                    v1            = flag1 ? src[position1 + nc + k] : delta;
-                    v2            = flag2 ? src[position2 + k] : delta;
-                    v3            = flag3 ? src[position2 + nc + k] : delta;
-                    float sum     = 0;
-                    sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
-                    dst[idxDst + k] = static_cast<T>(sum);
-                }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                int sx1     = sx0 + 1;
-                int sy1     = sy0 + 1;
-                sx0         = clip(sx0, 0, inWidth - 1);
-                sx1         = clip(sx1, 0, inWidth - 1);
-                sy0         = clip(sy0, 0, inHeight - 1);
-                sy1         = clip(sy1, 0, inHeight - 1);
-                const T* t0 = src + sy0 * inWidthStride + sx0 * nc;
-                const T* t1 = src + sy0 * inWidthStride + sx1 * nc;
-                const T* t2 = src + sy1 * inWidthStride + sx0 * nc;
-                const T* t3 = src + sy1 * inWidthStride + sx1 * nc;
-                for (int k = 0; k < nc; ++k) {
-                    float sum = 0;
-                    sum += t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3];
-                    dst[idxDst + k] = static_cast<T>(sum);
-                }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-                bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                if (flag0 && flag1 && flag2 && flag3) {
-                    for (int k = 0; k < nc; k++) {
-                        int position1 = (sy0 * inWidthStride + sx0 * nc);
-                        int position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        v0            = src[position1 + k];
-                        v1            = src[position1 + nc + k];
-                        v2            = src[position2 + k];
-                        v3            = src[position2 + nc + k];
-                        float sum     = 0;
-                        sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
-                        dst[idxDst + k] = static_cast<T>(sum);
-                    }
-                } else {
-                    continue;
-                }
-            }
-        }
+    if (inData == nullptr || outData == nullptr) {
+        return ppl::common::RC_INVALID_VALUE;
     }
-}
-
-template <typename T, int nc>
-::ppl::common::RetCode RemapLinear(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData, const float* mapx, const float* mapy, BorderType border_type, T border_value)
-{
-    assert(border_type == ppl::cv::BORDER_TYPE_CONSTANT || border_type == ppl::cv::BORDER_TYPE_REPLICATE || border_type == ppl::cv::BORDER_TYPE_TRANSPARENT);
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if (border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE && border_type != ppl::cv::BORDER_TYPE_TRANSPARENT) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
     if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
         remap_linear<T, nc, BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, border_value);
     } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
@@ -268,24 +225,30 @@ template <typename T, int nc>
     return ppl::common::RC_SUCCESS;
 }
 
-template <typename T>
-::ppl::common::RetCode RemapLinear(int nc, int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData, const float* mapx, const float* mapy, BorderType border_type, T border_value)
+template <typename T, int32_t nc>
+::ppl::common::RetCode RemapNearestPoint(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData,
+    const float* mapx,
+    const float* mapy,
+    BorderType border_type,
+    T border_value)
 {
-    assert(border_type == ppl::cv::BORDER_TYPE_CONSTANT || border_type == ppl::cv::BORDER_TYPE_REPLICATE || border_type == ppl::cv::BORDER_TYPE_TRANSPARENT);
-    if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
-        remap_linear<T, BORDER_TYPE_CONSTANT>(nc, inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, border_value);
-    } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-        remap_linear<T, BORDER_TYPE_REPLICATE>(nc, inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, border_value);
-    } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-        remap_linear<T, BORDER_TYPE_TRANSPARENT>(nc, inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, border_value);
+    if (inData == nullptr || outData == nullptr) {
+        return ppl::common::RC_INVALID_VALUE;
     }
-    return ppl::common::RC_SUCCESS;
-}
-
-template <typename T, int nc>
-::ppl::common::RetCode RemapNearestPoint(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData, const float* mapx, const float* mapy, BorderType border_type, T border_value)
-{
-    assert(border_type == ppl::cv::BORDER_TYPE_CONSTANT || border_type == ppl::cv::BORDER_TYPE_REPLICATE || border_type == ppl::cv::BORDER_TYPE_TRANSPARENT);
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if (border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE && border_type != ppl::cv::BORDER_TYPE_TRANSPARENT) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
     if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
         remap_nearest<T, nc, BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, border_value);
     } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
@@ -296,33 +259,29 @@ template <typename T, int nc>
     return ppl::common::RC_SUCCESS;
 }
 
-template ::ppl::common::RetCode RemapLinear<float, 1>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
+template ::ppl::common::RetCode RemapLinear<float, 1>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const float* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
 
-template ::ppl::common::RetCode RemapLinear<float, 3>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
+template ::ppl::common::RetCode RemapLinear<float, 3>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const float* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
 
-template ::ppl::common::RetCode RemapLinear<float, 4>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
+template ::ppl::common::RetCode RemapLinear<float, 4>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const float* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
 
-template ::ppl::common::RetCode RemapLinear<float>(int nc, int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
+template ::ppl::common::RetCode RemapLinear<uint8_t, 1>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const uint8_t* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* outData, const float* mapx, const float* mapy, BorderType border_type, uint8_t border_value);
 
-template ::ppl::common::RetCode RemapLinear<uchar, 1>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, const float* mapx, const float* mapy, BorderType border_type, uchar border_value);
+template ::ppl::common::RetCode RemapLinear<uint8_t, 3>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const uint8_t* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* outData, const float* mapx, const float* mapy, BorderType border_type, uint8_t border_value);
 
-template ::ppl::common::RetCode RemapLinear<uchar, 3>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, const float* mapx, const float* mapy, BorderType border_type, uchar border_value);
+template ::ppl::common::RetCode RemapLinear<uint8_t, 4>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const uint8_t* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* outData, const float* mapx, const float* mapy, BorderType border_type, uint8_t border_value);
 
-template ::ppl::common::RetCode RemapLinear<uchar, 4>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, const float* mapx, const float* mapy, BorderType border_type, uchar border_value);
+template ::ppl::common::RetCode RemapNearestPoint<float, 1>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const float* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
 
-template ::ppl::common::RetCode RemapLinear<uchar>(int nc, int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, const float* mapx, const float* mapy, BorderType border_type, uchar border_value);
+template ::ppl::common::RetCode RemapNearestPoint<float, 3>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const float* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
 
-template ::ppl::common::RetCode RemapNearestPoint<float, 1>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
+template ::ppl::common::RetCode RemapNearestPoint<float, 4>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const float* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
 
-template ::ppl::common::RetCode RemapNearestPoint<float, 3>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
+template ::ppl::common::RetCode RemapNearestPoint<uint8_t, 1>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const uint8_t* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* outData, const float* mapx, const float* mapy, BorderType border_type, uint8_t border_value);
 
-template ::ppl::common::RetCode RemapNearestPoint<float, 4>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, const float* mapx, const float* mapy, BorderType border_type, float border_value);
+template ::ppl::common::RetCode RemapNearestPoint<uint8_t, 3>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const uint8_t* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* outData, const float* mapx, const float* mapy, BorderType border_type, uint8_t border_value);
 
-template ::ppl::common::RetCode RemapNearestPoint<uchar, 1>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, const float* mapx, const float* mapy, BorderType border_type, uchar border_value);
-
-template ::ppl::common::RetCode RemapNearestPoint<uchar, 3>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, const float* mapx, const float* mapy, BorderType border_type, uchar border_value);
-
-template ::ppl::common::RetCode RemapNearestPoint<uchar, 4>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, const float* mapx, const float* mapy, BorderType border_type, uchar border_value);
+template ::ppl::common::RetCode RemapNearestPoint<uint8_t, 4>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, const uint8_t* inData, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* outData, const float* mapx, const float* mapy, BorderType border_type, uint8_t border_value);
 
 }
 }
