@@ -35,10 +35,10 @@ namespace x86 {
 void getScharrKernels_f32(
     float *kx,
     float *ky,
-    int &ksizeX,
-    int &ksizeY,
-    int dx,
-    int dy,
+    int32_t &ksizeX,
+    int32_t &ksizeY,
+    int32_t dx,
+    int32_t dy,
     double scale)
 {
     if (dx == 0) {
@@ -68,19 +68,19 @@ void getScharrKernels_f32(
 void getSobelKernels_f32(
     float *kx,
     float *ky,
-    int &ksizeX,
-    int &ksizeY,
-    int dx,
-    int dy,
+    int32_t &ksizeX,
+    int32_t &ksizeY,
+    int32_t dx,
+    int32_t dy,
     double scale,
-    int ksize)
+    int32_t ksize)
 {
     if (ksize == -1) {
         getScharrKernels_f32(kx, ky, ksizeX, ksizeY, dx, dy, scale);
         return;
     }
 
-    int i, j;
+    int32_t i, j;
 
     ksizeX = ksize;
     ksizeY = ksize;
@@ -93,10 +93,10 @@ void getSobelKernels_f32(
 
     float kerI[33];
 
-    for (int k = 0; k < 2; ++k) {
+    for (int32_t k = 0; k < 2; ++k) {
         float *kernel = k == 0 ? kx : ky;
-        int order     = k == 0 ? dx : dy;
-        int ksize     = k == 0 ? ksizeX : ksizeY;
+        int32_t order = k == 0 ? dx : dy;
+        int32_t ksize = k == 0 ? ksizeX : ksizeY;
 
         if (ksize == 1) {
             kerI[0] = 1;
@@ -115,7 +115,7 @@ void getSobelKernels_f32(
                 kerI[2] = 1;
             }
         } else {
-            int oldval, newval;
+            int32_t oldval, newval;
             kerI[0] = 1;
             for (i = 0; i < ksize; ++i) {
                 kerI[i + 1] = 0;
@@ -146,41 +146,41 @@ void getSobelKernels_f32(
 }
 
 void sobel_kernel_reflect101_f32(
-    int height,
-    int width,
-    int channels,
-    int inWidthStride,
+    int32_t height,
+    int32_t width,
+    int32_t channels,
+    int32_t inWidthStride,
     const float *inData,
-    int dx,
-    int dy,
-    int ksize,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
     double scale,
     double delta,
-    int outWidthStride,
+    int32_t outWidthStride,
     float *outData)
 {
     float kx[33];
     float ky[33];
-    int ksizeX = 0;
-    int ksizeY = 0;
+    int32_t ksizeX = 0;
+    int32_t ksizeY = 0;
 
     getSobelKernels_f32(kx, ky, ksizeX, ksizeY, dx, dy, scale, ksize);
 
-    int x_r = ksizeX / 2;
-    int y_r = ksizeY / 2;
+    int32_t x_r = ksizeX / 2;
+    int32_t y_r = ksizeY / 2;
 
     float sum[4] = {};
 
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            for (int c = 0; c < channels; ++c) {
+    for (int32_t i = 0; i < height; ++i) {
+        for (int32_t j = 0; j < width; ++j) {
+            for (int32_t c = 0; c < channels; ++c) {
                 sum[c] = delta;
             }
 
-            for (int ii = -y_r; ii <= y_r; ++ii) {
-                for (int jj = -x_r; jj <= x_r; ++jj) {
-                    int y = i + ii;
-                    int x = j + jj;
+            for (int32_t ii = -y_r; ii <= y_r; ++ii) {
+                for (int32_t jj = -x_r; jj <= x_r; ++jj) {
+                    int32_t y = i + ii;
+                    int32_t x = j + jj;
                     if (y < 0) {
                         y = -y;
                     }
@@ -194,13 +194,13 @@ void sobel_kernel_reflect101_f32(
                         x = (width - 2 - (x - width));
                     }
 
-                    for (int c = 0; c < channels; ++c) {
+                    for (int32_t c = 0; c < channels; ++c) {
                         sum[c] += ky[ii + y_r] * kx[jj + x_r] * inData[y * inWidthStride + x * channels + c];
                     }
                 }
             }
 
-            for (int c = 0; c < channels; ++c) {
+            for (int32_t c = 0; c < channels; ++c) {
                 outData[i * outWidthStride + j * channels + c] = sum[c];
             }
         }
@@ -210,10 +210,10 @@ void sobel_kernel_reflect101_f32(
 void getScharrKernels_u8(
     int16_t *kx,
     int16_t *ky,
-    int &ksizeX,
-    int &ksizeY,
-    int dx,
-    int dy,
+    int32_t &ksizeX,
+    int32_t &ksizeY,
+    int32_t dx,
+    int32_t dy,
     double scale)
 {
     if (dx == 0) {
@@ -243,19 +243,19 @@ void getScharrKernels_u8(
 void getSobelKernels_u8(
     int16_t *kx,
     int16_t *ky,
-    int &ksizeX,
-    int &ksizeY,
-    int dx,
-    int dy,
+    int32_t &ksizeX,
+    int32_t &ksizeY,
+    int32_t dx,
+    int32_t dy,
     double scale,
-    int ksize)
+    int32_t ksize)
 {
     if (ksize == -1) {
         getScharrKernels_u8(kx, ky, ksizeX, ksizeY, dx, dy, scale);
         return;
     }
 
-    int i, j;
+    int32_t i, j;
 
     ksizeX = ksize;
     ksizeY = ksize;
@@ -268,10 +268,10 @@ void getSobelKernels_u8(
 
     int16_t kerI[33];
 
-    for (int k = 0; k < 2; ++k) {
+    for (int32_t k = 0; k < 2; ++k) {
         int16_t *kernel = k == 0 ? kx : ky;
-        int order       = k == 0 ? dx : dy;
-        int ksize       = k == 0 ? ksizeX : ksizeY;
+        int32_t order   = k == 0 ? dx : dy;
+        int32_t ksize   = k == 0 ? ksizeX : ksizeY;
 
         if (ksize == 1) {
             kerI[0] = 1;
@@ -290,7 +290,7 @@ void getSobelKernels_u8(
                 kerI[2] = 1;
             }
         } else {
-            int oldval, newval;
+            int32_t oldval, newval;
             kerI[0] = 1;
             for (i = 0; i < ksize; ++i) {
                 kerI[i + 1] = 0;
@@ -321,41 +321,41 @@ void getSobelKernels_u8(
 }
 
 void sobel_kernel_reflect101_u8(
-    int height,
-    int width,
-    int channels,
-    int inWidthStride,
+    int32_t height,
+    int32_t width,
+    int32_t channels,
+    int32_t inWidthStride,
     const uint8_t *inData,
-    int dx,
-    int dy,
-    int ksize,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
     double scale,
     double delta,
-    int outWidthStride,
+    int32_t outWidthStride,
     int16_t *outData)
 {
     int16_t kx[33];
     int16_t ky[33];
-    int ksizeX = 0;
-    int ksizeY = 0;
+    int32_t ksizeX = 0;
+    int32_t ksizeY = 0;
 
     getSobelKernels_u8(kx, ky, ksizeX, ksizeY, dx, dy, scale, ksize);
 
-    int x_r = ksizeX / 2;
-    int y_r = ksizeY / 2;
+    int32_t x_r = ksizeX / 2;
+    int32_t y_r = ksizeY / 2;
 
     int16_t sum[4] = {};
 
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            for (int c = 0; c < channels; ++c) {
+    for (int32_t i = 0; i < height; ++i) {
+        for (int32_t j = 0; j < width; ++j) {
+            for (int32_t c = 0; c < channels; ++c) {
                 sum[c] = delta;
             }
 
-            for (int ii = -y_r; ii <= y_r; ++ii) {
-                for (int jj = -x_r; jj <= x_r; ++jj) {
-                    int y = i + ii;
-                    int x = j + jj;
+            for (int32_t ii = -y_r; ii <= y_r; ++ii) {
+                for (int32_t jj = -x_r; jj <= x_r; ++jj) {
+                    int32_t y = i + ii;
+                    int32_t x = j + jj;
                     if (y < 0) {
                         y = -y;
                     }
@@ -369,13 +369,13 @@ void sobel_kernel_reflect101_u8(
                         x = (width - 2 - (x - width));
                     }
 
-                    for (int c = 0; c < channels; ++c) {
+                    for (int32_t c = 0; c < channels; ++c) {
                         sum[c] += ky[ii + y_r] * kx[jj + x_r] * inData[y * inWidthStride + x * channels + c];
                     }
                 }
             }
 
-            for (int c = 0; c < channels; ++c) {
+            for (int32_t c = 0; c < channels; ++c) {
                 outData[i * outWidthStride + j * channels + c] = sum[c];
             }
         }
@@ -383,7 +383,19 @@ void sobel_kernel_reflect101_u8(
 }
 
 template <>
-::ppl::common::RetCode Sobel<float, float, 1>(int height, int width, int inWidthStride, const float *inData, int outWidthStride, float *outData, int dx, int dy, int ksize, double scale, double delta, BorderType border_type)
+::ppl::common::RetCode Sobel<float, float, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const float *inData,
+    int32_t outWidthStride,
+    float *outData,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
+    double scale,
+    double delta,
+    BorderType border_type)
 {
     assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
     sobel_kernel_reflect101_f32(height, width, 1, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
@@ -391,7 +403,19 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode Sobel<float, float, 3>(int height, int width, int inWidthStride, const float *inData, int outWidthStride, float *outData, int dx, int dy, int ksize, double scale, double delta, BorderType border_type)
+::ppl::common::RetCode Sobel<float, float, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const float *inData,
+    int32_t outWidthStride,
+    float *outData,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
+    double scale,
+    double delta,
+    BorderType border_type)
 {
     assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
     sobel_kernel_reflect101_f32(height, width, 3, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
@@ -399,7 +423,19 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode Sobel<float, float, 4>(int height, int width, int inWidthStride, const float *inData, int outWidthStride, float *outData, int dx, int dy, int ksize, double scale, double delta, BorderType border_type)
+::ppl::common::RetCode Sobel<float, float, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const float *inData,
+    int32_t outWidthStride,
+    float *outData,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
+    double scale,
+    double delta,
+    BorderType border_type)
 {
     assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
     sobel_kernel_reflect101_f32(height, width, 4, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
@@ -407,7 +443,19 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode Sobel<uint8_t, int16_t, 1>(int height, int width, int inWidthStride, const uint8_t *inData, int outWidthStride, int16_t *outData, int dx, int dy, int ksize, double scale, double delta, BorderType border_type)
+::ppl::common::RetCode Sobel<uint8_t, int16_t, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const uint8_t *inData,
+    int32_t outWidthStride,
+    int16_t *outData,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
+    double scale,
+    double delta,
+    BorderType border_type)
 {
     assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
     sobel_kernel_reflect101_u8(height, width, 1, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
@@ -415,7 +463,19 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode Sobel<uint8_t, int16_t, 3>(int height, int width, int inWidthStride, const uint8_t *inData, int outWidthStride, int16_t *outData, int dx, int dy, int ksize, double scale, double delta, BorderType border_type)
+::ppl::common::RetCode Sobel<uint8_t, int16_t, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const uint8_t *inData,
+    int32_t outWidthStride,
+    int16_t *outData,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
+    double scale,
+    double delta,
+    BorderType border_type)
 {
     assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
     sobel_kernel_reflect101_u8(height, width, 3, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
@@ -423,7 +483,19 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode Sobel<uint8_t, int16_t, 4>(int height, int width, int inWidthStride, const uint8_t *inData, int outWidthStride, int16_t *outData, int dx, int dy, int ksize, double scale, double delta, BorderType border_type)
+::ppl::common::RetCode Sobel<uint8_t, int16_t, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const uint8_t *inData,
+    int32_t outWidthStride,
+    int16_t *outData,
+    int32_t dx,
+    int32_t dy,
+    int32_t ksize,
+    double scale,
+    double delta,
+    BorderType border_type)
 {
     assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
     sobel_kernel_reflect101_u8(height, width, 4, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);

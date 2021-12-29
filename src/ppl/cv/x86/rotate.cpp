@@ -65,18 +65,26 @@ inline void transpose(__m128i& a, __m128i& b, __m128i& c, __m128i& d, __m128i& e
     h = _mm_unpackhi_epi32(tmp14_vec, tmp15_vec);
 }
 
-template <typename T, int nc>
-void imgRotate90degree(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData)
+template <typename T, int32_t nc>
+void imgRotate90degree(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData)
 {
-    const int BC   = 64;
-    const int BR   = 64;
-    int numColsEnd = outWidth - outWidth % BC;
-    int numRowsEnd = outHeight - outHeight % BR;
-    for (int i = 0; i < numRowsEnd; i += BR) {
-        for (int j = 0; j < numColsEnd; j += BC) {
-            for (int ii = 0; ii < BR; ii++) {
-                for (int jj = 0; jj < BC; jj++) {
-                    for (int c = 0; c < nc; c++) {
+    const int32_t BC   = 64;
+    const int32_t BR   = 64;
+    int32_t numColsEnd = outWidth - outWidth % BC;
+    int32_t numRowsEnd = outHeight - outHeight % BR;
+    for (int32_t i = 0; i < numRowsEnd; i += BR) {
+        for (int32_t j = 0; j < numColsEnd; j += BC) {
+            for (int32_t ii = 0; ii < BR; ii++) {
+                for (int32_t jj = 0; jj < BC; jj++) {
+                    for (int32_t c = 0; c < nc; c++) {
                         outData[(i + ii) * outWidthStride + (j + jj) * nc + c] =
                             inData[(inHeight - (j + jj) - 1) * inWidthStride + (i + ii) * nc + c];
                     }
@@ -84,17 +92,17 @@ void imgRotate90degree(int inHeight, int inWidth, int inWidthStride, const T* in
             }
         }
     }
-    for (int i = numRowsEnd; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
-            for (int c = 0; c < nc; c++) {
+    for (int32_t i = numRowsEnd; i < outHeight; i++) {
+        for (int32_t j = 0; j < outWidth; j++) {
+            for (int32_t c = 0; c < nc; c++) {
                 outData[i * outWidthStride + j * nc + c] =
                     inData[(inHeight - j - 1) * inWidthStride + i * nc + c];
             }
         }
     }
-    for (int i = 0; i < numRowsEnd; i++) {
-        for (int j = numColsEnd; j < outWidth; j++) {
-            for (int c = 0; c < nc; c++) {
+    for (int32_t i = 0; i < numRowsEnd; i++) {
+        for (int32_t j = numColsEnd; j < outWidth; j++) {
+            for (int32_t c = 0; c < nc; c++) {
                 outData[i * outWidthStride + j * nc + c] =
                     inData[(inHeight - j - 1) * inWidthStride + i * nc + c];
             }
@@ -103,26 +111,34 @@ void imgRotate90degree(int inHeight, int inWidth, int inWidthStride, const T* in
 }
 
 template <>
-void imgRotate90degree<uchar, 1>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData)
+void imgRotate90degree<uint8_t, 1>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* outData)
 {
-    const int BC   = 64;
-    const int BR   = 64;
-    int numColsEnd = outWidth - outWidth % BC;
-    int numRowsEnd = outHeight - outHeight % BR;
-    for (int i = 0; i < numRowsEnd; i += BR) {
-        for (int j = 0; j < numColsEnd; j += BC) {
-            for (int ii = 0; ii < BR; ii += 16) {
-                for (int jj = 0; jj < BC; jj += 8) {
-                    const uchar* base_in = inData + (inHeight - (j + jj) - 1) * inWidthStride + (i + ii);
-                    uchar* base_out      = outData + (i + ii) * outWidthStride + (j + jj);
-                    __m128i vec0         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 7 * inWidthStride));
-                    __m128i vec1         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 6 * inWidthStride));
-                    __m128i vec2         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 5 * inWidthStride));
-                    __m128i vec3         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 4 * inWidthStride));
-                    __m128i vec4         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 3 * inWidthStride));
-                    __m128i vec5         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 2 * inWidthStride));
-                    __m128i vec6         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 1 * inWidthStride));
-                    __m128i vec7         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 0 * inWidthStride));
+    const int32_t BC   = 64;
+    const int32_t BR   = 64;
+    int32_t numColsEnd = outWidth - outWidth % BC;
+    int32_t numRowsEnd = outHeight - outHeight % BR;
+    for (int32_t i = 0; i < numRowsEnd; i += BR) {
+        for (int32_t j = 0; j < numColsEnd; j += BC) {
+            for (int32_t ii = 0; ii < BR; ii += 16) {
+                for (int32_t jj = 0; jj < BC; jj += 8) {
+                    const uint8_t* base_in = inData + (inHeight - (j + jj) - 1) * inWidthStride + (i + ii);
+                    uint8_t* base_out      = outData + (i + ii) * outWidthStride + (j + jj);
+                    __m128i vec0           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 7 * inWidthStride));
+                    __m128i vec1           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 6 * inWidthStride));
+                    __m128i vec2           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 5 * inWidthStride));
+                    __m128i vec3           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 4 * inWidthStride));
+                    __m128i vec4           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 3 * inWidthStride));
+                    __m128i vec5           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 2 * inWidthStride));
+                    __m128i vec6           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 1 * inWidthStride));
+                    __m128i vec7           = _mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in - 0 * inWidthStride));
                     transpose(vec7, vec6, vec5, vec4, vec3, vec2, vec1, vec0);
                     _mm_storel_pd(reinterpret_cast<double*>(base_out), _mm_castsi128_pd(vec7));
                     _mm_storeh_pd(reinterpret_cast<double*>(base_out + outWidthStride), _mm_castsi128_pd(vec7));
@@ -144,26 +160,34 @@ void imgRotate90degree<uchar, 1>(int inHeight, int inWidth, int inWidthStride, c
             }
         }
     }
-    for (int i = numRowsEnd; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
+    for (int32_t i = numRowsEnd; i < outHeight; i++) {
+        for (int32_t j = 0; j < outWidth; j++) {
             outData[i * outWidthStride + j] =
                 inData[(inHeight - j - 1) * inWidthStride + i];
         }
     }
-    for (int i = 0; i < numRowsEnd; i++) {
-        for (int j = numColsEnd; j < outWidth; j++) {
+    for (int32_t i = 0; i < numRowsEnd; i++) {
+        for (int32_t j = numColsEnd; j < outWidth; j++) {
             outData[i * outWidthStride + j] =
                 inData[(inHeight - j - 1) * inWidthStride + i];
         }
     }
 }
 
-template <typename T, int nc>
-void imgRotate180degree(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData)
+template <typename T, int32_t nc>
+void imgRotate180degree(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData)
 {
-    for (int i = 0; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
-            for (int c = 0; c < nc; c++) {
+    for (int32_t i = 0; i < outHeight; i++) {
+        for (int32_t j = 0; j < outWidth; j++) {
+            for (int32_t c = 0; c < nc; c++) {
                 outData[i * outWidthStride + j * nc + c] =
                     inData[(inHeight - i - 1) * inWidthStride + (inWidth - j - 1) * nc + c];
             }
@@ -172,34 +196,50 @@ void imgRotate180degree(int inHeight, int inWidth, int inWidthStride, const T* i
 }
 
 template <>
-void imgRotate180degree<uchar, 1>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData)
+void imgRotate180degree<uint8_t, 1>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* outData)
 {
     __m128i reverse_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-    for (int i = 0; i < outHeight; i++) {
-        uchar* baseOut      = outData + i * outWidthStride;
-        const uchar* baseIn = inData + (inHeight - i - 1) * inWidthStride;
-        for (int j = 0; j < outWidth / 16 * 16; j += 16) {
+    for (int32_t i = 0; i < outHeight; i++) {
+        uint8_t* baseOut      = outData + i * outWidthStride;
+        const uint8_t* baseIn = inData + (inHeight - i - 1) * inWidthStride;
+        for (int32_t j = 0; j < outWidth / 16 * 16; j += 16) {
             _mm_storeu_si128(reinterpret_cast<__m128i*>(baseOut + j),
                              _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(baseIn + inWidth - 16 - j)), reverse_mask));
         }
-        for (int j = outWidth / 16 * 16; j < outWidth; j++) {
+        for (int32_t j = outWidth / 16 * 16; j < outWidth; j++) {
             baseOut[j] = baseIn[inWidth - j - 1];
         }
     }
 }
 
-template <typename T, int nc>
-void imgRotate270degree(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData)
+template <typename T, int32_t nc>
+void imgRotate270degree(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData)
 {
-    const int BC   = 64;
-    const int BR   = 64;
-    int numColsEnd = outWidth - outWidth % BC;
-    int numRowsEnd = outHeight - outHeight % BR;
-    for (int i = 0; i < numRowsEnd; i += BR) {
-        for (int j = 0; j < numColsEnd; j += BC) {
-            for (int ii = 0; ii < BR; ii++) {
-                for (int jj = 0; jj < BC; jj++) {
-                    for (int c = 0; c < nc; c++) {
+    const int32_t BC   = 64;
+    const int32_t BR   = 64;
+    int32_t numColsEnd = outWidth - outWidth % BC;
+    int32_t numRowsEnd = outHeight - outHeight % BR;
+    for (int32_t i = 0; i < numRowsEnd; i += BR) {
+        for (int32_t j = 0; j < numColsEnd; j += BC) {
+            for (int32_t ii = 0; ii < BR; ii++) {
+                for (int32_t jj = 0; jj < BC; jj++) {
+                    for (int32_t c = 0; c < nc; c++) {
                         outData[(i + ii) * outWidthStride + (j + jj) * nc + c] =
                             inData[(j + jj) * inWidthStride + (inWidth - (i + ii) - 1) * nc + c];
                     }
@@ -207,17 +247,17 @@ void imgRotate270degree(int inHeight, int inWidth, int inWidthStride, const T* i
             }
         }
     }
-    for (int i = numRowsEnd; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
-            for (int c = 0; c < nc; c++) {
+    for (int32_t i = numRowsEnd; i < outHeight; i++) {
+        for (int32_t j = 0; j < outWidth; j++) {
+            for (int32_t c = 0; c < nc; c++) {
                 outData[i * outWidthStride + j * nc + c] =
                     inData[j * inWidthStride + (inWidth - i - 1) * nc + c];
             }
         }
     }
-    for (int i = 0; i < numRowsEnd; i++) {
-        for (int j = numColsEnd; j < outWidth; j++) {
-            for (int c = 0; c < nc; c++) {
+    for (int32_t i = 0; i < numRowsEnd; i++) {
+        for (int32_t j = numColsEnd; j < outWidth; j++) {
+            for (int32_t c = 0; c < nc; c++) {
                 outData[i * outWidthStride + j * nc + c] =
                     inData[j * inWidthStride + (inWidth - i - 1) * nc + c];
             }
@@ -226,27 +266,35 @@ void imgRotate270degree(int inHeight, int inWidth, int inWidthStride, const T* i
 }
 
 template <>
-void imgRotate270degree<uchar, 1>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData)
+void imgRotate270degree<uint8_t, 1>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* outData)
 {
-    const int BC         = 64;
-    const int BR         = 64;
+    const int32_t BC     = 64;
+    const int32_t BR     = 64;
     __m128i reverse_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-    int numColsEnd       = outWidth - outWidth % BC;
-    int numRowsEnd       = outHeight - outHeight % BR;
-    for (int i = 0; i < numRowsEnd; i += BR) {
-        for (int j = 0; j < numColsEnd; j += BC) {
-            for (int ii = 0; ii < BR; ii += 16) {
-                for (int jj = 0; jj < BC; jj += 8) {
-                    const uchar* base_in = inData + (j + jj) * inWidthStride + (inWidth - (i + ii) - 16);
-                    uchar* base_out      = outData + (i + ii) * outWidthStride + (j + jj);
-                    __m128i vec0         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 0 * inWidthStride)), reverse_mask);
-                    __m128i vec1         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 1 * inWidthStride)), reverse_mask);
-                    __m128i vec2         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 2 * inWidthStride)), reverse_mask);
-                    __m128i vec3         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 3 * inWidthStride)), reverse_mask);
-                    __m128i vec4         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 4 * inWidthStride)), reverse_mask);
-                    __m128i vec5         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 5 * inWidthStride)), reverse_mask);
-                    __m128i vec6         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 6 * inWidthStride)), reverse_mask);
-                    __m128i vec7         = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 7 * inWidthStride)), reverse_mask);
+    int32_t numColsEnd   = outWidth - outWidth % BC;
+    int32_t numRowsEnd   = outHeight - outHeight % BR;
+    for (int32_t i = 0; i < numRowsEnd; i += BR) {
+        for (int32_t j = 0; j < numColsEnd; j += BC) {
+            for (int32_t ii = 0; ii < BR; ii += 16) {
+                for (int32_t jj = 0; jj < BC; jj += 8) {
+                    const uint8_t* base_in = inData + (j + jj) * inWidthStride + (inWidth - (i + ii) - 16);
+                    uint8_t* base_out      = outData + (i + ii) * outWidthStride + (j + jj);
+                    __m128i vec0           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 0 * inWidthStride)), reverse_mask);
+                    __m128i vec1           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 1 * inWidthStride)), reverse_mask);
+                    __m128i vec2           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 2 * inWidthStride)), reverse_mask);
+                    __m128i vec3           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 3 * inWidthStride)), reverse_mask);
+                    __m128i vec4           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 4 * inWidthStride)), reverse_mask);
+                    __m128i vec5           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 5 * inWidthStride)), reverse_mask);
+                    __m128i vec6           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 6 * inWidthStride)), reverse_mask);
+                    __m128i vec7           = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(base_in + 7 * inWidthStride)), reverse_mask);
                     transpose(vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7);
                     _mm_storel_pd(reinterpret_cast<double*>(base_out), _mm_castsi128_pd(vec0));
                     _mm_storeh_pd(reinterpret_cast<double*>(base_out + outWidthStride), _mm_castsi128_pd(vec0));
@@ -268,22 +316,31 @@ void imgRotate270degree<uchar, 1>(int inHeight, int inWidth, int inWidthStride, 
             }
         }
     }
-    for (int i = numRowsEnd; i < outHeight; i++) {
-        for (int j = 0; j < outWidth; j++) {
+    for (int32_t i = numRowsEnd; i < outHeight; i++) {
+        for (int32_t j = 0; j < outWidth; j++) {
             outData[i * outWidthStride + j] =
                 inData[j * inWidthStride + (inWidth - i - 1)];
         }
     }
-    for (int i = 0; i < numRowsEnd; i++) {
-        for (int j = numColsEnd; j < outWidth; j++) {
+    for (int32_t i = 0; i < numRowsEnd; i++) {
+        for (int32_t j = numColsEnd; j < outWidth; j++) {
             outData[i * outWidthStride + j] =
                 inData[j * inWidthStride + (inWidth - i - 1)];
         }
     }
 }
 
-template <typename T, int nc>
-::ppl::common::RetCode imgRotate(int inHeight, int inWidth, int inWidthStride, const T* inData, int outHeight, int outWidth, int outWidthStride, T* outData, int degree)
+template <typename T, int32_t nc>
+::ppl::common::RetCode imgRotate(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T* outData,
+    int32_t degree)
 {
     if (degree == 90) {
         imgRotate90degree<T, nc>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData);
@@ -296,7 +353,16 @@ template <typename T, int nc>
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree<float, 1>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<float, 1>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const float* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    float* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
@@ -306,7 +372,16 @@ template <>
     return ppl::common::RC_SUCCESS;
 }
 template <>
-::ppl::common::RetCode RotateNx90degree<float, 2>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<float, 2>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const float* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    float* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
@@ -317,7 +392,16 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree<float, 3>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<float, 3>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const float* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    float* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
@@ -328,7 +412,16 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree<float, 4>(int inHeight, int inWidth, int inWidthStride, const float* inData, int outHeight, int outWidth, int outWidthStride, float* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<float, 4>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const float* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    float* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
@@ -339,70 +432,149 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree<uchar, 1>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<uint8_t, 1>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
     assert(inHeight != 0 && inWidth != 0 && inWidthStride != 0 && outHeight != 0 && outWidth != 0);
     assert(degree == 90 || degree == 180 || degree == 270);
-    imgRotate<uchar, 1>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
+    imgRotate<uint8_t, 1>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
     return ppl::common::RC_SUCCESS;
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree<uchar, 2>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<uint8_t, 2>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
     assert(inHeight != 0 && inWidth != 0 && inWidthStride != 0 && outHeight != 0 && outWidth != 0);
     assert(degree == 90 || degree == 180 || degree == 270);
-    imgRotate<uchar, 2>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
+    imgRotate<uint8_t, 2>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
     return ppl::common::RC_SUCCESS;
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree<uchar, 3>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<uint8_t, 3>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
     assert(inHeight != 0 && inWidth != 0 && inWidthStride != 0 && outHeight != 0 && outWidth != 0);
     assert(degree == 90 || degree == 180 || degree == 270);
-    imgRotate<uchar, 3>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
+    imgRotate<uint8_t, 3>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
     return ppl::common::RC_SUCCESS;
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree<uchar, 4>(int inHeight, int inWidth, int inWidthStride, const uchar* inData, int outHeight, int outWidth, int outWidthStride, uchar* outData, int degree)
+::ppl::common::RetCode RotateNx90degree<uint8_t, 4>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    uint8_t* outData,
+    int32_t degree)
 {
     assert(inData != NULL);
     assert(outData != NULL);
     assert(inHeight != 0 && inWidth != 0 && inWidthStride != 0 && outHeight != 0 && outWidth != 0);
     assert(degree == 90 || degree == 180 || degree == 270);
-    imgRotate<uchar, 4>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
+    imgRotate<uint8_t, 4>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, degree);
     return ppl::common::RC_SUCCESS;
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree_NV12<uchar>(int inHeight, int inWidth, int inYStride, const uchar* inDataY, int inUVStride, const uchar* inDataUV, int outHeight, int outWidth, int outYStride, uchar* outDataY, int outUVStride, uchar* outDataUV, int degree)
+::ppl::common::RetCode RotateNx90degree_NV12<uint8_t>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inYStride,
+    const uint8_t* inDataY,
+    int32_t inUVStride,
+    const uint8_t* inDataUV,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outYStride,
+    uint8_t* outDataY,
+    int32_t outUVStride,
+    uint8_t* outDataUV,
+    int32_t degree)
 {
-    imgRotate<uchar, 1>(inHeight, inWidth, inYStride, inDataY, outHeight, outWidth, outYStride, outDataY, degree);
-    imgRotate<uchar, 2>(inHeight / 2, inWidth / 2, inUVStride, inDataUV, outHeight / 2, outWidth / 2, outUVStride, outDataUV, degree);
+    imgRotate<uint8_t, 1>(inHeight, inWidth, inYStride, inDataY, outHeight, outWidth, outYStride, outDataY, degree);
+    imgRotate<uint8_t, 2>(inHeight / 2, inWidth / 2, inUVStride, inDataUV, outHeight / 2, outWidth / 2, outUVStride, outDataUV, degree);
     return ppl::common::RC_SUCCESS;
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree_NV21<uchar>(int inHeight, int inWidth, int inYStride, const uchar* inDataY, int inVUStride, const uchar* inDataVU, int outHeight, int outWidth, int outYStride, uchar* outDataY, int outVUStride, uchar* outDataVU, int degree)
+::ppl::common::RetCode RotateNx90degree_NV21<uint8_t>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inYStride,
+    const uint8_t* inDataY,
+    int32_t inVUStride,
+    const uint8_t* inDataVU,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outYStride,
+    uint8_t* outDataY,
+    int32_t outVUStride,
+    uint8_t* outDataVU,
+    int32_t degree)
 {
-    RotateNx90degree_NV12<uchar>(inHeight, inWidth, inYStride, inDataY, inVUStride, inDataVU, outHeight, outWidth, outYStride, outDataY, outVUStride, outDataVU, degree);
+    RotateNx90degree_NV12<uint8_t>(inHeight, inWidth, inYStride, inDataY, inVUStride, inDataVU, outHeight, outWidth, outYStride, outDataY, outVUStride, outDataVU, degree);
     return ppl::common::RC_SUCCESS;
 }
 
 template <>
-::ppl::common::RetCode RotateNx90degree_I420<uchar>(int inHeight, int inWidth, int inYStride, const uchar* inDataY, int inUStride, const uchar* inDataU, int inVStride, const uchar* inDataV, int outHeight, int outWidth, int outYStride, uchar* outDataY, int outUStride, uchar* outDataU, int outVStride, uchar* outDataV, int degree)
+::ppl::common::RetCode RotateNx90degree_I420<uint8_t>(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inYStride,
+    const uint8_t* inDataY,
+    int32_t inUStride,
+    const uint8_t* inDataU,
+    int32_t inVStride,
+    const uint8_t* inDataV,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outYStride,
+    uint8_t* outDataY,
+    int32_t outUStride,
+    uint8_t* outDataU,
+    int32_t outVStride,
+    uint8_t* outDataV,
+    int32_t degree)
 {
-    imgRotate<uchar, 1>(inHeight, inWidth, inYStride, inDataY, outHeight, outWidth, outYStride, outDataY, degree);
-    imgRotate<uchar, 1>(inHeight / 2, inWidth / 2, inUStride, inDataU, outHeight / 2, outWidth / 2, outUStride, outDataU, degree);
-    imgRotate<uchar, 1>(inHeight / 2, inWidth / 2, inVStride, inDataV, outHeight / 2, outWidth / 2, outVStride, outDataV, degree);
+    imgRotate<uint8_t, 1>(inHeight, inWidth, inYStride, inDataY, outHeight, outWidth, outYStride, outDataY, degree);
+    imgRotate<uint8_t, 1>(inHeight / 2, inWidth / 2, inUStride, inDataU, outHeight / 2, outWidth / 2, outUStride, outDataU, degree);
+    imgRotate<uint8_t, 1>(inHeight / 2, inWidth / 2, inVStride, inDataV, outHeight / 2, outWidth / 2, outVStride, outDataV, degree);
     return ppl::common::RC_SUCCESS;
 }
 
