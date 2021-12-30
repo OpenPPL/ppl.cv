@@ -71,6 +71,24 @@ inline void Map(T *out_data, const T *in_data0, const T *in_data1, float alpha, 
     }
 }
 
+static inline int32_t borderInterpolate(int32_t p, int32_t len)
+{
+    if (len == 1) {
+        return 0;
+    }
+    if (p < 0 || p >= len) {
+        do {
+            if (p < 0) {
+                p = -p;
+            } else {
+                p = len - 1 - (p - len) - 1;
+            }
+        } while (p < 0 || p >= len);
+    }
+
+    return p;
+}
+
 } //! namespace x86
 } //! namespace cv
 } //! namespace ppl

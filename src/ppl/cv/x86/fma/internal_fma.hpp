@@ -166,11 +166,11 @@ template <int32_t dstcn, int32_t blueIdx, bool isUV>
     int32_t height,
     int32_t width,
     int32_t inYStride,
-    const uchar *inY,
+    const uint8_t *inY,
     int32_t inUVStride,
-    const uchar *inUV,
+    const uint8_t *inUV,
     int32_t outWidthStride,
-    uchar *outData);
+    uint8_t *outData);
 
 template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 ::ppl::common::RetCode warpaffine_linear(
@@ -198,14 +198,113 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
     const double *M,
     T delta);
 
-template <typename T, int nc>
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_linear(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T *dst,
+    const T *src,
+    const double M[][3],
+    T delta);
+
+template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
+::ppl::common::RetCode warpperspective_nearest(
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T *dst,
+    const T *src,
+    const double M[][3],
+    T delta);
+
+template <typename T, int32_t nc>
 ::ppl::common::RetCode splitAOS2SOA(
-    int height,
-    int width,
-    int inWidthStride,
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
     const T *in,
-    int outWidthStride,
+    int32_t outWidthStride,
     T **out);
+
+template <int32_t filterSize>
+void convolution_f(
+    int32_t imageInSizeX,
+    int32_t imageInSizeY,
+    int32_t inWidthStride,
+    float *imageIn, /*do copy make border inside */
+    const float *filter,
+    int32_t outWidthStride,
+    float *imageOut,
+    int32_t cn,
+    const float *src,
+    int32_t srcHeight,
+    int32_t srcWidth,
+    int32_t srcWidthStride,
+    BorderType border_type);
+
+template <int32_t filterSize>
+void convolution_b(
+    int32_t imageInSizeX,
+    int32_t imageInSizeY,
+    int32_t inWidthStride,
+    uint8_t *imageIn, /*do copy make border inside */
+    const float *filter,
+    int32_t outWidthStride,
+    uint8_t *imageOut,
+    int32_t cn,
+    const uint8_t *src,
+    int32_t srcHeight,
+    int32_t srcWidth,
+    int32_t srcWidthStride,
+    BorderType border_type);
+
+void convolution_b_r(
+    int32_t imageInSizeX,
+    int32_t imageInSizeY,
+    int32_t inWidthStride,
+    uint8_t *imageIn,
+    int32_t filterSize,
+    const float *filter,
+    int32_t outWidthStride,
+    uint8_t *imageOut,
+    int32_t cn,
+    const uint8_t *src,
+    int32_t srcHeight,
+    int32_t srcWidth,
+    int32_t srcWidthStride,
+    BorderType border_type);
+
+void convolution_f_r(
+    int32_t imageInSizeX,
+    int32_t imageInSizeY,
+    int32_t inWidthStride,
+    float *imageIn,
+    int32_t filterSize,
+    const float *filter,
+    int32_t outWidthStride,
+    float *imageOut,
+    int32_t cn,
+    const float *src,
+    int32_t srcHeight,
+    int32_t srcWidth,
+    int32_t srcWidthStride,
+    BorderType border_type);
+
+template <typename T, int32_t nc>
+void mergeSOA2AOS(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T **in,
+    int32_t outWidthStride,
+    T *out);
 
 }}}} // namespace ppl::cv::x86::fma
 #endif //! PPL_CV_X86_INTERNAL_FMA_H_
