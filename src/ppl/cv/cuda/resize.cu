@@ -354,7 +354,7 @@ void resizeAreaKernel0C1(const T* src, int src_rows, int src_cols, int channels,
 
   T* output = (T*)(dst + element_y * dst_stride);
   if (sizeof(T) == 1) {
-    output[element_x] = saturate_cast(sum);
+    output[element_x] = saturateCast(sum);
   }
   else {
     output[element_x] = sum;
@@ -392,7 +392,7 @@ void resizeAreaKernel0C3(const T* src, int src_rows, int src_cols,
   sum /= area;
 
   Tn* output = (Tn*)(dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tn, float3>(sum);
+  output[element_x] = saturateCastVector<Tn, float3>(sum);
 }
 
 template <typename T, typename Tn>
@@ -426,7 +426,7 @@ void resizeAreaKernel0C4(const T* src, int src_rows, int src_cols,
   sum /= area;
 
   Tn* output = (Tn*)(dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tn, float4>(sum);
+  output[element_x] = saturateCastVector<Tn, float4>(sum);
 }
 
 template <typename T>
@@ -503,7 +503,7 @@ void resizeAreaKernel1C1(const T* src, int src_rows, int src_cols, int channels,
 
   T* output = (T*)(dst + element_y * dst_stride);
   if (sizeof(T) == 1) {
-    output[element_x] = saturate_cast(sum);
+    output[element_x] = saturateCast(sum);
   }
   else {
     output[element_x] = sum;
@@ -593,7 +593,7 @@ void resizeAreaKernel1C3(const T* src, int src_rows, int src_cols,
   sum /= area;
 
   Tn* output = (Tn*)(dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tn, float3>(sum);
+  output[element_x] = saturateCastVector<Tn, float3>(sum);
 }
 
 template <typename T, typename Tn>
@@ -679,7 +679,7 @@ void resizeAreaKernel1C4(const T* src, int src_rows, int src_cols,
   sum /= area;
 
   Tn* output = (Tn*)(dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tn, float4>(sum);
+  output[element_x] = saturateCastVector<Tn, float4>(sum);
 }
 
 __global__

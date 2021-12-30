@@ -84,7 +84,7 @@ void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
       sum += value1;
 
       uchar* output = (uchar*)(dst + element_y * dst_stride);
-      output[element_x] = saturate_cast(sum);
+      output[element_x] = saturateCast(sum);
     }
     else if (channels == 3) {
       uchar3 border_value1 = make_uchar3(border_value, border_value,
@@ -111,7 +111,7 @@ void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
         output[element_x] = border_value1;  // align with npp.
       }
       else {
-        output[element_x] = saturate_cast_vector<uchar3, float3>(sum);
+        output[element_x] = saturateCastVector<uchar3, float3>(sum);
       }
     }
     else {
@@ -135,7 +135,7 @@ void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
       sum += value1;
 
       uchar4* output = (uchar4*)(dst + element_y * dst_stride);
-      output[element_x] = saturate_cast_vector<uchar4, float4>(sum);
+      output[element_x] = saturateCastVector<uchar4, float4>(sum);
     }
   }
   else if (border_type == BORDER_TYPE_REPLICATE) {
@@ -168,7 +168,7 @@ void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
       sum += value1;
 
       uchar* output = (uchar*)(dst + element_y * dst_stride);
-      output[element_x] = saturate_cast(sum);
+      output[element_x] = saturateCast(sum);
     }
     else if (channels == 3) {
       uchar3* input = (uchar3*)(src + src_y0 * src_stride);
@@ -189,7 +189,7 @@ void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
       sum += value1;
 
       uchar3* output = (uchar3*)(dst + element_y * dst_stride);
-      output[element_x] = saturate_cast_vector<uchar3, float3>(sum);
+      output[element_x] = saturateCastVector<uchar3, float3>(sum);
     }
     else {
       uchar4* input = (uchar4*)(src + src_y0 * src_stride);
@@ -210,7 +210,7 @@ void warpPerspectiveLinearKernel(const uchar* src, int src_rows, int src_cols,
       sum += value1;
 
       uchar4* output = (uchar4*)(dst + element_y * dst_stride);
-      output[element_x] = saturate_cast_vector<uchar4, float4>(sum);
+      output[element_x] = saturateCastVector<uchar4, float4>(sum);
     }
   }
   else {

@@ -305,42 +305,42 @@ RetCode rotate(const float* src, int src_rows, int src_cols, int channels,
   if (degree == 90) {
     if (channels == 1) {
       rotate90Kernel<<<grid0, block0, 0, stream>>>((float*)src, src_rows,
-        src_cols, src_stride, (float*)dst, dst_stride);
+          src_cols, src_stride, (float*)dst, dst_stride);
     }
     else if (channels == 3) {
       rotate90Kernel<<<grid0, block0, 0, stream>>>((float3*)src, src_rows,
-        src_cols, src_stride, (float3*)dst, dst_stride);
+          src_cols, src_stride, (float3*)dst, dst_stride);
     }
     else {  // channels == 4
       rotate90Kernel<<<grid0, block0, 0, stream>>>((float4*)src, src_rows,
-        src_cols, src_stride, (float4*)dst, dst_stride);
+          src_cols, src_stride, (float4*)dst, dst_stride);
     }
   } else if (degree == 180) {
     if (channels == 1) {
       rotate180CnKernel<<<grid1, block1, 0, stream>>>((float*)src, src_rows,
-        src_cols, src_stride, (float*)dst, dst_stride);
+          src_cols, src_stride, (float*)dst, dst_stride);
     }
     else if (channels == 3) {
       rotate180CnKernel<<<grid1, block1, 0, stream>>>((float3*)src, src_rows,
-        src_cols, src_stride, (float3*)dst, dst_stride);
+          src_cols, src_stride, (float3*)dst, dst_stride);
     }
     else {  // channels == 4
       rotate180CnKernel<<<grid1, block1, 0, stream>>>((float4*)src, src_rows,
-        src_cols, src_stride, (float4*)dst, dst_stride);
+          src_cols, src_stride, (float4*)dst, dst_stride);
     }
   }
   else {  // degree == 270
     if (channels == 1) {
       rotate270Kernel<<<grid0, block0, 0, stream>>>((float*)src, src_rows,
-        src_cols, src_stride, (float*)dst, dst_stride);
+          src_cols, src_stride, (float*)dst, dst_stride);
     }
     else if (channels == 3) {
       rotate270Kernel<<<grid0, block0, 0, stream>>>((float3*)src, src_rows,
-        src_cols, src_stride, (float3*)dst, dst_stride);
+          src_cols, src_stride, (float3*)dst, dst_stride);
     }
     else {  // channels == 4
       rotate270Kernel<<<grid0, block0, 0, stream>>>((float4*)src, src_rows,
-        src_cols, src_stride, (float4*)dst, dst_stride);
+          src_cols, src_stride, (float4*)dst, dst_stride);
     }
   }
 

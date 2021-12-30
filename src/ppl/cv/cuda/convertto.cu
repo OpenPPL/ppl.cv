@@ -68,18 +68,18 @@ void convertToKernel0(const Tsrc* src, int rows, int cols, int src_stride,
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tdst) == 1) {
     if (element_x < cols - 3) {
-      output[element_x] = saturate_cast(value0);
-      output[element_x + 1] = saturate_cast(value1);
-      output[element_x + 2] = saturate_cast(value2);
-      output[element_x + 3] = saturate_cast(value3);
+      output[element_x] = saturateCast(value0);
+      output[element_x + 1] = saturateCast(value1);
+      output[element_x + 2] = saturateCast(value2);
+      output[element_x + 3] = saturateCast(value3);
     }
     else {
-      output[element_x] = saturate_cast(value0);
+      output[element_x] = saturateCast(value0);
       if (element_x < cols - 1) {
-        output[element_x + 1] = saturate_cast(value1);
+        output[element_x + 1] = saturateCast(value1);
       }
       if (element_x < cols - 2) {
-        output[element_x + 2] = saturate_cast(value2);
+        output[element_x + 2] = saturateCast(value2);
       }
     }
   }
@@ -131,11 +131,11 @@ void convertToKernel1(const Tsrc* src, int rows, int cols, int src_stride,
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tdst) == 1) {
     if (element_x < cols - 1) {
-      output[element_x] = saturate_cast(value0);
-      output[element_x + 1] = saturate_cast(value1);
+      output[element_x] = saturateCast(value0);
+      output[element_x + 1] = saturateCast(value1);
     }
     else {
-      output[element_x] = saturate_cast(value0);
+      output[element_x] = saturateCast(value0);
     }
   }
   else {

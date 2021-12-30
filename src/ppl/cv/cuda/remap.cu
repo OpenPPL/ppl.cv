@@ -77,7 +77,7 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
       float sum = value0 * tab[0] + value1 * tab[1] + value2 * tab[2] +
                   value3 * tab[3];
       if (sizeof(T) == 1) {
-        dst[dst_index + i] = saturate_cast(sum);
+        dst[dst_index + i] = saturateCast(sum);
       }
       else {
         dst[dst_index + i] = sum;
@@ -99,7 +99,7 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
       float sum = src0[i] * tab[0] + src1[i] * tab[1] + src2[i] * tab[2] +
                   src3[i] * tab[3];
       if (sizeof(T) == 1) {
-        dst[dst_index + i] = saturate_cast(sum);
+        dst[dst_index + i] = saturateCast(sum);
       }
       else {
         dst[dst_index + i] = sum;
@@ -126,7 +126,7 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
         float sum = value0 * tab[0] + value1 * tab[1] + value2 * tab[2] +
                     value3 * tab[3];
         if (sizeof(T) == 1) {
-          dst[dst_index + i] = saturate_cast(sum);
+          dst[dst_index + i] = saturateCast(sum);
         }
         else {
           dst[dst_index + i] = sum;

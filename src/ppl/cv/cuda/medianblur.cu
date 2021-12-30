@@ -178,18 +178,18 @@ void medianC1SharedKernel(const uchar* src, int rows, int cols, int src_stride,
 
   uchar* output = (uchar*)((uchar*)dst + element_y * dst_stride);
   if (element_x < cols - 3) {
-    output[element_x]     = saturate_cast(top.x);
-    output[element_x + 1] = saturate_cast(top.y);
-    output[element_x + 2] = saturate_cast(top.z);
-    output[element_x + 3] = saturate_cast(top.w);
+    output[element_x]     = saturateCast(top.x);
+    output[element_x + 1] = saturateCast(top.y);
+    output[element_x + 2] = saturateCast(top.z);
+    output[element_x + 3] = saturateCast(top.w);
   }
   else {
-    output[element_x] = saturate_cast(top.x);
+    output[element_x] = saturateCast(top.x);
     if (element_x < cols - 1) {
-      output[element_x + 1] = saturate_cast(top.y);
+      output[element_x + 1] = saturateCast(top.y);
     }
     if (element_x < cols - 2) {
-      output[element_x + 2] = saturate_cast(top.z);
+      output[element_x + 2] = saturateCast(top.z);
     }
   }
 }
@@ -447,7 +447,7 @@ void medianC3SharedKernel(const uchar* src, int rows, int cols, int src_stride,
   }
 
   uchar3* output = (uchar3*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<uchar3, short3>(top);
+  output[element_x] = saturateCastVector<uchar3, short3>(top);
 }
 
 template <typename BorderInterpolation>
@@ -645,7 +645,7 @@ void medianC4SharedKernel(const uchar* src, int rows, int cols, int src_stride,
   }
 
   uchar4* output = (uchar4*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<uchar4, short4>(top);
+  output[element_x] = saturateCastVector<uchar4, short4>(top);
 }
 
 template <typename BorderInterpolation>
@@ -904,18 +904,18 @@ void medianC1Kernel(const uchar* src, int rows, int cols, int src_stride,
 
   uchar* output = (uchar*)((uchar*)dst + element_y * dst_stride);
   if (element_x < cols - 3) {
-    output[element_x]     = saturate_cast(top.x);
-    output[element_x + 1] = saturate_cast(top.y);
-    output[element_x + 2] = saturate_cast(top.z);
-    output[element_x + 3] = saturate_cast(top.w);
+    output[element_x]     = saturateCast(top.x);
+    output[element_x + 1] = saturateCast(top.y);
+    output[element_x + 2] = saturateCast(top.z);
+    output[element_x + 3] = saturateCast(top.w);
   }
   else {
-    output[element_x] = saturate_cast(top.x);
+    output[element_x] = saturateCast(top.x);
     if (element_x < cols - 1) {
-      output[element_x + 1] = saturate_cast(top.y);
+      output[element_x + 1] = saturateCast(top.y);
     }
     if (element_x < cols - 2) {
-      output[element_x + 2] = saturate_cast(top.z);
+      output[element_x + 2] = saturateCast(top.z);
     }
   }
 }
@@ -1210,7 +1210,7 @@ void medianC3Kernel(const uchar* src, int rows, int cols, int src_stride,
   }
 
   uchar3* output = (uchar3*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<uchar3, short3>(top);
+  output[element_x] = saturateCastVector<uchar3, short3>(top);
 }
 
 template <typename BorderInterpolation>
@@ -1480,7 +1480,7 @@ void medianC4Kernel(const uchar* src, int rows, int cols, int src_stride,
   }
 
   uchar4* output = (uchar4*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<uchar4, short4>(top);
+  output[element_x] = saturateCastVector<uchar4, short4>(top);
 }
 
 template <typename BorderInterpolation>
