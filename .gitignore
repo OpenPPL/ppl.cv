@@ -2,7 +2,6 @@ deps
 cuda-build
 x86-build
 arm-build
-aarch64-build
 log
 .vscode
 install

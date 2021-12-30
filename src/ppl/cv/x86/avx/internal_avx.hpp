@@ -55,41 +55,6 @@ template <typename Tsrc, int32_t ncSrc, typename Tdst, int32_t ncDst>
     int32_t outWidthStride,
     float *outData);
 
-template <int32_t cn>
-void bilateralFilter_32f_avx(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const float *src,
-    int32_t outWidthStride,
-    float *dst,
-    int32_t d,
-    float sigma_color,
-    float sigma_space);
-
-template <typename Tsrc, int32_t ncSrc, typename Tdst, int32_t ncDst, int32_t nc>
-void x86ImageCrop_avx(
-    int32_t p_y,
-    int32_t p_x,
-    int32_t inWidthStride,
-    const float *inData,
-    int32_t outHeight,
-    int32_t outWidth,
-    int32_t outWidthStride,
-    float *outData,
-    float ratio);
-
-template <int cn>
-void x86GaussianBlur_f_avx(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const float *inData,
-    int32_t kernel_len,
-    float sigma,
-    int32_t outWidthStride,
-    float *outData,
-    ppl::cv::BorderType border_type);
 }
 }
 } // namespace ppl::cv::x86

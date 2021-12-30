@@ -8,9 +8,6 @@ endif()
 if(PPLCV_USE_CUDA)
     target_compile_definitions(pplcv_unittest PRIVATE PPLCV_UNITTEST_OPENCV_CUDA)
 endif()
-if(PPLCV_USE_AARCH64)
-    target_compile_definitions(pplcv_unittest PRIVATE PPLCV_UNITTEST_OPENCV)
-endif()
 
 target_include_directories(pplcv_unittest PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
