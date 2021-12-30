@@ -140,11 +140,8 @@ bool PplCvCudaWarpAffineTest<T, channels>::apply() {
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
-  int cv_iterpolation;
-  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
-    cv_iterpolation = cv::INTER_LINEAR;
-  }
-  else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+  int cv_iterpolation = cv::INTER_LINEAR;
+  if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
     cv_iterpolation = cv::INTER_NEAREST;
   }
   else {
