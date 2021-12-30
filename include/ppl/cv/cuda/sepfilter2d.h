@@ -58,25 +58,16 @@ namespace cuda {
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
- * <tr><th>Data type(Tsrc)<th>channels
- * <tr><td>uint8_t(uchar)<td>1
- * <tr><td>uint8_t(uchar)<td>3
- * <tr><td>uint8_t(uchar)<td>4
- * <tr><td>float<td>1
- * <tr><td>float<td>3
- * <tr><td>float<td>4
- * </table>
- * <table>
- * <tr><th>Data type(Tdst)<th>channels
- * <tr><td>uint8_t(uchar)<td>1
- * <tr><td>uint8_t(uchar)<td>3
- * <tr><td>uint8_t(uchar)<td>4
- * <tr><td>short<td>1
- * <tr><td>short<td>3
- * <tr><td>short<td>4
- * <tr><td>float<td>1
- * <tr><td>float<td>3
- * <tr><td>float<td>4
+ * <tr><th>Data type(Tsrc)<th>Data type(Tdst)<th>channels
+ * <tr><td>uint8_t(uchar)<td>uint8_t(uchar)<td>1
+ * <tr><td>uint8_t(uchar)<td>uint8_t(uchar)<td>3
+ * <tr><td>uint8_t(uchar)<td>uint8_t(uchar)<td>4
+ * <tr><td>uint8_t(uchar)<td>short<td>1
+ * <tr><td>uint8_t(uchar)<td>short<td>3
+ * <tr><td>uint8_t(uchar)<td>short<td>4
+ * <tr><td>float<td>float<td>1
+ * <tr><td>float<td>float<td>3
+ * <tr><td>float<td>float<td>4
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
