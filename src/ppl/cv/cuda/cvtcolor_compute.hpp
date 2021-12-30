@@ -589,9 +589,9 @@ struct BGR2YCrCbCompute {
     int z = divideUp((b - x) * kCBCoeff + kShift14Delta, kYCrCbShift);
 
     uchar3 dst;  // (x = Y, y = Cr, z = Cb)
-    dst.x = saturate_cast(x);
-    dst.y = saturate_cast(y);
-    dst.z = saturate_cast(z);
+    dst.x = saturateCast(x);
+    dst.y = saturateCast(y);
+    dst.z = saturateCast(z);
 
     return dst;
   }
@@ -624,9 +624,9 @@ struct RGB2YCrCbCompute {
     int z = divideUp((b - x) * kCBCoeff + kShift14Delta, kYCrCbShift);
 
     uchar3 dst;  // (x = Y, y = Cr, z = Cb)
-    dst.x = saturate_cast(x);
-    dst.y = saturate_cast(y);
-    dst.z = saturate_cast(z);
+    dst.x = saturateCast(x);
+    dst.y = saturateCast(y);
+    dst.z = saturateCast(z);
 
     return dst;
   }
@@ -659,9 +659,9 @@ struct BGRA2YCrCbCompute {
     int z = divideUp((b - x) * kCBCoeff + kShift14Delta, kYCrCbShift);
 
     uchar3 dst;  // (x = Y, y = Cr, z = Cb)
-    dst.x = saturate_cast(x);
-    dst.y = saturate_cast(y);
-    dst.z = saturate_cast(z);
+    dst.x = saturateCast(x);
+    dst.y = saturateCast(y);
+    dst.z = saturateCast(z);
 
     return dst;
   }
@@ -694,9 +694,9 @@ struct RGBA2YCrCbCompute {
     int z = divideUp((b - x) * kCBCoeff + kShift14Delta, kYCrCbShift);
 
     uchar3 dst;  // (x = Y, y = Cr, z = Cb)
-    dst.x = saturate_cast(x);
-    dst.y = saturate_cast(y);
-    dst.z = saturate_cast(z);
+    dst.x = saturateCast(x);
+    dst.y = saturateCast(y);
+    dst.z = saturateCast(z);
 
     return dst;
   }
@@ -1212,9 +1212,9 @@ struct HSV2BGRCompute {
     }
 
     uchar3 dst;
-    dst.x = saturate_cast(b * 255.f);
-    dst.y = saturate_cast(g * 255.f);
-    dst.z = saturate_cast(r * 255.f);
+    dst.x = saturateCast(b * 255.f);
+    dst.y = saturateCast(g * 255.f);
+    dst.z = saturateCast(r * 255.f);
 
     return dst;
   }
@@ -1314,9 +1314,9 @@ struct HSV2RGBCompute {
     }
 
     uchar3 dst;
-    dst.x = saturate_cast(r * 255.f);
-    dst.y = saturate_cast(g * 255.f);
-    dst.z = saturate_cast(b * 255.f);
+    dst.x = saturateCast(r * 255.f);
+    dst.y = saturateCast(g * 255.f);
+    dst.z = saturateCast(b * 255.f);
 
     return dst;
   }
@@ -1416,9 +1416,9 @@ struct HSV2BGRACompute {
     }
 
     uchar4 dst;
-    dst.x = saturate_cast(b * 255.f);
-    dst.y = saturate_cast(g * 255.f);
-    dst.z = saturate_cast(r * 255.f);
+    dst.x = saturateCast(b * 255.f);
+    dst.y = saturateCast(g * 255.f);
+    dst.z = saturateCast(r * 255.f);
     dst.w = 255;
 
     return dst;
@@ -1520,9 +1520,9 @@ struct HSV2RGBACompute {
     }
 
     uchar4 dst;
-    dst.x = saturate_cast(r * 255.f);
-    dst.y = saturate_cast(g * 255.f);
-    dst.z = saturate_cast(b * 255.f);
+    dst.x = saturateCast(r * 255.f);
+    dst.y = saturateCast(g * 255.f);
+    dst.z = saturateCast(b * 255.f);
     dst.w = 255;
 
     return dst;
@@ -1630,9 +1630,9 @@ struct BGR2LABCompute {
     int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
-    dst.x = L; //saturate_cast(L);
-    dst.y = a; //saturate_cast(a);
-    dst.z = b; //saturate_cast(b);
+    dst.x = L; //saturateCast(L);
+    dst.y = a; //saturateCast(a);
+    dst.z = b; //saturateCast(b);
 
     return dst;
   }
@@ -1695,9 +1695,9 @@ struct RGB2LABCompute {
     int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
-    dst.x = L; //saturate_cast(L);
-    dst.y = a; //saturate_cast(a);
-    dst.z = b; //saturate_cast(b);
+    dst.x = L; //saturateCast(L);
+    dst.y = a; //saturateCast(a);
+    dst.z = b; //saturateCast(b);
 
     return dst;
   }
@@ -1760,9 +1760,9 @@ struct BGRA2LABCompute {
     int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
-    dst.x = L; //saturate_cast(L);
-    dst.y = a; //saturate_cast(a);
-    dst.z = b; //saturate_cast(b);
+    dst.x = L; //saturateCast(L);
+    dst.y = a; //saturateCast(a);
+    dst.z = b; //saturateCast(b);
 
     return dst;
   }
@@ -1825,9 +1825,9 @@ struct RGBA2LABCompute {
     int b = divideUp1(200 * (fY - fZ) + 128 * (1 << kLabShift2), kLabShift2);
 
     uchar3 dst;
-    dst.x = L; //saturate_cast(L);
-    dst.y = a; //saturate_cast(a);
-    dst.z = b; //saturate_cast(b);
+    dst.x = L; //saturateCast(L);
+    dst.y = a; //saturateCast(a);
+    dst.z = b; //saturateCast(b);
 
     return dst;
   }
@@ -1920,9 +1920,9 @@ struct LAB2BGRCompute {
     R = R * 255.f;
 
     uchar3 dst;
-    dst.x = saturate_cast(B);
-    dst.y = saturate_cast(G);
-    dst.z = saturate_cast(R);
+    dst.x = saturateCast(B);
+    dst.y = saturateCast(G);
+    dst.z = saturateCast(R);
 
     return dst;
   }
@@ -2031,9 +2031,9 @@ struct LAB2RGBCompute {
     B = B * 255.f;
 
     uchar3 dst;
-    dst.x = saturate_cast(R);
-    dst.y = saturate_cast(G);
-    dst.z = saturate_cast(B);
+    dst.x = saturateCast(R);
+    dst.y = saturateCast(G);
+    dst.z = saturateCast(B);
 
     return dst;
   }
@@ -2142,9 +2142,9 @@ struct LAB2BGRACompute {
     R = R * 255.f;
 
     uchar4 dst;
-    dst.x = saturate_cast(B);
-    dst.y = saturate_cast(G);
-    dst.z = saturate_cast(R);
+    dst.x = saturateCast(B);
+    dst.y = saturateCast(G);
+    dst.z = saturateCast(R);
     dst.w = 255;
 
     return dst;
@@ -2255,9 +2255,9 @@ struct LAB2RGBACompute {
     R = R * 255.f;
 
     uchar4 dst;
-    dst.x = saturate_cast(R);
-    dst.y = saturate_cast(G);
-    dst.z = saturate_cast(B);
+    dst.x = saturateCast(R);
+    dst.y = saturateCast(G);
+    dst.z = saturateCast(B);
     dst.w = 255;
 
     return dst;
@@ -2481,9 +2481,9 @@ struct NV122BGRCompute {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
 
     return dst;
   }
@@ -2505,9 +2505,9 @@ struct NV122RGBCompute {
     int b = (y + buv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(r);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(b);
+    dst.x = saturateCast(r);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(b);
 
     return dst;
   }
@@ -2529,9 +2529,9 @@ struct NV122BGRACompute {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar4 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
     dst.w = 255;
 
     return dst;
@@ -2554,9 +2554,9 @@ struct NV122RGBACompute {
     int b = (y + buv) >> NVXX1_SHIFT;
 
     uchar4 dst;
-    dst.x = saturate_cast(r);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(b);
+    dst.x = saturateCast(r);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(b);
     dst.w = 255;
 
     return dst;
@@ -2701,9 +2701,9 @@ struct NV212BGRCompute {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
 
     return dst;
   }
@@ -2725,9 +2725,9 @@ struct NV212RGBCompute {
     int b = (y + buv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(r);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(b);
+    dst.x = saturateCast(r);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(b);
 
     return dst;
   }
@@ -2749,9 +2749,9 @@ struct NV212BGRACompute {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar4 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
     dst.w = 255;
 
     return dst;
@@ -2774,9 +2774,9 @@ struct NV212RGBACompute {
     int b = (y + buv) >> NVXX1_SHIFT;
 
     uchar4 dst;
-    dst.x = saturate_cast(r);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(b);
+    dst.x = saturateCast(r);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(b);
     dst.w = 255;
 
     return dst;
@@ -2807,8 +2807,8 @@ struct BGR2I420Compute {
       int v = (src.x * NVXX1_VB + src.y * NVXX1_VG + src.z * NVXX1_VR +
               kG2N1HalfShift + kG2N1Shift128) >> kG2N1Shift;
 
-      dst.y = saturate_cast(u);
-      dst.z = saturate_cast(v);
+      dst.y = saturateCast(u);
+      dst.z = saturateCast(v);
     }
 
     return dst;
@@ -2833,8 +2833,8 @@ struct RGB2I420Compute {
       int v = (src.x * NVXX1_VR + src.y * NVXX1_VG + src.z * NVXX1_VB +
               kG2N1HalfShift + kG2N1Shift128) >> kG2N1Shift;
 
-      dst.y = saturate_cast(u);
-      dst.z = saturate_cast(v);
+      dst.y = saturateCast(u);
+      dst.z = saturateCast(v);
     }
 
     return dst;
@@ -2859,8 +2859,8 @@ struct BGRA2I420Compute {
       int v = (src.x * NVXX1_VB + src.y * NVXX1_VG + src.z * NVXX1_VR +
               kG2N1HalfShift + kG2N1Shift128) >> kG2N1Shift;
 
-      dst.y = saturate_cast(u);
-      dst.z = saturate_cast(v);
+      dst.y = saturateCast(u);
+      dst.z = saturateCast(v);
     }
 
     return dst;
@@ -2885,8 +2885,8 @@ struct RGBA2I420Compute {
       int v = (src.x * NVXX1_VR + src.y * NVXX1_VG + src.z * NVXX1_VB +
               kG2N1HalfShift + kG2N1Shift128) >> kG2N1Shift;
 
-      dst.y = saturate_cast(u);
-      dst.z = saturate_cast(v);
+      dst.y = saturateCast(u);
+      dst.z = saturateCast(v);
     }
 
     return dst;
@@ -2914,9 +2914,9 @@ struct I4202BGRCompute {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
 
     return dst;
   }
@@ -2939,9 +2939,9 @@ struct I4202RGBCompute {
     int b = (y + buv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(r);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(b);
+    dst.x = saturateCast(r);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(b);
 
     return dst;
   }
@@ -2964,9 +2964,9 @@ struct I4202BGRACompute {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar4 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
     dst.w = 255;
 
     return dst;
@@ -2990,9 +2990,9 @@ struct I4202RGBACompute {
     int b = (y + buv) >> NVXX1_SHIFT;
 
     uchar4 dst;
-    dst.x = saturate_cast(r);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(b);
+    dst.x = saturateCast(r);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(b);
     dst.w = 255;
 
     return dst;
@@ -3017,9 +3017,9 @@ struct UYVY2BGRCompute0 {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
 
     return dst;
   }
@@ -3041,9 +3041,9 @@ struct UYVY2BGRCompute1 {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
 
     return dst;
   }
@@ -3078,9 +3078,9 @@ struct YUYV2BGRCompute0 {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
 
     return dst;
   }
@@ -3102,9 +3102,9 @@ struct YUYV2BGRCompute1 {
     int r = (y + ruv) >> NVXX1_SHIFT;
 
     uchar3 dst;
-    dst.x = saturate_cast(b);
-    dst.y = saturate_cast(g);
-    dst.z = saturate_cast(r);
+    dst.x = saturateCast(b);
+    dst.y = saturateCast(g);
+    dst.z = saturateCast(r);
 
     return dst;
   }

@@ -139,18 +139,18 @@ void filter2DC1SharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tsrc) == 1) {
     if (element_x < cols - 3) {
-      output[element_x]     = saturate_cast(sum.x);
-      output[element_x + 1] = saturate_cast(sum.y);
-      output[element_x + 2] = saturate_cast(sum.z);
-      output[element_x + 3] = saturate_cast(sum.w);
+      output[element_x]     = saturateCast(sum.x);
+      output[element_x + 1] = saturateCast(sum.y);
+      output[element_x + 2] = saturateCast(sum.z);
+      output[element_x + 3] = saturateCast(sum.w);
     }
     else {
-      output[element_x] = saturate_cast(sum.x);
+      output[element_x] = saturateCast(sum.x);
       if (element_x < cols - 1) {
-        output[element_x + 1] = saturate_cast(sum.y);
+        output[element_x + 1] = saturateCast(sum.y);
       }
       if (element_x < cols - 2) {
-        output[element_x + 2] = saturate_cast(sum.z);
+        output[element_x + 2] = saturateCast(sum.z);
       }
     }
   }
@@ -233,7 +233,7 @@ void filter2DCnSharedKernel0(const Tsrc* src, int rows, int cols,
   }
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+  output[element_x] = saturateCastVector<Tdstn, float4>(sum);
 }
 
 template <typename Tsrc, typename Tsrc4, typename Tdst, typename Tdst4,
@@ -323,18 +323,18 @@ void filter2DC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
   if (sizeof(Tsrc) == 1) {
     if (element_x < cols - 3) {
-      output[element_x]     = saturate_cast(sum.x);
-      output[element_x + 1] = saturate_cast(sum.y);
-      output[element_x + 2] = saturate_cast(sum.z);
-      output[element_x + 3] = saturate_cast(sum.w);
+      output[element_x]     = saturateCast(sum.x);
+      output[element_x + 1] = saturateCast(sum.y);
+      output[element_x + 2] = saturateCast(sum.z);
+      output[element_x + 3] = saturateCast(sum.w);
     }
     else {
-      output[element_x] = saturate_cast(sum.x);
+      output[element_x] = saturateCast(sum.x);
       if (element_x < cols - 1) {
-        output[element_x + 1] = saturate_cast(sum.y);
+        output[element_x + 1] = saturateCast(sum.y);
       }
       if (element_x < cols - 2) {
-        output[element_x + 2] = saturate_cast(sum.z);
+        output[element_x + 2] = saturateCast(sum.z);
       }
     }
   }
@@ -442,7 +442,7 @@ void filter2DCnSharedKernel1(const Tsrc* src, int rows, int cols,
     }
 
     Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-    output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+    output[element_x] = saturateCastVector<Tdstn, float4>(sum);
   }
 }
 
@@ -522,7 +522,7 @@ void filter2DCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   Tdst4* output = (Tdst4*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tdst4, float4>(sum);
+  output[element_x] = saturateCastVector<Tdst4, float4>(sum);
 }
 
 #define RUN_CHANNEL1_SMALL_KERNELS(Tsrc, Tdst, Interpolation)                  \

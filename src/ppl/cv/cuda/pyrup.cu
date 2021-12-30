@@ -82,8 +82,8 @@ float4 setValue(float value) {
 
 template <typename T, typename BorderInterpolation>
 __global__
-void pyrupC1Kernel(const T* src, int src_stride, T* dst, int dst_rows, 
-                   int dst_cols, int dst_stride, 
+void pyrupC1Kernel(const T* src, int src_stride, T* dst, int dst_rows,
+                   int dst_cols, int dst_stride,
                    BorderInterpolation interpolation) {
   __shared__ T raw_data[BlockDimY + (RADIUS << 1)][BlockDimX + (RADIUS << 1)];
   __shared__ float col_data[BlockDimY + (RADIUS << 1)][BlockDimX];
@@ -108,7 +108,7 @@ void pyrupC1Kernel(const T* src, int src_stride, T* dst, int dst_rows,
           raw_data[y_index][x_index] = input[x_index1 >> 1];
         }
         else {
-          raw_data[y_index][x_index] = 0;   
+          raw_data[y_index][x_index] = 0;
         }
         x_index   += BlockDimX;
         col_index += BlockDimX;
@@ -119,7 +119,7 @@ void pyrupC1Kernel(const T* src, int src_stride, T* dst, int dst_rows,
       int col_index = element_x - RADIUS;
       while (col_index < (int)(((blockIdx.x + 1) << BlockShiftX) + RADIUS) &&
              col_index < dst_cols + RADIUS) {
-        raw_data[y_index][x_index] = 0; 
+        raw_data[y_index][x_index] = 0;
         x_index   += BlockDimX;
         col_index += BlockDimX;
       }
@@ -159,7 +159,7 @@ void pyrupC1Kernel(const T* src, int src_stride, T* dst, int dst_rows,
 
     T* output = (T*)((uchar*)dst + element_y * dst_stride);
     if (sizeof(T) == 1) {
-      output[element_x] = saturate_cast(sum);
+      output[element_x] = saturateCast(sum);
     }
     else {
       output[element_x] = sum;
@@ -169,19 +169,19 @@ void pyrupC1Kernel(const T* src, int src_stride, T* dst, int dst_rows,
 
 template <typename T>
 __global__
-void pyrupC1Bat4Ref101Kernel(const T* src, int src_stride, T* dst, int dst_rows, 
+void pyrupC1Bat4Ref101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
                              int dst_cols, int dst_stride) {
   __shared__ T raw_data[(BlockDimY >> 1) + RADIUS][(BlockDimX << 1) + 8];
   __shared__ float4 col_data[BlockDimY + (RADIUS << 1)][BlockDimX];
 
   int element_x = ((blockIdx.x << BlockShiftX) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << BlockShiftY) + threadIdx.y;
-  
+
   int index0, index1;
   int src_x = (blockIdx.x << (BlockShiftX + 1)) + (threadIdx.x << 2) - 4;
   int src_y = (blockIdx.y << (BlockShiftY - 1)) + threadIdx.y - 1;
-  if (threadIdx.y < (blockDim.y >> 1) + RADIUS && 
-      threadIdx.x < (blockDim.x >> 1) + RADIUS && 
+  if (threadIdx.y < (blockDim.y >> 1) + RADIUS &&
+      threadIdx.x < (blockDim.x >> 1) + RADIUS &&
       src_y < (dst_rows >> 1) + 1 && src_x < (dst_cols >> 1) + 1) {
     int src_x1 = src_x + 1;
     int src_x2 = src_x + 2;
@@ -208,7 +208,7 @@ void pyrupC1Bat4Ref101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
     raw_data[threadIdx.y][index0 + 3] = input[src_x3];
   }
   __syncthreads();
-  
+
   int y_index   = threadIdx.y;
   int row_index = element_y - RADIUS;
   float4 sum;
@@ -217,12 +217,12 @@ void pyrupC1Bat4Ref101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
     sum = make_float4(0.f, 0.f, 0.f, 0.f);
     if ((y_index & 1) == 0) {
       index0 = y_index >> 1;
-      index1 = threadIdx.x << 1; 
+      index1 = threadIdx.x << 1;
       sum.x += raw_data[index0][index1 + 3] * 0.0625f;
       sum.z += raw_data[index0][index1 + 4] * 0.0625f;
 
       sum.y += raw_data[index0][index1 + 4] * 0.25f;
-      sum.w += raw_data[index0][index1 + 5] * 0.25f; 
+      sum.w += raw_data[index0][index1 + 5] * 0.25f;
 
       sum.x += raw_data[index0][index1 + 4] * 0.375f;
       sum.z += raw_data[index0][index1 + 5] * 0.375f;
@@ -256,18 +256,18 @@ void pyrupC1Bat4Ref101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
     T* output = (T*)((uchar*)dst + element_y * dst_stride);
     if (sizeof(T) == 1) {
       if (element_x < dst_cols - 3) {
-        output[element_x]     = saturate_cast(sum.x);
-        output[element_x + 1] = saturate_cast(sum.y);
-        output[element_x + 2] = saturate_cast(sum.z);
-        output[element_x + 3] = saturate_cast(sum.w);
+        output[element_x]     = saturateCast(sum.x);
+        output[element_x + 1] = saturateCast(sum.y);
+        output[element_x + 2] = saturateCast(sum.z);
+        output[element_x + 3] = saturateCast(sum.w);
       }
       else {
-        output[element_x] = saturate_cast(sum.x);
+        output[element_x] = saturateCast(sum.x);
         if (element_x < dst_cols - 1) {
-          output[element_x + 1] = saturate_cast(sum.y);
+          output[element_x + 1] = saturateCast(sum.y);
         }
         if (element_x < dst_cols - 2) {
-          output[element_x + 2] = saturate_cast(sum.z);
+          output[element_x + 2] = saturateCast(sum.z);
         }
       }
     }
@@ -293,8 +293,8 @@ void pyrupC1Bat4Ref101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
 
 template <typename T, typename Tn, typename BorderInterpolation>
 __global__
-void pyrupCnKernel(const T* src, int src_stride, T* dst, int dst_rows, 
-                   int dst_cols, int dst_stride, 
+void pyrupCnKernel(const T* src, int src_stride, T* dst, int dst_rows,
+                   int dst_cols, int dst_stride,
                    BorderInterpolation interpolation) {
   __shared__ Tn raw_data[BlockDimY + (RADIUS << 1)][BlockDimX + (RADIUS << 1)];
   __shared__ float4 col_data[BlockDimY + (RADIUS << 1)][BlockDimX];
@@ -319,7 +319,7 @@ void pyrupCnKernel(const T* src, int src_stride, T* dst, int dst_rows,
           raw_data[y_index][x_index] = input[x_index1 >> 1];
         }
         else {
-          raw_data[y_index][x_index] = setValue<Tn, T>(0);   
+          raw_data[y_index][x_index] = setValue<Tn, T>(0);
         }
         x_index   += BlockDimX;
         col_index += BlockDimX;
@@ -330,7 +330,7 @@ void pyrupCnKernel(const T* src, int src_stride, T* dst, int dst_rows,
       int col_index = element_x - RADIUS;
       while (col_index < (int)(((blockIdx.x + 1) << BlockShiftX) + RADIUS) &&
              col_index < dst_cols + RADIUS) {
-        raw_data[y_index][x_index] = setValue<Tn, T>(0); 
+        raw_data[y_index][x_index] = setValue<Tn, T>(0);
         x_index   += BlockDimX;
         col_index += BlockDimX;
       }
@@ -373,24 +373,24 @@ void pyrupCnKernel(const T* src, int src_stride, T* dst, int dst_rows,
     sum.w *= 4;
 
     Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
-    output[element_x] = saturate_cast_vector<Tn, float4>(sum);
+    output[element_x] = saturateCastVector<Tn, float4>(sum);
   }
 }
 
 template <typename T, typename Tn>
 __global__
-void pyrupCnRef101Kernel(const T* src, int src_stride, T* dst, int dst_rows, 
+void pyrupCnRef101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
                          int dst_cols, int dst_stride) {
   __shared__ Tn raw_data[(BlockDimY >> 1) + RADIUS][(BlockDimX >> 1) + RADIUS];
   __shared__ float4 col_data[BlockDimY + (RADIUS << 1)][BlockDimX];
 
   int element_x = (blockIdx.x << BlockShiftX) + threadIdx.x;
   int element_y = (blockIdx.y << BlockShiftY) + threadIdx.y;
-  
+
   int src_x = (blockIdx.x << (BlockShiftX - 1)) + threadIdx.x - 1;
   int src_y = (blockIdx.y << (BlockShiftY - 1)) + threadIdx.y - 1;
-  if (threadIdx.y < (blockDim.y >> 1) + RADIUS && 
-      threadIdx.x < (blockDim.x >> 1) + RADIUS && 
+  if (threadIdx.y < (blockDim.y >> 1) + RADIUS &&
+      threadIdx.x < (blockDim.x >> 1) + RADIUS &&
       src_y < (dst_rows >> 1) + 1 && src_x < (dst_cols >> 1) + 1) {
     src_x = src_x < 0 ? 0 - src_x : src_x;
     src_y = src_y < 0 ? 0 - src_y : src_y;
@@ -398,12 +398,12 @@ void pyrupCnRef101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
     src_x = src_x > top ? top : src_x;
     top = (dst_rows >> 1) - 1;
     src_y = src_y > top ? top : src_y;
-    
+
     Tn* input = (Tn*)((uchar*)src + src_y * src_stride);
     raw_data[threadIdx.y][threadIdx.x] = input[src_x];
   }
   __syncthreads();
-  
+
   int y_index   = threadIdx.y, index;
   int row_index = element_y - RADIUS;
   float4 sum;
@@ -440,18 +440,18 @@ void pyrupCnRef101Kernel(const T* src, int src_stride, T* dst, int dst_rows,
     sum.w *= 4;
 
     Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
-    output[element_x] = saturate_cast_vector<Tn, float4>(sum);
+    output[element_x] = saturateCastVector<Tn, float4>(sum);
   }
 }
 
 #define RUN_C1_BATCH1_KERNELS(T, Interpolation)                                \
 Interpolation interpolation;                                                   \
 pyrupC1Kernel<T, Interpolation><<<grid, block, 0, stream>>>(src, src_stride,   \
-    dst, dst_rows, dst_cols, dst_stride, interpolation);        
-                               
+    dst, dst_rows, dst_cols, dst_stride, interpolation);
+
 #define RUN_C1_BATCH4_Reflect101_KERNELS(T)                                    \
 pyrupC1Bat4Ref101Kernel<T><<<grid, block, 0, stream>>>(src, src_stride, dst,   \
-    dst_rows, dst_cols, dst_stride);                                   
+    dst_rows, dst_cols, dst_stride);
 
 #define RUN_CN_BATCH1_KERNELS(T, Interpolation)                                \
 Interpolation interpolation;                                                   \
@@ -495,7 +495,7 @@ RetCode pyrup(const uchar* src, int rows, int cols, int channels,
   block.y = BlockDimY;
   grid.x = divideUp(dst_cols, BlockDimX, BlockShiftX);
   grid.y = divideUp(dst_rows, BlockDimY, BlockShiftY);
-  
+
   if (channels == 1) {
     if (border_type == BORDER_TYPE_REPLICATE) {
       RUN_C1_BATCH1_KERNELS(uchar, ReplicateBorder);

@@ -54,16 +54,10 @@ namespace cuda {
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
- * <tr><th>Data type(Tsrc)<th>channels
- * <tr><td>uint8_t(uchar)<td>1
- * <tr><td>float<td>1
+ * <tr><th>Data type(Tsrc)<th>Data type(Tdst)<th>channels
+ * <tr><td>uint8_t(uchar)<td>int<td>1
+ * <tr><td>float<td>float<td>1
  * </table>
- * <table>
- * <tr><th>Data type(Tdst)<th>channels
- * <tr><td>int<td>1
- * <tr><td>float<td>1
- * </table>
- * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>CUDA platforms supported <td>CUDA 7.0
  * <tr><td>Header files  <td> #include "ppl/cv/cuda/integral.h"
@@ -80,24 +74,25 @@ namespace cuda {
  *   int height = 480;
  *   int channels = 1;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Integral<float, float, 1>(stream, height, width,
- *                             input_pitch / sizeof(float), dev_input,
+ *                             input_pitch / sizeof(float), gpu_input,
  *                             height, width, output_pitch / sizeof(float),
- *                             dev_output);
+ *                             gpu_output);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

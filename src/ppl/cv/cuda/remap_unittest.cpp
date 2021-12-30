@@ -33,27 +33,12 @@ enum Scaling {
   kDoubleSize,
 };
 
-enum InterpolationTypes {
-  kInterLinear,
-  kInterNearest,
-};
-
-using Parameters = std::tuple<InterpolationTypes, Scaling, BorderType,
+using Parameters = std::tuple<Scaling, InterpolationType, BorderType,
                               cv::Size>;
 inline std::string convertToStringResize(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  InterpolationTypes inter_type = (InterpolationTypes)std::get<0>(parameters);
-  if (inter_type == kInterLinear) {
-    formatted << "InterLinear" << "_";
-  }
-  else if (inter_type == kInterNearest) {
-    formatted << "InterNearest" << "_";
-  }
-  else {
-  }
-
-  Scaling scale = std::get<1>(parameters);
+  Scaling scale = std::get<0>(parameters);
   if (scale == kHalfSize) {
     formatted << "HalfSize" << "_";
   }
@@ -66,12 +51,22 @@ inline std::string convertToStringResize(const Parameters& parameters) {
   else {
   }
 
-  BorderType border_type = (BorderType)std::get<2>(parameters);
-  if (border_type == BORDER_TYPE_REPLICATE) {
-    formatted << "BORDER_REPLICATE" << "_";
+  InterpolationType inter_type = (InterpolationType)std::get<1>(parameters);
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    formatted << "InterLinear" << "_";
   }
-  else if (border_type == BORDER_TYPE_CONSTANT) {
+  else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+    formatted << "InterNearest" << "_";
+  }
+  else {
+  }
+
+  BorderType border_type = (BorderType)std::get<2>(parameters);
+  if (border_type == BORDER_TYPE_CONSTANT) {
     formatted << "BORDER_CONSTANT" << "_";
+  }
+  else if (border_type == BORDER_TYPE_REPLICATE) {
+    formatted << "BORDER_REPLICATE" << "_";
   }
   else if (border_type == BORDER_TYPE_TRANSPARENT) {
     formatted << "BORDER_TRANSPARENT" << "_";
@@ -92,8 +87,8 @@ class PplCvCudaRemapTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaRemapTest() {
     const Parameters& parameters = GetParam();
-    inter_type  = std::get<0>(parameters);
-    scale       = std::get<1>(parameters);
+    scale       = std::get<0>(parameters);
+    inter_type  = std::get<1>(parameters);
     border_type = std::get<2>(parameters);
     size        = std::get<3>(parameters);
   }
@@ -104,8 +99,8 @@ class PplCvCudaRemapTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
-  InterpolationTypes inter_type;
   Scaling scale;
+  InterpolationType inter_type;
   BorderType border_type;
   cv::Size size;
 };
@@ -139,12 +134,12 @@ bool PplCvCudaRemapTest<T, channels>::apply() {
   cv::cuda::GpuMat gpu_dst(dst);
 
   int src_size = src.rows * src.cols * channels * sizeof(T);
-  int dst_size = dst.rows * dst.cols * channels * sizeof(T);
   int map_size = dst_height * dst_width * sizeof(float);
+  int dst_size = dst.rows * dst.cols * channels * sizeof(T);
   T* input  = (T*)malloc(src_size);
-  T* output = (T*)malloc(dst_size);
   float* map_x1 = (float*)malloc(map_size);
   float* map_y1 = (float*)malloc(map_size);
+  T* output = (T*)malloc(dst_size);
   T* gpu_input;
   T* gpu_output;
   cudaMalloc((void**)&gpu_input, src_size);
@@ -160,12 +155,12 @@ bool PplCvCudaRemapTest<T, channels>::apply() {
   cudaMemcpy(gpu_map_x, map_x1, map_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_map_y, map_y1, map_size, cudaMemcpyHostToDevice);
 
-  int iterpolation;
-  if (inter_type == kInterLinear) {
-    iterpolation = cv::INTER_LINEAR;
+  int cv_iterpolation;
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    cv_iterpolation = cv::INTER_LINEAR;
   }
   else {
-    iterpolation = cv::INTER_NEAREST;
+    cv_iterpolation = cv::INTER_NEAREST;
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
@@ -180,36 +175,21 @@ bool PplCvCudaRemapTest<T, channels>::apply() {
   }
   else {
   }
-  cv::remap(src, cv_dst, map_x0, map_y0, iterpolation, cv_border);
+  cv::remap(src, cv_dst, map_x0, map_y0, cv_iterpolation, cv_border);
 
-  if (inter_type == kInterLinear) {
-    RemapLinear<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-                             (T*)gpu_src.data, dst_height, dst_width,
-                             gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                             gpu_map_x, gpu_map_y, border_type);
-    RemapLinear<T, channels>(0, src.rows, src.cols, src.cols * channels,
-                             gpu_input, dst_height, dst_width,
-                             dst_width * channels, gpu_output,
-                             gpu_map_x, gpu_map_y, border_type);
-  }
-  else if (inter_type == kInterNearest) {
-    RemapNearestPoint<T, channels>(0, src.rows, src.cols,
-                                   gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                                   dst_height, dst_width,
-                                   gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                                   gpu_map_x, gpu_map_y, border_type);
-    RemapNearestPoint<T, channels>(0, src.rows, src.cols, src.cols * channels,
-                                   gpu_input, dst_height, dst_width,
-                                   dst_width * channels, gpu_output,
-                                   gpu_map_x, gpu_map_y, border_type);
-  }
-  else {
-  }
+  Remap<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
+                     (T*)gpu_src.data, dst_height, dst_width,
+                     gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
+                     gpu_map_x, gpu_map_y, inter_type, border_type);
   gpu_dst.download(dst);
+
+  Remap<T, channels>(0, src.rows, src.cols, src.cols * channels,
+                     gpu_input, dst_height, dst_width, dst_width * channels,
+                     gpu_output, gpu_map_x, gpu_map_y, inter_type, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
-  if (inter_type == kInterLinear) {
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
     if (sizeof(T) == 1) {
       epsilon = 8.1f;
     }
@@ -249,8 +229,9 @@ TEST_P(PplCvCudaRemapTest ## T ## channels, Standard) {                        \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaRemapTest ## T ## channels,          \
   ::testing::Combine(                                                          \
-    ::testing::Values(kInterLinear, kInterNearest),                            \
     ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
+    ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
+                      INTERPOLATION_TYPE_NEAREST_POINT),                       \
     ::testing::Values(BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE,             \
                       BORDER_TYPE_TRANSPARENT),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \

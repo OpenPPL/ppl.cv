@@ -117,7 +117,7 @@ void unmaskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   if (threadIdx_x == 0) {
     atomicAdd(stddev_values, partial_sums[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       int elements = rows * cols;
@@ -125,7 +125,7 @@ void unmaskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
       float square = stddev_values[0] * weight;
       stddev_values[0] = sqrtf(square);
 
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -207,7 +207,7 @@ void unmaskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
   if (threadIdx_x == 0) {
     atomicAddVector(stddev_values, partial_sums[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       int elements = rows * cols;
@@ -225,7 +225,7 @@ void unmaskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
         stddev_values[3] = sqrtf(square);
       }
 
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -342,14 +342,14 @@ void maskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     atomicAdd(stddev_values, partial_sums[0]);
     atomicAdd(&mask_count, partial_counts[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       float weight = 1.f / mask_count;
       float square = stddev_values[0] * weight;
       stddev_values[0] = sqrtf(square);
 
-      count = 0;
+      block_count = 0;
       mask_count = 0;
     }
   }
@@ -452,7 +452,7 @@ void maskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
     atomicAddVector(stddev_values, partial_sums[0]);
     atomicAdd(&mask_count, partial_counts[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       float weight = 1.f / mask_count;
@@ -469,7 +469,7 @@ void maskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
         stddev_values[3] = sqrtf(square);
       }
 
-      count = 0;
+      block_count = 0;
       mask_count = 0;
     }
   }

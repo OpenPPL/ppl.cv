@@ -29,12 +29,7 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
-enum InterpolationTypes {
-  kInterLinear,
-  kInterNearest,
-};
-
-template <typename T, int channels, InterpolationTypes inter_type,
+template <typename T, int channels, InterpolationType inter_type,
           BorderType border_type>
 void BM_WarpPerspective_ppl_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
@@ -54,30 +49,20 @@ void BM_WarpPerspective_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    WarpPerspectiveNearestPoint<T, channels>(0, src.rows, src.cols,
+    WarpPerspective<T, channels>(0, src.rows, src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data,
-        border_type);
+        inter_type, border_type);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (inter_type == kInterLinear) {
-        WarpPerspectiveLinear<T, channels>(0, src.rows, src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data,
-            border_type);
-      }
-      else if (inter_type == kInterNearest) {
-        WarpPerspectiveNearestPoint<T, channels>(0, src.rows, src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data,
-            border_type);
-      }
-      else {
-      }
+      WarpPerspective<T, channels>(0, src.rows, src.cols,
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data,
+          inter_type, border_type);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -88,7 +73,7 @@ void BM_WarpPerspective_ppl_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename T, int channels, InterpolationTypes inter_type,
+template <typename T, int channels, InterpolationType inter_type,
           BorderType border_type>
 void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
@@ -102,6 +87,14 @@ void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
   cv::Mat M = createSourceImage(3, 3, CV_32FC1);
+
+  int cv_iterpolation;
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    cv_iterpolation = cv::INTER_LINEAR;
+  }
+  else {
+    cv_iterpolation = cv::INTER_NEAREST;
+  }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_CONSTANT) {
@@ -123,25 +116,16 @@ void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   for (int i = 0; i < iterations; i++) {
     cv::cuda::warpPerspective(gpu_src, gpu_dst, M,
         cv::Size(dst_width, dst_height),
-        cv::WARP_INVERSE_MAP | cv::INTER_LINEAR, cv_border);
+        cv::WARP_INVERSE_MAP | cv_iterpolation, cv_border);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      if (inter_type == kInterLinear) {
-        cv::cuda::warpPerspective(gpu_src, gpu_dst, M,
-            cv::Size(dst_width, dst_height),
-            cv::WARP_INVERSE_MAP | cv::INTER_LINEAR, cv_border);
-      }
-      else if (inter_type == kInterNearest) {
-        cv::cuda::warpPerspective(gpu_src, gpu_dst, M,
-            cv::Size(dst_width, dst_height),
-            cv::WARP_INVERSE_MAP | cv::INTER_NEAREST, cv_border);
-      }
-      else {
-      }
+      cv::cuda::warpPerspective(gpu_src, gpu_dst, M,
+          cv::Size(dst_width, dst_height),
+          cv::WARP_INVERSE_MAP | cv_iterpolation, cv_border);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -152,7 +136,7 @@ void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename T, int channels, InterpolationTypes inter_type,
+template <typename T, int channels, InterpolationType inter_type,
           BorderType border_type>
 void BM_WarpPerspective_opencv_x86_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
@@ -164,6 +148,14 @@ void BM_WarpPerspective_opencv_x86_cuda(benchmark::State &state) {
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
   cv::Mat dst(dst_height, dst_width, src.type());
   cv::Mat M = createSourceImage(3, 3, CV_32FC1);
+
+  int cv_iterpolation;
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    cv_iterpolation = cv::INTER_LINEAR;
+  }
+  else {
+    cv_iterpolation = cv::INTER_NEAREST;
+  }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_CONSTANT) {
@@ -179,16 +171,8 @@ void BM_WarpPerspective_opencv_x86_cuda(benchmark::State &state) {
   }
 
   for (auto _ : state) {
-    if (inter_type == kInterLinear) {
-      cv::warpPerspective(src, dst, M, cv::Size(dst_width, dst_height),
-          cv::WARP_INVERSE_MAP | cv::INTER_LINEAR, cv_border);
-    }
-    else if (inter_type == kInterNearest) {
-      cv::warpPerspective(src, dst, M, cv::Size(dst_width, dst_height),
-          cv::WARP_INVERSE_MAP | cv::INTER_NEAREST, cv_border);
-    }
-    else {
-    }
+    cv::warpPerspective(src, dst, M, cv::Size(dst_width, dst_height),
+        cv::WARP_INVERSE_MAP | cv_iterpolation, cv_border);
   }
   state.SetItemsProcessed(state.iterations() * 1);
 }
@@ -240,19 +224,19 @@ BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, channels,               \
                    src_height, dst_width, dst_height})->                       \
                    UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(c1, kInterLinear, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterLinear, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterLinear, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterLinear, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterLinear, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterLinear, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK(c1, kInterNearest, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, kInterNearest, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, kInterNearest, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, kInterNearest, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, kInterNearest, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, kInterNearest, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK(c1, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK(c3, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK(c4, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
 
 #define RUN_OPENCV_X86_TYPE_FUNCTIONS(inter_type, border_type)                 \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, uchar, c1, inter_type,  \
@@ -356,16 +340,24 @@ BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, c4, inter_type,         \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_TRANSPARENT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_TRANSPARENT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
+                              BORDER_TYPE_TRANSPARENT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
+                              BORDER_TYPE_TRANSPARENT)
 
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterLinear, BORDER_TYPE_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(kInterNearest, BORDER_TYPE_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR, BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
+                               BORDER_TYPE_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
+                               BORDER_TYPE_TRANSPARENT)

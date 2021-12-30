@@ -50,10 +50,10 @@ void cropKernel(const T* src, int src_stride, const int top, const int left,
     fvalue3 = value3 * scale;
 
     if (sizeof(T) == 1) {
-      value0 = saturate_cast(fvalue0);
-      value1 = saturate_cast(fvalue1);
-      value2 = saturate_cast(fvalue2);
-      value3 = saturate_cast(fvalue3);
+      value0 = saturateCast(fvalue0);
+      value1 = saturateCast(fvalue1);
+      value2 = saturateCast(fvalue2);
+      value3 = saturateCast(fvalue3);
     }
     else {
       value0 = fvalue0;

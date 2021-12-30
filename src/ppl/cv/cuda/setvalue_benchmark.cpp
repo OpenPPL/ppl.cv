@@ -67,20 +67,20 @@ void BM_SetValue_ppl_cuda(benchmark::State &state) {
     for (int i = 0; i < iterations; i++) {
       if (function == kUnmaskedSetTo) {
         SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
       }
       else if (function == kMaskedSetTo) {
         SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask.step,
-          gpu_mask.data);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask.step,
+            gpu_mask.data);
       }
       else if (function == kOnes) {
         Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {
         Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
     }
     cudaDeviceSynchronize();
@@ -101,14 +101,12 @@ void BM_SetValue_opencv_cuda(benchmark::State &state) {
   dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           outChannels));
   mask = createSourceImage(height, width,
-                           CV_MAKETYPE(cv::DataType<uchar>::depth,
-                           maskChannels));
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
   cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask(mask);
 
-  cv::Scalar scalar_one(1, 1, 1, 1);
   cv::Scalar scalar_zero(0, 0, 0, 0);
-  cv::Scalar scalar_five(5, 5, 5, 5);
+  cv::Scalar scalar_five(5, 9, 2, 37);
 
   int iterations = 3000;
   struct timeval start, end;
@@ -127,9 +125,6 @@ void BM_SetValue_opencv_cuda(benchmark::State &state) {
       }
       else if (function == kMaskedSetTo) {
         gpu_dst.setTo(scalar_five, gpu_mask);
-      }
-      else if (function == kOnes) {
-        gpu_dst.setTo(scalar_one);
       }
       else {
         gpu_dst.setTo(scalar_zero);
@@ -270,14 +265,6 @@ BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c1, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c3, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c3, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, c4, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c4, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c3, c1, function)->            \
@@ -289,14 +276,6 @@ BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c4, c1, function)->            \
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c1, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c1, c1, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c3, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c3, c3, function)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, c4, function)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, float, c4, c4, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c1, function)->         \
                    Args({width, height})->UseManualTime()->Iterations(10);     \

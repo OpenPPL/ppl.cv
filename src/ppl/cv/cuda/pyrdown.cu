@@ -161,13 +161,13 @@ void colRowC1Kernel0(const T* src, int rows, int cols, int src_stride, T* dst,
     x_index = element_x >> 1;
     if (sizeof(T) == 1) {
       if (element_x < cols - 3) {
-        output[x_index]     = saturate_cast(sum.x);
-        output[x_index + 1] = saturate_cast(sum.y);
+        output[x_index]     = saturateCast(sum.x);
+        output[x_index + 1] = saturateCast(sum.y);
       }
       else {
-        output[x_index] = saturate_cast(sum.x);
+        output[x_index] = saturateCast(sum.x);
         if (element_x < cols - 2) {
-          output[x_index + 1] = saturate_cast(sum.y);
+          output[x_index + 1] = saturateCast(sum.y);
         }
       }
     }
@@ -282,7 +282,7 @@ void colRowC1Kernel1(const T* src, int rows, int cols, int src_stride, T* dst,
     T* output = (T*)((uchar*)dst + (element_y >> 1) * dst_stride);
     x_index = element_x >> 1;
     if (sizeof(T) == 1) {
-      output[x_index] = saturate_cast(sum.x);
+      output[x_index] = saturateCast(sum.x);
     }
     else {
       output[x_index] = sum.x;
@@ -371,7 +371,7 @@ void colRowCnKernel0(const T* src, int rows, int cols, int src_stride, T* dst,
     mulAdd(sum, row_data[y_index][x_index], 0.0625f);
 
     Tn* output = (Tn*)((uchar*)dst + (element_y >> 1) * dst_stride);
-    output[element_x] = saturate_cast_vector<Tn, float4>(sum);
+    output[element_x] = saturateCastVector<Tn, float4>(sum);
   }
 }
 
@@ -471,7 +471,7 @@ void colRowCnKernel1(const T* src, int rows, int cols, int src_stride, T* dst,
 
     Tn* output = (Tn*)((uchar*)dst + (element_y >> 1) * dst_stride);
     x_index = element_x >> 1;
-    output[x_index] = saturate_cast_vector<Tn, float4>(sum0);
+    output[x_index] = saturateCastVector<Tn, float4>(sum0);
   }
 }
 

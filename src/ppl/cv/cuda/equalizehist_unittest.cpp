@@ -87,14 +87,15 @@ bool PplCvCudaEqualizeHistTest<T, channels>::apply() {
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon = EPSILON_1F;
-  bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
+  bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
+  bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
 
   free(input);
   free(output);
   cudaFree(gpu_input);
   cudaFree(gpu_output);
 
-  return identity;
+  return (identity0 && identity1);
 }
 
 #define UNITTEST(T, channels)                                                  \

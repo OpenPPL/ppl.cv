@@ -33,40 +33,11 @@ enum Scaling {
   kDoubleSize,
 };
 
-enum InterpolationTypes {
-  kInterLinear,
-  kInterNearest,
-};
-
-using Parameters = std::tuple<InterpolationTypes, BorderType, Scaling,
-                              cv::Size>;
+using Parameters = std::tuple<Scaling, InterpolationType, BorderType, cv::Size>;
 inline std::string convertToStringWarpAffine(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  InterpolationTypes inter_type = (InterpolationTypes)std::get<0>(parameters);
-  if (inter_type == kInterLinear) {
-    formatted << "InterLinear" << "_";
-  }
-  else if (inter_type == kInterNearest) {
-    formatted << "InterNearest" << "_";
-  }
-  else {
-  }
-
-  BorderType border_type = (BorderType)std::get<1>(parameters);
-  if (border_type == BORDER_TYPE_CONSTANT) {
-    formatted << "BORDER_CONSTANT" << "_";
-  }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
-    formatted << "BORDER_REPLICATE" << "_";
-  }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
-    formatted << "BORDER_TRANSPARENT" << "_";
-  }
-  else {
-  }
-
-  Scaling scale = std::get<2>(parameters);
+  Scaling scale = std::get<0>(parameters);
   if (scale == kHalfSize) {
     formatted << "HalfSize" << "_";
   }
@@ -75,6 +46,29 @@ inline std::string convertToStringWarpAffine(const Parameters& parameters) {
   }
   else if (scale == kDoubleSize) {
     formatted << "DoubleSize" << "_";
+  }
+  else {
+  }
+
+  InterpolationType inter_type = (InterpolationType)std::get<1>(parameters);
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    formatted << "InterLinear" << "_";
+  }
+  else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+    formatted << "InterNearest" << "_";
+  }
+  else {
+  }
+
+  BorderType border_type = (BorderType)std::get<2>(parameters);
+  if (border_type == BORDER_TYPE_CONSTANT) {
+    formatted << "BORDER_CONSTANT" << "_";
+  }
+  else if (border_type == BORDER_TYPE_REPLICATE) {
+    formatted << "BORDER_REPLICATE" << "_";
+  }
+  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+    formatted << "BORDER_TRANSPARENT" << "_";
   }
   else {
   }
@@ -91,9 +85,9 @@ class PplCvCudaWarpAffineTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaWarpAffineTest() {
     const Parameters& parameters = GetParam();
-    inter_type  = std::get<0>(parameters);
-    border_type = std::get<1>(parameters);
-    scale       = std::get<2>(parameters);
+    scale       = std::get<0>(parameters);
+    inter_type  = std::get<1>(parameters);
+    border_type = std::get<2>(parameters);
     size        = std::get<3>(parameters);
   }
 
@@ -103,9 +97,9 @@ class PplCvCudaWarpAffineTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
-  InterpolationTypes inter_type;
-  BorderType border_type;
   Scaling scale;
+  InterpolationType inter_type;
+  BorderType border_type;
   cv::Size size;
 };
 
@@ -146,6 +140,16 @@ bool PplCvCudaWarpAffineTest<T, channels>::apply() {
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
+  int cv_iterpolation;
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    cv_iterpolation = cv::INTER_LINEAR;
+  }
+  else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+    cv_iterpolation = cv::INTER_NEAREST;
+  }
+  else {
+  }
+
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == BORDER_TYPE_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
@@ -158,37 +162,20 @@ bool PplCvCudaWarpAffineTest<T, channels>::apply() {
   }
   else {
   }
-
   int border_value = 5;
-  if (inter_type == kInterLinear) {
-    cv::cuda::warpAffine(gpu_src, gpu_cv_dst, M, cv::Size(dst_width,
-        dst_height), cv::WARP_INVERSE_MAP | cv::INTER_LINEAR, cv_border,
-        cv::Scalar(border_value, border_value, border_value, border_value));
-    WarpAffineLinear<T, channels>(0, src.rows, src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
-        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, border_type,
-        border_value);
-    WarpAffineLinear<T, channels>(0, src.rows, src.cols, src.cols * channels,
-        gpu_input, dst_height, dst_width, dst_width * channels, gpu_output,
-        (float*)M.data, border_type, border_value);
-  }
-  else if (inter_type == kInterNearest) {
-    cv::cuda::warpAffine(gpu_src, gpu_cv_dst, M, cv::Size(dst_width,
-        dst_height), cv::WARP_INVERSE_MAP | cv::INTER_NEAREST, cv_border,
-        cv::Scalar(border_value, border_value, border_value, border_value));
-    WarpAffineNearestPoint<T, channels>(0, src.rows, src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
-        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, border_type,
-        border_value);
-    WarpAffineNearestPoint<T, channels>(0, src.rows, src.cols,
-        src.cols * channels, gpu_input, dst_height, dst_width,
-        dst_width * channels, gpu_output, (float*)M.data, border_type,
-        border_value);
-  }
-  else {
-  }
+  cv::cuda::warpAffine(gpu_src, gpu_cv_dst, M, cv::Size(dst_width,
+      dst_height), cv::WARP_INVERSE_MAP | cv_iterpolation, cv_border,
+      cv::Scalar(border_value, border_value, border_value, border_value));
   gpu_cv_dst.download(cv_dst);
+
+  WarpAffine<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
+      (T*)gpu_src.data, dst_height, dst_width, gpu_dst.step / sizeof(T),
+      (T*)gpu_dst.data, (float*)M.data, inter_type, border_type, border_value);
   gpu_dst.download(dst);
+
+  WarpAffine<T, channels>(0, src.rows, src.cols, src.cols * channels,
+      gpu_input, dst_height, dst_width, dst_width * channels, gpu_output,
+      (float*)M.data, inter_type, border_type, border_value);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -219,9 +206,10 @@ TEST_P(PplCvCudaWarpAffineTest ## T ## channels, Standard) {                   \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaWarpAffineTest ## T ## channels,     \
   ::testing::Combine(                                                          \
-    ::testing::Values(kInterLinear, kInterNearest),                            \
-    ::testing::Values(BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE),            \
     ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
+    ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
+                      INTERPOLATION_TYPE_NEAREST_POINT),                       \
+    ::testing::Values(BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE),            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

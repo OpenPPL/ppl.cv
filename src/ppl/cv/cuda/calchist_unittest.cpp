@@ -72,29 +72,29 @@ class PplCvCudaCalcHistTest : public ::testing::TestWithParam<Parameters> {
 
 template <typename T, int channels>
 bool PplCvCudaCalcHistTest<T, channels>::apply() {
-  cv::Mat src, dst, cv_dst, cv_dst1, mask0;
+  cv::Mat src, mask0, dst, cv_dst0, cv_dst1;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
-  cv_dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
   mask0 = createSourceImage(size.height, size.width,
                             CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
+  cv_dst0 = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
   cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask0(mask0);
+  cv::cuda::GpuMat gpu_dst(dst);
 
   int src_size = size.height * size.width * channels * sizeof(T);
-  int dst_size = 256 * sizeof(int);
   int mask_size = size.height * size.width * sizeof(uchar);
+  int dst_size = 256 * sizeof(int);
   T* input = (T*)malloc(src_size);
-  int* output = (int*)malloc(dst_size);
   uchar* mask1 = (uchar*)malloc(mask_size);
+  int* output = (int*)malloc(dst_size);
   T* gpu_input;
-  int* gpu_output;
   uchar* gpu_mask1;
+  int* gpu_output;
   cudaMalloc((void**)&gpu_input, src_size);
-  cudaMalloc((void**)&gpu_output, dst_size);
   cudaMalloc((void**)&gpu_mask1, mask_size);
+  cudaMalloc((void**)&gpu_output, dst_size);
   copyMatToArray(src, input);
   copyMatToArray(mask0, mask1);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
@@ -130,11 +130,11 @@ bool PplCvCudaCalcHistTest<T, channels>::apply() {
   }
   cv::Mat temp_mat;
   cv_dst1.convertTo(temp_mat, CV_32S);
-  cv_dst = temp_mat.reshape(0, 1);
+  cv_dst0 = temp_mat.reshape(0, 1);
 
   float epsilon = EPSILON_1F;
-  bool identity0 = checkMatricesIdentity<int>(cv_dst, dst, epsilon);
-  bool identity1 = checkMatArrayIdentity<int>(cv_dst, output, epsilon);
+  bool identity0 = checkMatricesIdentity<int>(cv_dst0, dst, epsilon);
+  bool identity1 = checkMatArrayIdentity<int>(cv_dst0, output, epsilon);
 
   free(input);
   free(output);

@@ -82,26 +82,27 @@ namespace cuda {
  *   int channels = 3;
  *   int border   = 16;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   (width + border * 2) * channels * sizeof(float),
  *                   (height + border * 2));
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   CopyMakeBorder<float, 3>(stream, height, width,
- *                            input_pitch / sizeof(float), dev_input,
- *                            output_pitch / sizeof(float), dev_output,
+ *                            input_pitch / sizeof(float), gpu_input,
+ *                            output_pitch / sizeof(float), gpu_output,
  *                            border, border, border, border,
  *                            ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

@@ -76,23 +76,24 @@ namespace cuda {
  *   int channels = 3;
  *   int degree   = 180;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Rotate<float, 3>(stream, src_height, src_width, input_pitch / sizeof(float),
- *                    dev_input, dst_height, dst_width,
+ *                    gpu_input, dst_height, dst_width,
  *                    output_pitch / sizeof(float), degree);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

@@ -224,10 +224,10 @@ BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c4, kUnmasked)->          \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c1, kMasked)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c3, kMasked)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
-BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_cuda, uchar, c4, kMasked)->            \
-                   Args({width, height})->UseManualTime()->Iterations(10);
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_x86_cuda, uchar, c3, kMasked)->        \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_BitwiseAnd_opencv_x86_cuda, uchar, c4, kMasked)->        \
+                   Args({width, height});
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(width, height)                               \
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_cuda, uchar, c1, kUnmasked)->             \

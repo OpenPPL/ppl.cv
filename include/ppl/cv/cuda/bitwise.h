@@ -76,24 +76,25 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 3;
  *
- *   uchar* dev_input;
- *   uchar* dev_output;
+ *   uchar* gpu_input;
+ *   uchar* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(uchar), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(uchar), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   BitwiseAnd<uchar, 3>(stream, height, width,
- *                 input_pitch / sizeof(uchar), dev_input,
- *                 input_pitch / sizeof(uchar), dev_input,
- *                 output_pitch / sizeof(uchar), dev_output);
+ *                        input_pitch / sizeof(uchar), gpu_input,
+ *                        input_pitch / sizeof(uchar), gpu_input,
+ *                        output_pitch / sizeof(uchar), gpu_output);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

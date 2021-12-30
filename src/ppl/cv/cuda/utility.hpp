@@ -47,71 +47,43 @@ typedef unsigned char uchar;
 typedef signed char schar;
 typedef unsigned int uint;
 
-// configuration of thread block
+// configuration of thread blocks.
 enum DimX {
   kDimX0 = 16,
   kDimX1 = 32,
   kDimX2 = 32,
-  kDimX3 = 32,
-  kDimX4 = 128,
-  kDimX5 = 256,
-  kDimX6 = 64,
-  kDimX7 = 32,
-  kDimX8 = 32,
-  kDimX9 = 64,
 };
 
 enum DimY {
   kDimY0 = 16,
-  kDimY1 = 32,
-  kDimY2 = 16,
-  kDimY3 = 8,
-  kDimY4 = 1,
-  kDimY5 = 1,
-  kDimY6 = 1,
-  kDimY7 = 1,
-  kDimY8 = 4,
-  kDimY9 = 4,
+  kDimY1 = 4,
+  kDimY2 = 8,
 };
 
 enum ShiftX {
   kShiftX0 = 4,
   kShiftX1 = 5,
   kShiftX2 = 5,
-  kShiftX3 = 5,
-  kShiftX4 = 7,
-  kShiftX5 = 8,
-  kShiftX6 = 6,
-  kShiftX7 = 5,
-  kShiftX8 = 5,
-  kShiftX9 = 6,
 };
 
 enum ShiftY {
   kShiftY0 = 4,
-  kShiftY1 = 5,
-  kShiftY2 = 4,
-  kShiftY3 = 3,
-  kShiftY4 = 0,
-  kShiftY5 = 0,
-  kShiftY6 = 0,
-  kShiftY7 = 0,
-  kShiftY8 = 2,
-  kShiftY9 = 2,
+  kShiftY1 = 2,
+  kShiftY2 = 3,
 };
 
 enum BlockConfiguration0 {
-  kBlockDimX0 = kDimX8,
-  kBlockDimY0 = kDimY8,
-  kBlockShiftX0 = kShiftX8,
-  kBlockShiftY0 = kShiftY8,
+  kBlockDimX0 = kDimX1,
+  kBlockDimY0 = kDimY1,
+  kBlockShiftX0 = kShiftX1,
+  kBlockShiftY0 = kShiftY1,
 };
 
 enum BlockConfiguration1 {
-  kBlockDimX1 = kDimX3,
-  kBlockDimY1 = kDimY3,
-  kBlockShiftX1 = kShiftX3,
-  kBlockShiftY1 = kShiftY3,
+  kBlockDimX1 = kDimX2,
+  kBlockDimY1 = kDimY2,
+  kBlockShiftX1 = kShiftX2,
+  kBlockShiftY1 = kShiftY2,
 };
 
 /*
@@ -192,35 +164,35 @@ T clip(const T& value, const T& min_value, const T& max_value) {
 }
 
 __DEVICE__
-uchar saturate_cast(int value) {
+uchar saturateCast(int value) {
   unsigned int result = 0;
   asm("cvt.sat.u8.s32 %0, %1;" : "=r"(result) : "r"(value));
   return result;
 }
 
 __DEVICE__
-uchar saturate_cast(short value) {
+uchar saturateCast(short value) {
   unsigned int result = 0;
   asm("cvt.sat.u8.s16 %0, %1;" : "=r"(result) : "h"(value));
   return result;
 }
 
 __DEVICE__
-uchar saturate_cast(float value) {
+uchar saturateCast(float value) {
   unsigned int result = 0;
   asm("cvt.rni.sat.u8.f32 %0, %1;" : "=r"(result) : "f"(value));
   return result;
 }
 
 __DEVICE__
-short saturate_cast_i2s(int value) {
+short saturateCastI2S(int value) {
   short result = 0;
   asm("cvt.sat.s16.s32 %0, %1;" : "=h"(result) : "r"(value));
   return result;
 }
 
 __DEVICE__
-short saturate_cast_f2s(float value) {
+short saturateCastF2S(float value) {
   short result = 0;
   asm("cvt.rni.sat.s16.f32 %0, %1;" : "=h"(result) : "f"(value));
   return result;
@@ -228,127 +200,127 @@ short saturate_cast_f2s(float value) {
 
 template <typename T0, typename T1>
 __DEVICE__
-T0 saturate_cast_vector(T1 value);
+T0 saturateCastVector(T1 value);
 
 template <>
 __DEVICE__
-uchar saturate_cast_vector(float4 value) {
-  uchar result = saturate_cast(value.x);
+uchar saturateCastVector(float4 value) {
+  uchar result = saturateCast(value.x);
 
   return result;
 }
 
 template <>
 __DEVICE__
-uchar2 saturate_cast_vector(float2 value) {
+uchar2 saturateCastVector(float2 value) {
   uchar2 result;
-  result.x = saturate_cast(value.x);
-  result.y = saturate_cast(value.y);
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
 
   return result;
 }
 
 template <>
 __DEVICE__
-uchar3 saturate_cast_vector(short3 value) {
+uchar3 saturateCastVector(short3 value) {
   uchar3 result;
-  result.x = saturate_cast(value.x);
-  result.y = saturate_cast(value.y);
-  result.z = saturate_cast(value.z);
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
 
   return result;
 }
 
 template <>
 __DEVICE__
-uchar3 saturate_cast_vector(float3 value) {
+uchar3 saturateCastVector(float3 value) {
   uchar3 result;
-  result.x = saturate_cast(value.x);
-  result.y = saturate_cast(value.y);
-  result.z = saturate_cast(value.z);
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
 
   return result;
 }
 
 template <>
 __DEVICE__
-uchar3 saturate_cast_vector(float4 value) {
+uchar3 saturateCastVector(float4 value) {
   uchar3 result;
-  result.x = saturate_cast(value.x);
-  result.y = saturate_cast(value.y);
-  result.z = saturate_cast(value.z);
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
 
   return result;
 }
 
 template <>
 __DEVICE__
-uchar4 saturate_cast_vector(short4 value) {
+uchar4 saturateCastVector(short4 value) {
   uchar4 result;
-  result.x = saturate_cast(value.x);
-  result.y = saturate_cast(value.y);
-  result.z = saturate_cast(value.z);
-  result.w = saturate_cast(value.w);
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
+  result.w = saturateCast(value.w);
 
   return result;
 }
 
 template <>
 __DEVICE__
-uchar4 saturate_cast_vector(float4 value) {
+uchar4 saturateCastVector(float4 value) {
   uchar4 result;
-  result.x = saturate_cast(value.x);
-  result.y = saturate_cast(value.y);
-  result.z = saturate_cast(value.z);
-  result.w = saturate_cast(value.w);
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
+  result.w = saturateCast(value.w);
 
   return result;
 }
 
 template <>
 __DEVICE__
-short3 saturate_cast_vector(float4 value) {
+short3 saturateCastVector(float4 value) {
   short3 result;
-  result.x = saturate_cast_f2s(value.x);
-  result.y = saturate_cast_f2s(value.y);
-  result.z = saturate_cast_f2s(value.z);
+  result.x = saturateCastF2S(value.x);
+  result.y = saturateCastF2S(value.y);
+  result.z = saturateCastF2S(value.z);
 
   return result;
 }
 
 template <>
 __DEVICE__
-short4 saturate_cast_vector(float4 value) {
+short4 saturateCastVector(float4 value) {
   short4 result;
-  result.x = saturate_cast_f2s(value.x);
-  result.y = saturate_cast_f2s(value.y);
-  result.z = saturate_cast_f2s(value.z);
-  result.w = saturate_cast_f2s(value.w);
+  result.x = saturateCastF2S(value.x);
+  result.y = saturateCastF2S(value.y);
+  result.z = saturateCastF2S(value.z);
+  result.w = saturateCastF2S(value.w);
 
   return result;
 }
 
 template <>
 __DEVICE__
-float saturate_cast_vector(float4 value) {
+float saturateCastVector(float4 value) {
   return value.x;
 }
 
 template <>
 __DEVICE__
-float2 saturate_cast_vector(float2 value) {
+float2 saturateCastVector(float2 value) {
   return value;
 }
 
 template <>
 __DEVICE__
-float3 saturate_cast_vector(float3 value) {
+float3 saturateCastVector(float3 value) {
   return value;
 }
 
 template <>
 __DEVICE__
-float3 saturate_cast_vector(float4 value) {
+float3 saturateCastVector(float4 value) {
   float3 result;
   result.x = value.x;
   result.y = value.y;
@@ -359,7 +331,7 @@ float3 saturate_cast_vector(float4 value) {
 
 template <>
 __DEVICE__
-float4 saturate_cast_vector(float4 value) {
+float4 saturateCastVector(float4 value) {
   return value;
 }
 
