@@ -79,22 +79,23 @@ namespace cuda {
  *   int dst_height = 480;
  *   int channels = 3;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   PyrUp<float, 3>(stream, src_height, src_width, input_pitch / sizeof(float),
- *                   dev_input, output_pitch / sizeof(float), dev_output);
+ *                   gpu_input, output_pitch / sizeof(float), gpu_output);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

@@ -26,94 +26,73 @@ namespace cuda {
 
 /******************************* SetTo() *******************************/
 
-__global__
-void setToKernel1(uchar* dst, int rows, int cols, int dst_stride,
-                  const uchar value, const uchar* mask, int mask_stride,
-                  bool using_mask) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
+template <typename Tn, typename T>
+__DEVICE__
+void setVector(Tn &result, T value);
 
-  int offset = element_y * dst_stride;
-  uchar* output = (uchar*)((uchar*)dst + offset);
-  uchar value0 = 0, value1 = 0, value2 = 0, value3 = 0;
+template <>
+__DEVICE__
+void setVector(uchar3 &result, uchar value) {
+  result.x = value;
+  result.y = value;
+  result.z = value;
+}
 
-  if (using_mask) {
-    uchar* mask_start;
-    uchar mvalue0, mvalue1, mvalue2, mvalue3;
-    mask_start = (uchar*)((uchar*)mask + offset);
-    mvalue0 = mask_start[element_x];
-    mvalue1 = mask_start[element_x + 1];
-    mvalue2 = mask_start[element_x + 2];
-    mvalue3 = mask_start[element_x + 3];
-    if (mvalue0 > 0) {
-      value0 = value;
-    }
-    if (mvalue1 > 0) {
-      value1 = value;
-    }
-    if (mvalue2 > 0) {
-      value2 = value;
-    }
-    if (mvalue3 > 0) {
-      value3 = value;
-    }
-  }
-  else {
-    value0 = value;
-    value1 = value;
-    value2 = value;
-    value3 = value;
-  }
+template <>
+__DEVICE__
+void setVector(uchar4 &result, uchar value) {
+  result.x = value;
+  result.y = value;
+  result.z = value;
+  result.w = value;
+}
 
-  output[element_x]     = value0;
-  output[element_x + 1] = value1;
-  output[element_x + 2] = value2;
-  output[element_x + 3] = value3;
+template <>
+__DEVICE__
+void setVector(float3 &result, float value) {
+  result.x = value;
+  result.y = value;
+  result.z = value;
+}
+
+template <>
+__DEVICE__
+void setVector(float4 &result, float value) {
+  result.x = value;
+  result.y = value;
+  result.z = value;
+  result.w = value;
 }
 
 __global__
-void setToKernel2(uchar* dst, int rows, int cols, int dst_stride,
-                  const uchar value, const uchar* mask, int mask_stride,
-                  bool using_mask) {
+void setToKernel0(const uchar* mask, int rows, int cols, int mask_stride,
+                  const uchar value, uchar* dst, int dst_stride) {
   int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
     return;
   }
 
-  int offset = element_y * dst_stride;
-  uchar* output = (uchar*)((uchar*)dst + offset);
+  uchar* mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
+  uchar* output = (uchar*)((uchar*)dst + element_y * dst_stride);
+  uchar mask_value0, mask_value1, mask_value2, mask_value3;
   uchar value0 = 0, value1 = 0, value2 = 0, value3 = 0;
 
-  if (blockIdx.x < gridDim.x - 1) {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + offset);
-      mvalue0 = mask_start[element_x];
-      mvalue1 = mask_start[element_x + 1];
-      mvalue2 = mask_start[element_x + 2];
-      mvalue3 = mask_start[element_x + 3];
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (mvalue1 > 0) {
-        value1 = value;
-      }
-      if (mvalue2 > 0) {
-        value2 = value;
-      }
-      if (mvalue3 > 0) {
-        value3 = value;
-      }
-    }
-    else {
+  if (element_x < cols - 3) {
+    mask_value0 = mask_row[element_x];
+    mask_value1 = mask_row[element_x + 1];
+    mask_value2 = mask_row[element_x + 2];
+    mask_value3 = mask_row[element_x + 3];
+    if (mask_value0 > 0) {
       value0 = value;
+    }
+    if (mask_value1 > 0) {
       value1 = value;
+    }
+    if (mask_value2 > 0) {
       value2 = value;
+    }
+    if (mask_value3 > 0) {
       value3 = value;
     }
 
@@ -123,49 +102,25 @@ void setToKernel2(uchar* dst, int rows, int cols, int dst_stride,
     output[element_x + 3] = value3;
   }
   else {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + offset);
-      mvalue0 = mask_start[element_x];
-      if (element_x < cols - 1) {
-        mvalue1 = mask_start[element_x + 1];
-      }
-      if (element_x < cols - 2) {
-        mvalue2 = mask_start[element_x + 2];
-      }
-      if (element_x < cols - 3) {
-        mvalue3 = mask_start[element_x + 3];
-      }
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (element_x < cols - 1) {
-        if (mvalue1 > 0) {
-          value1 = value;
-        }
-      }
-      if (element_x < cols - 2) {
-        if (mvalue2 > 0) {
-          value2 = value;
-        }
-      }
-      if (element_x < cols - 3) {
-        if (mvalue3 > 0) {
-          value3 = value;
-        }
-      }
+    mask_value0 = mask_row[element_x];
+    if (element_x < cols - 1) {
+      mask_value1 = mask_row[element_x + 1];
     }
-    else {
+    if (element_x < cols - 2) {
+      mask_value2 = mask_row[element_x + 2];
+    }
+
+    if (mask_value0 > 0) {
       value0 = value;
-      if (element_x < cols - 1) {
+    }
+    if (element_x < cols - 1) {
+      if (mask_value1 > 0) {
         value1 = value;
       }
-      if (element_x < cols - 2) {
+    }
+    if (element_x < cols - 2) {
+      if (mask_value2 > 0) {
         value2 = value;
-      }
-      if (element_x < cols - 3) {
-        value3 = value;
       }
     }
 
@@ -176,483 +131,99 @@ void setToKernel2(uchar* dst, int rows, int cols, int dst_stride,
     if (element_x < cols - 2) {
       output[element_x + 2] = value2;
     }
-    if (element_x < cols - 3) {
-      output[element_x + 3] = value3;
-    }
   }
 }
 
 __global__
-void setToKernel1(uchar* dst, int rows, int cols, int dst_channels,
-                  int dst_stride, const uchar value, const uchar* mask,
-                  int mask_stride, bool using_mask) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
+void setToKernel0(const float value, float* dst, int rows, int cols,
+                  int dst_stride) {
+  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
     return;
   }
 
-  int offset = element_y * dst_stride;
-  uchar* output = (uchar*)((uchar*)dst + offset);
-  uchar value0 = 0, value1 = 0, value2 = 0, value3 = 0;
+  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+  float value0 = 0.f, value1 = 0.f;
 
-  if (using_mask) {
-    uchar* mask_start;
-    uchar mvalue0, mvalue1, mvalue2, mvalue3;
-    mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-    mvalue0 = mask_start[element_x / dst_channels];
-    mvalue1 = mask_start[(element_x + 1) / dst_channels];
-    mvalue2 = mask_start[(element_x + 2) / dst_channels];
-    mvalue3 = mask_start[(element_x + 3) / dst_channels];
-    if (mvalue0 > 0) {
-      value0 = value;
-    }
-    if (mvalue1 > 0) {
-      value1 = value;
-    }
-    if (mvalue2 > 0) {
-      value2 = value;
-    }
-    if (mvalue3 > 0) {
-      value3 = value;
-    }
+  if (element_x < cols - 1) {
+    value0 = value;
+    value1 = value;
+
+    output[element_x]     = value0;
+    output[element_x + 1] = value1;
   }
   else {
     value0 = value;
-    value1 = value;
-    value2 = value;
-    value3 = value;
-  }
 
-  output[element_x]     = value0;
-  output[element_x + 1] = value1;
-  output[element_x + 2] = value2;
-  output[element_x + 3] = value3;
+    output[element_x] = value0;
+  }
 }
 
 __global__
-void setToKernel2(uchar* dst, int rows, int cols, int dst_channels,
-                  int dst_stride, const uchar value, const uchar* mask,
-                  int mask_stride, bool using_mask) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
+void setToKernel0(const uchar* mask, int rows, int cols, int mask_stride,
+                  const float value, float* dst, int dst_stride) {
+  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
     return;
   }
 
-  int offset = element_y * dst_stride;
-  uchar* output = (uchar*)((uchar*)dst + offset);
-  uchar value0 = 0, value1 = 0, value2 = 0, value3 = 0;
+  uchar* mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
+  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+  uchar mask_value0, mask_value1;
+  float value0 = 0.f, value1 = 0.f;
 
-  if (blockIdx.x < gridDim.x - 1) {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-      mvalue0 = mask_start[element_x / dst_channels];
-      mvalue1 = mask_start[(element_x + 1) / dst_channels];
-      mvalue2 = mask_start[(element_x + 2) / dst_channels];
-      mvalue3 = mask_start[(element_x + 3) / dst_channels];
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (mvalue1 > 0) {
-        value1 = value;
-      }
-      if (mvalue2 > 0) {
-        value2 = value;
-      }
-      if (mvalue3 > 0) {
-        value3 = value;
-      }
-    }
-    else {
+  if (element_x < cols - 1) {
+    mask_value0 = mask_row[element_x];
+    mask_value1 = mask_row[element_x + 1];
+    if (mask_value0 > 0) {
       value0 = value;
+    }
+    if (mask_value1 > 0) {
       value1 = value;
-      value2 = value;
-      value3 = value;
     }
 
     output[element_x]     = value0;
     output[element_x + 1] = value1;
-    output[element_x + 2] = value2;
-    output[element_x + 3] = value3;
   }
   else {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-      mvalue0 = mask_start[element_x / dst_channels];
-      if (element_x < cols - 1) {
-        mvalue1 = mask_start[(element_x + 1) / dst_channels];
-      }
-      if (element_x < cols - 2) {
-        mvalue2 = mask_start[(element_x + 2) / dst_channels];
-      }
-      if (element_x < cols - 3) {
-        mvalue3 = mask_start[(element_x + 3) / dst_channels];
-      }
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (element_x < cols - 1) {
-        if (mvalue1 > 0) {
-          value1 = value;
-        }
-      }
-      if (element_x < cols - 2) {
-        if (mvalue2 > 0) {
-          value2 = value;
-        }
-      }
-      if (element_x < cols - 3) {
-        if (mvalue3 > 0) {
-          value3 = value;
-        }
-      }
-    }
-    else {
+    mask_value0 = mask_row[element_x];
+    if (mask_value0 > 0) {
       value0 = value;
-      if (element_x < cols - 1) {
-        value1 = value;
-      }
-      if (element_x < cols - 2) {
-        value2 = value;
-      }
-      if (element_x < cols - 3) {
-        value3 = value;
-      }
     }
 
     output[element_x] = value0;
-    if (element_x < cols - 1) {
-      output[element_x + 1] = value1;
-    }
-    if (element_x < cols - 2) {
-      output[element_x + 2] = value2;
-    }
-    if (element_x < cols - 3) {
-      output[element_x + 3] = value3;
-    }
   }
 }
 
+template <typename T, typename Tn>
 __global__
-void setToKernel1(float* dst, int rows, int cols, int dst_stride,
-                  const float value, const uchar* mask, int mask_stride,
-                  bool using_mask) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
+void setToKernel1(const uchar* mask, int rows, int cols, int mask_stride,
+                  const T value, T* dst, int dst_stride) {
+  int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
     return;
   }
 
-  int offset = element_y * dst_stride;
-  float* output = (float*)((uchar*)dst + offset);
-  float value0 = 0.f, value1 = 0.f, value2 = 0.f, value3 = 0.f;
+  Tn result;
+  setVector(result, (T)0);
 
-  if (using_mask) {
-    uchar* mask_start;
-    uchar mvalue0, mvalue1, mvalue2, mvalue3;
-    mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-    mvalue0 = mask_start[element_x];
-    mvalue1 = mask_start[element_x + 1];
-    mvalue2 = mask_start[element_x + 2];
-    mvalue3 = mask_start[element_x + 3];
-    if (mvalue0 > 0) {
-      value0 = value;
-    }
-    if (mvalue1 > 0) {
-      value1 = value;
-    }
-    if (mvalue2 > 0) {
-      value2 = value;
-    }
-    if (mvalue3 > 0) {
-      value3 = value;
-    }
-  }
-  else {
-    value0 = value;
-    value1 = value;
-    value2 = value;
-    value3 = value;
+  uchar* mask_row = (uchar*)((uchar*)mask + element_y * mask_stride);
+  uchar mask_value;
+  mask_value = mask_row[element_x];
+  if (mask_value > 0) {
+    setVector(result, value);
   }
 
-  output[element_x]     = value0;
-  output[element_x + 1] = value1;
-  output[element_x + 2] = value2;
-  output[element_x + 3] = value3;
-}
-
-__global__
-void setToKernel2(float* dst, int rows, int cols, int dst_stride,
-                  const float value, const uchar* mask, int mask_stride,
-                  bool using_mask) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * dst_stride;
-  float* output = (float*)((uchar*)dst + offset);
-  float value0 = 0.f, value1 = 0.f, value2 = 0.f, value3 = 0.f;
-
-  if (blockIdx.x < gridDim.x - 1) {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-      mvalue0 = mask_start[element_x];
-      mvalue1 = mask_start[element_x + 1];
-      mvalue2 = mask_start[element_x + 2];
-      mvalue3 = mask_start[element_x + 3];
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (mvalue1 > 0) {
-        value1 = value;
-      }
-      if (mvalue2 > 0) {
-        value2 = value;
-      }
-      if (mvalue3 > 0) {
-        value3 = value;
-      }
-    }
-    else {
-      value0 = value;
-      value1 = value;
-      value2 = value;
-      value3 = value;
-    }
-
-    output[element_x]     = value0;
-    output[element_x + 1] = value1;
-    output[element_x + 2] = value2;
-    output[element_x + 3] = value3;
-  }
-  else {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-      mvalue0 = mask_start[element_x];
-      if (element_x < cols - 1) {
-        mvalue1 = mask_start[element_x + 1];
-      }
-      if (element_x < cols - 2) {
-        mvalue2 = mask_start[element_x + 2];
-      }
-      if (element_x < cols - 3) {
-        mvalue3 = mask_start[element_x + 3];
-      }
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (element_x < cols - 1) {
-        if (mvalue1 > 0) {
-          value1 = value;
-        }
-      }
-      if (element_x < cols - 2) {
-        if (mvalue2 > 0) {
-          value2 = value;
-        }
-      }
-      if (element_x < cols - 3) {
-        if (mvalue3 > 0) {
-          value3 = value;
-        }
-      }
-    }
-    else {
-      value0 = value;
-      if (element_x < cols - 1) {
-        value1 = value;
-      }
-      if (element_x < cols - 2) {
-        value2 = value;
-      }
-      if (element_x < cols - 3) {
-        value3 = value;
-      }
-    }
-
-    output[element_x] = value0;
-    if (element_x < cols - 1) {
-      output[element_x + 1] = value1;
-    }
-    if (element_x < cols - 2) {
-      output[element_x + 2] = value2;
-    }
-    if (element_x < cols - 3) {
-      output[element_x + 3] = value3;
-    }
-  }
-}
-
-__global__
-void setToKernel1(float* dst, int rows, int cols, int dst_channels,
-                  int dst_stride, const float value, const uchar* mask,
-                  int mask_stride, bool using_mask) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * dst_stride;
-  float* output = (float*)((uchar*)dst + offset);
-  float value0 = 0.f, value1 = 0.f, value2 = 0.f, value3 = 0.f;
-
-  if (using_mask) {
-    uchar* mask_start;
-    uchar mvalue0, mvalue1, mvalue2, mvalue3;
-    mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-    mvalue0 = mask_start[element_x / dst_channels];
-    mvalue1 = mask_start[(element_x + 1) / dst_channels];
-    mvalue2 = mask_start[(element_x + 2) / dst_channels];
-    mvalue3 = mask_start[(element_x + 3) / dst_channels];
-    if (mvalue0 > 0) {
-      value0 = value;
-    }
-    if (mvalue1 > 0) {
-      value1 = value;
-    }
-    if (mvalue2 > 0) {
-      value2 = value;
-    }
-    if (mvalue3 > 0) {
-      value3 = value;
-    }
-  }
-  else {
-    value0 = value;
-    value1 = value;
-    value2 = value;
-    value3 = value;
-  }
-
-  output[element_x]     = value0;
-  output[element_x + 1] = value1;
-  output[element_x + 2] = value2;
-  output[element_x + 3] = value3;
-}
-
-__global__
-void setToKernel2(float* dst, int rows, int cols, int dst_channels,
-                  int dst_stride, const float value, const uchar* mask,
-                  int mask_stride, bool using_mask) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * dst_stride;
-  float* output = (float*)((uchar*)dst + offset);
-  float value0 = 0.f, value1 = 0.f, value2 = 0.f, value3 = 0.f;
-
-  if (blockIdx.x < gridDim.x - 1) {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-      mvalue0 = mask_start[element_x / dst_channels];
-      mvalue1 = mask_start[(element_x + 1) / dst_channels];
-      mvalue2 = mask_start[(element_x + 2) / dst_channels];
-      mvalue3 = mask_start[(element_x + 3) / dst_channels];
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (mvalue1 > 0) {
-        value1 = value;
-      }
-      if (mvalue2 > 0) {
-        value2 = value;
-      }
-      if (mvalue3 > 0) {
-        value3 = value;
-      }
-    }
-    else {
-      value0 = value;
-      value1 = value;
-      value2 = value;
-      value3 = value;
-    }
-
-    output[element_x]     = value0;
-    output[element_x + 1] = value1;
-    output[element_x + 2] = value2;
-    output[element_x + 3] = value3;
-  }
-  else {
-    if (using_mask) {
-      uchar* mask_start;
-      uchar mvalue0, mvalue1, mvalue2, mvalue3;
-      mask_start = (uchar*)((uchar*)mask + element_y * mask_stride);
-      mvalue0 = mask_start[element_x / dst_channels];
-      if (element_x < cols - 1) {
-        mvalue1 = mask_start[(element_x + 1) / dst_channels];
-      }
-      if (element_x < cols - 2) {
-        mvalue2 = mask_start[(element_x + 2) / dst_channels];
-      }
-      if (element_x < cols - 3) {
-        mvalue3 = mask_start[(element_x + 3) / dst_channels];
-      }
-      if (mvalue0 > 0) {
-        value0 = value;
-      }
-      if (element_x < cols - 1) {
-        if (mvalue1 > 0) {
-          value1 = value;
-        }
-      }
-      if (element_x < cols - 2) {
-        if (mvalue2 > 0) {
-          value2 = value;
-        }
-      }
-      if (element_x < cols - 3) {
-        if (mvalue3 > 0) {
-          value3 = value;
-        }
-      }
-    }
-    else {
-      value0 = value;
-      if (element_x < cols - 1) {
-        value1 = value;
-      }
-      if (element_x < cols - 2) {
-        value2 = value;
-      }
-      if (element_x < cols - 3) {
-        value3 = value;
-      }
-    }
-
-    output[element_x] = value0;
-    if (element_x < cols - 1) {
-      output[element_x + 1] = value1;
-    }
-    if (element_x < cols - 2) {
-      output[element_x + 2] = value2;
-    }
-    if (element_x < cols - 3) {
-      output[element_x + 3] = value3;
-    }
-  }
+  Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
+  output[element_x] = result;
 }
 
 RetCode setTo(uchar* dst, int rows, int cols, int dst_channels, int dst_stride,
-              const uchar* mask, int mask_stride, int mask_channels,
-              const uchar value, cudaStream_t stream) {
+              const uchar value, const uchar* mask, int mask_channels,
+              int mask_stride, cudaStream_t stream) {
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(dst_channels == 1 || dst_channels == 3 || dst_channels == 4);
@@ -662,6 +233,23 @@ RetCode setTo(uchar* dst, int rows, int cols, int dst_channels, int dst_stride,
     PPL_ASSERT(mask_stride >= cols * mask_channels * (int)sizeof(uchar));
   }
 
+  cudaError_t code;
+  if (mask == nullptr) {
+    size_t width_bytes = cols * dst_channels * sizeof(uchar);
+    if (dst_stride == cols * dst_channels * (int)sizeof(uchar)) {
+      code = cudaMemset(dst, value, rows * width_bytes);
+    }
+    else {
+      code = cudaMemset2D(dst, dst_stride, value, width_bytes, rows);
+    }
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+
+    return RC_SUCCESS;
+  }
+
   int columns = cols * dst_channels;
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -669,45 +257,25 @@ RetCode setTo(uchar* dst, int rows, int cols, int dst_channels, int dst_stride,
   grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  bool using_mask;
-  if (mask != nullptr) {
-    using_mask = true;
-  }
-  else {
-    using_mask = false;
-  }
-
-  int padded_stride = roundUp(cols, 4, 2) * dst_channels * sizeof(uchar);
   if (dst_channels == mask_channels) {
-    if (dst_stride >= padded_stride) {
-      setToKernel1<<<grid, block, 0, stream>>>(dst, rows, columns, dst_stride,
-                                               value, mask, mask_stride,
-                                               using_mask);
-    }
-    else {
-      setToKernel2<<<grid, block, 0, stream>>>(dst, rows, columns, dst_stride,
-                                               value, mask, mask_stride,
-                                               using_mask);
-    }
+    setToKernel0<<<grid, block, 0, stream>>>(mask, rows, columns, mask_stride,
+                                             value, dst, dst_stride);
   }
   else {
     if (mask_channels == 1) {
-      if (dst_stride >= padded_stride) {
-        setToKernel1<<<grid, block, 0, stream>>>(dst, rows, columns,
-                                                 dst_channels, dst_stride,
-                                                 value, mask, mask_stride,
-                                                 using_mask);
+      grid.x = divideUp(cols, kBlockDimX0, kBlockShiftX0);
+      if (dst_channels == 3) {
+        setToKernel1<uchar, uchar3><<<grid, block, 0, stream>>>(mask, rows,
+            cols, mask_stride, value, dst, dst_stride);
       }
       else {
-        setToKernel2<<<grid, block, 0, stream>>>(dst, rows, columns,
-                                                 dst_channels, dst_stride,
-                                                 value, mask, mask_stride,
-                                                 using_mask);
+        setToKernel1<uchar, uchar4><<<grid, block, 0, stream>>>(mask, rows,
+            cols, mask_stride, value, dst, dst_stride);
       }
     }
   }
 
-  cudaError_t code = cudaGetLastError();
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
@@ -717,8 +285,8 @@ RetCode setTo(uchar* dst, int rows, int cols, int dst_channels, int dst_stride,
 }
 
 RetCode setTo(float* dst, int rows, int cols, int dst_channels, int dst_stride,
-              const uchar* mask, int mask_stride, int mask_channels,
-              const float value, cudaStream_t stream) {
+              const float value, const uchar* mask, int mask_channels,
+              int mask_stride, cudaStream_t stream) {
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
   PPL_ASSERT(dst_channels == 1 || dst_channels == 3 || dst_channels == 4);
@@ -732,43 +300,29 @@ RetCode setTo(float* dst, int rows, int cols, int dst_channels, int dst_stride,
   dim3 block, grid;
   block.x = kBlockDimX0;
   block.y = kBlockDimY0;
-  grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX0, kBlockShiftX0);
+  grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  bool using_mask;
-  if (mask != nullptr) {
-    using_mask = true;
+  if (mask == nullptr) {
+    setToKernel0<<<grid, block, 0, stream>>>(value, dst, rows, columns,
+                                             dst_stride);
   }
   else {
-    using_mask = false;
-  }
-
-  int padded_stride = roundUp(cols, 4, 2) * dst_channels * sizeof(float);
-  if (dst_channels == mask_channels) {
-    if (dst_stride >= padded_stride) {
-      setToKernel1<<<grid, block, 0, stream>>>(dst, rows, columns, dst_stride,
-                                               value, mask, mask_stride,
-                                               using_mask);
+    if (dst_channels == mask_channels) {
+      setToKernel0<<<grid, block, 0, stream>>>(mask, rows, columns, mask_stride,
+                                               value, dst, dst_stride);
     }
     else {
-      setToKernel2<<<grid, block, 0, stream>>>(dst, rows, columns, dst_stride,
-                                               value, mask, mask_stride,
-                                               using_mask);
-    }
-  }
-  else {
-    if (mask_channels == 1) {
-      if (dst_stride >= padded_stride) {
-        setToKernel1<<<grid, block, 0, stream>>>(dst, rows, columns,
-                                                 dst_channels, dst_stride,
-                                                 value, mask, mask_stride,
-                                                 using_mask);
-      }
-      else {
-        setToKernel2<<<grid, block, 0, stream>>>(dst, rows, columns,
-                                                 dst_channels, dst_stride,
-                                                 value, mask, mask_stride,
-                                                 using_mask);
+      if (mask_channels == 1) {
+        grid.x = divideUp(cols, kBlockDimX0, kBlockShiftX0);
+        if (dst_channels == 3) {
+          setToKernel1<float, float3><<<grid, block, 0, stream>>>(mask, rows,
+              cols, mask_stride, value, dst, dst_stride);
+        }
+        else {
+          setToKernel1<float, float4><<<grid, block, 0, stream>>>(mask, rows,
+              cols, mask_stride, value, dst, dst_stride);
+        }
       }
     }
   }
@@ -791,8 +345,8 @@ RetCode SetTo<uchar, 1, 1>(cudaStream_t stream,
                            const uchar value,
                            int maskWidthStride,
                            const uchar *mask) {
-  RetCode code = setTo(outData, outHeight, outWidth, 1, outWidthStride, mask,
-                       maskWidthStride, 1, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 1, outWidthStride, value,
+                       mask, 1, maskWidthStride, stream);
 
   return code;
 }
@@ -806,8 +360,8 @@ RetCode SetTo<uchar, 3, 3>(cudaStream_t stream,
                            const uchar value,
                            int maskWidthStride,
                            const uchar *mask) {
-  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, mask,
-                       maskWidthStride, 3, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, value,
+                       mask, 3, maskWidthStride, stream);
 
   return code;
 }
@@ -821,8 +375,8 @@ RetCode SetTo<uchar, 4, 4>(cudaStream_t stream,
                            const uchar value,
                            int maskWidthStride,
                            const uchar *mask) {
-  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, mask,
-                       maskWidthStride, 4, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, value,
+                       mask, 4, maskWidthStride, stream);
 
   return code;
 }
@@ -836,8 +390,8 @@ RetCode SetTo<uchar, 3, 1>(cudaStream_t stream,
                            const uchar value,
                            int maskWidthStride,
                            const uchar *mask) {
-  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, mask,
-                       maskWidthStride, 1, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, value,
+                       mask, 1, maskWidthStride, stream);
 
   return code;
 }
@@ -851,8 +405,8 @@ RetCode SetTo<uchar, 4, 1>(cudaStream_t stream,
                            const uchar value,
                            int maskWidthStride,
                            const uchar *mask) {
-  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, mask,
-                       maskWidthStride, 1, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, value,
+                       mask, 1, maskWidthStride, stream);
 
   return code;
 }
@@ -867,8 +421,8 @@ RetCode SetTo<float, 1, 1>(cudaStream_t stream,
                            int maskWidthStride,
                            const uchar *mask) {
   outWidthStride *= sizeof(float);
-  RetCode code = setTo(outData, outHeight, outWidth, 1, outWidthStride, mask,
-                       maskWidthStride, 1, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 1, outWidthStride, value,
+                       mask, 1, maskWidthStride, stream);
 
   return code;
 }
@@ -883,8 +437,8 @@ RetCode SetTo<float, 3, 3>(cudaStream_t stream,
                            int maskWidthStride,
                            const uchar *mask) {
   outWidthStride *= sizeof(float);
-  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, mask,
-                       maskWidthStride, 3, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, value,
+                       mask, 3, maskWidthStride, stream);
 
   return code;
 }
@@ -899,8 +453,8 @@ RetCode SetTo<float, 4, 4>(cudaStream_t stream,
                            int maskWidthStride,
                            const uchar *mask) {
   outWidthStride *= sizeof(float);
-  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, mask,
-                       maskWidthStride, 4, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, value,
+                       mask, 4, maskWidthStride, stream);
 
   return code;
 }
@@ -915,8 +469,8 @@ RetCode SetTo<float, 3, 1>(cudaStream_t stream,
                            int maskWidthStride,
                            const uchar *mask) {
   outWidthStride *= sizeof(float);
-  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, mask,
-                       maskWidthStride, 1, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 3, outWidthStride, value,
+                       mask, 1, maskWidthStride, stream);
 
   return code;
 }
@@ -931,8 +485,8 @@ RetCode SetTo<float, 4, 1>(cudaStream_t stream,
                            int maskWidthStride,
                            const uchar *mask) {
   outWidthStride *= sizeof(float);
-  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, mask,
-                       maskWidthStride, 1, value, stream);
+  RetCode code = setTo(outData, outHeight, outWidth, 4, outWidthStride, value,
+                       mask, 1, maskWidthStride, stream);
 
   return code;
 }
@@ -940,7 +494,7 @@ RetCode SetTo<float, 4, 1>(cudaStream_t stream,
 /******************************* Ones() *******************************/
 
 __global__
-void onesKernel1(uchar* dst, int rows, int cols, int channels, int dst_stride) {
+void onesKernel(uchar* dst, int rows, int cols, int channels, int dst_stride) {
   int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
@@ -951,53 +505,7 @@ void onesKernel1(uchar* dst, int rows, int cols, int channels, int dst_stride) {
   uchar* output = dst + offset;
 
   if (channels == 1) {
-    output[element_x]     = 1;
-    output[element_x + 1] = 1;
-    output[element_x + 2] = 1;
-    output[element_x + 3] = 1;
-  }
-  else if (channels == 3) {
-    int remainder = (element_x >> 2) % 3;
-    if (remainder == 0) {
-      output[element_x]     = 1;
-      output[element_x + 1] = 0;
-      output[element_x + 2] = 0;
-      output[element_x + 3] = 1;
-    }
-    else if (remainder == 1) {
-      output[element_x]     = 0;
-      output[element_x + 1] = 0;
-      output[element_x + 2] = 1;
-      output[element_x + 3] = 0;
-    }
-    else {  // remainder == 2
-      output[element_x]     = 0;
-      output[element_x + 1] = 1;
-      output[element_x + 2] = 0;
-      output[element_x + 3] = 0;
-    }
-  }
-  else {  // channels == 4
-    output[element_x]     = 1;
-    output[element_x + 1] = 0;
-    output[element_x + 2] = 0;
-    output[element_x + 3] = 0;
-  }
-}
-
-__global__
-void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * dst_stride;
-  uchar* output = dst + offset;
-
-  if (channels == 1) {
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 3) {
       output[element_x]     = 1;
       output[element_x + 1] = 1;
       output[element_x + 2] = 1;
@@ -1011,13 +519,10 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
       if (element_x < cols - 2) {
         output[element_x + 2] = 1;
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 1;
-      }
     }
   }
   else if (channels == 3) {
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 3) {
       int remainder = (element_x >> 2) % 3;
       if (remainder == 0) {
         output[element_x]     = 1;
@@ -1048,9 +553,6 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
         if (element_x < cols - 2) {
           output[element_x + 2] = 0;
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 1;
-        }
       }
       else if (remainder == 1) {
         output[element_x] = 0;
@@ -1059,9 +561,6 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
         }
         if (element_x < cols - 2) {
           output[element_x + 2] = 1;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0;
         }
       }
       else {  // remainder == 2
@@ -1072,14 +571,11 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
         if (element_x < cols - 2) {
           output[element_x + 2] = 0;
         }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0;
-        }
       }
     }
   }
   else {  // channels == 4
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 3) {
       output[element_x]     = 1;
       output[element_x + 1] = 0;
       output[element_x + 2] = 0;
@@ -1093,16 +589,13 @@ void onesKernel2(uchar* dst, int rows, int cols, int channels, int dst_stride) {
       if (element_x < cols - 2) {
         output[element_x + 2] = 0;
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 0;
-      }
     }
   }
 }
 
 __global__
-void onesKernel1(float* dst, int rows, int cols, int channels, int dst_stride) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
+void onesKernel(float* dst, int rows, int cols, int channels, int dst_stride) {
+  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_y >= rows || element_x >= cols) {
     return;
@@ -1112,150 +605,62 @@ void onesKernel1(float* dst, int rows, int cols, int channels, int dst_stride) {
   float* output  = (float*)((uchar*)dst + offset);
 
   if (channels == 1) {
-    output[element_x]     = 1.f;
-    output[element_x + 1] = 1.f;
-    output[element_x + 2] = 1.f;
-    output[element_x + 3] = 1.f;
-  }
-  else if (channels == 3) {
-    int remainder = (element_x >> 2) % 3;
-    if (remainder == 0) {
-      output[element_x]     = 1.f;
-      output[element_x + 1] = 0.f;
-      output[element_x + 2] = 0.f;
-      output[element_x + 3] = 1.f;
-    }
-    else if (remainder == 1) {
-      output[element_x]     = 0.f;
-      output[element_x + 1] = 0.f;
-      output[element_x + 2] = 1.f;
-      output[element_x + 3] = 0.f;
-    }
-    else {  // remainder == 2
-      output[element_x]     = 0.f;
-      output[element_x + 1] = 1.f;
-      output[element_x + 2] = 0.f;
-      output[element_x + 3] = 0.f;
-    }
-  }
-  else {  // channels == 4
-    output[element_x]     = 1.f;
-    output[element_x + 1] = 0.f;
-    output[element_x + 2] = 0.f;
-    output[element_x + 3] = 0.f;
-  }
-}
-
-__global__
-void onesKernel2(float* dst, int rows, int cols, int channels, int dst_stride) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  int offset = element_y * dst_stride;
-  float* output  = (float*)((uchar*)dst + offset);
-
-  if (channels == 1) {
-    if (blockIdx.x < gridDim.x - 1) {
+    if (element_x < cols - 1) {
       output[element_x]     = 1.f;
       output[element_x + 1] = 1.f;
-      output[element_x + 2] = 1.f;
-      output[element_x + 3] = 1.f;
     }
     else {
       output[element_x] = 1.f;
-      if (element_x < cols - 1) {
-        output[element_x + 1] = 1.f;
-      }
-      if (element_x < cols - 2) {
-        output[element_x + 2] = 1.f;
-      }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 1.f;
-      }
     }
   }
   else if (channels == 3) {
-    if (blockIdx.x < gridDim.x - 1) {
-      int remainder = (element_x >> 2) % 3;
+    if (element_x < cols - 1) {
+      int remainder = (element_x >> 1) % 3;
       if (remainder == 0) {
         output[element_x]     = 1.f;
         output[element_x + 1] = 0.f;
-        output[element_x + 2] = 0.f;
-        output[element_x + 3] = 1.f;
       }
       else if (remainder == 1) {
         output[element_x]     = 0.f;
-        output[element_x + 1] = 0.f;
-        output[element_x + 2] = 1.f;
-        output[element_x + 3] = 0.f;
+        output[element_x + 1] = 1.f;
       }
       else {  // remainder == 2
         output[element_x]     = 0.f;
-        output[element_x + 1] = 1.f;
-        output[element_x + 2] = 0.f;
-        output[element_x + 3] = 0.f;
+        output[element_x + 1] = 0.f;
       }
     }
     else {
-      int remainder = (element_x >> 2) % 3;
+      int remainder = (element_x >> 1) % 3;
       if (remainder == 0) {
         output[element_x] = 1.f;
-        if (element_x < cols - 1) {
-          output[element_x + 1] = 0.f;
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = 0.f;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 1.f;
-        }
       }
       else if (remainder == 1) {
         output[element_x] = 0.f;
-        if (element_x < cols - 1) {
-          output[element_x + 1] = 0.f;
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = 1.f;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0.f;
-        }
       }
       else {  // remainder == 2
         output[element_x] = 0.f;
-        if (element_x < cols - 1) {
-          output[element_x + 1] = 1.f;
-        }
-        if (element_x < cols - 2) {
-          output[element_x + 2] = 0.f;
-        }
-        if (element_x < cols - 3) {
-          output[element_x + 3] = 0.f;
-        }
       }
     }
   }
   else {  // channels == 4
-    if (blockIdx.x < gridDim.x - 1) {
-      output[element_x]     = 1.f;
-      output[element_x + 1] = 0.f;
-      output[element_x + 2] = 0.f;
-      output[element_x + 3] = 0.f;
-    }
-    else {
-      output[element_x] = 1.f;
-      if (element_x < cols - 1) {
+    if (element_x < cols - 1) {
+      int remainder = element_x & 3;
+      if (remainder == 0) {
+        output[element_x]     = 1.f;
         output[element_x + 1] = 0.f;
       }
-      if (element_x < cols - 2) {
-        output[element_x + 2] = 0.f;
+      else {
+        output[element_x]     = 0.f;
+        output[element_x + 1] = 0.f;
       }
-      if (element_x < cols - 3) {
-        output[element_x + 3] = 0.f;
+    }
+    else {
+      int remainder = element_x & 3;
+      if (remainder == 0) {
+        output[element_x] = 1.f;
+      }
+      else {
+        output[element_x] = 0.f;
       }
     }
   }
@@ -1275,15 +680,8 @@ RetCode ones(uchar* dst, int rows, int cols, int channels, int dst_stride,
   grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  int padded_stride = roundUp(cols, 4, 2) * channels * sizeof(uchar);
-  if (dst_stride >= padded_stride) {
-    onesKernel1<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
-  else {
-    onesKernel2<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
+  onesKernel<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
+                                         dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -1305,18 +703,11 @@ RetCode ones(float* dst, int rows, int cols, int channels, int dst_stride,
   dim3 block, grid;
   block.x = kBlockDimX0;
   block.y = kBlockDimY0;
-  grid.x  = divideUp(divideUp(columns, 4, 2), kBlockDimX0, kBlockShiftX0);
+  grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
-  int padded_stride = roundUp(cols, 4, 2) * channels * sizeof(float);
-  if (dst_stride >= padded_stride) {
-    onesKernel1<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
-  else {
-    onesKernel2<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
-                                            dst_stride);
-  }
+  onesKernel<<<grid, block, 0, stream>>>(dst, rows, columns, channels,
+                                         dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {

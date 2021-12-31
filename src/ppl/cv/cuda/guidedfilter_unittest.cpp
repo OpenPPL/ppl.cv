@@ -79,9 +79,7 @@ bool PplCvCudaGuidedFilterTest<T, srcCns, guideCns>::apply() {
   cv::Mat cv_dst(size.height, size.width,
                  CV_MAKETYPE(cv::DataType<T>::depth, srcCns));
   if (srcCns == 1) {
-    cv::Mat tmp = createSourceImage(size.height, size.width,
-                      CV_MAKETYPE(cv::DataType<T>::depth, srcCns));
-    tmp.copyTo(guide);
+    src.copyTo(guide);
   }
   else if (srcCns == 3) {
     cv::cvtColor(src, guide, cv::COLOR_BGR2GRAY);
@@ -124,8 +122,8 @@ TEST_P(PplCvCudaGuidedFilterTest ## T ## srcCns ## guideCns, Standard) {       \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaGuidedFilterTest ## T ## srcCns ## guideCns,                        \
   ::testing::Combine(                                                          \
-    ::testing::Values(Config{3, 26.f}, Config{5, 26.f}, Config{7, 26.f},       \
-                      Config{8, 26.f}),                                        \
+    ::testing::Values(Config{3, 26.f}, Config{7, 59.f}, Config{8, 11.f},       \
+                      Config{15, 9.f}, Config{22, 64.f}),                      \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

@@ -22,7 +22,7 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-static __device__ uint count = 0;
+static __device__ uint block_count = 0;
 static __device__ uint mask_count = 0;
 
 // BLOCK_SIZE must be 512, 256, 128, 64, 32.
@@ -241,14 +241,14 @@ void unmaskedMeanC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   if (threadIdx_x == 0) {
     atomicAdd(mean_values, partial_sums[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       int elements = rows * cols;
       float weight = 1.f / elements;
       mean_values[0] *= weight;
 
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -325,7 +325,7 @@ void unmaskedMeanCnKernel(const Tsrc* src, int rows, int cols, int channels,
   if (threadIdx_x == 0) {
     atomicAddVector(mean_values, partial_sums[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       int elements = rows * cols;
@@ -339,7 +339,7 @@ void unmaskedMeanCnKernel(const Tsrc* src, int rows, int cols, int channels,
         mean_values[3] *= weight;
       }
 
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -455,13 +455,13 @@ void maskedMeanC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     atomicAdd(mean_values, partial_sums[0]);
     atomicAdd(&mask_count, partial_counts[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       float weight = 1.f / mask_count;
       mean_values[0] *= weight;
 
-      count = 0;
+      block_count = 0;
       mask_count = 0;
     }
   }
@@ -560,7 +560,7 @@ void maskedMeanCnKernel(const Tsrc* src, int rows, int cols, int channels,
     atomicAddVector(mean_values, partial_sums[0]);
     atomicAdd(&mask_count, partial_counts[0]);
 
-    uint local_count = atomicInc(&count, blocks);
+    uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
       float weight = 1.f / mask_count;
@@ -573,7 +573,7 @@ void maskedMeanCnKernel(const Tsrc* src, int rows, int cols, int channels,
         mean_values[3] *= weight;
       }
 
-      count = 0;
+      block_count = 0;
       mask_count = 0;
     }
   }

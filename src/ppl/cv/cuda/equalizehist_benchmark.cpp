@@ -45,7 +45,7 @@ void BM_EqualizeHist_ppl_cuda(benchmark::State &state) {
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     EqualizeHist(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+                 (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
@@ -53,7 +53,8 @@ void BM_EqualizeHist_ppl_cuda(benchmark::State &state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
       EqualizeHist(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                  (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+                   (T*)gpu_src.data, gpu_dst.step / sizeof(T),
+                   (T*)gpu_dst.data);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -113,18 +114,27 @@ void BM_EqualizeHist_opencv_x86_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_BENCHMARK(width, height)                                           \
-BENCHMARK_TEMPLATE(BM_EqualizeHist_opencv_x86_cuda, uchar)->                   \
-                   Args({width, height});                                      \
+#define RUN_BENCHMARK0(width, height)                                          \
 BENCHMARK_TEMPLATE(BM_EqualizeHist_opencv_cuda, uchar)->Args({width, height})->\
                    UseManualTime()->Iterations(10);                            \
 BENCHMARK_TEMPLATE(BM_EqualizeHist_ppl_cuda, uchar)->Args({width, height})->   \
                    UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(320, 240)
-// RUN_BENCHMARK(640, 480)
-// RUN_BENCHMARK(1280, 720)
-// RUN_BENCHMARK(1920, 1080)
+// RUN_BENCHMARK0(320, 240)
+// RUN_BENCHMARK0(640, 480)
+// RUN_BENCHMARK0(1280, 720)
+// RUN_BENCHMARK0(1920, 1080)
+
+#define RUN_BENCHMARK1(width, height)                                          \
+BENCHMARK_TEMPLATE(BM_EqualizeHist_opencv_x86_cuda, uchar)->                   \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_EqualizeHist_ppl_cuda, uchar)->Args({width, height})->   \
+                   UseManualTime()->Iterations(10);
+
+// RUN_BENCHMARK1(320, 240)
+// RUN_BENCHMARK1(640, 480)
+// RUN_BENCHMARK1(1280, 720)
+// RUN_BENCHMARK1(1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS()                                            \
 BENCHMARK_TEMPLATE(BM_EqualizeHist_opencv_cuda, uchar)->Args({320, 240})->     \

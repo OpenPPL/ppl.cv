@@ -38,15 +38,15 @@ template <typename T, int channels, MaskType mask_type>
 void BM_CalcHist_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src, dst, mask;
+  cv::Mat src, mask, dst;
   src = createSourceImage(height, width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
   mask = createSourceImage(height, width,
-                            CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
   cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask(mask);
+  cv::cuda::GpuMat gpu_dst(dst);
 
   int iterations = 1000;
   struct timeval start, end;
@@ -84,15 +84,15 @@ template <typename T, int channels, MaskType mask_type>
 void BM_CalcHist_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src, dst, mask;
+  cv::Mat src, mask, dst;
   src = createSourceImage(height, width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
   mask = createSourceImage(height, width,
-                            CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
   cv::cuda::GpuMat gpu_src(src);
-  cv::cuda::GpuMat gpu_dst(dst);
   cv::cuda::GpuMat gpu_mask(mask);
+  cv::cuda::GpuMat gpu_dst(dst);
 
   int iterations = 1000;
   struct timeval start, end;
@@ -126,12 +126,12 @@ template <typename T, int channels, MaskType mask_type>
 void BM_CalcHist_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src, dst, mask;
+  cv::Mat src, mask, dst;
   src = createSourceImage(height, width,
                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
   mask = createSourceImage(height, width,
-                            CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
+  dst = cv::Mat::zeros(1, 256, CV_MAKETYPE(cv::DataType<int>::depth, 1));
 
   int channel[] = {0};
   int hist_size = 256;
@@ -201,8 +201,8 @@ BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
 BENCHMARK_TEMPLATE(BM_CalcHist_ppl_cuda, type, c1, mask_type)->                \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMasked)
 RUN_OPENCV_TYPE_FUNCTIONS(uchar, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMasked)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMasked)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMasked)

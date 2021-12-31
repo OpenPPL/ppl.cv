@@ -24,336 +24,182 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-#define BLOCK_SIZE 128
-#define BLOCK_SHIFT 7
+#define BLOCK_X 128
+#define BLOCK_Y 8
 
+template <typename Tsrc, typename Tdst>
 __global__
-void verticalKernel1(const uchar* src, int* dst, int src_rows, int src_cols,
-                     int src_stride, int dst_stride) {
-  int src_x0 = ((blockIdx.x << BLOCK_SHIFT) + threadIdx.x) << 1;
-  if (src_x0 >= src_cols) {
+void verticalKernel(const Tsrc* src, int src_rows, int src_cols, int src_stride,
+                    Tdst* dst, int dst_rows, int dst_stride) {
+  __shared__ Tsrc data[BLOCK_Y][BLOCK_X * 2];
+  __shared__ Tdst block_sum[BLOCK_X * 2];
+
+  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 1;
+  int element_y = threadIdx.y;
+  if (element_x >= src_cols) {
     return;
   }
 
-  int src_x1 = src_x0 + 1;
-  int dst_x0 = src_x0;
-  int dst_x1 = src_x0 + 1;
-  int value0 = 0, value1 = 0;
-  uchar src_value0, src_value1;
-
+  if (sizeof(Tsrc) != 1) {
+    src_stride = src_stride >> 2;
+  }
+  Tsrc* input = (Tsrc*)src + element_y * src_stride;
+  Tdst* output;
   dst_stride = dst_stride >> 2;
-  uchar* src_row = (uchar*)src;
-  int* dst_row = dst;
-
-  if (blockIdx.x < gridDim.x - 1) {
-    for (int row = 0; row < src_rows; row++) {
-      src_value0 = src_row[src_x0];
-      src_value1 = src_row[src_x1];
-
-      value0 += src_value0;
-      value1 += src_value1;
-
-      dst_row[dst_x0] = value0;
-      dst_row[dst_x1] = value1;
-
-      src_row += src_stride;
-      dst_row += dst_stride;
-    }
+  if (src_rows == dst_rows) {
+    output = (Tdst*)dst + element_y * dst_stride;
   }
   else {
-    for (int row = 0; row < src_rows; row++) {
-      src_value0 = src_row[src_x0];
-      if (src_x0 != src_cols - 1) {
-        src_value1 = src_row[src_x1];
-      }
+    output = (Tdst*)dst + (element_y + 1) * dst_stride;
+  }
 
-      value0 += src_value0;
-      if (src_x0 != src_cols - 1) {
-        value1 += src_value1;
-      }
-
-      dst_row[dst_x0] = value0;
-      if (src_x0 != src_cols - 1) {
-        dst_row[dst_x1] = value1;
-      }
-
-      src_row += src_stride;
-      dst_row += dst_stride;
+  if (src_rows != dst_rows && threadIdx.y == 0) {
+    dst[element_x] = 0;
+    dst[element_x + 1] = 0;
+    if (element_x == src_cols - 1 || element_x == src_cols - 2) {
+      dst[src_cols] = 0;
     }
+  }
+
+  int threadIdx_x = (threadIdx.x << 1);
+  if (threadIdx.y == 0) {
+    block_sum[threadIdx_x] = 0;
+    block_sum[threadIdx_x + 1] = 0;
+  }
+
+  Tdst element_sum0, element_sum1;
+  while (element_y < src_rows) {
+    data[threadIdx.y][threadIdx_x]     = input[element_x];
+    data[threadIdx.y][threadIdx_x + 1] = input[element_x + 1];
+    __syncthreads();
+
+    element_sum0 = block_sum[threadIdx_x] + data[threadIdx.y][threadIdx_x];
+    element_sum1 = block_sum[threadIdx_x + 1] +
+                   data[threadIdx.y][threadIdx_x + 1];
+    for (int i = 0; i < threadIdx.y; i++) {
+      element_sum0 += data[i][threadIdx_x];
+      element_sum1 += data[i][threadIdx_x + 1];
+    }
+    __syncthreads();
+
+    if (src_rows == dst_rows) {
+      if (element_x < src_cols - 1) {
+        output[element_x]     = element_sum0;
+        output[element_x + 1] = element_sum1;
+      }
+      else {
+        output[element_x] = element_sum0;
+      }
+    }
+    else {
+      if (element_x == 0 && src_rows != dst_rows) {
+        output[0] = 0;
+      }
+      if (element_x < src_cols - 1) {
+        output[element_x + 1] = element_sum0;
+        output[element_x + 2] = element_sum1;
+      }
+      else {
+        output[element_x + 1] = element_sum0;
+      }
+    }
+
+    if (threadIdx.y == blockDim.y - 1) {
+      block_sum[threadIdx_x]     = element_sum0;
+      block_sum[threadIdx_x + 1] = element_sum1;
+    }
+
+    element_y += blockDim.y;
+    input  += blockDim.y * src_stride;
+    output += blockDim.y * dst_stride;
   }
 }
 
+template <typename T>
 __global__
-void verticalKernel2(const uchar* src, int* dst, int src_rows, int src_cols,
-                     int src_stride, int dst_stride) {
-  int src_x0 = ((blockIdx.x << BLOCK_SHIFT) + threadIdx.x) << 1;
-  if (src_x0 >= src_cols) {
+void horizontalKernel(int src_rows, int src_cols, T* dst, int dst_rows,
+                      int dst_stride) {
+  __shared__ T data[BLOCK_X];
+  __shared__ T block_sum;
+
+  int threadIdx_x = threadIdx.x;
+  int element_x = threadIdx_x;
+  int element_y = blockIdx.x;
+  if (element_y >= src_rows) {
     return;
   }
 
-  int src_x1 = src_x0 + 1;
-  int dst_x0 = src_x0 + 1;
-  int dst_x1 = src_x0 + 2;
-  int value0 = 0, value1 = 0;
-  uchar src_value0, src_value1;
-
-  if (src_x0 == 0) {
-    dst[0] = 0;
-  }
-
-  dst[dst_x0] = 0;
-  if (dst_x1 < src_cols + 1) {
-    dst[dst_x1] = 0;
-  }
-
-  dst_stride = dst_stride >> 2;
-  uchar* src_row = (uchar*)src;
-  int* dst_row = dst + dst_stride;
-
-  if (blockIdx.x < gridDim.x - 1) {
-    for (int row = 0; row < src_rows; row++) {
-      src_value0 = src_row[src_x0];
-      src_value1 = src_row[src_x1];
-
-      value0 += src_value0;
-      value1 += src_value1;
-
-      dst_row[dst_x0] = value0;
-      dst_row[dst_x1] = value1;
-
-      src_row += src_stride;
-      dst_row += dst_stride;
-    }
+  T* output;
+  if (src_rows == dst_rows) {
+    output = (T*)((uchar*)dst + element_y * dst_stride);
   }
   else {
-    for (int row = 0; row < src_rows; row++) {
-      src_value0 = src_row[src_x0];
-      if (src_x0 != src_cols - 1) {
-        src_value1 = src_row[src_x1];
+    output = (T*)((uchar*)dst + (element_y + 1) * dst_stride);
+  }
+
+  if (element_x == 0) {
+    block_sum = 0;
+  }
+  __syncthreads();
+
+  T element_sum;
+  while (element_x < src_cols) {
+    if (src_rows == dst_rows) {
+      data[threadIdx_x] = output[element_x];
+    }
+    else {
+      data[threadIdx_x] = output[element_x + 1];
+    }
+    __syncthreads();
+
+    element_sum = block_sum + data[threadIdx_x];
+    for (int i = 0; i < threadIdx_x; i++) {
+      element_sum += data[i];
+    }
+    __syncthreads();
+
+    if (src_rows == dst_rows) {
+      output[element_x] = element_sum;
+    }
+    else {
+      if (element_x == 0 && src_rows != dst_rows) {
+        output[0] = 0;
       }
-
-      value0 += src_value0;
-      if (src_x0 != src_cols - 1) {
-        value1 += src_value1;
-      }
-
-      dst_row[dst_x0] = value0;
-      if (src_x0 != src_cols - 1) {
-        dst_row[dst_x1] = value1;
-      }
-
-      src_row += src_stride;
-      dst_row += dst_stride;
-    }
-  }
-}
-
-__global__
-void verticalKernel1(const float* src, float* dst, int src_rows, int src_cols,
-                     int src_stride, int dst_stride) {
-  int src_x0 = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
-  if (src_x0 >= src_cols) {
-    return;
-  }
-
-  int dst_x0 = src_x0;
-  double value0 = 0.0;
-  float src_value0;
-
-  float* src_row = (float*)src;
-  float* dst_row = dst;
-  src_stride = src_stride >> 2;
-  dst_stride = dst_stride >> 2;
-
-  for (int row = 0; row < src_rows; row++) {
-    src_value0 = src_row[src_x0];
-    value0 += src_value0;
-    dst_row[dst_x0] = value0;
-
-    src_row += src_stride;
-    dst_row += dst_stride;
-  }
-}
-
-__global__
-void verticalKernel2(const float* src, float* dst, int src_rows, int src_cols,
-                     int src_stride, int dst_stride) {
-  int src_x0 = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
-  if (src_x0 >= src_cols) {
-    return;
-  }
-
-  int dst_x0 = src_x0 + 1;
-  double value0 = 0.0;
-  float src_value0;
-
-  if (src_x0 == 0) {
-    dst[0] = 0.f;
-  }
-  dst[dst_x0] = 0.f;
-
-  src_stride = src_stride >> 2;
-  dst_stride = dst_stride >> 2;
-  float* src_row = (float*)src;
-  float* dst_row = dst + dst_stride;
-
-  for (int row = 0; row < src_rows; row++) {
-    src_value0 = src_row[src_x0];
-    value0 += src_value0;
-    dst_row[dst_x0] = value0;
-
-    src_row += src_stride;
-    dst_row += dst_stride;
-  }
-}
-
-__global__
-void horizontalKernel1(int* dst, int src_rows, int src_cols, int dst_stride) {
-  int row = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
-  if (row >= src_rows) {
-    return;
-  }
-
-  int value0, value1, value;
-  int* dst_row = (int*)((uchar*)dst + row * dst_stride);
-
-  value0 = dst_row[0];
-  value1 = dst_row[1];
-
-  value1 += value0;
-  value   = value1;
-
-  dst_row[1] = value1;
-
-  for (int col = 2; col < src_cols; col += 2) {
-    value0 = dst_row[col];
-    if (col + 1 < src_cols) {
-      value1 = dst_row[col + 1];
+      output[element_x + 1] = element_sum;
     }
 
-    value0 += value;
-    value1 += value0;
-    value   = value1;
-
-    dst_row[col] = value0;
-    if (col + 1 < src_cols) {
-      dst_row[col + 1] = value1;
+    if (threadIdx_x == BLOCK_X - 1) {
+      block_sum = element_sum;
     }
+    element_x += BLOCK_X;
   }
 }
 
-__global__
-void horizontalKernel2(int* dst, int src_rows, int src_cols, int dst_stride) {
-  int row = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
-  if (row >= src_rows) {
-    return;
-  }
-
-  int value0, value1, value;
-  int* dst_row = (int*)((uchar*)dst + (row + 1) * dst_stride);
-
-  value0 = 0;
-  value1 = dst_row[1];
-
-  value = value1;
-
-  dst_row[0] = value0;
-
-  for (int col = 2; col <= src_cols; col += 2) {
-    value0 = dst_row[col];
-    if (col + 1 <= src_cols) {
-      value1 = dst_row[col + 1];
-    }
-
-    value0 += value;
-    value1 += value0;
-    value   = value1;
-
-    dst_row[col] = value0;
-    if (col + 1 <= src_cols) {
-      dst_row[col + 1] = value1;
-    }
-  }
-}
-
-__global__
-void horizontalKernel1(float* dst, int src_rows, int src_cols, int dst_stride) {
-  int row = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
-  if (row >= src_rows) {
-    return;
-  }
-
-  double value0, value;
-  float* dst_row = (float*)((uchar*)dst + row * dst_stride);
-
-  value0 = dst_row[0];
-  value  = value0;
-
-  for (int col = 1; col < src_cols; col++) {
-    value0 = dst_row[col];
-    value += value0;
-
-    dst_row[col] = value;
-  }
-}
-
-__global__
-void horizontalKernel2(float* dst, int src_rows, int src_cols, int dst_stride) {
-  int row = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
-  if (row >= src_rows) {
-    return;
-  }
-
-  double value0, value;
-  float* dst_row = (float*)((uchar*)dst + (row + 1) * dst_stride);
-
-  value = dst_row[1];
-
-  dst_row[0] = 0.0;
-
-  for (int col = 2; col <= src_cols; col++) {
-    value0 = dst_row[col];
-    value += value0;
-
-    dst_row[col] = value;
-  }
-}
-
-RetCode integral(const uchar* src, int* dst, int src_rows, int src_cols,
-                 int src_stride, int dst_rows, int dst_cols, int dst_stride,
-                 cudaStream_t stream) {
+RetCode integral(const uchar* src, int src_rows, int src_cols, int channels,
+                 int src_stride, int* dst, int dst_rows, int dst_cols,
+                 int dst_stride, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(src_rows > 1 && src_cols > 1);
-  PPL_ASSERT(dst_rows > 1 && dst_cols > 1);
+  PPL_ASSERT(src_rows >= 1 && src_cols >= 1);
+  PPL_ASSERT(dst_rows >= 1 && dst_cols >= 1);
   PPL_ASSERT(dst_rows == src_rows || dst_rows == src_rows + 1);
   PPL_ASSERT(dst_cols == src_cols || dst_cols == src_cols + 1);
+  PPL_ASSERT(channels == 1);
   PPL_ASSERT(src_stride >= src_cols * (int)sizeof(uchar));
   PPL_ASSERT(dst_stride >= dst_cols * (int)sizeof(uchar));
 
-  int threads, block, grid;
-  threads = divideUp(src_cols, 2, 1);
-  block   = BLOCK_SIZE;
-  grid    = divideUp(threads, BLOCK_SIZE, BLOCK_SHIFT);
-  if (dst_cols == src_cols) {
-    verticalKernel1<<<grid, block, 0, stream>>>(src, dst, src_rows, src_cols,
-                                                src_stride, dst_stride);
-  }
-  else {  // dst_cols == src_cols + 1
-    verticalKernel2<<<grid, block, 0, stream>>>(src, dst, src_rows, src_cols,
-                                                src_stride, dst_stride);
-  }
+  dim3 block0, grid0;
+  block0.x = kBlockDimX1;
+  block0.y = kBlockDimY1;
+  grid0.x  = divideUp(divideUp(src_cols, 2, 1), kBlockDimX1, kBlockShiftX1);
+  grid0.y  = 1;
+  verticalKernel<uchar, int><<<grid0, block0, 0, stream>>>(src, src_rows,
+      src_cols, src_stride, dst, dst_rows, dst_stride);
 
-  threads = src_rows;
-  grid = divideUp(threads, BLOCK_SIZE, BLOCK_SHIFT);
-  if (dst_rows == src_rows) {
-    horizontalKernel1<<<grid, block, 0, stream>>>(dst, src_rows, src_cols,
-                                                  dst_stride);
-  }
-  else {  // dst_rows == src_rows + 1
-    horizontalKernel2<<<grid, block, 0, stream>>>(dst, src_rows, src_cols,
-                                                  dst_stride);
-  }
+  int block1 = BLOCK_X;
+  int grid1  = src_rows;
+  horizontalKernel<int><<<grid1, block1, 0, stream>>>(src_rows, src_cols, dst,
+                                                      dst_rows, dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -364,41 +210,31 @@ RetCode integral(const uchar* src, int* dst, int src_rows, int src_cols,
   return RC_SUCCESS;
 }
 
-RetCode integral(const float* src, float* dst, int src_rows, int src_cols,
-                 int src_stride, int dst_rows, int dst_cols, int dst_stride,
-                 cudaStream_t stream) {
+RetCode integral(const float* src, int src_rows, int src_cols, int channels,
+                 int src_stride, float* dst, int dst_rows, int dst_cols,
+                 int dst_stride, cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(dst != nullptr);
-  PPL_ASSERT(src_rows > 1 && src_cols > 1);
-  PPL_ASSERT(dst_rows > 1 && dst_cols > 1);
+  PPL_ASSERT(src_rows >= 1 && src_cols >= 1);
+  PPL_ASSERT(dst_rows >= 1 && dst_cols >= 1);
   PPL_ASSERT(dst_rows == src_rows || dst_rows == src_rows + 1);
   PPL_ASSERT(dst_cols == src_cols || dst_cols == src_cols + 1);
+  PPL_ASSERT(channels == 1);
   PPL_ASSERT(src_stride >= src_cols * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= dst_cols * (int)sizeof(float));
 
-  int threads, block, grid;
-  threads = src_cols;
-  block = BLOCK_SIZE;
-  grid  = divideUp(threads, BLOCK_SIZE, BLOCK_SHIFT);
-  if (dst_cols == src_cols) {
-    verticalKernel1<<<grid, block, 0, stream>>>(src, dst, src_rows, src_cols,
-                                                src_stride, dst_stride);
-  }
-  else {  // dst_cols == src_cols + 1
-    verticalKernel2<<<grid, block, 0, stream>>>(src, dst, src_rows, src_cols,
-                                                src_stride, dst_stride);
-  }
+  dim3 block0, grid0;
+  block0.x = kBlockDimX1;
+  block0.y = kBlockDimY1;
+  grid0.x  = divideUp(divideUp(src_cols, 2, 1), kBlockDimX1, kBlockShiftX1);
+  grid0.y  = 1;
+  verticalKernel<float, float><<<grid0, block0, 0, stream>>>(src, src_rows,
+      src_cols, src_stride, dst, dst_rows, dst_stride);
 
-  threads = src_rows;
-  grid = divideUp(threads, BLOCK_SIZE, BLOCK_SHIFT);
-  if (dst_rows == src_rows) {
-    horizontalKernel1<<<grid, block, 0, stream>>>(dst, src_rows, src_cols,
-                                                  dst_stride);
-  }
-  else {  // dst_rows == src_rows + 1
-    horizontalKernel2<<<grid, block, 0, stream>>>(dst, src_rows, src_cols,
-                                                  dst_stride);
-  }
+  int block1 = BLOCK_X;
+  int grid1  = src_rows;
+  horizontalKernel<float><<<grid1, block1, 0, stream>>>(src_rows, src_cols, dst,
+                                                        dst_rows, dst_stride);
 
   cudaError_t code = cudaGetLastError();
   if (code != cudaSuccess) {
@@ -420,7 +256,7 @@ RetCode Integral<uchar, int, 1>(cudaStream_t stream,
                                 int outWidthStride,
                                 int* outData) {
   outWidthStride *= sizeof(int);
-  RetCode code = integral(inData, outData, inHeight, inWidth, inWidthStride,
+  RetCode code = integral(inData, inHeight, inWidth, 1, inWidthStride, outData,
                           outHeight, outWidth, outWidthStride, stream);
 
   return code;
@@ -438,7 +274,7 @@ RetCode Integral<float, float, 1>(cudaStream_t stream,
                                   float* outData) {
   inWidthStride  *= sizeof(float);
   outWidthStride *= sizeof(float);
-  RetCode code = integral(inData, outData, inHeight, inWidth, inWidthStride,
+  RetCode code = integral(inData, inHeight, inWidth, 1, inWidthStride, outData,
                           outHeight, outWidth, outWidthStride, stream);
 
   return code;

@@ -36,13 +36,10 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
   cv::Mat src;
   src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                           channels));
-  cv::Mat guide(height, width,
-                CV_MAKETYPE(cv::DataType<T>::depth, 1));
+  cv::Mat guide(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
   cv::Mat dst(src.rows, src.cols, src.type());
   if (channels == 1) {
-    cv::Mat tmp = createSourceImage(height, width,
-                        CV_MAKETYPE(cv::DataType<T>::depth, 1));
-    tmp.copyTo(guide);
+    src.copyTo(guide);
   }
   else if (channels == 3) {
     cv::cvtColor(src, guide, cv::COLOR_BGR2GRAY);
@@ -52,9 +49,9 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
   }
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_guide(guide);
-  cv::cuda::GpuMat gpu_dst(src.rows, src.cols, src.type());
+  cv::cuda::GpuMat gpu_dst(dst);
 
-  int iterations = 1000;
+  int iterations = 500;
   struct timeval start, end;
 
   // Warm up the GPU.
@@ -95,9 +92,7 @@ void BM_GuidedFilter_opencv_x86_cuda(benchmark::State &state) {
                 CV_MAKETYPE(cv::DataType<T>::depth, 1));
   cv::Mat dst(src.rows, src.cols, src.type());
   if (channels == 1) {
-    cv::Mat tmp = createSourceImage(height, width,
-                        CV_MAKETYPE(cv::DataType<T>::depth, 1));
-    tmp.copyTo(guide);
+    src.copyTo(guide);
   }
   else if (channels == 3) {
     cv::cvtColor(src, guide, cv::COLOR_BGR2GRAY);
@@ -116,32 +111,47 @@ void BM_GuidedFilter_opencv_x86_cuda(benchmark::State &state) {
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, uchar, c1, radius,         \
                    eps)->Args({width, height});                                \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, uchar, c1, radius, eps)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
+                   Args({width, height})->UseManualTime()->Iterations(5);      \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, float, c1, radius,         \
                    eps)->Args({width, height});                                \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, float, c1, radius, eps)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
+                   Args({width, height})->UseManualTime()->Iterations(5);      \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, uchar, c3, radius,         \
                    eps)->Args({width, height});                                \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, uchar, c3, radius, eps)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
+                   Args({width, height})->UseManualTime()->Iterations(5);      \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, float, c3, radius,         \
                    eps)->Args({width, height});                                \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, float, c3, radius, eps)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
+                   Args({width, height})->UseManualTime()->Iterations(5);      \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, uchar, c4, radius,         \
                    eps)->Args({width, height});                                \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, uchar, c4, radius, eps)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);     \
+                   Args({width, height})->UseManualTime()->Iterations(5);      \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, float, c4, radius,         \
                    eps)->Args({width, height});                                \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, float, c4, radius, eps)->         \
-                   Args({width, height})->UseManualTime()->Iterations(10);
+                   Args({width, height})->UseManualTime()->Iterations(5);
+
+// RUN_BENCHMARK(3, 50, 320, 240)
+// RUN_BENCHMARK(3, 50, 640, 480)
+// RUN_BENCHMARK(3, 50, 1280, 720)
+// RUN_BENCHMARK(3, 50, 1920, 1080)
 
 // RUN_BENCHMARK(7, 50, 320, 240)
 // RUN_BENCHMARK(7, 50, 640, 480)
 // RUN_BENCHMARK(7, 50, 1280, 720)
 // RUN_BENCHMARK(7, 50, 1920, 1080)
+
+// RUN_BENCHMARK(15, 50, 320, 240)
+// RUN_BENCHMARK(15, 50, 640, 480)
+// RUN_BENCHMARK(15, 50, 1280, 720)
+// RUN_BENCHMARK(15, 50, 1920, 1080)
+
+// RUN_BENCHMARK(22, 50, 320, 240)
+// RUN_BENCHMARK(22, 50, 640, 480)
+// RUN_BENCHMARK(22, 50, 1280, 720)
+// RUN_BENCHMARK(22, 50, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, radius, eps)                           \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c1, radius, eps)->   \
@@ -153,30 +163,62 @@ BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c1, radius, eps)->   \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c1, radius, eps)->   \
                    Args({1920, 1080});                                         \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c3, radius, eps)->   \
+                   Args({320, 240});                                           \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c3, radius, eps)->   \
+                   Args({640, 480});                                           \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c3, radius, eps)->   \
+                   Args({1280, 720});                                          \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c3, radius, eps)->   \
+                   Args({1920, 1080});                                         \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c4, radius, eps)->   \
+                   Args({320, 240});                                           \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c4, radius, eps)->   \
                    Args({640, 480});                                           \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c4, radius, eps)->   \
-                   Args({640, 480});
+                   Args({1280, 720});                                          \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c4, radius, eps)->   \
+                   Args({1920, 1080});
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(type, radius, eps)                           \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c1, radius, eps)->          \
-                   Args({320, 240})->UseManualTime()->Iterations(10);          \
+                   Args({320, 240})->UseManualTime()->Iterations(5);           \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c1, radius, eps)->          \
-                   Args({640, 480})->UseManualTime()->Iterations(10);          \
+                   Args({640, 480})->UseManualTime()->Iterations(5);           \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c1, radius, eps)->          \
-                   Args({1280, 720})->UseManualTime()->Iterations(10);         \
+                   Args({1280, 720})->UseManualTime()->Iterations(5);          \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c1, radius, eps)->          \
-                   Args({1920, 1080})->UseManualTime()->Iterations(10);        \
+                   Args({1920, 1080})->UseManualTime()->Iterations(5);         \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c3, radius, eps)->          \
-                   Args({640, 480})->UseManualTime()->Iterations(10);          \
+                   Args({320, 240})->UseManualTime()->Iterations(5);           \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c3, radius, eps)->          \
+                   Args({640, 480})->UseManualTime()->Iterations(5);           \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c3, radius, eps)->          \
+                   Args({1280, 720})->UseManualTime()->Iterations(5);          \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c3, radius, eps)->          \
+                   Args({1920, 1080})->UseManualTime()->Iterations(5);         \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c4, radius, eps)->          \
-                   Args({640, 480})->UseManualTime()->Iterations(10);
+                   Args({320, 240})->UseManualTime()->Iterations(5);           \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c4, radius, eps)->          \
+                   Args({640, 480})->UseManualTime()->Iterations(5);           \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c4, radius, eps)->          \
+                   Args({1280, 720})->UseManualTime()->Iterations(5);          \
+BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c4, radius, eps)->          \
+                   Args({1920, 1080})->UseManualTime()->Iterations(5);
 
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 3, 50)
+RUN_OPENCV_TYPE_FUNCTIONS(float, 3, 50)
 RUN_OPENCV_TYPE_FUNCTIONS(uchar, 7, 50)
 RUN_OPENCV_TYPE_FUNCTIONS(float, 7, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, 9, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(float, 9, 50)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 15, 50)
+RUN_OPENCV_TYPE_FUNCTIONS(float, 15, 50)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 22, 50)
+RUN_OPENCV_TYPE_FUNCTIONS(float, 22, 50)
 
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 3, 50)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, 3, 50)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 7, 50)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, 7, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 9, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, 9, 50)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 15, 50)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, 15, 50)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 22, 50)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, 22, 50)

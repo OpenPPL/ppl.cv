@@ -285,18 +285,18 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
     if (sizeof(Tdst) == 1) {
       if (element_x < cols - 3) {
-        output[element_x]     = saturate_cast(sum.x);
-        output[element_x + 1] = saturate_cast(sum.y);
-        output[element_x + 2] = saturate_cast(sum.z);
-        output[element_x + 3] = saturate_cast(sum.w);
+        output[element_x]     = saturateCast(sum.x);
+        output[element_x + 1] = saturateCast(sum.y);
+        output[element_x + 2] = saturateCast(sum.z);
+        output[element_x + 3] = saturateCast(sum.w);
       }
       else {
-        output[element_x] = saturate_cast(sum.x);
+        output[element_x] = saturateCast(sum.x);
         if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast(sum.y);
+          output[element_x + 1] = saturateCast(sum.y);
         }
         if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast(sum.z);
+          output[element_x + 2] = saturateCast(sum.z);
         }
       }
     }
@@ -387,7 +387,7 @@ void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
 
     Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-    output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+    output[element_x] = saturateCastVector<Tdstn, float4>(sum);
   }
 }
 
@@ -465,7 +465,7 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+  output[element_x] = saturateCastVector<Tdstn, float4>(sum);
 }
 
 template <typename Tdst, typename BorderInterpolation>
@@ -549,10 +549,10 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   index = element_x << 2;
   if (element_x < cols4 - 1) {
     if (sizeof(Tdst) == 1) {
-      output[index] = saturate_cast(sum.x);
-      output[index + 1] = saturate_cast(sum.y);
-      output[index + 2] = saturate_cast(sum.z);
-      output[index + 3] = saturate_cast(sum.w);
+      output[index] = saturateCast(sum.x);
+      output[index + 1] = saturateCast(sum.y);
+      output[index + 2] = saturateCast(sum.z);
+      output[index + 3] = saturateCast(sum.w);
     }
     else {
       output[index] = sum.x;
@@ -563,15 +563,15 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
   else {
     if (sizeof(Tdst) == 1) {
-      output[index] = saturate_cast(sum.x);
+      output[index] = saturateCast(sum.x);
       if (index < cols - 1) {
-        output[index + 1] = saturate_cast(sum.y);
+        output[index + 1] = saturateCast(sum.y);
       }
       if (index < cols - 2) {
-        output[index + 2] = saturate_cast(sum.z);
+        output[index + 2] = saturateCast(sum.z);
       }
       if (index < cols - 3) {
-        output[index + 3] = saturate_cast(sum.w);
+        output[index + 3] = saturateCast(sum.w);
       }
     }
     else {

@@ -68,31 +68,32 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 3;
  *
- *   float* dev_input;
- *   float* dev_output0;
- *   float* dev_output1;
- *   float* dev_output2;
+ *   float* gpu_input;
+ *   float* gpu_output0;
+ *   float* gpu_output1;
+ *   float* gpu_output2;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output0, &output_pitch,
+ *   cudaMallocPitch(&gpu_output0, &output_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output1, &output_pitch,
+ *   cudaMallocPitch(&gpu_output1, &output_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output2, &output_pitch,
+ *   cudaMallocPitch(&gpu_output2, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Split3Channels<float>(stream, height, width, input_pitch / sizeof(float),
- *                         dev_input, output_pitch / sizeof(float), dev_output0,
- *                         dev_output1, dev_output2);
+ *                         gpu_input, output_pitch / sizeof(float), gpu_output0,
+ *                         gpu_output1, gpu_output2);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output0);
- *   cudaFree(dev_output1);
- *   cudaFree(dev_output2);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output0);
+ *   cudaFree(gpu_output1);
+ *   cudaFree(gpu_output2);
  *
  *   return 0;
  * }
@@ -153,35 +154,36 @@ ppl::common::RetCode Split3Channels(cudaStream_t stream,
  *   int height   = 480;
  *   int channels = 4;
  *
- *   float* dev_input;
- *   float* dev_output0;
- *   float* dev_output1;
- *   float* dev_output2;
- *   float* dev_output3;
+ *   float* gpu_input;
+ *   float* gpu_output0;
+ *   float* gpu_output1;
+ *   float* gpu_output2;
+ *   float* gpu_output3;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output0, &output_pitch,
+ *   cudaMallocPitch(&gpu_output0, &output_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output1, &output_pitch,
+ *   cudaMallocPitch(&gpu_output1, &output_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output2, &output_pitch,
+ *   cudaMallocPitch(&gpu_output2, &output_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output3, &output_pitch,
+ *   cudaMallocPitch(&gpu_output3, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Split4Channels<float>(stream, height, width, input_pitch / sizeof(float),
- *                         dev_input, output_pitch / sizeof(float), dev_output0,
- *                         dev_output1, dev_output2, dev_output3);
+ *                         gpu_input, output_pitch / sizeof(float), gpu_output0,
+ *                         gpu_output1, gpu_output2, gpu_output3);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output0);
- *   cudaFree(dev_output1);
- *   cudaFree(dev_output2);
- *   cudaFree(dev_output3);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output0);
+ *   cudaFree(gpu_output1);
+ *   cudaFree(gpu_output2);
+ *   cudaFree(gpu_output3);
  *
  *   return 0;
  * }

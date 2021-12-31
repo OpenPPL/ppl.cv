@@ -88,23 +88,24 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 3;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Erode<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                   dev_input, 3, 3, nullptr, output_pitch / sizeof(float),
- *                   dev_output, ppl::cv::BORDER_TYPE_REPLICATE);
+ *                   gpu_input, 3, 3, nullptr, output_pitch / sizeof(float),
+ *                   gpu_output, ppl::cv::BORDER_TYPE_REPLICATE);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

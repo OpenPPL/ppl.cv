@@ -75,19 +75,20 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 3;
  *
- *   float* dev_input;
+ *   float* gpu_input;
  *   size_t input_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
  *   double norm_value;
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   Norm<float, 3>(stream, height, width, input_pitch / sizeof(float),
- *                  dev_input, &norm_value, ppl::cv::NORM_L2);
+ *                  gpu_input, &norm_value, ppl::cv::NORM_L2);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
+ *   cudaFree(gpu_input);
  *
  *   return 0;
  * }

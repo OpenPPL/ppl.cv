@@ -29,39 +29,55 @@ using namespace ppl::cv;
 using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
-template <typename T>
+enum MaskType {
+  kUnmasked,
+  kMasked,
+};
+
+template <typename T, MaskType mask_type>
 void BM_MinMaxLoc_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
+  cv::Mat src, mask;
   src  = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                            1));
+  mask = createSourceImage(height, width,
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
   cv::cuda::GpuMat gpu_src(src);
+  cv::cuda::GpuMat gpu_mask(mask);
 
-  T minVal;
-  T maxVal;
-  int minIdxX;
-  int minIdxY;
-  int maxIdxX;
-  int maxIdxY;
+  T min_val;
+  T max_val;
+  int min_loc_x;
+  int min_loc_y;
+  int max_loc_x;
+  int max_loc_y;
 
   int iterations = 1000;
   struct timeval start, end;
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
-                 gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                 &minVal, &maxVal, &minIdxX, &minIdxY, &maxIdxX, &maxIdxY);
+    MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
+                 (T*)gpu_src.data, &min_val, &max_val, &min_loc_x, &min_loc_y,
+                 &max_loc_x, &max_loc_y);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
-                  gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                  &minVal, &maxVal, &minIdxX, &minIdxY, &maxIdxX, &maxIdxY);
+      if (mask_type == kUnmasked) {
+        MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
+                     (T*)gpu_src.data, &min_val, &max_val, &min_loc_x,
+                     &min_loc_y, &max_loc_x, &max_loc_y);
+      }
+      else {
+        MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
+                     (T*)gpu_src.data, &min_val, &max_val, &min_loc_x,
+                     &min_loc_y, &max_loc_x, &max_loc_y, gpu_mask.step,
+                     (uchar*)gpu_mask.data);
+      }
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -72,31 +88,40 @@ void BM_MinMaxLoc_ppl_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename T>
+template <typename T, MaskType mask_type>
 void BM_MinMaxLoc_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
+  cv::Mat src, mask;
   src  = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                            1));
+  mask = createSourceImage(height, width,
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
   cv::cuda::GpuMat gpu_src(src);
+  cv::cuda::GpuMat gpu_mask(mask);
 
-  double minVal, maxVal;
-  cv::Point minLoc, maxLoc;
+  double min_val, max_val;
+  cv::Point min_loc, max_loc;
 
   int iterations = 1000;
   struct timeval start, end;
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    cv::cuda::minMaxLoc(gpu_src, &minVal, &maxVal, &minLoc, &maxLoc);
+    cv::cuda::minMaxLoc(gpu_src, &min_val, &max_val, &min_loc, &max_loc);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      cv::cuda::minMaxLoc(gpu_src, &minVal, &maxVal, &minLoc, &maxLoc);
+      if (mask_type == kUnmasked) {
+        cv::cuda::minMaxLoc(gpu_src, &min_val, &max_val, &min_loc, &max_loc);
+      }
+      else {
+        cv::cuda::minMaxLoc(gpu_src, &min_val, &max_val, &min_loc, &max_loc,
+                            gpu_mask);
+      }
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
@@ -107,73 +132,102 @@ void BM_MinMaxLoc_opencv_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-template <typename T>
+template <typename T, MaskType mask_type>
 void BM_MinMaxLoc_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          1));
+  cv::Mat src, mask;
+  src  = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           1));
+  mask = createSourceImage(height, width,
+                           CV_MAKETYPE(cv::DataType<uchar>::depth, 1));
 
-  double minVal, maxVal;
-  cv::Point minLoc, maxLoc;
+  double min_val, max_val;
+  cv::Point min_loc, max_loc;
 
   for (auto _ : state) {
-    cv::minMaxLoc(src, &minVal, &maxVal, &minLoc, &maxLoc);
+    if (mask_type == kUnmasked) {
+      cv::minMaxLoc(src, &min_val, &max_val, &min_loc, &max_loc);
+    }
+    else {
+      cv::minMaxLoc(src, &min_val, &max_val, &min_loc, &max_loc, mask);
+    }
   }
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
 #define RUN_BENCHMARK0(width, height)                                          \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, uchar)->Args({width, height})->   \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, uchar)->Args({width, height})->      \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, float)->Args({width, height})->   \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float)->Args({width, height})->      \
-                   UseManualTime()->Iterations(10);
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, uchar, kUnmasked)->               \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, uchar, kUnmasked)->                  \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, uchar, kMasked)->                 \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, uchar, kMasked)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, float, kUnmasked)->               \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float, kUnmasked)->                  \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, float, kMasked)->                 \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float, kMasked)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);
 
-RUN_BENCHMARK0(320, 240)
-RUN_BENCHMARK0(640, 480)
-RUN_BENCHMARK0(1280, 720)
-RUN_BENCHMARK0(1920, 1080)
+// RUN_BENCHMARK0(320, 240)
+// RUN_BENCHMARK0(640, 480)
+// RUN_BENCHMARK0(1280, 720)
+// RUN_BENCHMARK0(1920, 1080)
 
 #define RUN_BENCHMARK1(width, height)                                          \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, uchar)->Args({width, height});\
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, uchar)->Args({width, height})->      \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, float)->Args({width, height});\
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float)->Args({width, height})->      \
-                   UseManualTime()->Iterations(10);
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, uchar, kUnmasked)->           \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, uchar, kUnmasked)->                  \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, uchar, kMasked)->             \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, uchar, kMasked)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, float, kUnmasked)->           \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float, kUnmasked)->                  \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, float, kMasked)->             \
+                   Args({width, height});                                      \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float, kMasked)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);
 
-RUN_BENCHMARK1(320, 240)
-RUN_BENCHMARK1(640, 480)
-RUN_BENCHMARK1(1280, 720)
-RUN_BENCHMARK1(1920, 1080)
+// RUN_BENCHMARK1(320, 240)
+// RUN_BENCHMARK1(640, 480)
+// RUN_BENCHMARK1(1280, 720)
+// RUN_BENCHMARK1(1920, 1080)
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(type)                                        \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type)->Args({320, 240})->         \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type)->Args({640, 480})->         \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type)->Args({1280, 720})->        \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type)->Args({1920, 1080})->       \
-                   UseManualTime()->Iterations(10);
+#define RUN_OPENCV_TYPE_FUNCTIONS(type, mask_type)                             \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
+                   Args({320, 240})->UseManualTime()->Iterations(10);          \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
+                   Args({640, 480})->UseManualTime()->Iterations(10);          \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
+                   Args({1280, 720})->UseManualTime()->Iterations(10);         \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
+                   Args({1920, 1080})->UseManualTime()->Iterations(10);        \
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type)                                        \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type)->Args({320, 240})->            \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type)->Args({640, 480})->            \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type)->Args({1280, 720})->           \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type)->Args({1920, 1080})->          \
-                   UseManualTime()->Iterations(10);
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type, mask_type)                                             \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type, mask_type)->                   \
+                   Args({320, 240})->UseManualTime()->Iterations(10);          \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type, mask_type)->                   \
+                   Args({640, 480})->UseManualTime()->Iterations(10);          \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type, mask_type)->                   \
+                   Args({1280, 720})->UseManualTime()->Iterations(10);         \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type, mask_type)->                   \
+                   Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar)
-// RUN_OPENCV_TYPE_FUNCTIONS(float)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, kMasked)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, kMasked)

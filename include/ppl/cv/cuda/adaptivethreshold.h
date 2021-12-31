@@ -81,24 +81,25 @@ namespace cuda {
  *   float max_value = 25.f;
  *   float delta = 5.f;
  *
- *   uchar* dev_input;
- *   uchar* dev_output;
+ *   uchar* gpu_input;
+ *   uchar* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(uchar), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(uchar), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   AdaptiveThreshold(stream, height, width, input_pitch / sizeof(uchar),
- *                     dev_input, output_pitch / sizeof(uchar), dev_output,
+ *                     gpu_input, output_pitch / sizeof(uchar), gpu_output,
  *                     max_value, adaptive_method, threshold_type, ksize, delta,
  *                     ppl::cv::BORDER_TYPE_REPLICATE);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

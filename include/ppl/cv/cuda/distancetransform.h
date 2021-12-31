@@ -74,24 +74,25 @@ namespace cuda {
  *   DistTypes distance_type = ppl::cv::DIST_L2;
  *   DistanceTransformMasks mask_size = ppl::cv::DIST_MASK_PRECISE;
  *
- *   uchar* dev_input;
- *   float* dev_output;
+ *   uchar* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(uchar), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   DistanceTransform<float>(stream, height, width,
- *                            input_pitch / sizeof(uchar), dev_input,
- *                            input_pitch / sizeof(float), dev_output,
+ *                            input_pitch / sizeof(uchar), gpu_input,
+ *                            input_pitch / sizeof(float), gpu_output,
  *                            distance_type, mask_size);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }
