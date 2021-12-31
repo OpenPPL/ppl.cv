@@ -25,7 +25,7 @@ namespace cuda {
 #define BLOCK_SHIFT 7
 #define MAX_BLOCKS 256
 
-static __device__ uint count = 0;
+static __device__ uint block_count = 0;
 __shared__ bool isLastBlockDone;
 
 __DEVICE__
@@ -220,7 +220,7 @@ void normLinfKernel(const Tsrc* src, int rows, int cols, int channels,
     norm_values[offset] = partial_norms[0];
     __threadfence();
 
-    int value = atomicInc(&count, blocks);
+    int value = atomicInc(&block_count, blocks);
     isLastBlockDone = (value == (blocks - 1));
   }
   __syncthreads();
@@ -284,7 +284,7 @@ void normLinfKernel(const Tsrc* src, int rows, int cols, int channels,
 
     if (threadIdx_x == 0) {
       norm_values[0] = partial_norms[0];
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -409,7 +409,7 @@ void normL1Kernel(const Tsrc* src, int rows, int cols, int channels,
     norm_values[offset] = partial_norms[0];
     __threadfence();
 
-    int value = atomicInc(&count, blocks);
+    int value = atomicInc(&block_count, blocks);
     isLastBlockDone = (value == (blocks - 1));
   }
   __syncthreads();
@@ -473,7 +473,7 @@ void normL1Kernel(const Tsrc* src, int rows, int cols, int channels,
 
     if (threadIdx_x == 0) {
       norm_values[0] = partial_norms[0];
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -598,7 +598,7 @@ void normL2Kernel(const Tsrc* src, int rows, int cols, int channels,
     norm_values[offset] = partial_norms[0];
     __threadfence();
 
-    int value = atomicInc(&count, blocks);
+    int value = atomicInc(&block_count, blocks);
     isLastBlockDone = (value == (blocks - 1));
   }
   __syncthreads();
@@ -662,7 +662,7 @@ void normL2Kernel(const Tsrc* src, int rows, int cols, int channels,
 
     if (threadIdx_x == 0) {
       norm_values[0] = partial_norms[0];
-      count = 0;
+      block_count = 0;
     }
   }
 }
@@ -816,7 +816,7 @@ void MinMaxKernel(const Tsrc* src, int rows, int cols, int channels,
     norm_values[offset + blocks] = partial_mins[0];
     __threadfence();
 
-    int value = atomicInc(&count, blocks);
+    int value = atomicInc(&block_count, blocks);
     isLastBlockDone = (value == (blocks - 1));
   }
   __syncthreads();
@@ -899,7 +899,7 @@ void MinMaxKernel(const Tsrc* src, int rows, int cols, int channels,
     if (threadIdx_x == 0) {
       norm_values[0] = partial_maxs[0];
       norm_values[1] = partial_mins[0];
-      count = 0;
+      block_count = 0;
     }
   }
 }

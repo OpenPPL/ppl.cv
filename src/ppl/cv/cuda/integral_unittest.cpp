@@ -60,8 +60,8 @@ bool PplCvCudaIntegralTest<Tsrc, Tdst, channels>::apply() {
   cv::Mat src;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels));
-//   cv::Mat dst(size.height, size.width,
-//               CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
+  // cv::Mat dst(size.height, size.width,
+  //             CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
   cv::Mat dst(size.height + 1, size.width + 1,
               CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
   cv::Mat cv_dst(size.height + 1, size.width + 1,
@@ -104,7 +104,7 @@ bool PplCvCudaIntegralTest<Tsrc, Tdst, channels>::apply() {
     epsilon = EPSILON_1F;
   }
   else {
-    epsilon = EPSILON_2F;
+    epsilon = EPSILON_4F;
   }
   bool identity0 = checkMatricesIdentity<Tdst>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<Tdst>(cv_dst, output, epsilon);

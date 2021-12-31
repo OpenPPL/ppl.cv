@@ -48,7 +48,7 @@ namespace cuda {
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 The size of the output image is computed as ((height + 1) / 2, 
+ *       2 The size of the output image is computed as ((height + 1) / 2,
  *         (width + 1) / 2).
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -80,23 +80,24 @@ namespace cuda {
  *   int dst_height = 240;
  *   int channels = 3;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   src_width * channels * sizeof(float), src_height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   dst_width * channels * sizeof(float), dst_height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
- *   PyrDown<float, 3>(stream, src_height, src_width, 
- *                     input_pitch / sizeof(float), dev_input,
- *                     output_pitch / sizeof(float), dev_output);
+ *   PyrDown<float, 3>(stream, src_height, src_width,
+ *                     input_pitch / sizeof(float), gpu_input,
+ *                     output_pitch / sizeof(float), gpu_output);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

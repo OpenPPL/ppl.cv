@@ -239,10 +239,10 @@ void rowColC1Kernel0(const uchar* src, int rows, int cols, int src_stride,
     sum.w *= weight;
 
     int4 threshold;
-    threshold.x = saturate_cast(sum.x) - delta;
-    threshold.y = saturate_cast(sum.y) - delta;
-    threshold.z = saturate_cast(sum.z) - delta;
-    threshold.w = saturate_cast(sum.w) - delta;
+    threshold.x = saturateCast(sum.x) - delta;
+    threshold.y = saturateCast(sum.y) - delta;
+    threshold.z = saturateCast(sum.z) - delta;
+    threshold.w = saturateCast(sum.w) - delta;
 
     input = (uchar*)src + element_y * src_stride;
     value.x = input[element_x];
@@ -265,18 +265,18 @@ void rowColC1Kernel0(const uchar* src, int rows, int cols, int src_stride,
 
     uchar* output = dst + element_y * dst_stride;
     if (element_x < cols - 3) {
-      output[element_x]     = saturate_cast(value.x);
-      output[element_x + 1] = saturate_cast(value.y);
-      output[element_x + 2] = saturate_cast(value.z);
-      output[element_x + 3] = saturate_cast(value.w);
+      output[element_x]     = saturateCast(value.x);
+      output[element_x + 1] = saturateCast(value.y);
+      output[element_x + 2] = saturateCast(value.z);
+      output[element_x + 3] = saturateCast(value.w);
     }
     else {
-      output[element_x] = saturate_cast(value.x);
+      output[element_x] = saturateCast(value.x);
       if (element_x < cols - 1) {
-        output[element_x + 1] = saturate_cast(value.y);
+        output[element_x + 1] = saturateCast(value.y);
       }
       if (element_x < cols - 2) {
-        output[element_x + 2] = saturate_cast(value.z);
+        output[element_x + 2] = saturateCast(value.z);
       }
     }
   }
@@ -451,10 +451,10 @@ void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
     }
 
     int4 threshold;
-    threshold.x = saturate_cast(sum.x) - delta;
-    threshold.y = saturate_cast(sum.y) - delta;
-    threshold.z = saturate_cast(sum.z) - delta;
-    threshold.w = saturate_cast(sum.w) - delta;
+    threshold.x = saturateCast(sum.x) - delta;
+    threshold.y = saturateCast(sum.y) - delta;
+    threshold.z = saturateCast(sum.z) - delta;
+    threshold.w = saturateCast(sum.w) - delta;
 
     input = (uchar*)src + element_y * src_stride;
     value.x = input[element_x];
@@ -477,18 +477,18 @@ void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
 
     uchar* output = dst + element_y * dst_stride;
     if (element_x < cols - 3) {
-      output[element_x]     = saturate_cast(value.x);
-      output[element_x + 1] = saturate_cast(value.y);
-      output[element_x + 2] = saturate_cast(value.z);
-      output[element_x + 3] = saturate_cast(value.w);
+      output[element_x]     = saturateCast(value.x);
+      output[element_x + 1] = saturateCast(value.y);
+      output[element_x + 2] = saturateCast(value.z);
+      output[element_x + 3] = saturateCast(value.w);
     }
     else {
-      output[element_x] = saturate_cast(value.x);
+      output[element_x] = saturateCast(value.x);
       if (element_x < cols - 1) {
-        output[element_x + 1] = saturate_cast(value.y);
+        output[element_x + 1] = saturateCast(value.y);
       }
       if (element_x < cols - 2) {
-        output[element_x + 2] = saturate_cast(value.z);
+        output[element_x + 2] = saturateCast(value.z);
       }
     }
   }
@@ -676,7 +676,7 @@ void colBatch4Kernel0(const float* buffer, int rows, int cols,
   }
 
   sum *= weight;
-  data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
+  data[threadIdx.y][threadIdx.x] = saturateCast(sum);
   __syncthreads();
 
   if (threadIdx.x < kBlockDimX1) {
@@ -777,7 +777,7 @@ void colBatch4Kernel1(const float* buffer, int rows, int cols,
     }
   }
 
-  data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
+  data[threadIdx.y][threadIdx.x] = saturateCast(sum);
   __syncthreads();
 
   if (threadIdx.x < kBlockDimX1) {

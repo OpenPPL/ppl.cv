@@ -24,63 +24,149 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-#define BLOCKS_X 2
-#define BLOCKS_Y 36
+#define MAX_BLOCKS 128
 
 __global__
-void calcHistKernel0(const uchar* src, int rows, int cols, int src_stride,
-                     int* histogram) {
+void unmaskedCalcHistKernel0(const uchar* src, int size, int* histogram) {
   __shared__ int local_histogram[256];
 
-  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
-  
+  int element_x = (blockIdx.x << 8) + threadIdx.x;
+  int index_x = element_x << 2;
+  int grid_offset = gridDim.x * 1024;
+
   int index = threadIdx.y * blockDim.x + threadIdx.x;
   local_histogram[index] = 0;
   __syncthreads();
 
-  uchar value0, value1, value2, value3;
-  
-  int blocks_x = gridDim.x * blockDim.x * 4;
-  int blocks_y = gridDim.y * blockDim.y;
-  int index_x;
-  while (element_y < rows) {
-    const uchar* input = src + element_y * src_stride;
-    index_x = element_x;
-    while (index_x < cols) {
+  uint* input = (uint*)src;
+  for (; index_x < size; index_x += grid_offset) {
+    if (index_x < size) {
+      uint value = input[element_x];
+      if (index_x < size - 3) {
+        atomicAdd(&local_histogram[(value >>  0) & 0xFFU], 1);
+        atomicAdd(&local_histogram[(value >>  8) & 0xFFU], 1);
+        atomicAdd(&local_histogram[(value >> 16) & 0xFFU], 1);
+        atomicAdd(&local_histogram[(value >> 24) & 0xFFU], 1);
+      }
+      else {
+        atomicAdd(&local_histogram[(value >>  0) & 0xFFU], 1);
+        if (index_x < size - 1) {
+          atomicAdd(&local_histogram[(value >>  8) & 0xFFU], 1);
+        }
+        if (index_x < size - 2) {
+          atomicAdd(&local_histogram[(value >> 16) & 0xFFU], 1);
+        }
+        if (index_x < size - 3) {
+          atomicAdd(&local_histogram[(value >> 24) & 0xFFU], 1);
+        }
+      }
+    }
+    input += (grid_offset >> 2);
+  }
+  __syncthreads();
+
+  int count = local_histogram[index];
+  if (count > 0) {
+    atomicAdd(histogram + index, count);
+  }
+}
+
+__global__
+void unmaskedCalcHistKernel1(const uchar* src, int rows, int cols,
+                             int src_stride, int* histogram) {
+  __shared__ int local_histogram[256];
+
+  int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  int index_x = element_x << 2;
+
+  int index = threadIdx.y * blockDim.x + threadIdx.x;
+  local_histogram[index] = 0;
+  __syncthreads();
+
+  uint* input;
+  for (; element_y < rows; element_y += gridDim.y * blockDim.y) {
+    if (index_x < cols) {
+      input = (uint*)((uchar*)src + element_y * src_stride);
+
+      uint value = input[element_x];
       if (index_x < cols - 3) {
-        value0 = input[index_x];
-        value1 = input[index_x + 1];
-        value2 = input[index_x + 2];
-        value3 = input[index_x + 3];
-    
+        atomicAdd(&local_histogram[(value >>  0) & 0xFFU], 1);
+        atomicAdd(&local_histogram[(value >>  8) & 0xFFU], 1);
+        atomicAdd(&local_histogram[(value >> 16) & 0xFFU], 1);
+        atomicAdd(&local_histogram[(value >> 24) & 0xFFU], 1);
+      }
+      else {
+        atomicAdd(&local_histogram[(value >>  0) & 0xFFU], 1);
+        if (index_x < cols - 1) {
+          atomicAdd(&local_histogram[(value >>  8) & 0xFFU], 1);
+        }
+        if (index_x < cols - 2) {
+          atomicAdd(&local_histogram[(value >> 16) & 0xFFU], 1);
+        }
+        if (index_x < cols - 3) {
+          atomicAdd(&local_histogram[(value >> 24) & 0xFFU], 1);
+        }
+      }
+    }
+  }
+  __syncthreads();
+
+  int count = local_histogram[index];
+  if (count > 0) {
+    atomicAdd(histogram + index, count);
+  }
+}
+
+__global__
+void unmaskedCalcHistKernel2(const uchar* src, int rows, int cols,
+                             int src_stride, int* histogram) {
+  __shared__ int local_histogram[256];
+
+  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+
+  int index = threadIdx.y * blockDim.x + threadIdx.x;
+  local_histogram[index] = 0;
+  __syncthreads();
+
+  uchar* input;
+  uchar value0, value1, value2, value3;
+
+  for (; element_y < rows; element_y += gridDim.y * blockDim.y) {
+    if (element_x < cols) {
+      input = (uchar*)src + element_y * src_stride;
+
+      if (element_x < cols - 3) {
+        value0 = input[element_x];
+        value1 = input[element_x + 1];
+        value2 = input[element_x + 2];
+        value3 = input[element_x + 3];
+
         atomicAdd(&local_histogram[value0], 1);
         atomicAdd(&local_histogram[value1], 1);
         atomicAdd(&local_histogram[value2], 1);
         atomicAdd(&local_histogram[value3], 1);
       }
       else {
-        value0 = input[index_x];
-        if (index_x < cols - 1) {
-          value1 = input[index_x + 1];
+        value0 = input[element_x];
+        if (element_x < cols - 1) {
+          value1 = input[element_x + 1];
         }
-        if (index_x < cols - 2) {
-          value2 = input[index_x + 2];
+        if (element_x < cols - 2) {
+          value2 = input[element_x + 2];
         }
-    
+
         atomicAdd(&local_histogram[value0], 1);
-        if (index_x < cols - 1) {
+        if (element_x < cols - 1) {
           atomicAdd(&local_histogram[value1], 1);
         }
-        if (index_x < cols - 2) {
+        if (element_x < cols - 2) {
           atomicAdd(&local_histogram[value2], 1);
         }
       }
-      index_x += blocks_x;
     }
-    element_y += blocks_y;
   }
-  
   __syncthreads();
 
   int count = local_histogram[index];
@@ -90,80 +176,56 @@ void calcHistKernel0(const uchar* src, int rows, int cols, int src_stride,
 }
 
 __global__
-void calcHistKernel1(const uchar* src, int rows, int cols, int src_stride,
-                     const uchar* mask, int mask_stride, int* histogram) {
+void maskedCalcHistKernel0(const uchar* src, int size, const uchar* mask,
+                           int* histogram) {
   __shared__ int local_histogram[256];
 
-  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
-  
+  int element_x = (blockIdx.x << 8) + threadIdx.x;
+  int index_x = element_x << 2;
+  int grid_offset = gridDim.x * 1024;
+
   int index = threadIdx.y * blockDim.x + threadIdx.x;
   local_histogram[index] = 0;
   __syncthreads();
 
-  uchar value0, value1, value2, value3;
-  uchar mvalue0, mvalue1, mvalue2, mvalue3;
-  
-  int blocks_x = gridDim.x * blockDim.x * 4;
-  int blocks_y = gridDim.y * blockDim.y;
-  int index_x;
-  while (element_y < rows) {
-    const uchar* input = src + element_y * src_stride;
-    const uchar* mask_start = mask + element_y * mask_stride;
-    index_x = element_x;
-    while (index_x < cols) {
-      if (index_x < cols - 3) {
-        value0 = input[index_x];
-        value1 = input[index_x + 1];
-        value2 = input[index_x + 2];
-        value3 = input[index_x + 3];
-  
-        mvalue0 = mask_start[index_x];
-        mvalue1 = mask_start[index_x + 1];
-        mvalue2 = mask_start[index_x + 2];
-        mvalue3 = mask_start[index_x + 3];
-  
-        if (mvalue0 > 0) {
-          atomicAdd(&local_histogram[value0], 1);
+  uint* input = (uint*)src;
+  uint* mask_start = (uint*)mask;
+  for (; index_x < size; index_x += grid_offset) {
+    if (index_x < size) {
+      uint src_value  = input[element_x];
+      uint mask_value = mask_start[element_x];
+
+      if (index_x < size - 3) {
+        if ((mask_value >>  0) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >>  0) & 0xFFU], 1);
         }
-        if (mvalue1 > 0) {
-          atomicAdd(&local_histogram[value1], 1);
+        if ((mask_value >>  8) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >>  8) & 0xFFU], 1);
         }
-        if (mvalue2 > 0) {
-          atomicAdd(&local_histogram[value2], 1);
+        if ((mask_value >> 16) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >> 16) & 0xFFU], 1);
         }
-        if (mvalue3 > 0) {
-          atomicAdd(&local_histogram[value3], 1);
+        if ((mask_value >> 24) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >> 24) & 0xFFU], 1);
         }
       }
       else {
-        value0 = input[index_x];
-        if (index_x < cols - 1) {
-          value1 = input[index_x + 1];
+        if ((mask_value >>  0) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >>  0) & 0xFFU], 1);
         }
-        if (index_x < cols - 2) {
-          value2 = input[index_x + 2];
+        if ((mask_value >>  8) & 0xFFU && index_x < size - 1) {
+          atomicAdd(&local_histogram[(src_value >>  8) & 0xFFU], 1);
         }
-  
-        mvalue0 = mask_start[index_x];
-        if (index_x < cols - 1) {
-          mvalue1 = mask_start[index_x + 1];
+        if ((mask_value >> 16) & 0xFFU && index_x < size - 2) {
+          atomicAdd(&local_histogram[(src_value >> 16) & 0xFFU], 1);
         }
-        if (index_x < cols - 2) {
-          mvalue2 = mask_start[index_x + 2];
-        }
-    
-        atomicAdd(&local_histogram[value0], 1);
-        if (index_x < cols - 1 && mvalue1 > 0) {
-          atomicAdd(&local_histogram[value1], 1);
-        }
-        if (index_x < cols - 2 && mvalue2 > 0) {
-          atomicAdd(&local_histogram[value2], 1);
+        if ((mask_value >> 24) & 0xFFU && index_x < size - 3) {
+          atomicAdd(&local_histogram[(src_value >> 24) & 0xFFU], 1);
         }
       }
-      index_x += blocks_x;
     }
-    element_y += blocks_y;
+    input += (grid_offset >> 2);
+    mask_start += (grid_offset >> 2);
   }
   __syncthreads();
 
@@ -173,8 +235,152 @@ void calcHistKernel1(const uchar* src, int rows, int cols, int src_stride,
   }
 }
 
-RetCode calcHist(const uchar* src, int rows, int cols, int src_stride, 
-                 int* histogram, const uchar* mask, int mask_stride, 
+__global__
+void maskedCalcHistKernel1(const uchar* src, int rows, int cols, int src_stride,
+                           const uchar* mask, int mask_stride, int* histogram) {
+  __shared__ int local_histogram[256];
+
+  int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  int index_x = element_x << 2;
+
+  int index = threadIdx.y * blockDim.x + threadIdx.x;
+  local_histogram[index] = 0;
+  __syncthreads();
+
+  uint* input;
+  uint* mask_start;
+  for (; element_y < rows; element_y += gridDim.y * blockDim.y) {
+    if (index_x < cols) {
+      input = (uint*)((uchar*)src + element_y * src_stride);
+      mask_start = (uint*)((uchar*)mask + element_y * mask_stride);
+
+      uint src_value  = input[element_x];
+      uint mask_value = mask_start[element_x];
+
+      if (index_x < cols - 3) {
+        if ((mask_value >>  0) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >>  0) & 0xFFU], 1);
+        }
+        if ((mask_value >>  8) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >>  8) & 0xFFU], 1);
+        }
+        if ((mask_value >> 16) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >> 16) & 0xFFU], 1);
+        }
+        if ((mask_value >> 24) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >> 24) & 0xFFU], 1);
+        }
+      }
+      else {
+        if ((mask_value >>  0) & 0xFFU) {
+          atomicAdd(&local_histogram[(src_value >>  0) & 0xFFU], 1);
+        }
+        if ((mask_value >>  8) & 0xFFU && index_x < cols - 1) {
+          atomicAdd(&local_histogram[(src_value >>  8) & 0xFFU], 1);
+        }
+        if ((mask_value >> 16) & 0xFFU && index_x < cols - 2) {
+          atomicAdd(&local_histogram[(src_value >> 16) & 0xFFU], 1);
+        }
+        if ((mask_value >> 24) & 0xFFU && index_x < cols - 3) {
+          atomicAdd(&local_histogram[(src_value >> 24) & 0xFFU], 1);
+        }
+      }
+    }
+  }
+  __syncthreads();
+
+  int count = local_histogram[index];
+  if (count > 0) {
+    atomicAdd(histogram + index, count);
+  }
+}
+
+__global__
+void maskedCalcHistKernel2(const uchar* src, int rows, int cols, int src_stride,
+                           const uchar* mask, int mask_stride, int* histogram) {
+  __shared__ int local_histogram[256];
+
+  int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+
+  int index = threadIdx.y * blockDim.x + threadIdx.x;
+  local_histogram[index] = 0;
+  __syncthreads();
+
+  uchar* input;
+  uchar* mask_start;
+  uchar value0, value1, value2, value3;
+  uchar mask_value0, mask_value1, mask_value2, mask_value3;
+
+  for (; element_y < rows; element_y += gridDim.y * blockDim.y) {
+    if (element_x < cols) {
+      input = (uchar*)src + element_y * src_stride;
+      mask_start = (uchar*)mask + element_y * mask_stride;
+
+      if (element_x < cols - 3) {
+        value0 = input[element_x];
+        value1 = input[element_x + 1];
+        value2 = input[element_x + 2];
+        value3 = input[element_x + 3];
+
+        mask_value0 = mask_start[element_x];
+        mask_value1 = mask_start[element_x + 1];
+        mask_value2 = mask_start[element_x + 2];
+        mask_value3 = mask_start[element_x + 3];
+
+        if (mask_value0 > 0) {
+          atomicAdd(&local_histogram[value0], 1);
+        }
+        if (mask_value1 > 0) {
+          atomicAdd(&local_histogram[value1], 1);
+        }
+        if (mask_value2 > 0) {
+          atomicAdd(&local_histogram[value2], 1);
+        }
+        if (mask_value3 > 0) {
+          atomicAdd(&local_histogram[value3], 1);
+        }
+      }
+      else {
+        value0 = input[element_x];
+        if (element_x < cols - 1) {
+          value1 = input[element_x + 1];
+        }
+        if (element_x < cols - 2) {
+          value2 = input[element_x + 2];
+        }
+
+        mask_value0 = mask_start[element_x];
+        if (element_x < cols - 1) {
+          mask_value1 = mask_start[element_x + 1];
+        }
+        if (element_x < cols - 2) {
+          mask_value2 = mask_start[element_x + 2];
+        }
+
+        if (mask_value0) {
+          atomicAdd(&local_histogram[value0], 1);
+        }
+        if (element_x < cols - 1 && mask_value1 > 0) {
+          atomicAdd(&local_histogram[value1], 1);
+        }
+        if (element_x < cols - 2 && mask_value2 > 0) {
+          atomicAdd(&local_histogram[value2], 1);
+        }
+      }
+    }
+  }
+  __syncthreads();
+
+  int count = local_histogram[index];
+  if (count > 0) {
+    atomicAdd(histogram + index, count);
+  }
+}
+
+RetCode calcHist(const uchar* src, int rows, int cols, int src_stride,
+                 int* histogram, const uchar* mask, int mask_stride,
                  cudaStream_t stream) {
   PPL_ASSERT(src != nullptr);
   PPL_ASSERT(histogram != nullptr);
@@ -185,30 +391,52 @@ RetCode calcHist(const uchar* src, int rows, int cols, int src_stride,
   }
 
   dim3 block, grid;
-  block.x = kBlockDimX1;
-  block.y = kBlockDimY1;
-  int count_x = kBlockDimX1 * BLOCKS_X * 4;
-  int count_y = kBlockDimY1 * BLOCKS_Y;
-  if (count_x < cols) {
-    grid.x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
+  if (src_stride == cols) {
+    block.x = 256;
+    block.y = 1;
+    grid.x = divideUp(cols * rows, 256, 8);
+    if (grid.x > MAX_BLOCKS) {
+      grid.x = MAX_BLOCKS;
+    }
+    grid.y = 1;
   }
   else {
-    grid.x = BLOCKS_X;
-  }
-  if (count_y < rows) {
+    int columns = divideUp(cols, 4, 2);
+    block.x = kBlockDimX1;
+    block.y = kBlockDimY1;
+    grid.x = divideUp(columns, kBlockDimX1, kBlockShiftX1);
     grid.y = divideUp(rows, kBlockDimY1, kBlockShiftY1);
-  }
-  else {
-    grid.y = BLOCKS_Y;
+    uint grid_y = MAX_BLOCKS / grid.x;
+    grid.y = (grid_y < grid.y) ? grid_y : grid.y;
   }
 
   if (mask == nullptr) {
-    calcHistKernel0<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-                                                histogram);
+    if (src_stride == cols) {
+      unmaskedCalcHistKernel0<<<grid, block, 0, stream>>>(src, rows * cols,
+          histogram);
+    }
+    else if ((src_stride & 3) == 0) {
+      unmaskedCalcHistKernel1<<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, histogram);
+    }
+    else {
+      unmaskedCalcHistKernel2<<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, histogram);
+    }
   }
   else {
-    calcHistKernel1<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
-                                                mask, mask_stride, histogram);
+    if (src_stride == cols && mask_stride == cols) {
+      maskedCalcHistKernel0<<<grid, block, 0, stream>>>(src, rows * cols, mask,
+          histogram);
+    }
+    else if ((src_stride & 3) == 0 && (mask_stride & 3) == 0) {
+      maskedCalcHistKernel1<<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, mask, mask_stride, histogram);
+    }
+    else {
+      maskedCalcHistKernel2<<<grid, block, 0, stream>>>(src, rows, cols,
+          src_stride, mask, mask_stride, histogram);
+    }
   }
 
   cudaError_t code = cudaGetLastError();
@@ -229,11 +457,11 @@ RetCode CalcHist<uchar>(cudaStream_t stream,
                         int* outHist,
                         int maskWidthStride,
                         const uchar* mask) {
-  RetCode code = calcHist(inData, height, width, inWidthStride, outHist, 
+  RetCode code = calcHist(inData, height, width, inWidthStride, outHist,
                           mask, maskWidthStride, stream);
   return code;
 }
 
 }  // cuda
 }  // cv
-}  // ppl    
+}  // ppl

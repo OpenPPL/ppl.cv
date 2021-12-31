@@ -33,30 +33,11 @@ enum Scaling {
   kDoubleSize,
 };
 
-enum InterpolationTypes {
-  kInterLinear,
-  kInterNearest,
-  kInterArea,
-};
-
-using Parameters = std::tuple<InterpolationTypes, Scaling, cv::Size>;
+using Parameters = std::tuple<Scaling, InterpolationType, cv::Size>;
 inline std::string convertToStringResize(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  InterpolationTypes inter_type = (InterpolationTypes)std::get<0>(parameters);
-  if (inter_type == kInterLinear) {
-    formatted << "InterLinear" << "_";
-  }
-  else if (inter_type == kInterNearest) {
-    formatted << "InterNearest" << "_";
-  }
-  else if (inter_type == kInterArea) {
-    formatted << "InterArea" << "_";
-  }
-  else {
-  }
-
-  Scaling scale = std::get<1>(parameters);
+  Scaling scale = std::get<0>(parameters);
   if (scale == kHalfSize) {
     formatted << "HalfSize" << "_";
   }
@@ -65,6 +46,19 @@ inline std::string convertToStringResize(const Parameters& parameters) {
   }
   else if (scale == kDoubleSize) {
     formatted << "DoubleSize" << "_";
+  }
+  else {
+  }
+
+  InterpolationType inter_type = (InterpolationType)std::get<1>(parameters);
+  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+    formatted << "InterLinear" << "_";
+  }
+  else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+    formatted << "InterNearest" << "_";
+  }
+  else if (inter_type == INTERPOLATION_TYPE_AREA) {
+    formatted << "InterArea" << "_";
   }
   else {
   }
@@ -81,8 +75,8 @@ class PplCvCudaResizeTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaResizeTest() {
     const Parameters& parameters = GetParam();
-    inter_type = std::get<0>(parameters);
-    scale      = std::get<1>(parameters);
+    scale      = std::get<0>(parameters);
+    inter_type = std::get<1>(parameters);
     size       = std::get<2>(parameters);
   }
 
@@ -92,8 +86,8 @@ class PplCvCudaResizeTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
-  InterpolationTypes inter_type;
   Scaling scale;
+  InterpolationType inter_type;
   cv::Size size;
 };
 
@@ -132,40 +126,26 @@ bool PplCvCudaResizeTest<T, channels>::apply() {
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
-  if (inter_type == kInterLinear) {
-    cv::resize(src, cv_dst, cv::Size(dst_width, dst_height), 0, 0,
-               cv::INTER_LINEAR);
-    ResizeLinear<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-                              (T*)gpu_src.data, dst_height, dst_width,
-                              gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-    ResizeLinear<T, channels>(0, src.rows, src.cols, src.cols * channels,
-                              gpu_input, dst_height, dst_width,
-                              dst_width * channels, gpu_output);
+  int cv_iterpolation = cv::INTER_LINEAR;
+  if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+    cv_iterpolation = cv::INTER_NEAREST;
   }
-  else if (inter_type == kInterNearest) {
-    cv::resize(src, cv_dst, cv::Size(dst_width, dst_height), 0, 0,
-               cv::INTER_NEAREST);
-    ResizeNearestPoint<T, channels>(0, src.rows, src.cols,
-                                    gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                                    dst_height, dst_width,
-                                    gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-    ResizeNearestPoint<T, channels>(0, src.rows, src.cols, src.cols * channels,
-                                    gpu_input, dst_height, dst_width,
-                                    dst_width * channels, gpu_output);
-  }
-  else if (inter_type == kInterArea) {
-    cv::resize(src, cv_dst, cv::Size(dst_width, dst_height), 0, 0,
-               cv::INTER_AREA);
-    ResizeArea<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-                            (T*)gpu_src.data, dst_height, dst_width,
-                            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-    ResizeArea<T, channels>(0, src.rows, src.cols, src.cols * channels,
-                            gpu_input, dst_height, dst_width,
-                            dst_width * channels, gpu_output);
+  else if (inter_type == INTERPOLATION_TYPE_AREA) {
+    cv_iterpolation = cv::INTER_AREA;
   }
   else {
   }
+  cv::resize(src, cv_dst, cv::Size(dst_width, dst_height), 0, 0,
+             cv_iterpolation);
+
+  Resize<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
+                      (T*)gpu_src.data, dst_height, dst_width,
+                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, inter_type);
   gpu_dst.download(dst);
+
+  Resize<T, channels>(0, src.rows, src.cols, src.cols * channels,
+                      gpu_input, dst_height, dst_width, dst_width * channels,
+                      gpu_output, inter_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -196,8 +176,10 @@ TEST_P(PplCvCudaResizeTest ## T ## channels, Standard) {                       \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaResizeTest ## T ## channels,         \
   ::testing::Combine(                                                          \
-    ::testing::Values(kInterLinear, kInterNearest, kInterArea),                \
     ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
+    ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
+                      INTERPOLATION_TYPE_NEAREST_POINT,                        \
+                      INTERPOLATION_TYPE_AREA),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

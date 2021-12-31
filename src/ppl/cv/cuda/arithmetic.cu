@@ -42,10 +42,10 @@ void addKernel0(const uchar* src0, int rows, int cols, int src0_stride,
   uchar4 input_value1 = input1[element_x];
 
   uchar4 output_value;
-  output_value.x = saturate_cast((int)input_value0.x + input_value1.x);
-  output_value.y = saturate_cast((int)input_value0.y + input_value1.y);
-  output_value.z = saturate_cast((int)input_value0.z + input_value1.z);
-  output_value.w = saturate_cast((int)input_value0.w + input_value1.w);
+  output_value.x = saturateCast((int)input_value0.x + input_value1.x);
+  output_value.y = saturateCast((int)input_value0.y + input_value1.y);
+  output_value.z = saturateCast((int)input_value0.z + input_value1.z);
+  output_value.w = saturateCast((int)input_value0.w + input_value1.w);
 
   uchar4* output = (uchar4*)(dst + element_y * dst_stride);
   output[element_x] = output_value;
@@ -67,21 +67,21 @@ void addKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst) {
   input_value1 = input1[element_x];
 
   if (index_x < cols - 3) {
-    output_value.x = saturate_cast((int)input_value0.x + input_value1.x);
-    output_value.y = saturate_cast((int)input_value0.y + input_value1.y);
-    output_value.z = saturate_cast((int)input_value0.z + input_value1.z);
-    output_value.w = saturate_cast((int)input_value0.w + input_value1.w);
+    output_value.x = saturateCast((int)input_value0.x + input_value1.x);
+    output_value.y = saturateCast((int)input_value0.y + input_value1.y);
+    output_value.z = saturateCast((int)input_value0.z + input_value1.z);
+    output_value.w = saturateCast((int)input_value0.w + input_value1.w);
 
     uchar4* output = (uchar4*)dst;
     output[element_x] = output_value;
   }
   else {
-    output_value.x = saturate_cast((int)input_value0.x + input_value1.x);
+    output_value.x = saturateCast((int)input_value0.x + input_value1.x);
     if (index_x < cols - 1) {
-      output_value.y = saturate_cast((int)input_value0.y + input_value1.y);
+      output_value.y = saturateCast((int)input_value0.y + input_value1.y);
     }
     if (index_x < cols - 2) {
-      output_value.z = saturate_cast((int)input_value0.z + input_value1.z);
+      output_value.z = saturateCast((int)input_value0.z + input_value1.z);
     }
 
     dst[index_x] = output_value.x;
@@ -129,10 +129,10 @@ void addKernel11(const uchar* src0, int rows, int cols, int src0_stride,
     output_value2 = input_value02 + input_value12;
     output_value3 = input_value03 + input_value13;
 
-    output[index_x]     = saturate_cast(output_value0);
-    output[index_x + 1] = saturate_cast(output_value1);
-    output[index_x + 2] = saturate_cast(output_value2);
-    output[index_x + 3] = saturate_cast(output_value3);
+    output[index_x]     = saturateCast(output_value0);
+    output[index_x + 1] = saturateCast(output_value1);
+    output[index_x + 2] = saturateCast(output_value2);
+    output[index_x + 3] = saturateCast(output_value3);
   }
   else {
     input_value00 = input0[index_x];
@@ -159,12 +159,12 @@ void addKernel11(const uchar* src0, int rows, int cols, int src0_stride,
       output_value2 = input_value02 + input_value12;
     }
 
-    output[index_x] = saturate_cast(output_value0);
+    output[index_x] = saturateCast(output_value0);
     if (index_x < cols - 1) {
-      output[index_x + 1] = saturate_cast(output_value1);
+      output[index_x + 1] = saturateCast(output_value1);
     }
     if (index_x < cols - 2) {
-      output[index_x + 2] = saturate_cast(output_value2);
+      output[index_x + 2] = saturateCast(output_value2);
     }
   }
 }
@@ -466,7 +466,7 @@ void addWeightedKernel0(const T0* src0, int rows, int cols, int src0_stride,
   output_value0.x += input_value1.x * beta;
   output_value0.y += input_value1.y * beta;
 
-  output[element_x] = saturate_cast_vector<T1, float2>(output_value0);
+  output[element_x] = saturateCastVector<T1, float2>(output_value0);
 }
 
 template <typename T>
@@ -525,9 +525,9 @@ void addWeightedKernel1(const T* src0, int rows, int cols, int src0_stride,
     }
 
     if (sizeof(T) == 1) {
-      output[element_x] = saturate_cast(output_value0);
+      output[element_x] = saturateCast(output_value0);
       if (element_x != cols - 1) {
-        output[element_x + 1] = saturate_cast(output_value1);
+        output[element_x + 1] = saturateCast(output_value1);
       }
     }
     else {
@@ -812,10 +812,10 @@ void subtractKernel0(const T0* src, int rows, int cols, int channels,
   }
 
   if (sizeof(T0) == 1) {
-    output_value.x = saturate_cast(input_value.x - value0);
-    output_value.y = saturate_cast(input_value.y - value1);
-    output_value.z = saturate_cast(input_value.z - value2);
-    output_value.w = saturate_cast(input_value.w - value3);
+    output_value.x = saturateCast(input_value.x - value0);
+    output_value.y = saturateCast(input_value.y - value1);
+    output_value.z = saturateCast(input_value.z - value2);
+    output_value.w = saturateCast(input_value.w - value3);
   }
   else {
     output_value.x = input_value.x - value0;
@@ -878,10 +878,10 @@ void subtractKernel10(const T0* src, int cols, int channels, T0 scalar0,
 
   if (index_x < cols - 3) {
     if (sizeof(T0) == 1) {
-      output_value.x = saturate_cast(input_value.x - value0);
-      output_value.y = saturate_cast(input_value.y - value1);
-      output_value.z = saturate_cast(input_value.z - value2);
-      output_value.w = saturate_cast(input_value.w - value3);
+      output_value.x = saturateCast(input_value.x - value0);
+      output_value.y = saturateCast(input_value.y - value1);
+      output_value.z = saturateCast(input_value.z - value2);
+      output_value.w = saturateCast(input_value.w - value3);
     }
     else {
       output_value.x = input_value.x - value0;
@@ -895,12 +895,12 @@ void subtractKernel10(const T0* src, int cols, int channels, T0 scalar0,
   }
   else {
     if (sizeof(T0) == 1) {
-      output_value.x = saturate_cast(input_value.x - value0);
+      output_value.x = saturateCast(input_value.x - value0);
       if (index_x < cols - 1) {
-        output_value.y = saturate_cast(input_value.y - value1);
+        output_value.y = saturateCast(input_value.y - value1);
       }
       if (index_x < cols - 2) {
-        output_value.z = saturate_cast(input_value.z - value2);
+        output_value.z = saturateCast(input_value.z - value2);
       }
     }
     else {
@@ -992,8 +992,8 @@ void subtractKernel11(const T* src, int rows, int cols, int channels,
     input_value1 = input[element_x + 1];
 
     if (sizeof(T) == 1) {
-      output_value0 = saturate_cast(input_value0 - value0);
-      output_value1 = saturate_cast(input_value1 - value1);
+      output_value0 = saturateCast(input_value0 - value0);
+      output_value1 = saturateCast(input_value1 - value1);
     }
     else {
       output_value0 = input_value0 - value0;
@@ -1011,8 +1011,8 @@ void subtractKernel11(const T* src, int rows, int cols, int channels,
 
     if (element_x != cols - 1) {
       if (sizeof(T) == 1) {
-        output_value0 = saturate_cast(input_value0 - value0);
-        output_value1 = saturate_cast(input_value1 - value1);
+        output_value0 = saturateCast(input_value0 - value0);
+        output_value1 = saturateCast(input_value1 - value1);
       }
       else {
         output_value0 = input_value0 - value0;
@@ -1021,7 +1021,7 @@ void subtractKernel11(const T* src, int rows, int cols, int channels,
     }
     else {
       if (sizeof(T) == 1) {
-        output_value0 = saturate_cast(input_value0 - value0);
+        output_value0 = saturateCast(input_value0 - value0);
       }
       else {
         output_value0 = input_value0 - value0;
@@ -1292,7 +1292,7 @@ void multiplyKernel0(const uchar* src0, int rows, int cols, int src0_stride,
   }
 
   uchar4* output = (uchar4*)(dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<uchar4, float4>(output_value);
+  output[element_x] = saturateCastVector<uchar4, float4>(output_value);
 }
 
 __global__
@@ -1325,7 +1325,7 @@ void multiplyKernel10(const uchar* src0, int cols, const uchar* src1,
     }
 
     uchar4* output = (uchar4*)dst;
-    output[element_x] = saturate_cast_vector<uchar4, float4>(output_value);
+    output[element_x] = saturateCastVector<uchar4, float4>(output_value);
   }
   else {
     if (scale == 1.f) {
@@ -1347,12 +1347,12 @@ void multiplyKernel10(const uchar* src0, int cols, const uchar* src1,
       }
     }
 
-    dst[index_x] = saturate_cast(output_value.x);
+    dst[index_x] = saturateCast(output_value.x);
     if (index_x < cols - 1) {
-      dst[index_x + 1] = saturate_cast(output_value.y);
+      dst[index_x + 1] = saturateCast(output_value.y);
     }
     if (index_x < cols - 2) {
-      dst[index_x + 2] = saturate_cast(output_value.z);
+      dst[index_x + 2] = saturateCast(output_value.z);
     }
   }
 }
@@ -1393,8 +1393,8 @@ void multiplyKernel11(const T* src0, int rows, int cols, int src0_stride,
     }
 
     if (sizeof(T) == 1) {
-      output[element_x]     = saturate_cast(output_value0);
-      output[element_x + 1] = saturate_cast(output_value1);
+      output[element_x]     = saturateCast(output_value0);
+      output[element_x + 1] = saturateCast(output_value1);
     }
     else {
       output[element_x]     = output_value0;
@@ -1426,9 +1426,9 @@ void multiplyKernel11(const T* src0, int rows, int cols, int src0_stride,
     }
 
     if (sizeof(T) == 1) {
-      output[element_x] = saturate_cast(output_value0);
+      output[element_x] = saturateCast(output_value0);
       if (element_x != cols - 1) {
-        output[element_x + 1] = saturate_cast(output_value1);
+        output[element_x + 1] = saturateCast(output_value1);
       }
     }
     else {
@@ -1712,7 +1712,7 @@ void divideKernel0(const uchar* src0, int rows, int cols, int src0_stride,
   }
 
   uchar4* output = (uchar4*)(dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<uchar4, float4>(output_value);
+  output[element_x] = saturateCastVector<uchar4, float4>(output_value);
 }
 
 __global__
@@ -1753,7 +1753,7 @@ void divideKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst,
     }
 
     uchar4* output = (uchar4*)dst;
-    output[element_x] = saturate_cast_vector<uchar4, float4>(output_value);
+    output[element_x] = saturateCastVector<uchar4, float4>(output_value);
   }
   else {
     if (scale == 1.f) {
@@ -1781,12 +1781,12 @@ void divideKernel10(const uchar* src0, int cols, const uchar* src1, uchar* dst,
       }
     }
 
-    dst[index_x] = saturate_cast(output_value.x);
+    dst[index_x] = saturateCast(output_value.x);
     if (index_x < cols - 1) {
-      dst[index_x + 1] = saturate_cast(output_value.y);
+      dst[index_x + 1] = saturateCast(output_value.y);
     }
     if (index_x < cols - 2) {
-      dst[index_x + 2] = saturate_cast(output_value.z);
+      dst[index_x + 2] = saturateCast(output_value.z);
     }
   }
 }
@@ -1829,8 +1829,8 @@ void divideKernel11(const T* src0, int rows, int cols, int src0_stride,
     }
 
     if (sizeof(T) == 1) {
-      output[element_x]     = saturate_cast(output_value0);
-      output[element_x + 1] = saturate_cast(output_value1);
+      output[element_x]     = saturateCast(output_value0);
+      output[element_x + 1] = saturateCast(output_value1);
     }
     else {
       output[element_x]     = output_value0;
@@ -1864,9 +1864,9 @@ void divideKernel11(const T* src0, int rows, int cols, int src0_stride,
     }
 
     if (sizeof(T) == 1) {
-      output[element_x] = saturate_cast(output_value0);
+      output[element_x] = saturateCast(output_value0);
       if (element_x != cols - 1) {
-        output[element_x + 1] = saturate_cast(output_value1);
+        output[element_x + 1] = saturateCast(output_value1);
       }
     }
     else {

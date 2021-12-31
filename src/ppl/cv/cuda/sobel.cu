@@ -317,35 +317,35 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
     if (sizeof(Tdst) == 1) {
       if (element_x < cols - 3) {
-        output[element_x]     = saturate_cast(sum.x);
-        output[element_x + 1] = saturate_cast(sum.y);
-        output[element_x + 2] = saturate_cast(sum.z);
-        output[element_x + 3] = saturate_cast(sum.w);
+        output[element_x]     = saturateCast(sum.x);
+        output[element_x + 1] = saturateCast(sum.y);
+        output[element_x + 2] = saturateCast(sum.z);
+        output[element_x + 3] = saturateCast(sum.w);
       }
       else {
-        output[element_x] = saturate_cast(sum.x);
+        output[element_x] = saturateCast(sum.x);
         if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast(sum.y);
+          output[element_x + 1] = saturateCast(sum.y);
         }
         if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast(sum.z);
+          output[element_x + 2] = saturateCast(sum.z);
         }
       }
     }
     else if (sizeof(Tdst) == 2) {
       if (element_x < cols - 3) {
-        output[element_x]     = saturate_cast_f2s(sum.x);
-        output[element_x + 1] = saturate_cast_f2s(sum.y);
-        output[element_x + 2] = saturate_cast_f2s(sum.z);
-        output[element_x + 3] = saturate_cast_f2s(sum.w);
+        output[element_x]     = saturateCastF2S(sum.x);
+        output[element_x + 1] = saturateCastF2S(sum.y);
+        output[element_x + 2] = saturateCastF2S(sum.z);
+        output[element_x + 3] = saturateCastF2S(sum.w);
       }
       else {
-        output[element_x] = saturate_cast_f2s(sum.x);
+        output[element_x] = saturateCastF2S(sum.x);
         if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast_f2s(sum.y);
+          output[element_x + 1] = saturateCastF2S(sum.y);
         }
         if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast_f2s(sum.z);
+          output[element_x + 2] = saturateCastF2S(sum.z);
         }
       }
     }
@@ -453,7 +453,7 @@ void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
 
     Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-    output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+    output[element_x] = saturateCastVector<Tdstn, float4>(sum);
   }
 }
 

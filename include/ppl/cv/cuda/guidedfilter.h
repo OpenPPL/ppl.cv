@@ -29,7 +29,7 @@ namespace cuda {
 /**
  * @brief Uses a guidance image to perform edge-preserving smoothing on an image.
  * @tparam T The data type, used for input&guide&output image, currently only
- *         uchar and float are supported.
+ *         uint8_t(uchar) and float are supported.
  * @tparam srcCns The number of channels of input&output image, 1, 3 and 4
  *         are supported for now.
  * @tparam guideCns The number of channels of guide image, 1 is supported
@@ -49,14 +49,12 @@ namespace cuda {
  * @param outData          output image data.
  * @param radius	         radius of the guided filter.
  * @param eps	             regularization term of the guided filter.
- * @param border_type      Image boundary type. BORDER_TYPE_REFLECT,
- *                         BORDER_TYPE_REFLECT_101 or BORDER_TYPE_DEFAULT are
- *                         supported now.
+ * @param border_type      ways to deal with border. BORDER_TYPE_REPLICATE,
+ *                         BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
+ *                         BORDER_TYPE_DEFAULT are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
- *       2 The input and output must have the same height, width, channels and
- *         width stride.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -85,29 +83,30 @@ namespace cuda {
  *   int height   = 480;
  *   int channels = 1;
  *
- *   float* dev_input;
- *   float* dev_guide;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_guide;
+ *   float* gpu_output;
  *   size_t input_pitch, guide_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_guide, &guide_pitch,
+ *   cudaMallocPitch(&gpu_guide, &guide_pitch,
  *                   width * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   GuidedFilter<float, 1, 1>(stream, height, width,
- *                             input_pitch / sizeof(float), dev_input,
- *                             guide_pitch / sizeof(float), dev_guide,
- *                             output_pitch / sizeof(float), dev_output,
+ *                             input_pitch / sizeof(float), gpu_input,
+ *                             guide_pitch / sizeof(float), gpu_guide,
+ *                             output_pitch / sizeof(float), gpu_output,
  *                             3, 50, ppl::cv::BORDER_TYPE_DEFAULT);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_guide);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_guide);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }

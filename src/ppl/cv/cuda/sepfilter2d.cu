@@ -204,35 +204,35 @@ void rowColC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     Tdst* output = (Tdst*)((uchar*)dst + element_y * dst_stride);
     if (sizeof(Tdst) == 1) {
       if (element_x < cols - 3) {
-        output[element_x]     = saturate_cast(sum.x);
-        output[element_x + 1] = saturate_cast(sum.y);
-        output[element_x + 2] = saturate_cast(sum.z);
-        output[element_x + 3] = saturate_cast(sum.w);
+        output[element_x]     = saturateCast(sum.x);
+        output[element_x + 1] = saturateCast(sum.y);
+        output[element_x + 2] = saturateCast(sum.z);
+        output[element_x + 3] = saturateCast(sum.w);
       }
       else {
-        output[element_x] = saturate_cast(sum.x);
+        output[element_x] = saturateCast(sum.x);
         if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast(sum.y);
+          output[element_x + 1] = saturateCast(sum.y);
         }
         if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast(sum.z);
+          output[element_x + 2] = saturateCast(sum.z);
         }
       }
     }
     else if (sizeof(Tdst) == 2) {
       if (element_x < cols - 3) {
-        output[element_x]     = saturate_cast_f2s(sum.x);
-        output[element_x + 1] = saturate_cast_f2s(sum.y);
-        output[element_x + 2] = saturate_cast_f2s(sum.z);
-        output[element_x + 3] = saturate_cast_f2s(sum.w);
+        output[element_x]     = saturateCastF2S(sum.x);
+        output[element_x + 1] = saturateCastF2S(sum.y);
+        output[element_x + 2] = saturateCastF2S(sum.z);
+        output[element_x + 3] = saturateCastF2S(sum.w);
       }
       else {
-        output[element_x] = saturate_cast_f2s(sum.x);
+        output[element_x] = saturateCastF2S(sum.x);
         if (element_x < cols - 1) {
-          output[element_x + 1] = saturate_cast_f2s(sum.y);
+          output[element_x + 1] = saturateCastF2S(sum.y);
         }
         if (element_x < cols - 2) {
-          output[element_x + 2] = saturate_cast_f2s(sum.z);
+          output[element_x + 2] = saturateCastF2S(sum.z);
         }
       }
     }
@@ -328,7 +328,7 @@ void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
 
     Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-    output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+    output[element_x] = saturateCastVector<Tdstn, float4>(sum);
   }
 }
 
@@ -460,9 +460,9 @@ void rowBatch2Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   Tdst4* output = (Tdst4*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tdst4, float4>(sum0);
+  output[element_x] = saturateCastVector<Tdst4, float4>(sum0);
   if (element_x < cols - 1) {
-    output[element_x + 1] = saturate_cast_vector<Tdst4, float4>(sum1);
+    output[element_x + 1] = saturateCastVector<Tdst4, float4>(sum1);
   }
 }
 
@@ -538,7 +538,7 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+  output[element_x] = saturateCastVector<Tdstn, float4>(sum);
 }
 
 template <typename Tsrc, typename Tsrcn, typename Tdstn,
@@ -589,7 +589,7 @@ void rowFilterKernel(const Tsrc* src, int rows, int cols, int src_stride,
   }
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+  output[element_x] = saturateCastVector<Tdstn, float4>(sum);
 }
 
 template <typename Tdst, typename BorderInterpolation>
@@ -678,16 +678,16 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   index = element_x << 2;
   if (element_x < cols4 - 1) {
     if (sizeof(Tdst) == 1) {
-      output[index] = saturate_cast(sum.x);
-      output[index + 1] = saturate_cast(sum.y);
-      output[index + 2] = saturate_cast(sum.z);
-      output[index + 3] = saturate_cast(sum.w);
+      output[index] = saturateCast(sum.x);
+      output[index + 1] = saturateCast(sum.y);
+      output[index + 2] = saturateCast(sum.z);
+      output[index + 3] = saturateCast(sum.w);
     }
     else if (sizeof(Tdst) == 2) {
-      output[index] = saturate_cast_f2s(sum.x);
-      output[index + 1] = saturate_cast_f2s(sum.y);
-      output[index + 2] = saturate_cast_f2s(sum.z);
-      output[index + 3] = saturate_cast_f2s(sum.w);
+      output[index] = saturateCastF2S(sum.x);
+      output[index + 1] = saturateCastF2S(sum.y);
+      output[index + 2] = saturateCastF2S(sum.z);
+      output[index + 3] = saturateCastF2S(sum.w);
     }
     else {
       output[index] = sum.x;
@@ -698,27 +698,27 @@ void colSharedKernel(const float* src, int rows, int cols4, int cols,
   }
   else {
     if (sizeof(Tdst) == 1) {
-      output[index] = saturate_cast(sum.x);
+      output[index] = saturateCast(sum.x);
       if (index < cols - 1) {
-        output[index + 1] = saturate_cast(sum.y);
+        output[index + 1] = saturateCast(sum.y);
       }
       if (index < cols - 2) {
-        output[index + 2] = saturate_cast(sum.z);
+        output[index + 2] = saturateCast(sum.z);
       }
       if (index < cols - 3) {
-        output[index + 3] = saturate_cast(sum.w);
+        output[index + 3] = saturateCast(sum.w);
       }
     }
     else if (sizeof(Tdst) == 2) {
-      output[index] = saturate_cast_f2s(sum.x);
+      output[index] = saturateCastF2S(sum.x);
       if (index < cols - 1) {
-        output[index + 1] = saturate_cast_f2s(sum.y);
+        output[index + 1] = saturateCastF2S(sum.y);
       }
       if (index < cols - 2) {
-        output[index + 2] = saturate_cast_f2s(sum.z);
+        output[index + 2] = saturateCastF2S(sum.z);
       }
       if (index < cols - 3) {
-        output[index + 3] = saturate_cast_f2s(sum.w);
+        output[index + 3] = saturateCastF2S(sum.w);
       }
     }
     else {
@@ -790,10 +790,10 @@ void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
   }
 
   if (sizeof(Tdst) == 1) {
-    data[threadIdx.y][threadIdx.x] = saturate_cast(sum);
+    data[threadIdx.y][threadIdx.x] = saturateCast(sum);
   }
   else if (sizeof(Tdst) == 2) {
-    data[threadIdx.y][threadIdx.x] = saturate_cast_f2s(sum);
+    data[threadIdx.y][threadIdx.x] = saturateCastF2S(sum);
   }
   __syncthreads();
 
@@ -866,7 +866,7 @@ void colFilterKernel(const float* src, int rows, int cols, int src_stride,
   }
 
   Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturate_cast_vector<Tdstn, float4>(sum);
+  output[element_x] = saturateCastVector<Tdstn, float4>(sum);
 }
 
 #define RUN_CHANNEL1_SMALL_KERNELS(Tsrc, Tdst, Interpolation)                  \

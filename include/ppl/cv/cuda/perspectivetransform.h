@@ -69,24 +69,25 @@ namespace cuda {
  *   int src_height = 240;
  *   int channels = 3;
  *
- *   float* dev_input;
- *   float* dev_output;
+ *   float* gpu_input;
+ *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&dev_input, &input_pitch,
+ *   cudaMallocPitch(&gpu_input, &input_pitch,
  *                   width * channels * sizeof(float), height);
- *   cudaMallocPitch(&dev_output, &output_pitch,
+ *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * channels * sizeof(float), height);
  *   float trans_matrix[16];
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);
  *   PerspectiveTransform<float, 3, 3>(stream, src_height, src_width,
- *     input_pitch / sizeof(float), dev_input, output_pitch / sizeof(float),
- *     dev_output, trans_matrix);
+ *       input_pitch / sizeof(float), gpu_input, output_pitch / sizeof(float),
+ *       gpu_output, trans_matrix);
  *   cudaStreamSynchronize(stream);
+ *   cudaStreamDestroy(stream);
  *
- *   cudaFree(dev_input);
- *   cudaFree(dev_output);
+ *   cudaFree(gpu_input);
+ *   cudaFree(gpu_output);
  *
  *   return 0;
  * }
