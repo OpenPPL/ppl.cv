@@ -8,12 +8,6 @@ add_library(pplcv_static STATIC IMPORTED)
 
 # --------------------------------------------------------------------------- #
 
-# exported definitions
-set(PPLCV_USE_CUDA @HPCC_USE_CUDA@)
-set(PPLCV_USE_X86 @HPCC_USE_X86_64@)
-
-# --------------------------------------------------------------------------- #
-
 set(__PPLCV_PACKAGE_ROOTDIR__ "${CMAKE_CURRENT_LIST_DIR}/../../..")
 set(__PPLCV_LINK_LIBRARIES__)
 
@@ -24,8 +18,25 @@ list(APPEND __PPLCV_LINK_LIBRARIES__ "pplcommon_static")
 
 # --------------------------------------------------------------------------- #
 
+# exported definitions
+
+set(PPLCV_VERSION_MAJOR @PPLCV_VERSION_MAJOR@)
+set(PPLCV_VERSION_MINOR @PPLCV_VERSION_MINOR@)
+set(PPLCV_VERSION_PATCH @PPLCV_VERSION_PATCH@)
+
+set(PPLCV_USE_X86 @HPCC_USE_X86_64@)
+set(PPLCV_USE_CUDA @HPCC_USE_CUDA@)
+
+set(PPLCV_INCLUDE_DIRS "${__PPLCV_PACKAGE_ROOTDIR__}/include")
+set(PPLCV_LIBRARIES "pplcv_static")
+
+# --------------------------------------------------------------------------- #
+
 set_target_properties(pplcv_static PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${__PPLCV_LINK_LIBRARIES__}")
+    INTERFACE_LINK_LIBRARIES "${__PPLCV_LINK_LIBRARIES__}"
+    INTERFACE_COMPILE_DEFINITIONS PPLCV_VERSION_MAJOR=${PPLCV_VERSION_MAJOR}
+    INTERFACE_COMPILE_DEFINITIONS PPLCV_VERSION_MINOR=${PPLCV_VERSION_MINOR}
+    INTERFACE_COMPILE_DEFINITIONS PPLCV_VERSION_PATCH=${PPLCV_VERSION_PATCH})
 
 if(MSVC)
     set_target_properties(pplcv_static PROPERTIES
@@ -38,10 +49,6 @@ else()
         IMPORTED_LOCATION_DEBUG "${__PPLCV_PACKAGE_ROOTDIR__}/lib/libpplcv_static.a"
         IMPORTED_LOCATION_RELEASE "${__PPLCV_PACKAGE_ROOTDIR__}/lib/libpplcv_static.a")
 endif()
-
-# exported definitions
-set(PPLCV_INCLUDE_DIRS "${__PPLCV_PACKAGE_ROOTDIR__}/include")
-set(PPLCV_LIBRARIES "pplcv_static")
 
 # --------------------------------------------------------------------------- #
 

@@ -12,6 +12,13 @@ option(PPLCV_HOLD_DEPS "don't update dependencies" OFF)
 
 # --------------------------------------------------------------------------- #
 
+hpcc_get_git_tag2version(
+    VER_MAJOR PPLCV_VERSION_MAJOR
+    VER_MINOR PPLCV_VERSION_MINOR
+    VER_PATCH PPLCV_VERSION_PATCH)
+
+# --------------------------------------------------------------------------- #
+
 set(PPLCV_SRC )
 set(PPLCV_BENCHMARK_SRC )
 set(PPLCV_UNITTEST_SRC )
@@ -45,7 +52,11 @@ target_include_directories(pplcv_static PUBLIC
     $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
     ${PPLCV_INCLUDE_DIRECTORIES})
 target_link_libraries(pplcv_static PUBLIC pplcommon_static ${PPLCV_LINK_LIBRARIES})
-target_compile_definitions(pplcv_static PUBLIC ${PPLCV_COMPILE_DEFINITIONS})
+target_compile_definitions(pplcv_static PUBLIC
+    ${PPLCV_COMPILE_DEFINITIONS}
+    PPLCV_VERSION_MAJOR=${PPLCV_VERSION_MAJOR}
+    PPLCV_VERSION_MINOR=${PPLCV_VERSION_MINOR}
+    PPLCV_VERSION_PATCH=${PPLCV_VERSION_PATCH})
 
 target_compile_options(pplcv_static PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fno-exceptions -Wno-strict-aliasing>)
 
