@@ -53,7 +53,7 @@ uint8_t truncate(float v)
     }
     width *= channels;
     float32x4_t valpha = vdupq_n_f32(alpha);
-    float32x4_t vbeta  = vdupq_n_f32(beta);
+    float32x4_t vbeta = vdupq_n_f32(beta);
     float32x4_t vgamma = vdupq_n_f32(gamma);
 
     for (int32_t i = 0; i < height; ++i) {
@@ -61,9 +61,9 @@ uint8_t truncate(float v)
         for (; j <= width - 4; j += 4) {
             float32x4_t vdata0 = vld1q_f32(inData0 + i * inWidthStride0 + j);
             float32x4_t vdata1 = vld1q_f32(inData1 + i * inWidthStride1 + j);
-            float32x4_t vdst   = vgamma;
-            vdst               = vmlaq_f32(vdst, vdata0, valpha);
-            vdst               = vmlaq_f32(vdst, vdata1, vbeta);
+            float32x4_t vdst = vgamma;
+            vdst = vmlaq_f32(vdst, vdata0, valpha);
+            vdst = vmlaq_f32(vdst, vdata1, vbeta);
             vst1q_f32(outData + i * outWidthStride + j, vdst);
         }
         for (; j < width; ++j) {
@@ -98,28 +98,28 @@ uint8_t truncate(float v)
     }
     width *= channels;
     float32x4_t valpha = vdupq_n_f32(alpha);
-    float32x4_t vbeta  = vdupq_n_f32(beta);
+    float32x4_t vbeta = vdupq_n_f32(beta);
     float32x4_t vgamma = vdupq_n_f32(gamma);
 
     for (int32_t i = 0; i < height; ++i) {
         const uint8_t *row_indata0 = inData0 + i * inWidthStride0;
         const uint8_t *row_indata1 = inData1 + i * inWidthStride0;
-        int32_t j                  = 0;
+        int32_t j = 0;
         for (; j <= width - 8; j += 8) {
             prefetch(row_indata0 + j);
             prefetch(row_indata1 + j);
-            uint16x8_t vdata0    = vmovl_u8(vld1_u8(row_indata0 + j));
+            uint16x8_t vdata0 = vmovl_u8(vld1_u8(row_indata0 + j));
             float32x4_t v_dst0_0 = vcvtq_f32_u32(vmovl_u16(vget_low_u16(vdata0)));
             float32x4_t v_dst0_1 = vcvtq_f32_u32(vmovl_u16(vget_high_u16(vdata0)));
-            v_dst0_0             = vmlaq_f32(vgamma, v_dst0_0, valpha);
-            v_dst0_1             = vmlaq_f32(vgamma, v_dst0_1, valpha);
-            uint16x8_t vdata1    = vmovl_u8(vld1_u8(row_indata1 + j));
+            v_dst0_0 = vmlaq_f32(vgamma, v_dst0_0, valpha);
+            v_dst0_1 = vmlaq_f32(vgamma, v_dst0_1, valpha);
+            uint16x8_t vdata1 = vmovl_u8(vld1_u8(row_indata1 + j));
             float32x4_t v_dst1_0 = vcvtq_f32_u32(vmovl_u16(vget_low_u16(vdata1)));
             float32x4_t v_dst1_1 = vcvtq_f32_u32(vmovl_u16(vget_high_u16(vdata1)));
-            v_dst1_0             = vmlaq_f32(v_dst0_0, v_dst1_0, vbeta);
-            v_dst1_1             = vmlaq_f32(v_dst0_1, v_dst1_1, vbeta);
-            int16x8_t v_dst_tmp  = vcombine_s16(vmovn_s32(vcvtq_s32_f32(v_dst1_0)), vmovn_s32(vcvtq_s32_f32(v_dst1_1)));
-            uint8x8_t v_dst      = vqmovun_s16(v_dst_tmp);
+            v_dst1_0 = vmlaq_f32(v_dst0_0, v_dst1_0, vbeta);
+            v_dst1_1 = vmlaq_f32(v_dst0_1, v_dst1_1, vbeta);
+            int16x8_t v_dst_tmp = vcombine_s16(vmovn_s32(vcvtq_s32_f32(v_dst1_0)), vmovn_s32(vcvtq_s32_f32(v_dst1_1)));
+            uint8x8_t v_dst = vqmovun_s16(v_dst_tmp);
             vst1_u8(outData + i * outWidthStride + j, v_dst);
         }
         for (; j < width; ++j) {

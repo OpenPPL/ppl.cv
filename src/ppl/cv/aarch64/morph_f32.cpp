@@ -197,7 +197,7 @@ inline void MorphRowLast(float32x4_t *tprev, float32x4_t &tcurr, float32x4_t *tn
             float32x4_t t_left0, t_left1, t_mid, t_right0, t_right1, t_res;
 
             float32x4_t vnext[4] = {t_last, v_border, v_border, v_border};
-            for (int j = 0; j < 1 + radius_vec_num; j++) {
+            for (int32_t j = 0; j < 1 + radius_vec_num; j++) {
                 for (int32_t i = 1; i < radius_vec_num; i++) {
                     tprev[i - 1] = tprev[i];
                 }
@@ -271,7 +271,7 @@ inline void MorphFirstCol(float32x4_t &tcurr, float32x4_t *tnext, const float *s
         case 5: {
             float32x4_t v_up0, v_up1, v_mid, v_down0, v_down1;
 
-            for (int i = 0; i < radius_vec_num; i++) {
+            for (int32_t i = 0; i < radius_vec_num; i++) {
                 v_up0    = rowIdx < 2 ? v_border : vld1q_f32(srcCenterRow - 2 * srcStride + i * v_elem);
                 v_up1    = rowIdx < 1 ? v_border : vld1q_f32(srcCenterRow - 1 * srcStride + i * v_elem);
                 v_mid    = vld1q_f32(srcCenterRow + i * v_elem);
@@ -303,13 +303,13 @@ void morph_f32(
     float32x4_t tcurr, tprev[radius_vec_num], tnext[radius_vec_num];
     float32x4_t v_border = vdupq_n_f32(borderValue);
 
-    for (int y = 0; y < height; y++) {
+    for (int32_t y = 0; y < height; y++) {
         const float *srow = getRowPtr(srcBase, srcStride, y);
         float *drow       = getRowPtr(dstBase, dstStride, y);
         MorphFirstCol<morphOp, nc, kernel_len>(tcurr, tnext, srow, srcStride, y, height - 1 - y, borderValue);
         tprev[radius_vec_num - 1] = v_border;
         int32_t x                 = v_elem;
-        for (int i = 0; i < nc; i++) {
+        for (int32_t i = 0; i < nc; i++) {
             prefetch(srow + (i + 1) * srcStride);
             prefetch(srow - (i + 1) * srcStride);
         }

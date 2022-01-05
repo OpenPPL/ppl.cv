@@ -26,8 +26,8 @@
 #include <cmath>
 #include <float.h>
 
-namespace ppl {
-namespace cv {
+namespace ppl { 
+namespace cv { 
 namespace aarch64 {
 
 ::ppl::common::RetCode armminFilter_f(
@@ -44,19 +44,21 @@ namespace aarch64 {
 {
     float minimal = FLT_MAX;
 
-    float* gRowMin   = (float*)malloc(height * inWidthStride * sizeof(float));
-    int32_t leftPad  = cn * (kernely_len >> 1);
+    float* gRowMin = (float*)malloc(height * inWidthStride * sizeof(float));
+    int32_t leftPad = cn * (kernely_len >> 1);
     int32_t rightPad = cn * width - leftPad;
-    if (!(kernely_len & 1)) rightPad += cn;
+    if (!(kernely_len & 1))
+        rightPad += cn;
 
     for (int32_t i = 0; i < height; ++i) {
         int32_t inIndex = i * inWidthStride;
 
         for (int32_t j = 0; j < leftPad; ++j) {
             int32_t yEnd = j - leftPad + cn * kernely_len;
-            float _min   = border_value;
+            float _min = border_value;
             for (int32_t jj = j % cn; jj < yEnd; jj += cn)
-                if (inData[inIndex + jj] > _min) _min = inData[inIndex + jj];
+                if (inData[inIndex + jj] > _min)
+                    _min = inData[inIndex + jj];
             gRowMin[inIndex + j] = _min;
         }
 
@@ -65,44 +67,47 @@ namespace aarch64 {
             float32x4_t mm_min = vdupq_n_f32(0);
             for (int32_t jj = j - leftPad; jj < j - leftPad + cn * kernely_len; jj += cn) {
                 float32x4_t mm_temp = vld1q_f32(inData + inIndex + jj);
-                mm_min              = vminq_f32(mm_min, mm_temp);
+                mm_min = vminq_f32(mm_min, mm_temp);
             }
             vst1q_f32(gRowMin + inIndex + j, mm_min);
         }
         for (; j < width * cn; ++j) {
             int32_t yStart = j - leftPad;
-            float _min     = (j < rightPad) ? minimal : border_value;
-            int32_t yEnd   = yStart + cn * kernely_len;
-            yEnd           = std::min<int32_t>(yEnd, width * cn);
+            float _min = (j < rightPad) ? minimal : border_value;
+            int32_t yEnd = yStart + cn * kernely_len;
+            yEnd = std::min<int32_t>(yEnd, width * cn);
             for (int32_t jj = yStart; jj < yEnd; jj += cn)
-                if (inData[inIndex + jj] > _min) _min = inData[inIndex + jj];
+                if (inData[inIndex + jj] > _min)
+                    _min = inData[inIndex + jj];
             gRowMin[inIndex + j] = _min;
         }
     }
 
-    int32_t upPad   = kernelx_len >> 1;
+    int32_t upPad = kernelx_len >> 1;
     int32_t downPad = height - upPad;
-    if (!(kernelx_len & 1)) ++downPad;
+    if (!(kernelx_len & 1))
+        ++downPad;
 
     for (int32_t i = 0; i < height; ++i) {
         int32_t xStart = i - upPad;
-        int32_t xEnd   = xStart + kernelx_len;
-        bool valid     = (xStart >= 0) && (xEnd <= height);
-        xEnd           = std::min<int32_t>(xEnd, height);
-        xStart         = std::min<int32_t>(xStart, 0);
-        int32_t j      = 0;
+        int32_t xEnd = xStart + kernelx_len;
+        bool valid = (xStart >= 0) && (xEnd <= height);
+        xEnd = std::min<int32_t>(xEnd, height);
+        xStart = std::min<int32_t>(xStart, 0);
+        int32_t j = 0;
         for (; j < width * cn - 4; j += 4) {
             float32x4_t mm_min = vdupq_n_f32(valid ? minimal : border_value);
             for (int32_t ii = xStart; ii < xEnd; ++ii) {
                 float32x4_t mm_temp = vld1q_f32(gRowMin + ii * inWidthStride + j);
-                mm_min              = vminq_f32(mm_temp, mm_min);
+                mm_min = vminq_f32(mm_temp, mm_min);
             }
             vst1q_f32(outData + i * outWidthStride + j, mm_min);
         }
         for (; j < width * cn; ++j) {
             float _min = valid ? minimal : border_value;
             for (int32_t ii = xStart; ii < xEnd; ++ii) {
-                if (gRowMin[ii * inWidthStride + j] > _min) _min = gRowMin[ii * inWidthStride + j];
+                if (gRowMin[ii * inWidthStride + j] > _min)
+                    _min = gRowMin[ii * inWidthStride + j];
             }
             outData[i * outWidthStride + j] = _min;
         }
@@ -138,13 +143,14 @@ template <typename T>
                 T _min = minimal;
                 for (int32_t ky = 0; ky < kernely_len; ++ky) {
                     int32_t src_y = i + ky - (kernely_len >> 1);
-                    bool valid_y  = ((src_y >= 0) && (src_y < height));
+                    bool valid_y = ((src_y >= 0) && (src_y < height));
                     for (int32_t kx = 0; kx < kernelx_len; ++kx) {
                         int32_t src_x = j + kx - (kernelx_len >> 1);
-                        bool valid_x  = ((src_x >= 0) && (src_x < width));
+                        bool valid_x = ((src_x >= 0) && (src_x < width));
                         if (kernel[ky * kernelx_len + kx]) {
-                            T value = (valid_x && valid_y) ? inData[src_y * inWidthStride + src_x * cn + c] : border_value;
-                            _min    = std::min(_min, value);
+                            T value =
+                                (valid_x && valid_y) ? inData[src_y * inWidthStride + src_x * cn + c] : border_value;
+                            _min = std::min(_min, value);
                         }
                     }
                 }

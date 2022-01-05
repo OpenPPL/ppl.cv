@@ -56,11 +56,11 @@ inline const T round_up(const T &a, const T &b)
     return (a + b - static_cast<T>(1)) / b * b;
 }
 
-const int32_t AB_BITS                = 10;
-const int32_t AB_SCALE               = 1 << AB_BITS;
-const int32_t INTER_BITS             = 5;
-const int32_t INTER_TAB_SIZE         = 1 << INTER_BITS;
-const int32_t INTER_REMAP_COEF_BITS  = 15;
+const int32_t AB_BITS = 10;
+const int32_t AB_SCALE = 1 << AB_BITS;
+const int32_t INTER_BITS = 5;
+const int32_t INTER_TAB_SIZE = 1 << INTER_BITS;
+const int32_t INTER_REMAP_COEF_BITS = 15;
 const int32_t INTER_REMAP_COEF_SCALE = 1 << INTER_REMAP_COEF_BITS;
 
 //static int16_t BilinearTab_i[1024][2][2];
@@ -1135,13 +1135,13 @@ void warpAffine_nearest(
     }
 
     if (borderMode == BORDER_TYPE_REPLICATE) {
-        int32x4_t v_zero4         = vdupq_n_s32(0);
-        int32x4_t max_width       = vdupq_n_s32(inWidth - 1);
-        int32x4_t max_height      = vdupq_n_s32(inHeight - 1);
-        int32x4_t v_cn            = vdupq_n_s32(cn);
+        int32x4_t v_zero4 = vdupq_n_s32(0);
+        int32x4_t max_width = vdupq_n_s32(inWidth - 1);
+        int32x4_t max_height = vdupq_n_s32(inHeight - 1);
+        int32x4_t v_cn = vdupq_n_s32(cn);
         int32x4_t v_inWidthStride = vdupq_n_s32(inWidthStride);
-        int32x4_t v_round_delta   = vdupq_n_s32(round_delta);
-        float32x4_t v_AB_SCALE    = vdupq_n_f32(AB_SCALE);
+        int32x4_t v_round_delta = vdupq_n_s32(round_delta);
+        float32x4_t v_AB_SCALE = vdupq_n_f32(AB_SCALE);
         for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
             size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
             for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
@@ -1151,35 +1151,35 @@ void warpAffine_nearest(
                 for (size_t y = 0; y < blockHeight; ++y) {
                     int32_t *map_row = getRowPtr(&map[0], blockWidth, y);
                     size_t x = 0, dsty = y + i;
-                    float32x4_t v_y  = vdupq_n_f32(dsty);
+                    float32x4_t v_y = vdupq_n_f32(dsty);
                     float32x4_t v_yx = vmlaq_f32(v_m2, v_m1, v_y), v_yy = vmlaq_f32(v_m5, v_m4, v_y);
 
                     for (; x + 4 <= blockWidth; x += 4) {
-                        int32_t dstx              = x + j;
-                        int32x4_t X0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
-                        int32x4_t Y0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
-                        int32x4_t srcX        = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
-                        int32x4_t srcY        = vshrq_n_s32(vaddq_s32(Y0, vld1q_s32(bdelta + dstx)), AB_BITS);
-                        srcX                  = vminq_s32(vmaxq_s32(srcX, v_zero4), max_width);
-                        srcY                  = vminq_s32(vmaxq_s32(srcY, v_zero4), max_height);
+                        int32_t dstx = x + j;
+                        int32x4_t X0 = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
+                        int32x4_t Y0 = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
+                        int32x4_t srcX = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
+                        int32x4_t srcY = vshrq_n_s32(vaddq_s32(Y0, vld1q_s32(bdelta + dstx)), AB_BITS);
+                        srcX = vminq_s32(vmaxq_s32(srcX, v_zero4), max_width);
+                        srcY = vminq_s32(vmaxq_s32(srcY, v_zero4), max_height);
                         int32x4_t v_src_index = vmlaq_s32(vmulq_s32(srcY, v_inWidthStride), srcX, v_cn);
                         vst1q_s32(map_row + x, v_src_index);
                     }
 
                     for (; x < blockWidth; ++x) {
-                        int32_t dstx   = x + j;
-                        int32_t X0     = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
-                        int32_t Y0     = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
-                        int32_t srcX   = (X0 + adelta[dstx]) >> AB_BITS;
-                        int32_t srcY   = (Y0 + bdelta[dstx]) >> AB_BITS;
-                        srcX       = clip(srcX, 0, inWidth - 1);
-                        srcY       = clip(srcY, 0, inHeight - 1);
+                        int32_t dstx = x + j;
+                        int32_t X0 = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
+                        int32_t Y0 = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
+                        int32_t srcX = (X0 + adelta[dstx]) >> AB_BITS;
+                        int32_t srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
+                        srcX = clip(srcX, 0, inWidth - 1);
+                        srcY = clip(srcY, 0, inHeight - 1);
                         map_row[x] = srcY * inWidthStride + srcX * cn;
                     }
                 }
                 for (size_t y = 0; y < blockHeight; ++y) {
                     const int32_t *map_row = getRowPtr(map, blockWidth, y);
-                    T *dst_row         = getRowPtr(dst, outWidthStride, i + y) + j * cn;
+                    T *dst_row = getRowPtr(dst, outWidthStride, i + y) + j * cn;
 
                     for (size_t x = 0; x < blockWidth; x++) {
                         int32_t tmp = x * cn;
@@ -1191,13 +1191,13 @@ void warpAffine_nearest(
             }
         }
     } else if (borderMode == BORDER_TYPE_CONSTANT) {
-        int32x4_t v_nega          = vdupq_n_s32(-1);
-        int32x4_t max_width       = vdupq_n_s32(inWidth - 1);
-        int32x4_t max_height      = vdupq_n_s32(inHeight - 1);
-        int32x4_t v_cn            = vdupq_n_s32(cn);
+        int32x4_t v_nega = vdupq_n_s32(-1);
+        int32x4_t max_width = vdupq_n_s32(inWidth - 1);
+        int32x4_t max_height = vdupq_n_s32(inHeight - 1);
+        int32x4_t v_cn = vdupq_n_s32(cn);
         int32x4_t v_inWidthStride = vdupq_n_s32(inWidthStride);
-        int32x4_t v_round_delta   = vdupq_n_s32(round_delta);
-        float32x4_t v_AB_SCALE    = vdupq_n_f32(AB_SCALE);
+        int32x4_t v_round_delta = vdupq_n_s32(round_delta);
+        float32x4_t v_AB_SCALE = vdupq_n_f32(AB_SCALE);
         for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
             size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
             for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
@@ -1207,27 +1207,27 @@ void warpAffine_nearest(
                 for (size_t y = 0; y < blockHeight; ++y) {
                     int32_t *map_row = getRowPtr(&map[0], blockWidth, y);
                     size_t x = 0, dsty = y + i;
-                    float32x4_t v_y  = vdupq_n_f32(dsty);
+                    float32x4_t v_y = vdupq_n_f32(dsty);
                     float32x4_t v_yx = vmlaq_f32(v_m2, v_m1, v_y), v_yy = vmlaq_f32(v_m5, v_m4, v_y);
 
                     for (; x + 4 <= blockWidth; x += 4) {
-                        int32_t dstx              = x + j;
-                        int32x4_t X0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
-                        int32x4_t Y0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
-                        int32x4_t srcX        = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
-                        int32x4_t srcY        = vshrq_n_s32(vaddq_s32(Y0, vld1q_s32(bdelta + dstx)), AB_BITS);
-                        uint32x4_t flg0       = vcleq_u32(vreinterpretq_u32_s32(srcX), vreinterpretq_u32_s32(max_width));
-                        uint32x4_t flg1       = vcleq_u32(vreinterpretq_u32_s32(srcY), vreinterpretq_u32_s32(max_height));
-                        flg0                  = vandq_u32(flg0, flg1);
+                        int32_t dstx = x + j;
+                        int32x4_t X0 = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
+                        int32x4_t Y0 = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
+                        int32x4_t srcX = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
+                        int32x4_t srcY = vshrq_n_s32(vaddq_s32(Y0, vld1q_s32(bdelta + dstx)), AB_BITS);
+                        uint32x4_t flg0 = vcleq_u32(vreinterpretq_u32_s32(srcX), vreinterpretq_u32_s32(max_width));
+                        uint32x4_t flg1 = vcleq_u32(vreinterpretq_u32_s32(srcY), vreinterpretq_u32_s32(max_height));
+                        flg0 = vandq_u32(flg0, flg1);
                         int32x4_t v_src_index = vmlaq_s32(vmulq_s32(srcY, v_inWidthStride), srcX, v_cn);
-                        v_src_index           = vbslq_s32(flg0, v_src_index, v_nega);
+                        v_src_index = vbslq_s32(flg0, v_src_index, v_nega);
                         vst1q_s32(map_row + x, v_src_index);
                     }
 
                     for (; x < blockWidth; ++x) {
                         int32_t dstx = x + j;
-                        int32_t X0   = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
-                        int32_t Y0   = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
+                        int32_t X0 = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
+                        int32_t Y0 = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
                         int32_t srcX = (X0 + adelta[dstx]) >> AB_BITS;
                         int32_t srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
                         if ((unsigned)(srcX - 0) <= (unsigned)(inWidth - 1 - 0) && (unsigned)(srcY - 0) <= (unsigned)(inHeight - 1 - 0))
@@ -1238,7 +1238,7 @@ void warpAffine_nearest(
                 }
                 for (size_t y = 0; y < blockHeight; ++y) {
                     const int32_t *map_row = getRowPtr(map, blockWidth, y);
-                    T *dst_row         = getRowPtr(dst, outWidthStride, i + y) + j * cn;
+                    T *dst_row = getRowPtr(dst, outWidthStride, i + y) + j * cn;
 
                     for (size_t x = 0; x < blockWidth; x++) {
                         int32_t tmp = x * cn;
@@ -1250,13 +1250,13 @@ void warpAffine_nearest(
             }
         }
     } else if (borderMode == BORDER_TYPE_TRANSPARENT) {
-        int32x4_t v_nega          = vdupq_n_s32(-1);
-        int32x4_t max_width       = vdupq_n_s32(inWidth - 1);
-        int32x4_t max_height      = vdupq_n_s32(inHeight - 1);
-        int32x4_t v_cn            = vdupq_n_s32(cn);
+        int32x4_t v_nega = vdupq_n_s32(-1);
+        int32x4_t max_width = vdupq_n_s32(inWidth - 1);
+        int32x4_t max_height = vdupq_n_s32(inHeight - 1);
+        int32x4_t v_cn = vdupq_n_s32(cn);
         int32x4_t v_inWidthStride = vdupq_n_s32(inWidthStride);
-        int32x4_t v_round_delta   = vdupq_n_s32(round_delta);
-        float32x4_t v_AB_SCALE    = vdupq_n_f32(AB_SCALE);
+        int32x4_t v_round_delta = vdupq_n_s32(round_delta);
+        float32x4_t v_AB_SCALE = vdupq_n_f32(AB_SCALE);
         for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
             size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
             for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
@@ -1266,26 +1266,26 @@ void warpAffine_nearest(
                 for (size_t y = 0; y < blockHeight; ++y) {
                     int32_t *map_row = getRowPtr(&map[0], blockWidth, y);
                     size_t x = 0, dsty = y + i;
-                    float32x4_t v_y  = vdupq_n_f32(dsty);
+                    float32x4_t v_y = vdupq_n_f32(dsty);
                     float32x4_t v_yx = vmlaq_f32(v_m2, v_m1, v_y), v_yy = vmlaq_f32(v_m5, v_m4, v_y);
                     for (; x + 4 <= blockWidth; x += 4) {
-                        int32_t dstx              = x + j;
-                        int32x4_t X0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
-                        int32x4_t Y0          = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
-                        int32x4_t srcX        = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
-                        int32x4_t srcY        = vshrq_n_s32(vaddq_s32(Y0, vld1q_s32(bdelta + dstx)), AB_BITS);
-                        uint32x4_t flg0       = vcleq_u32(vreinterpretq_u32_s32(srcX), vreinterpretq_u32_s32(max_width));
-                        uint32x4_t flg1       = vcleq_u32(vreinterpretq_u32_s32(srcY), vreinterpretq_u32_s32(max_height));
-                        flg0                  = vandq_u32(flg0, flg1);
+                        int32_t dstx = x + j;
+                        int32x4_t X0 = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yx, v_AB_SCALE)), v_round_delta);
+                        int32x4_t Y0 = vaddq_s32(vcvtq_s32_f32(vmulq_f32(v_yy, v_AB_SCALE)), v_round_delta);
+                        int32x4_t srcX = vshrq_n_s32(vaddq_s32(X0, vld1q_s32(adelta + dstx)), AB_BITS);
+                        int32x4_t srcY = vshrq_n_s32(vaddq_s32(Y0, vld1q_s32(bdelta + dstx)), AB_BITS);
+                        uint32x4_t flg0 = vcleq_u32(vreinterpretq_u32_s32(srcX), vreinterpretq_u32_s32(max_width));
+                        uint32x4_t flg1 = vcleq_u32(vreinterpretq_u32_s32(srcY), vreinterpretq_u32_s32(max_height));
+                        flg0 = vandq_u32(flg0, flg1);
                         int32x4_t v_src_index = vmlaq_s32(vmulq_s32(srcY, v_inWidthStride), srcX, v_cn);
-                        v_src_index           = vbslq_s32(flg0, v_src_index, v_nega);
+                        v_src_index = vbslq_s32(flg0, v_src_index, v_nega);
                         vst1q_s32(map_row + x, v_src_index);
                     }
 
                     for (; x < blockWidth; ++x) {
                         int32_t dstx = x + j;
-                        int32_t X0   = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
-                        int32_t Y0   = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
+                        int32_t X0 = rint((M[1] * dsty + M[2]) * AB_SCALE) + round_delta;
+                        int32_t Y0 = rint((M[4] * dsty + M[5]) * AB_SCALE) + round_delta;
                         int32_t srcX = (X0 + adelta[dstx]) >> AB_BITS;
                         int32_t srcY = (Y0 + bdelta[dstx]) >> AB_BITS;
                         if ((unsigned)(srcX - 0) <= (unsigned)(inWidth - 1 - 0) && (unsigned)(srcY - 0) <= (unsigned)(inHeight - 1 - 0))
@@ -1296,7 +1296,7 @@ void warpAffine_nearest(
                 }
                 for (size_t y = 0; y < blockHeight; ++y) {
                     const int32_t *map_row = getRowPtr(map, blockWidth, y);
-                    T *dst_row         = getRowPtr(dst, outWidthStride, i + y) + j * cn;
+                    T *dst_row = getRowPtr(dst, outWidthStride, i + y) + j * cn;
 
                     for (size_t x = 0; x < blockWidth; x++) {
                         if (map_row[x] < 0)
@@ -1314,7 +1314,18 @@ void warpAffine_nearest(
 
 template <typename T>
 void warpaffine_linear(
-    int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, T *dst, const T *src, const float *M, T delta, int32_t nc, ppl::cv::BorderType borderMode)
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    T *dst,
+    const T *src,
+    const float *M,
+    T delta,
+    int32_t nc,
+    ppl::cv::BorderType borderMode)
 {
     for (int32_t i = 0; i < outHeight; i++) {
         float base_x = M[1] * i + M[2];
@@ -1351,21 +1362,21 @@ void warpaffine_linear(
                 for (int32_t k = 0; k < nc; k++) {
                     int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
                     int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                    v0            = flag0 ? src[position1 + k] : delta;
-                    v1            = flag1 ? src[position1 + nc + k] : delta;
-                    v2            = flag2 ? src[position2 + k] : delta;
-                    v3            = flag3 ? src[position2 + nc + k] : delta;
-                    float sum     = 0;
+                    v0 = flag0 ? src[position1 + k] : delta;
+                    v1 = flag1 ? src[position1 + nc + k] : delta;
+                    v2 = flag2 ? src[position2 + k] : delta;
+                    v3 = flag3 ? src[position2 + nc + k] : delta;
+                    float sum = 0;
                     sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
                 }
             } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
-                int32_t sx1     = sx0 + 1;
-                int32_t sy1     = sy0 + 1;
-                sx0         = clip(sx0, 0, inWidth - 1);
-                sx1         = clip(sx1, 0, inWidth - 1);
-                sy0         = clip(sy0, 0, inHeight - 1);
-                sy1         = clip(sy1, 0, inHeight - 1);
+                int32_t sx1 = sx0 + 1;
+                int32_t sy1 = sy0 + 1;
+                sx0 = clip(sx0, 0, inWidth - 1);
+                sx1 = clip(sx1, 0, inWidth - 1);
+                sy0 = clip(sy0, 0, inHeight - 1);
+                sy1 = clip(sy1, 0, inHeight - 1);
                 const T *t0 = src + sy0 * inWidthStride + sx0 * nc;
                 const T *t1 = src + sy0 * inWidthStride + sx1 * nc;
                 const T *t2 = src + sy1 * inWidthStride + sx0 * nc;
@@ -1384,11 +1395,11 @@ void warpaffine_linear(
                     for (int32_t k = 0; k < nc; k++) {
                         int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
                         int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                        v0            = src[position1 + k];
-                        v1            = src[position1 + nc + k];
-                        v2            = src[position2 + k];
-                        v3            = src[position2 + nc + k];
-                        float sum     = 0;
+                        v0 = src[position1 + k];
+                        v1 = src[position1 + nc + k];
+                        v2 = src[position2 + k];
+                        v3 = src[position2 + nc + k];
+                        float sum = 0;
                         sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                         dst[idxDst + k] = static_cast<T>(sum);
                     }
@@ -1401,7 +1412,18 @@ void warpaffine_linear(
 }
 
 void warpAffine_linear_uint8_t(
-    uint8_t *dst, const uint8_t *src, int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, const float *M, int32_t cn, int32_t borderMode, uint8_t borderValue = 0)
+    uint8_t *dst,
+    const uint8_t *src,
+    int32_t inHeight,
+    int32_t inWidth,
+    int32_t inWidthStride,
+    int32_t outHeight,
+    int32_t outWidth,
+    int32_t outWidthStride,
+    const float *M,
+    int32_t cn,
+    int32_t borderMode,
+    uint8_t borderValue = 0)
 {
     int32_t *buffer = nullptr;
     int32_t ret = posix_memalign((void **)(&buffer), 32, (outHeight + outWidth) * 2 * sizeof(int32_t));
@@ -1428,57 +1450,57 @@ void warpAffine_linear_uint8_t(
 
     if (cn == 1) {
         uint32_t *buf_loc = new uint32_t[outWidth];
-        int16_t *tab_loc        = new int16_t[outWidth];
+        int16_t *tab_loc = new int16_t[outWidth];
 
         uint16_t *buf_point = (uint16_t *)buf_loc;
-        const uint8_t *src2         = src + inWidthStride;
+        const uint8_t *src2 = src + inWidthStride;
 
         for (int32_t y = 0; y < outHeight; ++y) {
-            int32_t x_count        = 0;
-            int32_t end_x          = 0;
+            int32_t x_count = 0;
+            int32_t end_x = 0;
             int32_t final_loc_base = y * outWidthStride;
             for (int32_t x = 0; x < outWidth; ++x) {
-                int32_t final_loc  = final_loc_base + x;
-                int32_t new_x      = adelta[2 * x] + bdelta[2 * y] + 16;
-                int32_t new_y      = adelta[2 * x + 1] + bdelta[2 * y + 1] + 16;
+                int32_t final_loc = final_loc_base + x;
+                int32_t new_x = adelta[2 * x] + bdelta[2 * y] + 16;
+                int32_t new_y = adelta[2 * x + 1] + bdelta[2 * y + 1] + 16;
                 int32_t new_x_full = new_x >> 5;
                 int32_t new_y_full = new_y >> 5;
-                int32_t new_x_loc  = new_x >> 10;
-                int32_t new_y_loc  = new_y >> 10;
+                int32_t new_x_loc = new_x >> 10;
+                int32_t new_y_loc = new_y >> 10;
 
                 int16_t new_xy_float = (new_x_full & 31) + (new_y_full & 31) * 32;
-                int16_t *wtab        = BilinearTab_i[new_xy_float][0];
-                int32_t loc_base       = new_y_loc * inWidthStride + new_x_loc;
+                int16_t *wtab = BilinearTab_i[new_xy_float][0];
+                int32_t loc_base = new_y_loc * inWidthStride + new_x_loc;
 
                 if (((new_x_loc >= 0) && (new_x_loc < inWidth - 1) && (new_y_loc >= 0) && (new_y_loc < inHeight - 1))) {
-                    uint16_t *ptr  = (uint16_t *)(src + loc_base);
+                    uint16_t *ptr = (uint16_t *)(src + loc_base);
                     uint16_t *ptr2 = (uint16_t *)(src2 + loc_base);
-                    buf_point[2 * x]     = ptr[0];
+                    buf_point[2 * x] = ptr[0];
                     buf_point[2 * x + 1] = ptr2[0];
-                    tab_loc[x]           = new_xy_float;
+                    tab_loc[x] = new_xy_float;
                     x_count++;
                     end_x = x;
                 } else {
                     if (borderMode == BORDER_TYPE_CONSTANT) {
                         int32_t mask0 = new_x_loc >= 0 &&
-                                    new_x_loc <= (inWidth - 1) &&
-                                    new_y_loc >= 0 &&
-                                    new_y_loc <= (inHeight - 1);
+                                        new_x_loc <= (inWidth - 1) &&
+                                        new_y_loc >= 0 &&
+                                        new_y_loc <= (inHeight - 1);
 
                         int32_t mask1 = new_x_loc >= -1 &&
-                                    new_x_loc <= (inWidth - 2) &&
-                                    new_y_loc >= 0 &&
-                                    new_y_loc <= (inHeight - 1);
+                                        new_x_loc <= (inWidth - 2) &&
+                                        new_y_loc >= 0 &&
+                                        new_y_loc <= (inHeight - 1);
 
                         int32_t mask2 = new_x_loc >= 0 &&
-                                    new_x_loc <= (inWidth - 1) &&
-                                    new_y_loc >= -1 &&
-                                    new_y_loc <= (inHeight - 2);
+                                        new_x_loc <= (inWidth - 1) &&
+                                        new_y_loc >= -1 &&
+                                        new_y_loc <= (inHeight - 2);
 
                         int32_t mask3 = new_x_loc >= -1 &&
-                                    new_x_loc <= (inWidth - 2) &&
-                                    new_y_loc >= -1 &&
-                                    new_y_loc <= (inHeight - 2);
+                                        new_x_loc <= (inWidth - 2) &&
+                                        new_y_loc >= -1 &&
+                                        new_y_loc <= (inHeight - 2);
 
                         int32_t val_xy0 = 0;
                         if (mask0) {
@@ -1521,14 +1543,14 @@ void warpAffine_linear_uint8_t(
                     }
                 }
             }
-            int32_t x      = end_x - x_count + 1;
+            int32_t x = end_x - x_count + 1;
             uint8_t *ptr = (uint8_t *)(buf_loc + x);
 
             int32x4_t DELTA_vec = vdupq_n_s32(DELTA);
-            uint8_t *dst_loc      = dst + final_loc_base + x;
+            uint8_t *dst_loc = dst + final_loc_base + x;
 
             int16_t *BilinearTab_ptr = BilinearTab_i[0][0];
-            int32_t simd_loop          = x_count >> 3;
+            int32_t simd_loop = x_count >> 3;
 
             if (simd_loop > 0) {
                 asm volatile(
@@ -1623,14 +1645,14 @@ void warpAffine_linear_uint8_t(
 
             for (; x <= end_x; ++x) {
                 int32_t final_loc = final_loc_base + x;
-                int16_t *wtab   = BilinearTab_i[tab_loc[x]][0];
-                int32_t point0    = ptr[0];
-                int32_t point1    = ptr[1];
-                int32_t point2    = ptr[2];
-                int32_t point3    = ptr[3];
+                int16_t *wtab = BilinearTab_i[tab_loc[x]][0];
+                int32_t point0 = ptr[0];
+                int32_t point1 = ptr[1];
+                int32_t point2 = ptr[2];
+                int32_t point3 = ptr[3];
                 ptr += 4;
 
-                int32_t val_xy0    = wtab[0] * point0 + wtab[1] * point1 + wtab[2] * point2 + wtab[3] * point3;
+                int32_t val_xy0 = wtab[0] * point0 + wtab[1] * point1 + wtab[2] * point2 + wtab[3] * point3;
                 dst[final_loc] = static_cast<uint8_t>((val_xy0 + DELTA) >> 15);
             }
         }
@@ -1639,53 +1661,53 @@ void warpAffine_linear_uint8_t(
         delete[] tab_loc;
     } // cn == 1
     else if (cn == 3) {
-        int32_t *buf_loc        = new int32_t[outWidth + 4];
-        int16_t *short_buf    = new int16_t[outWidth * 2 + outWidth + outWidth + 4];
-        int16_t *xy_loc_buf   = short_buf;
+        int32_t *buf_loc = new int32_t[outWidth + 4];
+        int16_t *short_buf = new int16_t[outWidth * 2 + outWidth + outWidth + 4];
+        int16_t *xy_loc_buf = short_buf;
         int16_t *xy_float_buf = xy_loc_buf + 2 * outWidth;
-        int16_t *tab_loc      = xy_float_buf + outWidth;
-        const uint8_t *src2   = src + inWidthStride;
+        int16_t *tab_loc = xy_float_buf + outWidth;
+        const uint8_t *src2 = src + inWidthStride;
 
         for (int32_t y = 0; y < outHeight; ++y) {
-            int32_t x_count        = 0;
-            int32_t end_x          = 0;
+            int32_t x_count = 0;
+            int32_t end_x = 0;
             int32_t final_loc_base = y * outWidthStride;
 
-            int32x4_t off_vec    = vdupq_n_s32(16);
-            int16x4_t mask31     = vdup_n_s16(31);
-            int16x8_t mask_mull  = {1, 32, 1, 32, 1, 32, 1, 32};
+            int32x4_t off_vec = vdupq_n_s32(16);
+            int16x4_t mask31 = vdup_n_s16(31);
+            int16x8_t mask_mull = {1, 32, 1, 32, 1, 32, 1, 32};
             int32x4_t bdelta_vec = {bdelta[2 * y], bdelta[2 * y + 1], bdelta[2 * y], bdelta[2 * y + 1]};
-            int32_t idx              = 0;
+            int32_t idx = 0;
             for (; idx <= outWidth - 4; idx += 4) {
-                int32x4_t adelta0   = vaddq_s32(vld1q_s32(adelta + 2 * idx), off_vec);
-                int32x4_t adelta1   = vaddq_s32(vld1q_s32(adelta + 2 * idx + 4), off_vec);
+                int32x4_t adelta0 = vaddq_s32(vld1q_s32(adelta + 2 * idx), off_vec);
+                int32x4_t adelta1 = vaddq_s32(vld1q_s32(adelta + 2 * idx + 4), off_vec);
                 //x0y0,x1y1
-                int32x4_t x0y0      = vaddq_s32(adelta0, bdelta_vec);
+                int32x4_t x0y0 = vaddq_s32(adelta0, bdelta_vec);
                 //x2y2,x3y3
-                int32x4_t x2y2      = vaddq_s32(adelta1, bdelta_vec);
-                int16x4_t x0y0sh    = vshrn_n_s32(x0y0, 5);
-                int16x4_t x2y2sh    = vshrn_n_s32(x2y2, 5);
-                int16x8_t xy_float  = vcombine_s16(vand_s16(x0y0sh, mask31), vand_s16(x2y2sh, mask31));
-                xy_float            = vmulq_s16(xy_float, mask_mull);
-                int16x8_t xy        = vcombine_s16(vshrn_n_s32(x0y0, 10), vshrn_n_s32(x2y2, 10));
+                int32x4_t x2y2 = vaddq_s32(adelta1, bdelta_vec);
+                int16x4_t x0y0sh = vshrn_n_s32(x0y0, 5);
+                int16x4_t x2y2sh = vshrn_n_s32(x2y2, 5);
+                int16x8_t xy_float = vcombine_s16(vand_s16(x0y0sh, mask31), vand_s16(x2y2sh, mask31));
+                xy_float = vmulq_s16(xy_float, mask_mull);
+                int16x8_t xy = vcombine_s16(vshrn_n_s32(x0y0, 10), vshrn_n_s32(x2y2, 10));
                 int16x4_t xy_float0 = vpadd_s16(vget_low_s16(xy_float), vget_high_s16(xy_float));
                 vst1q_s16(xy_loc_buf + idx * 2, xy);
                 vst1_s16(xy_float_buf + idx, xy_float0);
             }
             for (; idx < outWidth; idx++) {
-                int32_t new_x               = adelta[2 * idx] + bdelta[2 * y] + 16;
-                int32_t new_y               = adelta[2 * idx + 1] + bdelta[2 * y + 1] + 16;
-                int32_t new_x_full          = new_x >> 5;
-                int32_t new_y_full          = new_y >> 5;
-                xy_loc_buf[idx * 2]     = (new_x >> 10);
+                int32_t new_x = adelta[2 * idx] + bdelta[2 * y] + 16;
+                int32_t new_y = adelta[2 * idx + 1] + bdelta[2 * y + 1] + 16;
+                int32_t new_x_full = new_x >> 5;
+                int32_t new_y_full = new_y >> 5;
+                xy_loc_buf[idx * 2] = (new_x >> 10);
                 xy_loc_buf[idx * 2 + 1] = (new_y >> 10);
-                xy_float_buf[idx]       = (new_x_full & 31) + (new_y_full & 31) * 32;
+                xy_float_buf[idx] = (new_x_full & 31) + (new_y_full & 31) * 32;
             }
             for (int32_t x = 0; x < outWidth; ++x) {
-                int32_t new_x_loc    = xy_loc_buf[x * 2];
-                int32_t new_y_loc    = xy_loc_buf[x * 2 + 1];
+                int32_t new_x_loc = xy_loc_buf[x * 2];
+                int32_t new_y_loc = xy_loc_buf[x * 2 + 1];
                 int32_t new_xy_float = xy_float_buf[x];
-                int16_t *wtab      = BilinearTab_i[new_xy_float][0];
+                int16_t *wtab = BilinearTab_i[new_xy_float][0];
 
                 if ((new_x_loc >= 0) && (new_x_loc < inWidth - 1) && (new_y_loc >= 0) && (new_y_loc < inHeight - 1)) {
                     buf_loc[x] = new_y_loc * inWidthStride + new_x_loc * 3;
@@ -1695,27 +1717,27 @@ void warpAffine_linear_uint8_t(
                 } else {
                     if (borderMode == BORDER_TYPE_CONSTANT) {
                         int32_t loc_buffer = new_y_loc * inWidthStride + new_x_loc * 3;
-                        int32_t final_loc  = final_loc_base + x * 3;
+                        int32_t final_loc = final_loc_base + x * 3;
 
                         int32_t mask0 = new_x_loc >= 0 &&
-                                    new_x_loc <= (inWidth - 1) &&
-                                    new_y_loc >= 0 &&
-                                    new_y_loc <= (inHeight - 1);
+                                        new_x_loc <= (inWidth - 1) &&
+                                        new_y_loc >= 0 &&
+                                        new_y_loc <= (inHeight - 1);
 
                         int32_t mask1 = new_x_loc >= -1 &&
-                                    new_x_loc <= (inWidth - 2) &&
-                                    new_y_loc >= 0 &&
-                                    new_y_loc <= (inHeight - 1);
+                                        new_x_loc <= (inWidth - 2) &&
+                                        new_y_loc >= 0 &&
+                                        new_y_loc <= (inHeight - 1);
 
                         int32_t mask2 = new_x_loc >= 0 &&
-                                    new_x_loc <= (inWidth - 1) &&
-                                    new_y_loc >= -1 &&
-                                    new_y_loc <= (inHeight - 2);
+                                        new_x_loc <= (inWidth - 1) &&
+                                        new_y_loc >= -1 &&
+                                        new_y_loc <= (inHeight - 2);
 
                         int32_t mask3 = new_x_loc >= -1 &&
-                                    new_x_loc <= (inWidth - 2) &&
-                                    new_y_loc >= -1 &&
-                                    new_y_loc <= (inHeight - 2);
+                                        new_x_loc <= (inWidth - 2) &&
+                                        new_y_loc >= -1 &&
+                                        new_y_loc <= (inHeight - 2);
 
                         int32_t val_xy0 = 0;
                         int32_t val_xy1 = 0;
@@ -1786,7 +1808,7 @@ void warpAffine_linear_uint8_t(
                             src[sy1 * inWidthStride + sx0 * 3 + 2] * wtab[2] +
                             src[sy1 * inWidthStride + sx1 * 3 + 2] * wtab[3];
 
-                        int32_t final_loc      = final_loc_base + x * 3;
+                        int32_t final_loc = final_loc_base + x * 3;
                         dst[final_loc + 0] = static_cast<uint8_t>((val_xy0 + DELTA) >> 15);
                         dst[final_loc + 1] = static_cast<uint8_t>((val_xy1 + DELTA) >> 15);
                         dst[final_loc + 2] = static_cast<uint8_t>((val_xy2 + DELTA) >> 15);
@@ -1794,14 +1816,14 @@ void warpAffine_linear_uint8_t(
                 }
             }
 
-            int32_t x               = end_x - x_count + 1;
+            int32_t x = end_x - x_count + 1;
             int32x4_t DELTA_vec = vdupq_n_s32(DELTA);
-            uint8x8_t tb        = {0, 1, 2, 4, 5, 6, 0, 0};
-            uint8_t *dst_loc      = dst + final_loc_base + x * 3;
+            uint8x8_t tb = {0, 1, 2, 4, 5, 6, 0, 0};
+            uint8_t *dst_loc = dst + final_loc_base + x * 3;
 
             int16_t *BilinearTab_ptr = BilinearTab_i[0][0];
-            int32_t simd_loop          = x_count >> 2;
-            int32_t cmp_flag           = end_x - 4 + 1;
+            int32_t simd_loop = x_count >> 2;
+            int32_t cmp_flag = end_x - 4 + 1;
             if (simd_loop > 0) {
                 asm volatile(
                     "subs x25, %2, #1\n\t"
@@ -1919,25 +1941,25 @@ void warpAffine_linear_uint8_t(
             }
 
             for (; x <= end_x; x++) {
-                int32_t final_loc  = final_loc_base + x * 3;
+                int32_t final_loc = final_loc_base + x * 3;
                 int32_t loc_buffer = buf_loc[x];
-                int16_t *wtab    = BilinearTab_i[tab_loc[x]][0];
-                int32_t point00    = src[loc_buffer];
-                int32_t point01    = src[loc_buffer + 1];
-                int32_t point02    = src[loc_buffer + 2];
-                int32_t point03    = src[loc_buffer + 3];
-                int32_t point04    = src[loc_buffer + 4];
-                int32_t point05    = src[loc_buffer + 5];
-                int32_t point10    = src2[loc_buffer];
-                int32_t point11    = src2[loc_buffer + 1];
-                int32_t point12    = src2[loc_buffer + 2];
-                int32_t point13    = src2[loc_buffer + 3];
-                int32_t point14    = src2[loc_buffer + 4];
-                int32_t point15    = src2[loc_buffer + 5];
+                int16_t *wtab = BilinearTab_i[tab_loc[x]][0];
+                int32_t point00 = src[loc_buffer];
+                int32_t point01 = src[loc_buffer + 1];
+                int32_t point02 = src[loc_buffer + 2];
+                int32_t point03 = src[loc_buffer + 3];
+                int32_t point04 = src[loc_buffer + 4];
+                int32_t point05 = src[loc_buffer + 5];
+                int32_t point10 = src2[loc_buffer];
+                int32_t point11 = src2[loc_buffer + 1];
+                int32_t point12 = src2[loc_buffer + 2];
+                int32_t point13 = src2[loc_buffer + 3];
+                int32_t point14 = src2[loc_buffer + 4];
+                int32_t point15 = src2[loc_buffer + 5];
 
-                int32_t val_xy0        = wtab[0] * point00 + wtab[1] * point03 + wtab[2] * point10 + wtab[3] * point13;
-                int32_t val_xy1        = wtab[0] * point01 + wtab[1] * point04 + wtab[2] * point11 + wtab[3] * point14;
-                int32_t val_xy2        = wtab[0] * point02 + wtab[1] * point05 + wtab[2] * point12 + wtab[3] * point15;
+                int32_t val_xy0 = wtab[0] * point00 + wtab[1] * point03 + wtab[2] * point10 + wtab[3] * point13;
+                int32_t val_xy1 = wtab[0] * point01 + wtab[1] * point04 + wtab[2] * point11 + wtab[3] * point14;
+                int32_t val_xy2 = wtab[0] * point02 + wtab[1] * point05 + wtab[2] * point12 + wtab[3] * point15;
                 dst[final_loc + 0] = static_cast<uint8_t>((val_xy0 + DELTA) >> 15);
                 dst[final_loc + 1] = static_cast<uint8_t>((val_xy1 + DELTA) >> 15);
                 dst[final_loc + 2] = static_cast<uint8_t>((val_xy2 + DELTA) >> 15);
@@ -1948,53 +1970,53 @@ void warpAffine_linear_uint8_t(
         delete[] short_buf;
     } // cn == 3
     else if (cn == 4) {
-        int32_t *buf_loc        = new int32_t[outWidth + 4];
-        int16_t *short_buf    = new int16_t[outWidth * 2 + outWidth + outWidth + 4];
-        int16_t *xy_loc_buf   = short_buf;
+        int32_t *buf_loc = new int32_t[outWidth + 4];
+        int16_t *short_buf = new int16_t[outWidth * 2 + outWidth + outWidth + 4];
+        int16_t *xy_loc_buf = short_buf;
         int16_t *xy_float_buf = xy_loc_buf + 2 * outWidth;
-        int16_t *tab_loc      = xy_float_buf + outWidth;
-        const uint8_t *src2   = src + inWidthStride;
+        int16_t *tab_loc = xy_float_buf + outWidth;
+        const uint8_t *src2 = src + inWidthStride;
 
-        int32x4_t off_vec   = vdupq_n_s32(16);
-        int16x4_t mask31    = vdup_n_s16(31);
+        int32x4_t off_vec = vdupq_n_s32(16);
+        int16x4_t mask31 = vdup_n_s16(31);
         int16x8_t mask_mull = {1, 32, 1, 32, 1, 32, 1, 32};
         for (int32_t y = 0; y < outHeight; ++y) {
-            int32_t x_count        = 0;
-            int32_t end_x          = 0;
+            int32_t x_count = 0;
+            int32_t end_x = 0;
             int32_t final_loc_base = y * outWidthStride;
 
             int32x4_t bdelta_vec = {bdelta[2 * y], bdelta[2 * y + 1], bdelta[2 * y], bdelta[2 * y + 1]};
-            int32_t idx              = 0;
+            int32_t idx = 0;
             for (; idx <= outWidth - 4; idx += 4) {
-                int32x4_t adelta0   = vaddq_s32(vld1q_s32(adelta + 2 * idx), off_vec);
-                int32x4_t adelta1   = vaddq_s32(vld1q_s32(adelta + 2 * idx + 4), off_vec);
+                int32x4_t adelta0 = vaddq_s32(vld1q_s32(adelta + 2 * idx), off_vec);
+                int32x4_t adelta1 = vaddq_s32(vld1q_s32(adelta + 2 * idx + 4), off_vec);
                 //x0y0,x1y1
-                int32x4_t x0y0      = vaddq_s32(adelta0, bdelta_vec);
+                int32x4_t x0y0 = vaddq_s32(adelta0, bdelta_vec);
                 //x2y2,x3y3
-                int32x4_t x2y2      = vaddq_s32(adelta1, bdelta_vec);
-                int16x4_t x0y0sh    = vshrn_n_s32(x0y0, 5);
-                int16x4_t x2y2sh    = vshrn_n_s32(x2y2, 5);
-                int16x8_t xy_float  = vcombine_s16(vand_s16(x0y0sh, mask31), vand_s16(x2y2sh, mask31));
-                xy_float            = vmulq_s16(xy_float, mask_mull);
-                int16x8_t xy        = vcombine_s16(vshrn_n_s32(x0y0, 10), vshrn_n_s32(x2y2, 10));
+                int32x4_t x2y2 = vaddq_s32(adelta1, bdelta_vec);
+                int16x4_t x0y0sh = vshrn_n_s32(x0y0, 5);
+                int16x4_t x2y2sh = vshrn_n_s32(x2y2, 5);
+                int16x8_t xy_float = vcombine_s16(vand_s16(x0y0sh, mask31), vand_s16(x2y2sh, mask31));
+                xy_float = vmulq_s16(xy_float, mask_mull);
+                int16x8_t xy = vcombine_s16(vshrn_n_s32(x0y0, 10), vshrn_n_s32(x2y2, 10));
                 int16x4_t xy_float0 = vpadd_s16(vget_low_s16(xy_float), vget_high_s16(xy_float));
                 vst1q_s16(xy_loc_buf + idx * 2, xy);
                 vst1_s16(xy_float_buf + idx, xy_float0);
             }
             for (; idx < outWidth; idx++) {
-                int32_t new_x               = adelta[2 * idx] + bdelta[2 * y] + 16;
-                int32_t new_y               = adelta[2 * idx + 1] + bdelta[2 * y + 1] + 16;
-                int32_t new_x_full          = new_x >> 5;
-                int32_t new_y_full          = new_y >> 5;
-                xy_loc_buf[idx * 2]     = (new_x >> 10);
+                int32_t new_x = adelta[2 * idx] + bdelta[2 * y] + 16;
+                int32_t new_y = adelta[2 * idx + 1] + bdelta[2 * y + 1] + 16;
+                int32_t new_x_full = new_x >> 5;
+                int32_t new_y_full = new_y >> 5;
+                xy_loc_buf[idx * 2] = (new_x >> 10);
                 xy_loc_buf[idx * 2 + 1] = (new_y >> 10);
-                xy_float_buf[idx]       = (new_x_full & 31) + (new_y_full & 31) * 32;
+                xy_float_buf[idx] = (new_x_full & 31) + (new_y_full & 31) * 32;
             }
             for (int32_t x = 0; x < outWidth; ++x) {
-                int32_t new_x_loc    = xy_loc_buf[x * 2];
-                int32_t new_y_loc    = xy_loc_buf[x * 2 + 1];
+                int32_t new_x_loc = xy_loc_buf[x * 2];
+                int32_t new_y_loc = xy_loc_buf[x * 2 + 1];
                 int32_t new_xy_float = xy_float_buf[x];
-                int16_t *wtab      = BilinearTab_i[new_xy_float][0];
+                int16_t *wtab = BilinearTab_i[new_xy_float][0];
 
                 if ((new_x_loc >= 0) && (new_x_loc < inWidth - 1) && (new_y_loc >= 0) && (new_y_loc < inHeight - 1)) {
                     buf_loc[x] = new_y_loc * inWidthStride + new_x_loc * 4;
@@ -2004,27 +2026,27 @@ void warpAffine_linear_uint8_t(
                 } else {
                     if (borderMode == BORDER_TYPE_CONSTANT) {
                         int32_t loc_buffer = new_y_loc * inWidthStride + new_x_loc * 4;
-                        int32_t final_loc  = final_loc_base + x * 4;
+                        int32_t final_loc = final_loc_base + x * 4;
 
                         int32_t mask0 = new_x_loc >= 0 &&
-                                    new_x_loc <= (inWidth - 1) &&
-                                    new_y_loc >= 0 &&
-                                    new_y_loc <= (inHeight - 1);
+                                        new_x_loc <= (inWidth - 1) &&
+                                        new_y_loc >= 0 &&
+                                        new_y_loc <= (inHeight - 1);
 
                         int32_t mask1 = new_x_loc >= -1 &&
-                                    new_x_loc <= (inWidth - 2) &&
-                                    new_y_loc >= 0 &&
-                                    new_y_loc <= (inHeight - 1);
+                                        new_x_loc <= (inWidth - 2) &&
+                                        new_y_loc >= 0 &&
+                                        new_y_loc <= (inHeight - 1);
 
                         int32_t mask2 = new_x_loc >= 0 &&
-                                    new_x_loc <= (inWidth - 1) &&
-                                    new_y_loc >= -1 &&
-                                    new_y_loc <= (inHeight - 2);
+                                        new_x_loc <= (inWidth - 1) &&
+                                        new_y_loc >= -1 &&
+                                        new_y_loc <= (inHeight - 2);
 
                         int32_t mask3 = new_x_loc >= -1 &&
-                                    new_x_loc <= (inWidth - 2) &&
-                                    new_y_loc >= -1 &&
-                                    new_y_loc <= (inHeight - 2);
+                                        new_x_loc <= (inWidth - 2) &&
+                                        new_y_loc >= -1 &&
+                                        new_y_loc <= (inHeight - 2);
 
                         int32_t val_xy0 = 0;
                         int32_t val_xy1 = 0;
@@ -2111,7 +2133,7 @@ void warpAffine_linear_uint8_t(
                             src[sy1 * inWidthStride + sx0 * 4 + 3] * wtab[2] +
                             src[sy1 * inWidthStride + sx1 * 4 + 3] * wtab[3];
 
-                        int32_t final_loc      = final_loc_base + x * 4;
+                        int32_t final_loc = final_loc_base + x * 4;
                         dst[final_loc + 0] = static_cast<uint8_t>((val_xy0 + DELTA) >> 15);
                         dst[final_loc + 1] = static_cast<uint8_t>((val_xy1 + DELTA) >> 15);
                         dst[final_loc + 2] = static_cast<uint8_t>((val_xy2 + DELTA) >> 15);
@@ -2120,11 +2142,11 @@ void warpAffine_linear_uint8_t(
                 }
             }
 
-            int32_t x                  = end_x - x_count + 1;
-            int32x4_t DELTA_vec    = vdupq_n_s32(DELTA);
-            uint8_t *dst_loc         = dst + final_loc_base + x * 4;
+            int32_t x = end_x - x_count + 1;
+            int32x4_t DELTA_vec = vdupq_n_s32(DELTA);
+            uint8_t *dst_loc = dst + final_loc_base + x * 4;
             int16_t *BilinearTab_ptr = BilinearTab_i[0][0];
-            int32_t simd_loop          = x_count >> 2;
+            int32_t simd_loop = x_count >> 2;
             if (simd_loop > 0) {
                 asm volatile(
                     "subs x25, %2, #1\n\t"
@@ -2243,26 +2265,26 @@ void warpAffine_linear_uint8_t(
                 x = x + (simd_loop << 2);
             }
             for (; x <= end_x; x++) {
-                int32_t final_loc  = final_loc_base + x * 4;
+                int32_t final_loc = final_loc_base + x * 4;
                 int32_t loc_buffer = buf_loc[x];
-                int16_t *wtab    = BilinearTab_i[tab_loc[x]][0];
+                int16_t *wtab = BilinearTab_i[tab_loc[x]][0];
 
                 int32_t val_xy0 = wtab[0] * src[loc_buffer + 0] +
-                              wtab[1] * src[loc_buffer + 4] +
-                              wtab[2] * src2[loc_buffer + 0] +
-                              wtab[3] * src2[loc_buffer + 4];
+                                  wtab[1] * src[loc_buffer + 4] +
+                                  wtab[2] * src2[loc_buffer + 0] +
+                                  wtab[3] * src2[loc_buffer + 4];
                 int32_t val_xy1 = wtab[0] * src[loc_buffer + 1] +
-                              wtab[1] * src[loc_buffer + 5] +
-                              wtab[2] * src2[loc_buffer + 1] +
-                              wtab[3] * src2[loc_buffer + 5];
+                                  wtab[1] * src[loc_buffer + 5] +
+                                  wtab[2] * src2[loc_buffer + 1] +
+                                  wtab[3] * src2[loc_buffer + 5];
                 int32_t val_xy2 = wtab[0] * src[loc_buffer + 2] +
-                              wtab[1] * src[loc_buffer + 6] +
-                              wtab[2] * src2[loc_buffer + 2] +
-                              wtab[3] * src2[loc_buffer + 6];
+                                  wtab[1] * src[loc_buffer + 6] +
+                                  wtab[2] * src2[loc_buffer + 2] +
+                                  wtab[3] * src2[loc_buffer + 6];
                 int32_t val_xy3 = wtab[0] * src[loc_buffer + 3] +
-                              wtab[1] * src[loc_buffer + 7] +
-                              wtab[2] * src2[loc_buffer + 3] +
-                              wtab[3] * src2[loc_buffer + 7];
+                                  wtab[1] * src[loc_buffer + 7] +
+                                  wtab[2] * src2[loc_buffer + 3] +
+                                  wtab[3] * src2[loc_buffer + 7];
 
                 dst[final_loc + 0] = static_cast<uint8_t>((val_xy0 + DELTA) >> 15);
                 dst[final_loc + 1] = static_cast<uint8_t>((val_xy1 + DELTA) >> 15);
@@ -2291,13 +2313,13 @@ template <>
     BorderType border_type,
     uint8_t borderValue)
 {
-    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+    if (inData == nullptr || outData == nullptr || affineMatrix == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(inHeight <= 0 || inWidth <=0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_nearest<uint8_t, 1>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -2318,13 +2340,13 @@ template <>
     BorderType border_type,
     uint8_t borderValue)
 {
-    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+    if (inData == nullptr || outData == nullptr || affineMatrix == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(inHeight <= 0 || inWidth <=0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_nearest<uint8_t, 3>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -2345,13 +2367,13 @@ template <>
     BorderType border_type,
     uint8_t borderValue)
 {
-    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+    if (inData == nullptr || outData == nullptr || affineMatrix == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(inHeight <= 0 || inWidth <=0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_nearest<uint8_t, 4>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -2372,13 +2394,13 @@ template <>
     BorderType border_type,
     uint8_t borderValue)
 {
-    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+    if (inData == nullptr || outData == nullptr || affineMatrix == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(inHeight <= 0 || inWidth <=0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 1, border_type, borderValue);
@@ -2399,13 +2421,13 @@ template <>
     BorderType border_type,
     uint8_t borderValue)
 {
-    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+    if (inData == nullptr || outData == nullptr || affineMatrix == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(inHeight <= 0 || inWidth <=0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 2, border_type, borderValue);
@@ -2426,13 +2448,13 @@ template <>
     BorderType border_type,
     uint8_t borderValue)
 {
-    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+    if (inData == nullptr || outData == nullptr || affineMatrix == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(inHeight <= 0 || inWidth <=0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 3, border_type, borderValue);
@@ -2453,13 +2475,13 @@ template <>
     BorderType border_type,
     uint8_t borderValue)
 {
-    if(inData == nullptr || outData == nullptr || affineMatrix == nullptr){
+    if (inData == nullptr || outData == nullptr || affineMatrix == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(inHeight <= 0 || inWidth <=0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
+    if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if(border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT){
+    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 4, border_type, borderValue);

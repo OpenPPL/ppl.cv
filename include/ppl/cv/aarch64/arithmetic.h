@@ -50,21 +50,21 @@ namespace aarch64 {
 * <table>
 * <caption align="left">Requirements</caption>
 * <tr><td>aarch64 platforms supported<td> All
-* <tr><td>Header files<td> #include &lt;ppl/cv/arm/arithmetic.h&gt;
+* <tr><td>Header files<td> #include &lt;ppl/cv/aarch64/arithmetic.h&gt;
 * <tr><td>Project<td> ppl.cv
 * @since ppl.cv-v1.0.0
 * ###Example
 * @code{.cpp}
-* #include <ppl/cv/arm/arithmetic.h>
-* int main(int argc, char** argv) {
-*     const int W = 640;
-*     const int H = 480;
-*     const int C = 3;
+* #include <ppl/cv/aarch64/arithmetic.h>
+* int32_t main(int32_t argc, char** argv) {
+*     const int32_t W = 640;
+*     const int32_t H = 480;
+*     const int32_t C = 3;
 *     float* dev_iImage0 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_iImage1 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_oImage = (float*)malloc(W * H * C * sizeof(float));
 *
-*     ppl::cv::arm::Add<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
+*     ppl::cv::aarch64::Add<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
 *
 *     free(dev_iImage0);
 *     free(dev_iImage1);
@@ -111,21 +111,21 @@ template <typename T, int32_t nc>
 * <table>
 * <caption align="left">Requirements</caption>
 * <tr><td>aarch64 platforms supported<td> All
-* <tr><td>Header files<td> #include &lt;ppl/cv/arm/arithmetic.h&gt;
+* <tr><td>Header files<td> #include &lt;ppl/cv/aarch64/arithmetic.h&gt;
 * <tr><td>Project<td> ppl.cv
 * @since ppl.cv-v1.0.0
 * ###Example
 * @code{.cpp}
-* #include <ppl/cv/arm/arithmetic.h>
-* int main(int argc, char** argv) {
-*     const int W = 640;
-*     const int H = 480;
-*     const int C = 3;
+* #include <ppl/cv/aarch64/arithmetic.h>
+* int32_t main(int32_t argc, char** argv) {
+*     const int32_t W = 640;
+*     const int32_t H = 480;
+*     const int32_t C = 3;
 *     float* dev_iImage0 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_iImage1 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_oImage = (float*)malloc(W * H * C * sizeof(float));
 *
-*     ppl::cv::arm::Sub<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
+*     ppl::cv::aarch64::Sub<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
 *
 *     free(dev_iImage0);
 *     free(dev_iImage1);
@@ -172,21 +172,21 @@ template <typename T, int32_t nc>
 * <table>
 * <caption align="left">Requirements</caption>
 * <tr><td>aarch64 platforms supported<td> All
-* <tr><td>Header files<td> #include &lt;ppl/cv/arm/arithmetic.h&gt;
+* <tr><td>Header files<td> #include &lt;ppl/cv/aarch64/arithmetic.h&gt;
 * <tr><td>Project<td> ppl.cv
 * @since ppl.cv-v1.0.0
 * ###Example
 * @code{.cpp}
-* #include <ppl/cv/arm/arithmetic.h>
-* int main(int argc, char** argv) {
-*     const int W = 640;
-*     const int H = 480;
-*     const int C = 3;
+* #include <ppl/cv/aarch64/arithmetic.h>
+* int32_t main(int32_t argc, char** argv) {
+*     const int32_t W = 640;
+*     const int32_t H = 480;
+*     const int32_t C = 3;
 *     float* dev_iImage0 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_iImage1 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_oImage = (float*)malloc(W * H * C * sizeof(float));
 *
-*     ppl::cv::arm::Mul<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
+*     ppl::cv::aarch64::Mul<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
 *
 *     free(dev_iImage0);
 *     free(dev_iImage1);
@@ -233,21 +233,21 @@ template <typename T, int32_t nc>
 * <table>
 * <caption align="left">Requirements</caption>
 * <tr><td>aarch64 platforms supported<td> All
-* <tr><td>Header files<td> #include &lt;ppl/cv/arm/arithmetic.h&gt;
+* <tr><td>Header files<td> #include &lt;ppl/cv/aarch64/arithmetic.h&gt;
 * <tr><td>Project<td> ppl.cv
 * @since ppl.cv-v1.0.0
 * ###Example
 * @code{.cpp}
-* #include <ppl/cv/arm/arithmetic.h>
-* int main(int argc, char** argv) {
-*     const int W = 640;
-*     const int H = 480;
-*     const int C = 3;
+* #include <ppl/cv/aarch64/arithmetic.h>
+* int32_t main(int32_t argc, char** argv) {
+*     const int32_t W = 640;
+*     const int32_t H = 480;
+*     const int32_t C = 3;
 *     float* dev_iImage0 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_iImage1 = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_oImage = (float*)malloc(W * H * C * sizeof(float));
 *
-*     ppl::cv::arm::Div<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
+*     ppl::cv::aarch64::Div<float, 3>(H, W, W * C, dev_iImage0, W * C, dev_iImage1, W * C, dev_oImage);
 *
 *     free(dev_iImage0);
 *     free(dev_iImage1);
