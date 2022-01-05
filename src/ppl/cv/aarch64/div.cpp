@@ -74,25 +74,25 @@ inline uint8x16_t divSaturate(uint8x16_t v0, uint8x16_t v1)
     }
     width *= channels;
     for (int32_t i = 0; i < height; ++i) {
-        int32_t j        = 0;
+        int32_t j = 0;
         const float *in0 = inData0 + i * inWidthStride0;
         const float *in1 = inData1 + i * inWidthStride1;
-        float *out       = outData + i * outWidthStride;
+        float *out = outData + i * outWidthStride;
         for (; j <= width - 8; j += 8) {
             prefetch(in0 + j);
             prefetch(in1 + j);
-            float32x4_t vdata0    = vld1q_f32(in0 + j);
-            float32x4_t vdata2    = vld1q_f32(in0 + j + 4);
-            float32x4_t vdata1    = vld1q_f32(in1 + j);
-            float32x4_t vdata3    = vld1q_f32(in1 + j + 4);
+            float32x4_t vdata0 = vld1q_f32(in0 + j);
+            float32x4_t vdata2 = vld1q_f32(in0 + j + 4);
+            float32x4_t vdata1 = vld1q_f32(in1 + j);
+            float32x4_t vdata3 = vld1q_f32(in1 + j + 4);
             float32x4_t voutData0 = vdivq_f32(vdata0, vdata1);
             float32x4_t voutData1 = vdivq_f32(vdata2, vdata3);
             vst1q_f32(out + j, voutData0);
             vst1q_f32(out + j + 4, voutData1);
         }
         for (; j <= width - 4; j += 4) {
-            float32x4_t vdata0   = vld1q_f32(inData0 + i * inWidthStride0 + j);
-            float32x4_t vdata1   = vld1q_f32(inData1 + i * inWidthStride1 + j);
+            float32x4_t vdata0 = vld1q_f32(inData0 + i * inWidthStride0 + j);
+            float32x4_t vdata1 = vld1q_f32(inData1 + i * inWidthStride1 + j);
             float32x4_t voutData = vdivq_f32(vdata0, vdata1);
             vst1q_f32(outData + i * outWidthStride + j, voutData);
         }
@@ -123,16 +123,16 @@ inline uint8x16_t divSaturate(uint8x16_t v0, uint8x16_t v1)
     }
     width *= channels;
     for (int32_t i = 0; i < height; ++i) {
-        int32_t j          = 0;
+        int32_t j = 0;
         const uint8_t *in0 = inData0 + i * inWidthStride0;
         const uint8_t *in1 = inData1 + i * inWidthStride1;
-        uint8_t *out       = outData + i * outWidthStride;
+        uint8_t *out = outData + i * outWidthStride;
         for (; j <= width - 16; j += 16) {
             prefetch(in0 + j);
             prefetch(in1 + j);
-            uint8x16_t vdata0    = vld1q_u8(in0 + j);
-            uint8x16_t vdata1    = vld1q_u8(in1 + j);
-            uint8x16_t vMask     = vtstq_u8(vdata1, vdata1);
+            uint8x16_t vdata0 = vld1q_u8(in0 + j);
+            uint8x16_t vdata1 = vld1q_u8(in1 + j);
+            uint8x16_t vMask = vtstq_u8(vdata1, vdata1);
             uint8x16_t voutData0 = divSaturate(vdata0, vdata1);
             vst1q_u8(out + j, vandq_u8(vMask, voutData0));
         }

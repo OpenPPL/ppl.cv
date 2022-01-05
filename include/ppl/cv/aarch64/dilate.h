@@ -54,23 +54,23 @@ namespace aarch64 {
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>ARM platforms supported<td> &gt; armv7 armv8
- * <tr><td>Header files<td> #include &lt;ppl/cv/arm/dilate.h&gt;
+ * <tr><td>Header files<td> #include &lt;ppl/cv/aarch64/dilate.h&gt;
  * <tr><td>Project<td> ppl.cv
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include <ppl/cv/arm/dilate.h>
- * int main(int argc, char** argv) {
- *     const int W = 640;
- *     const int H = 480;
- *     const int C = 3;
- *     const int kernelx_len = 3;
- *     const int kernely_len = 3;
+ * #include <ppl/cv/aarch64/dilate.h>
+ * int32_t main(int32_t argc, char** argv) {
+ *     const int32_t W = 640;
+ *     const int32_t H = 480;
+ *     const int32_t C = 3;
+ *     const int32_t kernelx_len = 3;
+ *     const int32_t kernely_len = 3;
  *     (T*)dev_iImage = (T*)malloc(W * H * C * sizeof(T));
  *     (T*)dev_oImage = (T*)malloc(W * H * C * sizeof(T));
  *     (unsigned char*)kernel = (unsigned char*)malloc(kernel_len * kernel_len * sizeof(unsigned char));
  *
- *     ppl::cv::arm::Dilate<float, 3>(H, W, W * 3, dev_iImage, kernelx_len, kernely_len, kernel, W * 3, dev_oImage);
+ *     ppl::cv::aarch64::Dilate<float, 3>(H, W, W * 3, dev_iImage, kernelx_len, kernely_len, kernel, W * 3, dev_oImage);
  *
  *     free(dev_iImage);
  *     free(dev_oImage);
@@ -79,16 +79,16 @@ namespace aarch64 {
  * }
  * @endcode
  ***************************************************************************************************/
-template <typename T, int channels>
+template <typename T, int32_t channels>
 ::ppl::common::RetCode Dilate(
-    int height,
-    int width,
-    int inWidthStride,
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
     const T* inData,
-    int kernelx_len,
-    int kernely_len,
+    int32_t kernelx_len,
+    int32_t kernely_len,
     const unsigned char* kernel,
-    int outWidthStride,
+    int32_t outWidthStride,
     T* outData,
     BorderType border_type = BORDER_TYPE_CONSTANT,
     T border_value         = 0);

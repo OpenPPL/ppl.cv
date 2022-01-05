@@ -46,25 +46,25 @@ namespace aarch64 {
     }
     width *= channels;
     for (int32_t i = 0; i < height; ++i) {
-        int32_t j        = 0;
+        int32_t j = 0;
         const float *in0 = inData0 + i * inWidthStride0;
         const float *in1 = inData1 + i * inWidthStride1;
-        float *out       = outData + i * outWidthStride;
+        float *out = outData + i * outWidthStride;
         for (; j <= width - 8; j += 8) {
             prefetch(in0 + j);
             prefetch(in1 + j);
-            float32x4_t vdata0    = vld1q_f32(in0 + j);
-            float32x4_t vdata2    = vld1q_f32(in0 + j + 4);
-            float32x4_t vdata1    = vld1q_f32(in1 + j);
-            float32x4_t vdata3    = vld1q_f32(in1 + j + 4);
+            float32x4_t vdata0 = vld1q_f32(in0 + j);
+            float32x4_t vdata2 = vld1q_f32(in0 + j + 4);
+            float32x4_t vdata1 = vld1q_f32(in1 + j);
+            float32x4_t vdata3 = vld1q_f32(in1 + j + 4);
             float32x4_t voutData0 = vmulq_f32(vdata0, vdata1);
             float32x4_t voutData1 = vmulq_f32(vdata2, vdata3);
             vst1q_f32(out + j, voutData0);
             vst1q_f32(out + j + 4, voutData1);
         }
         for (; j <= width - 4; j += 4) {
-            float32x4_t vdata0   = vld1q_f32(inData0 + i * inWidthStride0 + j);
-            float32x4_t vdata1   = vld1q_f32(inData1 + i * inWidthStride1 + j);
+            float32x4_t vdata0 = vld1q_f32(inData0 + i * inWidthStride0 + j);
+            float32x4_t vdata1 = vld1q_f32(inData1 + i * inWidthStride1 + j);
             float32x4_t voutData = vmulq_f32(vdata0, vdata1);
             vst1q_f32(outData + i * outWidthStride + j, voutData);
         }
@@ -95,17 +95,17 @@ namespace aarch64 {
     }
     width *= channels;
     for (int32_t i = 0; i < height; ++i) {
-        int32_t j          = 0;
+        int32_t j = 0;
         const uint8_t *in0 = inData0 + i * inWidthStride0;
         const uint8_t *in1 = inData1 + i * inWidthStride1;
-        uint8_t *out       = outData + i * outWidthStride;
+        uint8_t *out = outData + i * outWidthStride;
         for (; j <= width - 32; j += 32) {
             prefetch(in0 + j);
             prefetch(in1 + j);
-            uint8x16_t vdata0    = vld1q_u8(in0 + j);
-            uint8x16_t vdata2    = vld1q_u8(in0 + j + 16);
-            uint8x16_t vdata1    = vld1q_u8(in1 + j);
-            uint8x16_t vdata3    = vld1q_u8(in1 + j + 16);
+            uint8x16_t vdata0 = vld1q_u8(in0 + j);
+            uint8x16_t vdata2 = vld1q_u8(in0 + j + 16);
+            uint8x16_t vdata1 = vld1q_u8(in1 + j);
+            uint8x16_t vdata3 = vld1q_u8(in1 + j + 16);
             uint16x8_t voutData0 = vmull_u8(vget_low_u8(vdata0), vget_low_u8(vdata1));
             uint16x8_t voutData1 = vmull_u8(vget_high_u8(vdata0), vget_high_u8(vdata1));
             uint16x8_t voutData2 = vmull_u8(vget_low_u8(vdata2), vget_low_u8(vdata3));
@@ -114,8 +114,8 @@ namespace aarch64 {
             vst1q_u8(out + j + 16, vcombine_u8(vqmovn_u16(voutData2), vqmovn_u16(voutData3)));
         }
         for (; j <= width - 16; j += 16) {
-            uint8x16_t vdata0    = vld1q_u8(in0 + j);
-            uint8x16_t vdata1    = vld1q_u8(in1 + j);
+            uint8x16_t vdata0 = vld1q_u8(in0 + j);
+            uint8x16_t vdata1 = vld1q_u8(in1 + j);
             uint16x8_t voutData0 = vmull_u8(vget_low_u8(vdata0), vget_low_u8(vdata1));
             uint16x8_t voutData1 = vmull_u8(vget_high_u8(vdata0), vget_high_u8(vdata1));
             vst1q_u8(out + j, vcombine_u8(vqmovn_u16(voutData0), vqmovn_u16(voutData1)));

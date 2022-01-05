@@ -40,28 +40,28 @@ void yuv420_to_bgr_uchar_video_range(
     const uint8_t* uptr = u_ptr;
     const uint8_t* vptr = v_ptr;
 
-    int16x8_t _vCUB_s16   = vdupq_n_s16(ITUR_BT_601_CUB_6);
-    int16x8_t _vCUG_s16   = vdupq_n_s16(ITUR_BT_601_CUG_6);
-    int16x8_t _vCVG_s16   = vdupq_n_s16(ITUR_BT_601_CVG_6);
-    int16x8_t _vCVR_s16   = vdupq_n_s16(ITUR_BT_601_CVR_6);
-    int16x8_t _vCY_s16    = vdupq_n_s16(ITUR_BT_601_CY_6);
+    int16x8_t _vCUB_s16 = vdupq_n_s16(ITUR_BT_601_CUB_6);
+    int16x8_t _vCUG_s16 = vdupq_n_s16(ITUR_BT_601_CUG_6);
+    int16x8_t _vCVG_s16 = vdupq_n_s16(ITUR_BT_601_CVG_6);
+    int16x8_t _vCVR_s16 = vdupq_n_s16(ITUR_BT_601_CVR_6);
+    int16x8_t _vCY_s16 = vdupq_n_s16(ITUR_BT_601_CY_6);
     int16x8_t _vShift_s16 = vdupq_n_s16(1 << (ITUR_BT_601_SHIFT_6 - 1));
-    int16x8_t _v128_s16   = vdupq_n_s16(128);
-    int16x8_t _v16_s16    = vdupq_n_s16(16);
-    int16x8_t _v0_s16     = vdupq_n_s16(0);
-    uint8x8_t _v255_u8    = vdup_n_u8(255);
-    const uint8_t alpha   = 255;
+    int16x8_t _v128_s16 = vdupq_n_s16(128);
+    int16x8_t _v16_s16 = vdupq_n_s16(16);
+    int16x8_t _v0_s16 = vdupq_n_s16(0);
+    uint8x8_t _v255_u8 = vdup_n_u8(255);
+    const uint8_t alpha = 255;
 
     for (int32_t y = 0; y < h; y += 2) {
         const uint8_t* y0 = yptr;
         const uint8_t* y1 = yptr + yStride;
-        uint8_t* rgb0     = rgb;
-        uint8_t* rgb1     = rgb + rgbStride;
+        uint8_t* rgb0 = rgb;
+        uint8_t* rgb1 = rgb + rgbStride;
         const uint8_t* u0 = uptr; //for yu12 or yv12
         const uint8_t* v0 = vptr;
         const uint8_t* uv = uptr; //or nv12
         const uint8_t* vu = vptr; //or nv21
-        int32_t remain    = w;
+        int32_t remain = w;
 
         for (; remain > 16; remain -= 16) {
             uint8x8_t vec_u_u8;
@@ -73,13 +73,13 @@ void yuv420_to_bgr_uchar_video_range(
                 v0 += 8;
             } else if (YUV_NV12 == yuvType) {
                 uint8x8x2_t vec_uv_u8 = vld2_u8(uv);
-                vec_u_u8              = vec_uv_u8.val[0];
-                vec_v_u8              = vec_uv_u8.val[1];
+                vec_u_u8 = vec_uv_u8.val[0];
+                vec_v_u8 = vec_uv_u8.val[1];
                 uv += 16;
             } else if (YUV_NV21 == yuvType) {
                 uint8x8x2_t vec_vu_u8 = vld2_u8(vu);
-                vec_v_u8              = vec_vu_u8.val[0];
-                vec_u_u8              = vec_vu_u8.val[1];
+                vec_v_u8 = vec_vu_u8.val[0];
+                vec_u_u8 = vec_vu_u8.val[1];
                 vu += 16;
             }
 
@@ -88,20 +88,20 @@ void yuv420_to_bgr_uchar_video_range(
             int16x8_t vec_v_s16 = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(vec_v_u8)), _v128_s16);
 
             //(y-16)>0?y-16:0
-            uint8x16_t vec_y0_u8   = vld1q_u8(y0);
-            uint8x16_t vec_y1_u8   = vld1q_u8(y1);
-            uint8x8_t vec_y0_l_u8  = vget_low_u8(vec_y0_u8);
-            uint8x8_t vec_y0_h_u8  = vget_high_u8(vec_y0_u8);
-            uint8x8_t vec_y1_l_u8  = vget_low_u8(vec_y1_u8);
-            uint8x8_t vec_y1_h_u8  = vget_high_u8(vec_y1_u8);
+            uint8x16_t vec_y0_u8 = vld1q_u8(y0);
+            uint8x16_t vec_y1_u8 = vld1q_u8(y1);
+            uint8x8_t vec_y0_l_u8 = vget_low_u8(vec_y0_u8);
+            uint8x8_t vec_y0_h_u8 = vget_high_u8(vec_y0_u8);
+            uint8x8_t vec_y1_l_u8 = vget_low_u8(vec_y1_u8);
+            uint8x8_t vec_y1_h_u8 = vget_high_u8(vec_y1_u8);
             int16x8_t vec_y0_l_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_y0_l_u8));
             int16x8_t vec_y0_h_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_y0_h_u8));
             int16x8_t vec_y1_l_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_y1_l_u8));
             int16x8_t vec_y1_h_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_y1_h_u8));
-            vec_y0_l_s16           = vmaxq_s16(vsubq_s16(vec_y0_l_s16, _v16_s16), _v0_s16);
-            vec_y0_h_s16           = vmaxq_s16(vsubq_s16(vec_y0_h_s16, _v16_s16), _v0_s16);
-            vec_y1_l_s16           = vmaxq_s16(vsubq_s16(vec_y1_l_s16, _v16_s16), _v0_s16);
-            vec_y1_h_s16           = vmaxq_s16(vsubq_s16(vec_y1_h_s16, _v16_s16), _v0_s16);
+            vec_y0_l_s16 = vmaxq_s16(vsubq_s16(vec_y0_l_s16, _v16_s16), _v0_s16);
+            vec_y0_h_s16 = vmaxq_s16(vsubq_s16(vec_y0_h_s16, _v16_s16), _v0_s16);
+            vec_y1_l_s16 = vmaxq_s16(vsubq_s16(vec_y1_l_s16, _v16_s16), _v0_s16);
+            vec_y1_h_s16 = vmaxq_s16(vsubq_s16(vec_y1_h_s16, _v16_s16), _v0_s16);
 
             //y * ITUR_BT_601_CY_6
             vec_y0_l_s16 = vmulq_s16(vec_y0_l_s16, _vCY_s16);
@@ -110,10 +110,10 @@ void yuv420_to_bgr_uchar_video_range(
             vec_y1_h_s16 = vmulq_s16(vec_y1_h_s16, _vCY_s16);
 
             //u and v
-            int16x8_t vec_ruv_s16     = vmlaq_s16(_vShift_s16, vec_v_s16, _vCVR_s16);
-            int16x8_t vec_buv_s16     = vmlaq_s16(_vShift_s16, vec_u_s16, _vCUB_s16);
-            int16x8_t vec_guv_s16     = vmlaq_s16(_vShift_s16, vec_v_s16, _vCVG_s16);
-            vec_guv_s16               = vmlaq_s16(vec_guv_s16, vec_u_s16, _vCUG_s16);
+            int16x8_t vec_ruv_s16 = vmlaq_s16(_vShift_s16, vec_v_s16, _vCVR_s16);
+            int16x8_t vec_buv_s16 = vmlaq_s16(_vShift_s16, vec_u_s16, _vCUB_s16);
+            int16x8_t vec_guv_s16 = vmlaq_s16(_vShift_s16, vec_v_s16, _vCVG_s16);
+            vec_guv_s16 = vmlaq_s16(vec_guv_s16, vec_u_s16, _vCUG_s16);
             int16x8x2_t vec_ruv_s16_2 = vzipq_s16(vec_ruv_s16, vec_ruv_s16);
             int16x8x2_t vec_guv_s16_2 = vzipq_s16(vec_guv_s16, vec_guv_s16);
             int16x8x2_t vec_buv_s16_2 = vzipq_s16(vec_buv_s16, vec_buv_s16);
@@ -598,25 +598,25 @@ void bgr_to_yuv420_uchar_video_range(
     int16x8_t _vCGV_s16 = vdupq_n_s16(ITUR_BT_601_CGV_7);
     int16x8_t _vCBV_s16 = vdupq_n_s16(ITUR_BT_601_CBV_7);
 
-    const int32_t shifted16  = (16 << ITUR_BT_601_SHIFT_7);
-    const int32_t halfShift  = (1 << (ITUR_BT_601_SHIFT_7 - 1));
+    const int32_t shifted16 = (16 << ITUR_BT_601_SHIFT_7);
+    const int32_t halfShift = (1 << (ITUR_BT_601_SHIFT_7 - 1));
     const int32_t shifted128 = (128 << ITUR_BT_601_SHIFT_7);
-    const int32_t tail16     = halfShift + shifted16;
-    const int32_t tail128    = halfShift + shifted128;
+    const int32_t tail16 = halfShift + shifted16;
+    const int32_t tail128 = halfShift + shifted128;
 
-    int16x8_t _vtail16_s16  = vdupq_n_s16(tail16); //halfShift + shifted16;
+    int16x8_t _vtail16_s16 = vdupq_n_s16(tail16); //halfShift + shifted16;
     int16x8_t _vtail128_s16 = vdupq_n_s16(tail128); //halfShift + shifted128;
 
     for (int32_t i = 0; i < h; i += 2) {
-        uint8_t* y0         = yptr;
-        uint8_t* y1         = yptr + yStride;
+        uint8_t* y0 = yptr;
+        uint8_t* y1 = yptr + yStride;
         const uint8_t* rgb0 = rgb;
         const uint8_t* rgb1 = rgb + rgbStride;
-        uint8_t* u0         = uptr; //for yu12 or yv12
-        uint8_t* v0         = vptr;
-        uint8_t* uv         = uptr; //or nv12
+        uint8_t* u0 = uptr; //for yu12 or yv12
+        uint8_t* v0 = vptr;
+        uint8_t* uv = uptr; //or nv12
         // uint8_t* vu = vptr; //or nv21
-        int32_t remain      = w;
+        int32_t remain = w;
 
         for (; remain > 16; remain -= 16) {
             uint8x8_t b00_u8;
@@ -639,18 +639,18 @@ void bgr_to_yuv420_uchar_video_range(
                 uint8x8x3_t vec_bgr01_u8 = vld3_u8(rgb0 + 8 * 3);
                 uint8x8x3_t vec_bgr10_u8 = vld3_u8(rgb1);
                 uint8x8x3_t vec_bgr11_u8 = vld3_u8(rgb1 + 8 * 3);
-                b00_u8                   = vec_bgr00_u8.val[0];
-                b01_u8                   = vec_bgr01_u8.val[0];
-                b10_u8                   = vec_bgr10_u8.val[0];
-                b11_u8                   = vec_bgr11_u8.val[0];
-                g00_u8                   = vec_bgr00_u8.val[1];
-                g01_u8                   = vec_bgr01_u8.val[1];
-                g10_u8                   = vec_bgr10_u8.val[1];
-                g11_u8                   = vec_bgr11_u8.val[1];
-                r00_u8                   = vec_bgr00_u8.val[2];
-                r01_u8                   = vec_bgr01_u8.val[2];
-                r10_u8                   = vec_bgr10_u8.val[2];
-                r11_u8                   = vec_bgr11_u8.val[2];
+                b00_u8 = vec_bgr00_u8.val[0];
+                b01_u8 = vec_bgr01_u8.val[0];
+                b10_u8 = vec_bgr10_u8.val[0];
+                b11_u8 = vec_bgr11_u8.val[0];
+                g00_u8 = vec_bgr00_u8.val[1];
+                g01_u8 = vec_bgr01_u8.val[1];
+                g10_u8 = vec_bgr10_u8.val[1];
+                g11_u8 = vec_bgr11_u8.val[1];
+                r00_u8 = vec_bgr00_u8.val[2];
+                r01_u8 = vec_bgr01_u8.val[2];
+                r10_u8 = vec_bgr10_u8.val[2];
+                r11_u8 = vec_bgr11_u8.val[2];
 
                 rgb0 += 16 * 3;
                 rgb1 += 16 * 3;
@@ -660,18 +660,18 @@ void bgr_to_yuv420_uchar_video_range(
                 uint8x8x4_t vec_bgr01_u8 = vld4_u8(rgb0 + 8 * 4);
                 uint8x8x4_t vec_bgr10_u8 = vld4_u8(rgb1);
                 uint8x8x4_t vec_bgr11_u8 = vld4_u8(rgb1 + 8 * 4);
-                b00_u8                   = vec_bgr00_u8.val[0];
-                b01_u8                   = vec_bgr01_u8.val[0];
-                b10_u8                   = vec_bgr10_u8.val[0];
-                b11_u8                   = vec_bgr11_u8.val[0];
-                g00_u8                   = vec_bgr00_u8.val[1];
-                g01_u8                   = vec_bgr01_u8.val[1];
-                g10_u8                   = vec_bgr10_u8.val[1];
-                g11_u8                   = vec_bgr11_u8.val[1];
-                r00_u8                   = vec_bgr00_u8.val[2];
-                r01_u8                   = vec_bgr01_u8.val[2];
-                r10_u8                   = vec_bgr10_u8.val[2];
-                r11_u8                   = vec_bgr11_u8.val[2];
+                b00_u8 = vec_bgr00_u8.val[0];
+                b01_u8 = vec_bgr01_u8.val[0];
+                b10_u8 = vec_bgr10_u8.val[0];
+                b11_u8 = vec_bgr11_u8.val[0];
+                g00_u8 = vec_bgr00_u8.val[1];
+                g01_u8 = vec_bgr01_u8.val[1];
+                g10_u8 = vec_bgr10_u8.val[1];
+                g11_u8 = vec_bgr11_u8.val[1];
+                r00_u8 = vec_bgr00_u8.val[2];
+                r01_u8 = vec_bgr01_u8.val[2];
+                r10_u8 = vec_bgr10_u8.val[2];
+                r11_u8 = vec_bgr11_u8.val[2];
 
                 rgb0 += 16 * 4;
                 rgb1 += 16 * 4;
@@ -681,18 +681,18 @@ void bgr_to_yuv420_uchar_video_range(
                 uint8x8x3_t vec_bgr01_u8 = vld3_u8(rgb0 + 8 * 3);
                 uint8x8x3_t vec_bgr10_u8 = vld3_u8(rgb1);
                 uint8x8x3_t vec_bgr11_u8 = vld3_u8(rgb1 + 8 * 3);
-                b00_u8                   = vec_bgr00_u8.val[2];
-                b01_u8                   = vec_bgr01_u8.val[2];
-                b10_u8                   = vec_bgr10_u8.val[2];
-                b11_u8                   = vec_bgr11_u8.val[2];
-                g00_u8                   = vec_bgr00_u8.val[1];
-                g01_u8                   = vec_bgr01_u8.val[1];
-                g10_u8                   = vec_bgr10_u8.val[1];
-                g11_u8                   = vec_bgr11_u8.val[1];
-                r00_u8                   = vec_bgr00_u8.val[0];
-                r01_u8                   = vec_bgr01_u8.val[0];
-                r10_u8                   = vec_bgr10_u8.val[0];
-                r11_u8                   = vec_bgr11_u8.val[0];
+                b00_u8 = vec_bgr00_u8.val[2];
+                b01_u8 = vec_bgr01_u8.val[2];
+                b10_u8 = vec_bgr10_u8.val[2];
+                b11_u8 = vec_bgr11_u8.val[2];
+                g00_u8 = vec_bgr00_u8.val[1];
+                g01_u8 = vec_bgr01_u8.val[1];
+                g10_u8 = vec_bgr10_u8.val[1];
+                g11_u8 = vec_bgr11_u8.val[1];
+                r00_u8 = vec_bgr00_u8.val[0];
+                r01_u8 = vec_bgr01_u8.val[0];
+                r10_u8 = vec_bgr10_u8.val[0];
+                r11_u8 = vec_bgr11_u8.val[0];
 
                 rgb0 += 16 * 3;
                 rgb1 += 16 * 3;
@@ -702,18 +702,18 @@ void bgr_to_yuv420_uchar_video_range(
                 uint8x8x4_t vec_bgr01_u8 = vld4_u8(rgb0 + 8 * 4);
                 uint8x8x4_t vec_bgr10_u8 = vld4_u8(rgb1);
                 uint8x8x4_t vec_bgr11_u8 = vld4_u8(rgb1 + 8 * 4);
-                b00_u8                   = vec_bgr00_u8.val[2];
-                b01_u8                   = vec_bgr01_u8.val[2];
-                b10_u8                   = vec_bgr10_u8.val[2];
-                b11_u8                   = vec_bgr11_u8.val[2];
-                g00_u8                   = vec_bgr00_u8.val[1];
-                g01_u8                   = vec_bgr01_u8.val[1];
-                g10_u8                   = vec_bgr10_u8.val[1];
-                g11_u8                   = vec_bgr11_u8.val[1];
-                r00_u8                   = vec_bgr00_u8.val[0];
-                r01_u8                   = vec_bgr01_u8.val[0];
-                r10_u8                   = vec_bgr10_u8.val[0];
-                r11_u8                   = vec_bgr11_u8.val[0];
+                b00_u8 = vec_bgr00_u8.val[2];
+                b01_u8 = vec_bgr01_u8.val[2];
+                b10_u8 = vec_bgr10_u8.val[2];
+                b11_u8 = vec_bgr11_u8.val[2];
+                g00_u8 = vec_bgr00_u8.val[1];
+                g01_u8 = vec_bgr01_u8.val[1];
+                g10_u8 = vec_bgr10_u8.val[1];
+                g11_u8 = vec_bgr11_u8.val[1];
+                r00_u8 = vec_bgr00_u8.val[0];
+                r01_u8 = vec_bgr01_u8.val[0];
+                r10_u8 = vec_bgr10_u8.val[0];
+                r11_u8 = vec_bgr11_u8.val[0];
 
                 rgb0 += 16 * 4;
                 rgb1 += 16 * 4;

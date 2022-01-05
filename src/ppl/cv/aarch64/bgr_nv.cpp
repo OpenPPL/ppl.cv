@@ -83,24 +83,24 @@ void nv_to_bgr_uchar_video_range(
     const uint8_t* uptr = u_ptr;
     const uint8_t* vptr = v_ptr;
 
-    uint16x8_t v14216   = vdupq_n_u16(-COEFF_R);
-    uint16x8_t v17672   = vdupq_n_u16(-COEFF_B);
-    uint16x8_t v8696    = vdupq_n_u16(COEFF_G);
-    uint8x8_t v102      = vdup_n_u8(COEFF_RV);
-    uint8x8_t v25       = vdup_n_u8(COEFF_GU);
-    uint8x8_t v129      = vdup_n_u8(COEFF_BU);
-    uint8x8_t v52       = vdup_n_u8(COEFF_GV);
-    uint16x8_t v_1      = vdupq_n_u16((uint16_t)-1);
-    uint8x8_t v149      = vdup_n_u8(COEFF_Y);
-    uint8x8_t v16       = vdup_n_u8(16);
+    uint16x8_t v14216 = vdupq_n_u16(-COEFF_R);
+    uint16x8_t v17672 = vdupq_n_u16(-COEFF_B);
+    uint16x8_t v8696 = vdupq_n_u16(COEFF_G);
+    uint8x8_t v102 = vdup_n_u8(COEFF_RV);
+    uint8x8_t v25 = vdup_n_u8(COEFF_GU);
+    uint8x8_t v129 = vdup_n_u8(COEFF_BU);
+    uint8x8_t v52 = vdup_n_u8(COEFF_GV);
+    uint16x8_t v_1 = vdupq_n_u16((uint16_t)-1);
+    uint8x8_t v149 = vdup_n_u8(COEFF_Y);
+    uint8x8_t v16 = vdup_n_u8(16);
     const uint8_t alpha = 255;
-    int32_t remain      = w >= 15 ? w - 15 : 0;
+    int32_t remain = w >= 15 ? w - 15 : 0;
 
     for (int32_t i = 0; i < h; i += 2) {
         const uint8_t* y0 = yptr + i * yStride;
         const uint8_t* y1 = yptr + (i + 1) * yStride;
-        uint8_t* dst1     = rgb + i * rgbStride;
-        uint8_t* dst2     = rgb + (i + 1) * rgbStride;
+        uint8_t* dst1 = rgb + i * rgbStride;
+        uint8_t* dst2 = rgb + (i + 1) * rgbStride;
         const uint8_t* uv = uptr; //or nv12
         const uint8_t* vu = vptr; //or nv21
 
@@ -114,13 +114,13 @@ void nv_to_bgr_uchar_video_range(
             uint8x8_t vec_v_u8;
             if (YUV_NV12 == yuvType) {
                 uint8x8x2_t vec_uv_u8 = vld2_u8(uv);
-                vec_u_u8              = vec_uv_u8.val[0];
-                vec_v_u8              = vec_uv_u8.val[1];
+                vec_u_u8 = vec_uv_u8.val[0];
+                vec_v_u8 = vec_uv_u8.val[1];
                 uv += 16;
             } else if (YUV_NV21 == yuvType) {
                 uint8x8x2_t vec_vu_u8 = vld2_u8(vu);
-                vec_v_u8              = vec_vu_u8.val[0];
-                vec_u_u8              = vec_vu_u8.val[1];
+                vec_v_u8 = vec_vu_u8.val[0];
+                vec_u_u8 = vec_vu_u8.val[1];
                 vu += 16;
             }
 
@@ -131,8 +131,8 @@ void nv_to_bgr_uchar_video_range(
             uint8x16x3_t rgbl;
             {
                 uint8x8x2_t yl = vld2_u8(y0);
-                yl.val[0]      = vmax_u8(yl.val[0], v16);
-                yl.val[1]      = vmax_u8(yl.val[1], v16);
+                yl.val[0] = vmax_u8(yl.val[0], v16);
+                yl.val[1] = vmax_u8(yl.val[1], v16);
 
                 uint16x8_t yodd1 = vmlal_u8(v_1, yl.val[0], v149);
                 uint16x8_t yevn1 = vmlal_u8(v_1, yl.val[1], v149);
@@ -146,24 +146,24 @@ void nv_to_bgr_uchar_video_range(
                 int16x8_t godd1w = vhaddq_s16(yodd1h, guv);
                 int16x8_t bevn1w = vhsubq_s16(yevn1h, buv);
 
-                uint8x8_t rodd1n    = vqshrun_n_s16(rodd1w, 5);
-                uint8x8_t revn1n    = vqshrun_n_s16(revn1w, 5);
-                uint8x8_t godd1n    = vqshrun_n_s16(godd1w, 5);
-                uint8x8x2_t r1      = vzip_u8(rodd1n, revn1n);
-                uint8x8_t gevn1n    = vqshrun_n_s16(gevn1w, 5);
-                uint8x8_t bodd1n    = vqshrun_n_s16(bodd1w, 5);
-                uint8x8x2_t g1      = vzip_u8(godd1n, gevn1n);
-                uint8x8_t bevn1n    = vqshrun_n_s16(bevn1w, 5);
-                uint8x8x2_t b1      = vzip_u8(bodd1n, bevn1n);
+                uint8x8_t rodd1n = vqshrun_n_s16(rodd1w, 5);
+                uint8x8_t revn1n = vqshrun_n_s16(revn1w, 5);
+                uint8x8_t godd1n = vqshrun_n_s16(godd1w, 5);
+                uint8x8x2_t r1 = vzip_u8(rodd1n, revn1n);
+                uint8x8_t gevn1n = vqshrun_n_s16(gevn1w, 5);
+                uint8x8_t bodd1n = vqshrun_n_s16(bodd1w, 5);
+                uint8x8x2_t g1 = vzip_u8(godd1n, gevn1n);
+                uint8x8_t bevn1n = vqshrun_n_s16(bevn1w, 5);
+                uint8x8x2_t b1 = vzip_u8(bodd1n, bevn1n);
                 rgbl.val[2 - b_idx] = vcombine_u8(r1.val[0], r1.val[1]);
-                rgbl.val[1]         = vcombine_u8(g1.val[0], g1.val[1]);
+                rgbl.val[1] = vcombine_u8(g1.val[0], g1.val[1]);
                 rgbl.val[0 + b_idx] = vcombine_u8(b1.val[0], b1.val[1]);
             }
             vst3q_u8(dst1, rgbl);
             {
                 uint8x8x2_t yl = vld2_u8(y1);
-                yl.val[0]      = vmax_u8(yl.val[0], v16);
-                yl.val[1]      = vmax_u8(yl.val[1], v16);
+                yl.val[0] = vmax_u8(yl.val[0], v16);
+                yl.val[1] = vmax_u8(yl.val[1], v16);
 
                 uint16x8_t yodd1 = vmlal_u8(v_1, yl.val[0], v149);
                 uint16x8_t yevn1 = vmlal_u8(v_1, yl.val[1], v149);
@@ -177,17 +177,17 @@ void nv_to_bgr_uchar_video_range(
                 int16x8_t godd1w = vhaddq_s16(yodd1h, guv);
                 int16x8_t bevn1w = vhsubq_s16(yevn1h, buv);
 
-                uint8x8_t rodd1n    = vqshrun_n_s16(rodd1w, 5);
-                uint8x8_t revn1n    = vqshrun_n_s16(revn1w, 5);
-                uint8x8_t godd1n    = vqshrun_n_s16(godd1w, 5);
-                uint8x8x2_t r1      = vzip_u8(rodd1n, revn1n);
-                uint8x8_t gevn1n    = vqshrun_n_s16(gevn1w, 5);
-                uint8x8_t bodd1n    = vqshrun_n_s16(bodd1w, 5);
-                uint8x8x2_t g1      = vzip_u8(godd1n, gevn1n);
-                uint8x8_t bevn1n    = vqshrun_n_s16(bevn1w, 5);
-                uint8x8x2_t b1      = vzip_u8(bodd1n, bevn1n);
+                uint8x8_t rodd1n = vqshrun_n_s16(rodd1w, 5);
+                uint8x8_t revn1n = vqshrun_n_s16(revn1w, 5);
+                uint8x8_t godd1n = vqshrun_n_s16(godd1w, 5);
+                uint8x8x2_t r1 = vzip_u8(rodd1n, revn1n);
+                uint8x8_t gevn1n = vqshrun_n_s16(gevn1w, 5);
+                uint8x8_t bodd1n = vqshrun_n_s16(bodd1w, 5);
+                uint8x8x2_t g1 = vzip_u8(godd1n, gevn1n);
+                uint8x8_t bevn1n = vqshrun_n_s16(bevn1w, 5);
+                uint8x8x2_t b1 = vzip_u8(bodd1n, bevn1n);
                 rgbl.val[2 - b_idx] = vcombine_u8(r1.val[0], r1.val[1]);
-                rgbl.val[1]         = vcombine_u8(g1.val[0], g1.val[1]);
+                rgbl.val[1] = vcombine_u8(g1.val[0], g1.val[1]);
                 rgbl.val[0 + b_idx] = vcombine_u8(b1.val[0], b1.val[1]);
             }
             vst3q_u8(dst2, rgbl);
@@ -336,9 +336,9 @@ void rgb_2_nv(
     for (int32_t i = 0; i < height; i += 2) {
         const uint8_t* src0 = inData + i * inWidthStride;
         const uint8_t* src1 = inData + (i + 1) * inWidthStride;
-        uint8_t* dst0       = outY + i * outYStride;
-        uint8_t* dst1       = outY + (i + 1) * outYStride;
-        uint8_t* dst2       = outUV + (i / 2) * outUVStride;
+        uint8_t* dst0 = outY + i * outYStride;
+        uint8_t* dst1 = outY + (i + 1) * outYStride;
+        uint8_t* dst2 = outUV + (i / 2) * outUVStride;
         for (int32_t j = 0; j < width / 2; ++j, src0 += 2 * srccn, src1 += 2 * srccn) {
             int32_t r00 = src0[2 - bIdx];
             int32_t g00 = src0[1];
@@ -367,14 +367,14 @@ void rgb_2_nv(
             dst1[2 * j + 1] = sat_cast_u8(y11 >> SHIFT);
 
             const int32_t shifted128 = (128 << SHIFT);
-            int32_t u00              = CRU_coeff * r00 + CGU_coeff * g00 + CBU_coeff * b00 + halfShift + shifted128;
-            int32_t v00              = CBU_coeff * r00 + CGV_coeff * g00 + CBV_coeff * b00 + halfShift + shifted128;
+            int32_t u00 = CRU_coeff * r00 + CGU_coeff * g00 + CBU_coeff * b00 + halfShift + shifted128;
+            int32_t v00 = CBU_coeff * r00 + CGV_coeff * g00 + CBV_coeff * b00 + halfShift + shifted128;
 
             if (isUV) {
-                dst2[2 * j]     = sat_cast_u8(u00 >> SHIFT);
+                dst2[2 * j] = sat_cast_u8(u00 >> SHIFT);
                 dst2[2 * j + 1] = sat_cast_u8(v00 >> SHIFT);
             } else {
-                dst2[2 * j]     = sat_cast_u8(v00 >> SHIFT);
+                dst2[2 * j] = sat_cast_u8(v00 >> SHIFT);
                 dst2[2 * j + 1] = sat_cast_u8(u00 >> SHIFT);
             }
         }
@@ -475,19 +475,19 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t uStride      = inWidthStride;
+    int32_t uStride = inWidthStride;
     const uint8_t* u_ptr = inData + inWidthStride * height;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 3, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t inYStride   = inWidthStride;
-    int32_t inUVStride  = inWidthStride;
-    const uint8_t* inY  = inData;
+    int32_t inYStride = inWidthStride;
+    int32_t inUVStride = inWidthStride;
+    const uint8_t* inY = inData;
     const uint8_t* inUV = inY + inWidthStride * height;
     YUV4202RGB_u8_neon s(0);
     s.convert_from_yuv420sp_layout(height, width, inYStride, inY, inUVStride, inUV, outWidthStride, outData, true);
@@ -517,14 +517,14 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t uStride      = inUVStride;
+    int32_t uStride = inUVStride;
     const uint8_t* u_ptr = inUV;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 3, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
     YUV4202RGB_u8_neon s(0);
@@ -546,21 +546,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t uStride      = inWidthStride;
+    int32_t uStride = inWidthStride;
     const uint8_t* u_ptr = inData + inWidthStride * height;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 4, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inWidthStride;
-    int32_t uvStride  = inWidthStride;
-    const uint8_t* y  = inData;
+    int32_t yStride = inWidthStride;
+    int32_t uvStride = inWidthStride;
+    const uint8_t* y = inData;
     const uint8_t* uv = inData + inWidthStride * height;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(0);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(0);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, true);
 
 #endif
@@ -588,21 +588,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t uStride      = inUVStride;
+    int32_t uStride = inUVStride;
     const uint8_t* u_ptr = inUV;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 4, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inYStride;
-    int32_t uvStride  = inUVStride;
-    const uint8_t* y  = inY;
+    int32_t yStride = inYStride;
+    int32_t uvStride = inUVStride;
+    const uint8_t* y = inY;
     const uint8_t* uv = inUV;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(0);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(0);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, true);
 
 #endif
@@ -703,19 +703,19 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t vStride      = inWidthStride;
+    int32_t vStride = inWidthStride;
     const uint8_t* v_ptr = inData + inWidthStride * height;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 3, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t inYStride   = inWidthStride;
-    int32_t inUVStride  = inWidthStride;
-    const uint8_t* inY  = inData;
+    int32_t inYStride = inWidthStride;
+    int32_t inUVStride = inWidthStride;
+    const uint8_t* inY = inData;
     const uint8_t* inVU = inY + inWidthStride * height;
     YUV4202RGB_u8_neon s(0);
     s.convert_from_yuv420sp_layout(height, width, inYStride, inY, inUVStride, inVU, outWidthStride, outData, false);
@@ -744,14 +744,14 @@ template <>
     }
 
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t vStride      = inUVStride;
+    int32_t vStride = inUVStride;
     const uint8_t* v_ptr = inVU;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 3, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
     YUV4202RGB_u8_neon s(0);
@@ -773,21 +773,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t vStride      = inWidthStride;
+    int32_t vStride = inWidthStride;
     const uint8_t* v_ptr = inData + inWidthStride * height;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 4, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inWidthStride;
-    int32_t uvStride  = inWidthStride;
-    const uint8_t* y  = inData;
+    int32_t yStride = inWidthStride;
+    int32_t uvStride = inWidthStride;
+    const uint8_t* y = inData;
     const uint8_t* uv = inData + inWidthStride * height;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(0);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(0);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, false);
 #endif
     return ppl::common::RC_SUCCESS;
@@ -814,21 +814,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t vStride      = inUVStride;
+    int32_t vStride = inUVStride;
     const uint8_t* v_ptr = inVU;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 4, 0>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inYStride;
-    int32_t uvStride  = inUVStride;
-    const uint8_t* y  = inY;
+    int32_t yStride = inYStride;
+    int32_t uvStride = inUVStride;
+    const uint8_t* y = inY;
     const uint8_t* uv = inVU;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(0);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(0);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, false);
 
 #endif
@@ -927,19 +927,19 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t uStride      = inWidthStride;
+    int32_t uStride = inWidthStride;
     const uint8_t* u_ptr = inData + inWidthStride * height;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 3, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t inYStride   = inWidthStride;
-    int32_t inUVStride  = inWidthStride;
-    const uint8_t* inY  = inData;
+    int32_t inYStride = inWidthStride;
+    int32_t inUVStride = inWidthStride;
+    const uint8_t* inY = inData;
     const uint8_t* inUV = inY + inWidthStride * height;
     YUV4202RGB_u8_neon s(2);
     s.convert_from_yuv420sp_layout(height, width, inYStride, inY, inUVStride, inUV, outWidthStride, outData, true);
@@ -959,21 +959,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t uStride      = inWidthStride;
+    int32_t uStride = inWidthStride;
     const uint8_t* u_ptr = inData + inWidthStride * height;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 4, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inWidthStride;
-    int32_t uvStride  = inWidthStride;
-    const uint8_t* y  = inData;
+    int32_t yStride = inWidthStride;
+    int32_t uvStride = inWidthStride;
+    const uint8_t* y = inData;
     const uint8_t* uv = inData + inWidthStride * height;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(2);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(2);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, true);
 #endif
     return ppl::common::RC_SUCCESS;
@@ -1000,14 +1000,14 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t uStride      = inUVStride;
+    int32_t uStride = inUVStride;
     const uint8_t* u_ptr = inUV;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 3, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
     YUV4202RGB_u8_neon s(2);
@@ -1036,21 +1036,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t uStride      = inUVStride;
+    int32_t uStride = inUVStride;
     const uint8_t* u_ptr = inUV;
-    int32_t vStride      = 0;
+    int32_t vStride = 0;
     const uint8_t* v_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV12, 4, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inYStride;
-    int32_t uvStride  = inUVStride;
-    const uint8_t* y  = inY;
+    int32_t yStride = inYStride;
+    int32_t uvStride = inUVStride;
+    const uint8_t* y = inY;
     const uint8_t* uv = inUV;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(2);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(2);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, true);
 #endif
     return ppl::common::RC_SUCCESS;
@@ -1148,14 +1148,14 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t vStride      = inWidthStride;
+    int32_t vStride = inWidthStride;
     const uint8_t* v_ptr = inData + inWidthStride * height;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 3, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
     YUV4202RGB_u8_neon s(2);
@@ -1176,21 +1176,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inWidthStride;
+    int32_t yStride = inWidthStride;
     const uint8_t* y_ptr = inData;
-    int32_t vStride      = inWidthStride;
+    int32_t vStride = inWidthStride;
     const uint8_t* v_ptr = inData + inWidthStride * height;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 4, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inWidthStride;
-    int32_t uvStride  = inWidthStride;
-    const uint8_t* y  = inData;
+    int32_t yStride = inWidthStride;
+    int32_t uvStride = inWidthStride;
+    const uint8_t* y = inData;
     const uint8_t* uv = inData + inWidthStride * height;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(2);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(2);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, false);
 #endif
     return ppl::common::RC_SUCCESS;
@@ -1217,14 +1217,14 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t vStride      = inUVStride;
+    int32_t vStride = inUVStride;
     const uint8_t* v_ptr = inUV;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 3, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
     YUV4202RGB_u8_neon s(2);
@@ -1253,21 +1253,21 @@ template <>
         return ppl::common::RC_INVALID_VALUE;
     }
 #ifdef USE_QUANTIZED
-    int32_t yStride      = inYStride;
+    int32_t yStride = inYStride;
     const uint8_t* y_ptr = inY;
-    int32_t vStride      = inUVStride;
+    int32_t vStride = inUVStride;
     const uint8_t* v_ptr = inUV;
-    int32_t uStride      = 0;
+    int32_t uStride = 0;
     const uint8_t* u_ptr = nullptr;
-    int32_t rgbStride    = outWidthStride;
-    uint8_t* rgb         = outData;
+    int32_t rgbStride = outWidthStride;
+    uint8_t* rgb = outData;
     nv_to_bgr_uchar_video_range<YUV_NV21, 4, 2>(height, width, yStride, y_ptr, uStride, u_ptr, vStride, v_ptr, rgbStride, rgb);
 #else
-    int32_t yStride   = inYStride;
-    int32_t uvStride  = inUVStride;
-    const uint8_t* y  = inY;
+    int32_t yStride = inYStride;
+    int32_t uvStride = inUVStride;
+    const uint8_t* y = inY;
     const uint8_t* uv = inUV;
-    YUV4202RGBA_u8 s  = YUV4202RGBA_u8(2);
+    YUV4202RGBA_u8 s = YUV4202RGBA_u8(2);
     s.convert_from_yuv420sp_layout(height, width, yStride, y, uvStride, uv, outWidthStride, outData, false);
 
 #endif

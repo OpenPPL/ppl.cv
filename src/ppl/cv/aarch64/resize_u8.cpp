@@ -43,23 +43,23 @@ void resizeNearestPoint(
     Tdst* outData)
 {
     int32_t x, y;
-    int32_t* x_ofs   = (int32_t*)malloc(outWidth * sizeof(int32_t));
-    double fx        = (double)outWidth / inWidth;
-    double fy        = (double)outHeight / inHeight;
-    double ifx       = 1. / fx;
-    double ify       = 1. / fy;
+    int32_t* x_ofs = (int32_t*)malloc(outWidth * sizeof(int32_t));
+    double fx = (double)outWidth / inWidth;
+    double fy = (double)outHeight / inHeight;
+    double ifx = 1. / fx;
+    double ify = 1. / fy;
     int32_t pix_size = nc;
     for (x = 0; x < outWidth; x++) {
         int32_t sx = img_floor(x * ifx);
-        x_ofs[x]   = std::min(sx, inWidth - 1) * pix_size;
+        x_ofs[x] = std::min(sx, inWidth - 1) * pix_size;
     }
     for (y = 0; y < outHeight; y++) {
-        Tdst* D       = outData + y * outWidthStride;
-        int32_t sy    = std::min(int32_t(y * ify), inHeight - 1);
+        Tdst* D = outData + y * outWidthStride;
+        int32_t sy = std::min(int32_t(y * ify), inHeight - 1);
         const Tsrc* S = inData + sy * inWidthStride;
         for (x = 0; x < outWidth; x++) {
             for (int32_t i = 0; i < nc; i++) {
-                Tsrc t0       = S[x_ofs[x] + i];
+                Tsrc t0 = S[x_ofs[x] + i];
                 D[x * nc + i] = (Tdst)t0;
             }
         }
@@ -80,23 +80,23 @@ void resizeNearestPoint<uint8_t, uint8_t, 1>(
 {
     int32_t x, y;
     int32_t* x_ofs = (int32_t*)malloc(outWidth * sizeof(int32_t));
-    double fx      = (double)outWidth / inWidth;
-    double fy      = (double)outHeight / inHeight;
-    double ifx     = 1.0f / fx;
-    double ify     = 1.0f / fy;
+    double fx = (double)outWidth / inWidth;
+    double fy = (double)outHeight / inHeight;
+    double ifx = 1.0f / fx;
+    double ify = 1.0f / fy;
     for (x = 0; x < outWidth; x++) {
         int32_t sx = img_floor(x * ifx);
-        x_ofs[x]   = std::min(sx, inWidth - 1);
+        x_ofs[x] = std::min(sx, inWidth - 1);
     }
     for (y = 0; y + 4 <= outHeight; y += 4) {
-        uint8_t* D0       = outData + y * outWidthStride;
-        uint8_t* D1       = outData + (y + 1) * outWidthStride;
-        uint8_t* D2       = outData + (y + 2) * outWidthStride;
-        uint8_t* D3       = outData + (y + 3) * outWidthStride;
-        int32_t sy0       = std::min(int32_t(y * ify), inHeight - 1);
-        int32_t sy1       = std::min(int32_t((y + 1) * ify), inHeight - 1);
-        int32_t sy2       = std::min(int32_t((y + 2) * ify), inHeight - 1);
-        int32_t sy3       = std::min(int32_t((y + 3) * ify), inHeight - 1);
+        uint8_t* D0 = outData + y * outWidthStride;
+        uint8_t* D1 = outData + (y + 1) * outWidthStride;
+        uint8_t* D2 = outData + (y + 2) * outWidthStride;
+        uint8_t* D3 = outData + (y + 3) * outWidthStride;
+        int32_t sy0 = std::min(int32_t(y * ify), inHeight - 1);
+        int32_t sy1 = std::min(int32_t((y + 1) * ify), inHeight - 1);
+        int32_t sy2 = std::min(int32_t((y + 2) * ify), inHeight - 1);
+        int32_t sy3 = std::min(int32_t((y + 3) * ify), inHeight - 1);
         const uint8_t* S0 = inData + sy0 * inWidthStride;
         const uint8_t* S1 = inData + sy1 * inWidthStride;
         const uint8_t* S2 = inData + sy2 * inWidthStride;
@@ -117,8 +117,8 @@ void resizeNearestPoint<uint8_t, uint8_t, 1>(
         }
     }
     for (; y < outHeight; y++) {
-        uint8_t* D       = outData + y * outWidthStride;
-        int32_t sy       = std::min(int32_t(y * ify), inHeight - 1);
+        uint8_t* D = outData + y * outWidthStride;
+        int32_t sy = std::min(int32_t(y * ify), inHeight - 1);
         const uint8_t* S = inData + sy * inWidthStride;
         for (x = 0; x + 4 <= outWidth; x += 4) {
             int32_t x0 = x_ofs[x];
@@ -129,7 +129,7 @@ void resizeNearestPoint<uint8_t, uint8_t, 1>(
         }
         for (; x < outWidth; x++) {
             int32_t x0 = x_ofs[x];
-            D[x]       = S[x0];
+            D[x] = S[x0];
         }
     }
     free(x_ofs);
@@ -147,19 +147,19 @@ void resizeNearestPoint<uint8_t, uint8_t, 3>(
     uint8_t* outData) // resize_nearest_u8c3
 {
     int32_t x, y;
-    int32_t* x_ofs   = (int32_t*)malloc(outWidth * sizeof(int32_t));
-    double fx        = (double)outWidth / inWidth;
-    double fy        = (double)outHeight / inHeight;
-    double ifx       = 1.0f / fx;
-    double ify       = 1.0f / fy;
+    int32_t* x_ofs = (int32_t*)malloc(outWidth * sizeof(int32_t));
+    double fx = (double)outWidth / inWidth;
+    double fy = (double)outHeight / inHeight;
+    double ifx = 1.0f / fx;
+    double ify = 1.0f / fy;
     const int32_t nc = 3;
     for (x = 0; x < outWidth; x++) {
         int32_t sx = img_floor(x * ifx);
-        x_ofs[x]   = std::min(sx, inWidth - 1) * nc;
+        x_ofs[x] = std::min(sx, inWidth - 1) * nc;
     }
     for (y = 0; y < outHeight; y++) {
-        uint8_t* D       = outData + y * outWidthStride;
-        int32_t sy       = std::min(int32_t(y * ify), inHeight - 1);
+        uint8_t* D = outData + y * outWidthStride;
+        int32_t sy = std::min(int32_t(y * ify), inHeight - 1);
         const uint8_t* S = inData + sy * inWidthStride;
         for (x = 0; x + 4 <= outWidth; x += 4) {
             int32_t x0 = x_ofs[x];
@@ -170,7 +170,7 @@ void resizeNearestPoint<uint8_t, uint8_t, 3>(
             if (x3 + 4 >= inWidth || xd + 12 >= outWidth) { // to avoid segment fault
                 break;
             }
-            *((int32_t*)(D + xd))     = *((int32_t*)(S + x0));
+            *((int32_t*)(D + xd)) = *((int32_t*)(S + x0));
             *((int32_t*)(D + xd + 3)) = *((int32_t*)(S + x1));
             *((int32_t*)(D + xd + 6)) = *((int32_t*)(S + x2));
             *((int32_t*)(D + xd + 9)) = *((int32_t*)(S + x3));
@@ -196,34 +196,34 @@ void resizeNearestPoint<uint8_t, uint8_t, 4>(
     uint8_t* outData) // resize_nearest_u8c4
 {
     int32_t x, y;
-    int32_t* x_ofs   = (int32_t*)malloc(outWidth * sizeof(int32_t));
-    double fx        = (double)outWidth / inWidth;
-    double fy        = (double)outHeight / inHeight;
-    double ifx       = 1.0f / fx;
-    double ify       = 1.0f / fy;
+    int32_t* x_ofs = (int32_t*)malloc(outWidth * sizeof(int32_t));
+    double fx = (double)outWidth / inWidth;
+    double fy = (double)outHeight / inHeight;
+    double ifx = 1.0f / fx;
+    double ify = 1.0f / fy;
     const int32_t nc = 4;
     for (x = 0; x < outWidth; x++) {
         int32_t sx = img_floor(x * ifx);
-        x_ofs[x]   = std::min(sx, inWidth - 1) * nc;
+        x_ofs[x] = std::min(sx, inWidth - 1) * nc;
     }
     for (y = 0; y < outHeight; y++) {
-        uint8_t* D       = outData + y * outWidthStride;
-        int32_t sy       = std::min(int32_t(y * ify), inHeight - 1);
+        uint8_t* D = outData + y * outWidthStride;
+        int32_t sy = std::min(int32_t(y * ify), inHeight - 1);
         const uint8_t* S = inData + sy * inWidthStride;
         for (x = 0; x + 4 <= outWidth; x += 4) {
-            int32_t x0                 = x_ofs[x];
-            int32_t x1                 = x_ofs[x + 1];
-            int32_t x2                 = x_ofs[x + 2];
-            int32_t x3                 = x_ofs[x + 3];
-            int32_t xd                 = x * nc;
-            *((int32_t*)(D + xd))      = *((int32_t*)(S + x0));
-            *((int32_t*)(D + xd + 4))  = *((int32_t*)(S + x1));
-            *((int32_t*)(D + xd + 8))  = *((int32_t*)(S + x2));
+            int32_t x0 = x_ofs[x];
+            int32_t x1 = x_ofs[x + 1];
+            int32_t x2 = x_ofs[x + 2];
+            int32_t x3 = x_ofs[x + 3];
+            int32_t xd = x * nc;
+            *((int32_t*)(D + xd)) = *((int32_t*)(S + x0));
+            *((int32_t*)(D + xd + 4)) = *((int32_t*)(S + x1));
+            *((int32_t*)(D + xd + 8)) = *((int32_t*)(S + x2));
             *((int32_t*)(D + xd + 12)) = *((int32_t*)(S + x3));
         }
         for (; x < outWidth; x++) {
-            int32_t x0            = x_ofs[x];
-            int32_t xd            = x * nc;
+            int32_t x0 = x_ofs[x];
+            int32_t xd = x * nc;
             *((int32_t*)(D + xd)) = *((int32_t*)(S + x0));
         }
     }
@@ -248,23 +248,23 @@ bool img_resize_bilinear_neon_shrink2_u8(
 
     int32_t dstw = dst_width;
     int32_t dsth = dst_height;
-    int32_t cn   = channels;
+    int32_t cn = channels;
     if (channels == 1) {
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (2 * i) * src_stride;
             const uint8_t* row2 = src + (2 * i + 1) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             for (; j <= dstw - 8; j += 8) {
                 uint8x8x2_t q0 = vld2_u8(row1 + 2 * j);
                 prefetch_l1(row1, j * 2 + 256);
                 uint8x8x2_t q1 = vld2_u8(row2 + 2 * j);
                 prefetch_l1(row2, j * 2 + 256);
-                uint8x8_t q00      = q0.val[0];
-                uint8x8_t q01      = q0.val[1];
-                uint8x8_t q10      = q1.val[0];
-                uint8x8_t q11      = q1.val[1];
+                uint8x8_t q00 = q0.val[0];
+                uint8x8_t q01 = q0.val[1];
+                uint8x8_t q10 = q1.val[0];
+                uint8x8_t q11 = q1.val[1];
                 uint16x8_t res_u16 = vaddq_u16(vaddq_u16(vaddl_u8(q00, q01), vaddl_u8(q10, q11)), vdupq_n_u16(2));
-                uint8x8_t res_u8   = vqmovn_u16(vshrq_n_u16(res_u16, 2));
+                uint8x8_t res_u8 = vqmovn_u16(vshrq_n_u16(res_u16, 2));
                 vst1_u8(dst + i * dst_stride + j, res_u8);
             }
             for (; j < dstw; j++) {
@@ -276,9 +276,9 @@ bool img_resize_bilinear_neon_shrink2_u8(
     } else if (cn == 3) {
         uint8x8_t tbl = {0, 1, 2, 4, 5, 6, 0, 0};
         for (int32_t i = 0; i < dsth; i++) {
-            const uint8_t* row1             = src + (2 * i) * src_stride;
-            const uint8_t* row2             = src + (2 * i + 1) * src_stride;
-            int32_t j                       = 0;
+            const uint8_t* row1 = src + (2 * i) * src_stride;
+            const uint8_t* row2 = src + (2 * i + 1) * src_stride;
+            int32_t j = 0;
             int32_t dstw_not_cross_boundary = dstw;
             if (i == dsth - 1) dstw_not_cross_boundary = dstw - 1;
             for (; j <= dstw_not_cross_boundary - 2; j += 2) {
@@ -290,22 +290,22 @@ bool img_resize_bilinear_neon_shrink2_u8(
                 prefetch_l1(row1, (j + 1) * 6 + 256);
                 uint8x8_t q3 = vld1_u8(row2 + (j + 1) * 6);
                 prefetch_l1(row2, (j + 1) * 6 + 256);
-                uint16x8_t q0_u16   = vmovl_u8(q0);
-                uint16x8_t q1_u16   = vmovl_u8(q1);
-                uint16x8_t q2_u16   = vmovl_u8(q2);
-                uint16x8_t q3_u16   = vmovl_u8(q3);
-                uint16x4_t q00      = vget_low_u16(q0_u16);
-                uint16x4_t q01      = vget_low_u16(vextq_u16(q0_u16, q0_u16, 3));
-                uint16x4_t q10      = vget_low_u16(q1_u16);
-                uint16x4_t q11      = vget_low_u16(vextq_u16(q1_u16, q1_u16, 3));
-                uint16x4_t q20      = vget_low_u16(q2_u16);
-                uint16x4_t q21      = vget_low_u16(vextq_u16(q2_u16, q2_u16, 3));
-                uint16x4_t q30      = vget_low_u16(q3_u16);
-                uint16x4_t q31      = vget_low_u16(vextq_u16(q3_u16, q3_u16, 3));
+                uint16x8_t q0_u16 = vmovl_u8(q0);
+                uint16x8_t q1_u16 = vmovl_u8(q1);
+                uint16x8_t q2_u16 = vmovl_u8(q2);
+                uint16x8_t q3_u16 = vmovl_u8(q3);
+                uint16x4_t q00 = vget_low_u16(q0_u16);
+                uint16x4_t q01 = vget_low_u16(vextq_u16(q0_u16, q0_u16, 3));
+                uint16x4_t q10 = vget_low_u16(q1_u16);
+                uint16x4_t q11 = vget_low_u16(vextq_u16(q1_u16, q1_u16, 3));
+                uint16x4_t q20 = vget_low_u16(q2_u16);
+                uint16x4_t q21 = vget_low_u16(vextq_u16(q2_u16, q2_u16, 3));
+                uint16x4_t q30 = vget_low_u16(q3_u16);
+                uint16x4_t q31 = vget_low_u16(vextq_u16(q3_u16, q3_u16, 3));
                 uint16x4_t res0_u16 = vadd_u16(vadd_u16(vadd_u16(q00, q01), vadd_u16(q10, q11)), vdup_n_u16(2));
                 uint16x4_t res1_u16 = vadd_u16(vadd_u16(vadd_u16(q20, q21), vadd_u16(q30, q31)), vdup_n_u16(2));
-                uint8x8_t res_u8    = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
-                uint8x8_t ans       = vtbl1_u8(res_u8, tbl);
+                uint8x8_t res_u8 = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
+                uint8x8_t ans = vtbl1_u8(res_u8, tbl);
                 asm volatile(
                     "st1 {%2.s}[0], [%0]\n\t"
                     "st1 {%2.h}[2], [%1]\n\t"
@@ -325,7 +325,7 @@ bool img_resize_bilinear_neon_shrink2_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (2 * i) * src_stride;
             const uint8_t* row2 = src + (2 * i + 1) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             for (; j <= dstw - 2; j += 2) {
                 uint8x8_t q0 = vld1_u8(row1 + j * 8);
                 prefetch_l1(row1, j * 8 + 256);
@@ -335,21 +335,21 @@ bool img_resize_bilinear_neon_shrink2_u8(
                 prefetch_l1(row1, (j + 1) * 8 + 256);
                 uint8x8_t q3 = vld1_u8(row2 + (j + 1) * 8);
                 prefetch_l1(row2, (j + 1) * 8 + 256);
-                uint16x8_t q0_u16   = vmovl_u8(q0);
-                uint16x8_t q1_u16   = vmovl_u8(q1);
-                uint16x8_t q2_u16   = vmovl_u8(q2);
-                uint16x8_t q3_u16   = vmovl_u8(q3);
-                uint16x4_t q00      = vget_low_u16(q0_u16);
-                uint16x4_t q01      = vget_high_u16(q0_u16);
-                uint16x4_t q10      = vget_low_u16(q1_u16);
-                uint16x4_t q11      = vget_high_u16(q1_u16);
-                uint16x4_t q20      = vget_low_u16(q2_u16);
-                uint16x4_t q21      = vget_high_u16(q2_u16);
-                uint16x4_t q30      = vget_low_u16(q3_u16);
-                uint16x4_t q31      = vget_high_u16(q3_u16);
+                uint16x8_t q0_u16 = vmovl_u8(q0);
+                uint16x8_t q1_u16 = vmovl_u8(q1);
+                uint16x8_t q2_u16 = vmovl_u8(q2);
+                uint16x8_t q3_u16 = vmovl_u8(q3);
+                uint16x4_t q00 = vget_low_u16(q0_u16);
+                uint16x4_t q01 = vget_high_u16(q0_u16);
+                uint16x4_t q10 = vget_low_u16(q1_u16);
+                uint16x4_t q11 = vget_high_u16(q1_u16);
+                uint16x4_t q20 = vget_low_u16(q2_u16);
+                uint16x4_t q21 = vget_high_u16(q2_u16);
+                uint16x4_t q30 = vget_low_u16(q3_u16);
+                uint16x4_t q31 = vget_high_u16(q3_u16);
                 uint16x4_t res0_u16 = vadd_u16(vadd_u16(vadd_u16(q00, q01), vadd_u16(q10, q11)), vdup_n_u16(2));
                 uint16x4_t res1_u16 = vadd_u16(vadd_u16(vadd_u16(q20, q21), vadd_u16(q30, q31)), vdup_n_u16(2));
-                uint8x8_t res_u8    = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
+                uint8x8_t res_u8 = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
                 vst1_u8(dst + i * dst_stride + j * 4, res_u8);
             }
             for (; j < dstw; j++) {
@@ -364,7 +364,7 @@ bool img_resize_bilinear_neon_shrink2_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (2 * i) * src_stride;
             const uint8_t* row2 = src + (2 * i + 1) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             for (; j < dstw; j++) {
                 for (int32_t c = 0; c < cn; c++) {
                     dst[i * dst_stride + j * cn + c] = (row1[j * 2 * cn + c] + row1[j * 2 * cn + cn + c] +
@@ -394,7 +394,7 @@ bool img_resize_bilinear_neon_shrink4_u8(
 
     int32_t dstw = dst_width;
     int32_t dsth = dst_height;
-    int32_t cn   = channels;
+    int32_t cn = channels;
 
     if (cn == 1) {
         uint8_t* temp_buffer = (uint8_t*)malloc(dst_width * 2 * 2 * sizeof(uint8_t));
@@ -405,7 +405,7 @@ bool img_resize_bilinear_neon_shrink4_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (4 * i + 1) * src_stride;
             const uint8_t* row2 = src + (4 * i + 2) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             // gather
             for (; j < dstw; j++) {
                 row1_buffer[j] = *((uint16_t*)(row1 + j * 4 + 1));
@@ -413,18 +413,18 @@ bool img_resize_bilinear_neon_shrink4_u8(
                 row2_buffer[j] = *((uint16_t*)(row2 + j * 4 + 1));
                 prefetch_l1(row2, j * 4 + 1 + 256);
             }
-            j                        = 0;
+            j = 0;
             uint8_t* row1_buffer_ptr = (uint8_t*)row1_buffer;
             uint8_t* row2_buffer_ptr = (uint8_t*)row2_buffer;
             for (; j <= dstw - 8; j += 8) {
-                uint8x8x2_t q0     = vld2_u8(row1_buffer_ptr + 2 * j);
-                uint8x8x2_t q1     = vld2_u8(row2_buffer_ptr + 2 * j);
-                uint8x8_t q00      = q0.val[0];
-                uint8x8_t q01      = q0.val[1];
-                uint8x8_t q10      = q1.val[0];
-                uint8x8_t q11      = q1.val[1];
+                uint8x8x2_t q0 = vld2_u8(row1_buffer_ptr + 2 * j);
+                uint8x8x2_t q1 = vld2_u8(row2_buffer_ptr + 2 * j);
+                uint8x8_t q00 = q0.val[0];
+                uint8x8_t q01 = q0.val[1];
+                uint8x8_t q10 = q1.val[0];
+                uint8x8_t q11 = q1.val[1];
                 uint16x8_t res_u16 = vaddq_u16(vaddq_u16(vaddl_u8(q00, q01), vaddl_u8(q10, q11)), vdupq_n_u16(2));
-                uint8x8_t res_u8   = vshrn_n_u16(res_u16, 2);
+                uint8x8_t res_u8 = vshrn_n_u16(res_u16, 2);
                 vst1_u8(dst + i * dst_stride + j, res_u8);
             }
             for (; j < dstw; j++) {
@@ -439,9 +439,9 @@ bool img_resize_bilinear_neon_shrink4_u8(
     } else if (cn == 3) {
         uint8x8_t tbl = {0, 1, 2, 4, 5, 6, 0, 0};
         for (int32_t i = 0; i < dsth; i++) {
-            const uint8_t* row1             = src + (4 * i + 1) * src_stride;
-            const uint8_t* row2             = src + (4 * i + 2) * src_stride;
-            int32_t j                       = 0;
+            const uint8_t* row1 = src + (4 * i + 1) * src_stride;
+            const uint8_t* row2 = src + (4 * i + 2) * src_stride;
+            int32_t j = 0;
             int32_t dstw_not_cross_boundary = dstw;
             if (i == dsth - 1) dstw_not_cross_boundary = dstw - 1;
             for (; j <= dstw_not_cross_boundary - 2; j += 2) {
@@ -453,22 +453,22 @@ bool img_resize_bilinear_neon_shrink4_u8(
                 prefetch_l1(row1, (j + 1) * 12 + 3 + 256);
                 uint8x8_t q3 = vld1_u8(row2 + (j + 1) * 12 + 3);
                 prefetch_l1(row2, (j + 1) * 12 + 3 + 256);
-                uint16x8_t q0_u16   = vmovl_u8(q0);
-                uint16x8_t q1_u16   = vmovl_u8(q1);
-                uint16x8_t q2_u16   = vmovl_u8(q2);
-                uint16x8_t q3_u16   = vmovl_u8(q3);
-                uint16x4_t q00      = vget_low_u16(q0_u16);
-                uint16x4_t q01      = vget_low_u16(vextq_u16(q0_u16, q0_u16, 3));
-                uint16x4_t q10      = vget_low_u16(q1_u16);
-                uint16x4_t q11      = vget_low_u16(vextq_u16(q1_u16, q1_u16, 3));
-                uint16x4_t q20      = vget_low_u16(q2_u16);
-                uint16x4_t q21      = vget_low_u16(vextq_u16(q2_u16, q2_u16, 3));
-                uint16x4_t q30      = vget_low_u16(q3_u16);
-                uint16x4_t q31      = vget_low_u16(vextq_u16(q3_u16, q3_u16, 3));
+                uint16x8_t q0_u16 = vmovl_u8(q0);
+                uint16x8_t q1_u16 = vmovl_u8(q1);
+                uint16x8_t q2_u16 = vmovl_u8(q2);
+                uint16x8_t q3_u16 = vmovl_u8(q3);
+                uint16x4_t q00 = vget_low_u16(q0_u16);
+                uint16x4_t q01 = vget_low_u16(vextq_u16(q0_u16, q0_u16, 3));
+                uint16x4_t q10 = vget_low_u16(q1_u16);
+                uint16x4_t q11 = vget_low_u16(vextq_u16(q1_u16, q1_u16, 3));
+                uint16x4_t q20 = vget_low_u16(q2_u16);
+                uint16x4_t q21 = vget_low_u16(vextq_u16(q2_u16, q2_u16, 3));
+                uint16x4_t q30 = vget_low_u16(q3_u16);
+                uint16x4_t q31 = vget_low_u16(vextq_u16(q3_u16, q3_u16, 3));
                 uint16x4_t res0_u16 = vadd_u16(vadd_u16(vadd_u16(q00, q01), vadd_u16(q10, q11)), vdup_n_u16(2));
                 uint16x4_t res1_u16 = vadd_u16(vadd_u16(vadd_u16(q20, q21), vadd_u16(q30, q31)), vdup_n_u16(2));
-                uint8x8_t res_u8    = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
-                uint8x8_t ans       = vtbl1_u8(res_u8, tbl);
+                uint8x8_t res_u8 = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
+                uint8x8_t ans = vtbl1_u8(res_u8, tbl);
                 asm volatile(
                     "st1 {%2.s}[0], [%0]\n\t"
                     "st1 {%2.h}[2], [%1]\n\t"
@@ -488,7 +488,7 @@ bool img_resize_bilinear_neon_shrink4_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (4 * i + 1) * src_stride;
             const uint8_t* row2 = src + (4 * i + 2) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             for (; j <= dstw - 2; j += 2) {
                 uint8x8_t q0 = vld1_u8(row1 + j * 16 + 4);
                 prefetch_l1(row1, j * 16 + 4 + 256);
@@ -498,21 +498,21 @@ bool img_resize_bilinear_neon_shrink4_u8(
                 prefetch_l1(row2, j * 16 + 4 + 256);
                 uint8x8_t q3 = vld1_u8(row2 + (j + 1) * 16 + 4);
                 prefetch_l1(row2, (j + 1) * 16 + 4 + 256);
-                uint16x8_t q0_u16   = vmovl_u8(q0);
-                uint16x8_t q1_u16   = vmovl_u8(q1);
-                uint16x8_t q2_u16   = vmovl_u8(q2);
-                uint16x8_t q3_u16   = vmovl_u8(q3);
-                uint16x4_t q00      = vget_low_u16(q0_u16);
-                uint16x4_t q01      = vget_high_u16(q0_u16);
-                uint16x4_t q10      = vget_low_u16(q1_u16);
-                uint16x4_t q11      = vget_high_u16(q1_u16);
-                uint16x4_t q20      = vget_low_u16(q2_u16);
-                uint16x4_t q21      = vget_high_u16(q2_u16);
-                uint16x4_t q30      = vget_low_u16(q3_u16);
-                uint16x4_t q31      = vget_high_u16(q3_u16);
+                uint16x8_t q0_u16 = vmovl_u8(q0);
+                uint16x8_t q1_u16 = vmovl_u8(q1);
+                uint16x8_t q2_u16 = vmovl_u8(q2);
+                uint16x8_t q3_u16 = vmovl_u8(q3);
+                uint16x4_t q00 = vget_low_u16(q0_u16);
+                uint16x4_t q01 = vget_high_u16(q0_u16);
+                uint16x4_t q10 = vget_low_u16(q1_u16);
+                uint16x4_t q11 = vget_high_u16(q1_u16);
+                uint16x4_t q20 = vget_low_u16(q2_u16);
+                uint16x4_t q21 = vget_high_u16(q2_u16);
+                uint16x4_t q30 = vget_low_u16(q3_u16);
+                uint16x4_t q31 = vget_high_u16(q3_u16);
                 uint16x4_t res0_u16 = vadd_u16(vadd_u16(vadd_u16(q00, q01), vadd_u16(q10, q11)), vdup_n_u16(2));
                 uint16x4_t res1_u16 = vadd_u16(vadd_u16(vadd_u16(q20, q21), vadd_u16(q30, q31)), vdup_n_u16(2));
-                uint8x8_t res_u8    = vshrn_n_u16(vcombine_u16(res0_u16, res1_u16), 2);
+                uint8x8_t res_u8 = vshrn_n_u16(vcombine_u16(res0_u16, res1_u16), 2);
                 vst1_u8(dst + i * dst_stride + j * 4, res_u8);
             }
             for (; j < dstw; j++) {
@@ -527,7 +527,7 @@ bool img_resize_bilinear_neon_shrink4_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (4 * i + 1) * src_stride;
             const uint8_t* row2 = src + (4 * i + 2) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             for (; j < dstw; j++) {
                 for (int32_t c = 0; c < cn; c++) {
                     dst[i * dst_stride + j * cn + c] = (row1[j * 4 * cn + 1 * cn + c] + row1[j * 4 * cn + 2 * cn + c] +
@@ -559,7 +559,7 @@ bool img_resize_bilinear_neon_shrink6_u8(
 
     int32_t dstw = dst_width;
     int32_t dsth = dst_height;
-    int32_t cn   = channels;
+    int32_t cn = channels;
 
     if (cn == 1) {
         uint8_t* temp_buffer = (uint8_t*)malloc(dst_width * 2 * 2 * sizeof(uint8_t));
@@ -570,7 +570,7 @@ bool img_resize_bilinear_neon_shrink6_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (6 * i + 2) * src_stride;
             const uint8_t* row2 = src + (6 * i + 3) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             // gather
             for (; j < dstw; j++) {
                 row1_buffer[j] = *((uint16_t*)(row1 + j * 6 + 2));
@@ -578,18 +578,18 @@ bool img_resize_bilinear_neon_shrink6_u8(
                 row2_buffer[j] = *((uint16_t*)(row2 + j * 6 + 2));
                 prefetch_l1(row2, j * 6 + 2 + 256);
             }
-            j                        = 0;
+            j = 0;
             uint8_t* row1_buffer_ptr = (uint8_t*)row1_buffer;
             uint8_t* row2_buffer_ptr = (uint8_t*)row2_buffer;
             for (; j <= dstw - 8; j += 8) {
-                uint8x8x2_t q0     = vld2_u8(row1_buffer_ptr + 2 * j);
-                uint8x8x2_t q1     = vld2_u8(row2_buffer_ptr + 2 * j);
-                uint8x8_t q00      = q0.val[0];
-                uint8x8_t q01      = q0.val[1];
-                uint8x8_t q10      = q1.val[0];
-                uint8x8_t q11      = q1.val[1];
+                uint8x8x2_t q0 = vld2_u8(row1_buffer_ptr + 2 * j);
+                uint8x8x2_t q1 = vld2_u8(row2_buffer_ptr + 2 * j);
+                uint8x8_t q00 = q0.val[0];
+                uint8x8_t q01 = q0.val[1];
+                uint8x8_t q10 = q1.val[0];
+                uint8x8_t q11 = q1.val[1];
                 uint16x8_t res_u16 = vaddq_u16(vaddq_u16(vaddl_u8(q00, q01), vaddl_u8(q10, q11)), vdupq_n_u16(2));
-                uint8x8_t res_u8   = vshrn_n_u16(res_u16, 2);
+                uint8x8_t res_u8 = vshrn_n_u16(res_u16, 2);
                 vst1_u8(dst + i * dst_stride + j, res_u8);
             }
             for (; j < dstw; j++) {
@@ -604,9 +604,9 @@ bool img_resize_bilinear_neon_shrink6_u8(
     } else if (cn == 3) {
         uint8x8_t tbl = {0, 1, 2, 4, 5, 6, 0, 0};
         for (int32_t i = 0; i < dsth; i++) {
-            const uint8_t* row1             = src + (6 * i + 2) * src_stride;
-            const uint8_t* row2             = src + (6 * i + 3) * src_stride;
-            int32_t j                       = 0;
+            const uint8_t* row1 = src + (6 * i + 2) * src_stride;
+            const uint8_t* row2 = src + (6 * i + 3) * src_stride;
+            int32_t j = 0;
             int32_t dstw_not_cross_boundary = dstw;
             if (i == dsth - 1) dstw_not_cross_boundary = dstw - 1;
             for (; j <= dstw_not_cross_boundary - 2; j += 2) {
@@ -618,22 +618,22 @@ bool img_resize_bilinear_neon_shrink6_u8(
                 prefetch_l1(row1, (j + 1) * 18 + 6 + 256);
                 uint8x8_t q3 = vld1_u8(row2 + (j + 1) * 18 + 6);
                 prefetch_l1(row2, (j + 1) * 18 + 6 + 256);
-                uint16x8_t q0_u16   = vmovl_u8(q0);
-                uint16x8_t q1_u16   = vmovl_u8(q1);
-                uint16x8_t q2_u16   = vmovl_u8(q2);
-                uint16x8_t q3_u16   = vmovl_u8(q3);
-                uint16x4_t q00      = vget_low_u16(q0_u16);
-                uint16x4_t q01      = vget_low_u16(vextq_u16(q0_u16, q0_u16, 3));
-                uint16x4_t q10      = vget_low_u16(q1_u16);
-                uint16x4_t q11      = vget_low_u16(vextq_u16(q1_u16, q1_u16, 3));
-                uint16x4_t q20      = vget_low_u16(q2_u16);
-                uint16x4_t q21      = vget_low_u16(vextq_u16(q2_u16, q2_u16, 3));
-                uint16x4_t q30      = vget_low_u16(q3_u16);
-                uint16x4_t q31      = vget_low_u16(vextq_u16(q3_u16, q3_u16, 3));
+                uint16x8_t q0_u16 = vmovl_u8(q0);
+                uint16x8_t q1_u16 = vmovl_u8(q1);
+                uint16x8_t q2_u16 = vmovl_u8(q2);
+                uint16x8_t q3_u16 = vmovl_u8(q3);
+                uint16x4_t q00 = vget_low_u16(q0_u16);
+                uint16x4_t q01 = vget_low_u16(vextq_u16(q0_u16, q0_u16, 3));
+                uint16x4_t q10 = vget_low_u16(q1_u16);
+                uint16x4_t q11 = vget_low_u16(vextq_u16(q1_u16, q1_u16, 3));
+                uint16x4_t q20 = vget_low_u16(q2_u16);
+                uint16x4_t q21 = vget_low_u16(vextq_u16(q2_u16, q2_u16, 3));
+                uint16x4_t q30 = vget_low_u16(q3_u16);
+                uint16x4_t q31 = vget_low_u16(vextq_u16(q3_u16, q3_u16, 3));
                 uint16x4_t res0_u16 = vadd_u16(vadd_u16(vadd_u16(q00, q01), vadd_u16(q10, q11)), vdup_n_u16(2));
                 uint16x4_t res1_u16 = vadd_u16(vadd_u16(vadd_u16(q20, q21), vadd_u16(q30, q31)), vdup_n_u16(2));
-                uint8x8_t res_u8    = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
-                uint8x8_t ans       = vtbl1_u8(res_u8, tbl);
+                uint8x8_t res_u8 = vqmovn_u16(vcombine_u16(vshr_n_u16(res0_u16, 2), vshr_n_u16(res1_u16, 2)));
+                uint8x8_t ans = vtbl1_u8(res_u8, tbl);
                 asm volatile(
                     "st1 {%2.s}[0], [%0]\n\t"
                     "st1 {%2.h}[2], [%1]\n\t"
@@ -654,7 +654,7 @@ bool img_resize_bilinear_neon_shrink6_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (6 * i + 2) * src_stride;
             const uint8_t* row2 = src + (6 * i + 3) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             for (; j <= dstw - 2; j += 2) {
                 uint8x8_t q0 = vld1_u8(row1 + j * 24 + 8);
                 prefetch_l1(row1, j * 24 + 8 + 256);
@@ -664,21 +664,21 @@ bool img_resize_bilinear_neon_shrink6_u8(
                 prefetch_l1(row2, j * 24 + 8 + 256);
                 uint8x8_t q3 = vld1_u8(row2 + (j + 1) * 24 + 8);
                 prefetch_l1(row2, (j + 1) * 24 + 8 + 256);
-                uint16x8_t q0_u16   = vmovl_u8(q0);
-                uint16x8_t q1_u16   = vmovl_u8(q1);
-                uint16x8_t q2_u16   = vmovl_u8(q2);
-                uint16x8_t q3_u16   = vmovl_u8(q3);
-                uint16x4_t q00      = vget_low_u16(q0_u16);
-                uint16x4_t q01      = vget_high_u16(q0_u16);
-                uint16x4_t q10      = vget_low_u16(q1_u16);
-                uint16x4_t q11      = vget_high_u16(q1_u16);
-                uint16x4_t q20      = vget_low_u16(q2_u16);
-                uint16x4_t q21      = vget_high_u16(q2_u16);
-                uint16x4_t q30      = vget_low_u16(q3_u16);
-                uint16x4_t q31      = vget_high_u16(q3_u16);
+                uint16x8_t q0_u16 = vmovl_u8(q0);
+                uint16x8_t q1_u16 = vmovl_u8(q1);
+                uint16x8_t q2_u16 = vmovl_u8(q2);
+                uint16x8_t q3_u16 = vmovl_u8(q3);
+                uint16x4_t q00 = vget_low_u16(q0_u16);
+                uint16x4_t q01 = vget_high_u16(q0_u16);
+                uint16x4_t q10 = vget_low_u16(q1_u16);
+                uint16x4_t q11 = vget_high_u16(q1_u16);
+                uint16x4_t q20 = vget_low_u16(q2_u16);
+                uint16x4_t q21 = vget_high_u16(q2_u16);
+                uint16x4_t q30 = vget_low_u16(q3_u16);
+                uint16x4_t q31 = vget_high_u16(q3_u16);
                 uint16x4_t res0_u16 = vadd_u16(vadd_u16(vadd_u16(q00, q01), vadd_u16(q10, q11)), vdup_n_u16(2));
                 uint16x4_t res1_u16 = vadd_u16(vadd_u16(vadd_u16(q20, q21), vadd_u16(q30, q31)), vdup_n_u16(2));
-                uint8x8_t res_u8    = vshrn_n_u16(vcombine_u16(res0_u16, res1_u16), 2);
+                uint8x8_t res_u8 = vshrn_n_u16(vcombine_u16(res0_u16, res1_u16), 2);
                 vst1_u8(dst + i * dst_stride + j * 4, res_u8);
             }
             for (; j < dstw; j++) {
@@ -693,7 +693,7 @@ bool img_resize_bilinear_neon_shrink6_u8(
         for (int32_t i = 0; i < dsth; i++) {
             const uint8_t* row1 = src + (6 * i + 2) * src_stride;
             const uint8_t* row2 = src + (6 * i + 3) * src_stride;
-            int32_t j           = 0;
+            int32_t j = 0;
             for (; j < dstw; j++) {
                 for (int32_t c = 0; c < cn; c++) {
                     dst[i * dst_stride + j * cn + c] = (row1[j * 6 * cn + 2 * cn + c] + row1[j * 6 * cn + 3 * cn + c] +
@@ -727,9 +727,9 @@ void resize_generic_8UC3(
     int32_t w = dstWidth;
     int32_t h = dstHeight;
 
-    int32x4_t _v2                         = vdupq_n_s32(2);
+    int32x4_t _v2 = vdupq_n_s32(2);
     int16x4_t INTER_RESIZE_COEF_SCALE_vec = vdup_n_s16(INTER_RESIZE_COEF_SCALE);
-    int8x8_t _tb                          = {0, 1, 2, 4, 5, 6, 0, 0};
+    int8x8_t _tb = {0, 1, 2, 4, 5, 6, 0, 0};
 
     int32_t w_not_cross_boundary = w;
     for (int32_t dw = w - 1; dw >= 0; dw--) {
@@ -740,15 +740,15 @@ void resize_generic_8UC3(
     }
 
     for (int32_t dy = 0; dy < h; dy++) {
-        int32_t sy        = yofs[dy];
+        int32_t sy = yofs[dy];
         const uint8_t* S0 = src + sy * srcStride; //src.ptr(sy);
         const uint8_t* S1 = src + (sy + 1) * srcStride; //src.ptr(sy+1);
 
-        uint8_t* Dp            = dst + dy * dstStride; //dst.ptr(dy);
+        uint8_t* Dp = dst + dy * dstStride; //dst.ptr(dy);
         const int16_t* ialphap = ialpha;
 
-        int16x4_t _b1     = vdup_n_s16(ibeta[dy]);
-        int16x4_t _b0     = vdup_n_s16(INTER_RESIZE_COEF_SCALE - ibeta[dy]);
+        int16x4_t _b1 = vdup_n_s16(ibeta[dy]);
+        int16x4_t _b0 = vdup_n_s16(INTER_RESIZE_COEF_SCALE - ibeta[dy]);
         int32_t* tmp_xofs = xofs;
 
         int32_t remain = (w >> 2) << 2;
@@ -897,18 +897,18 @@ void resize_generic_8UC3(
         }
         //Corner Case
         for (; nn > 0; nn--) {
-            int32_t ofs        = xofs[w - nn];
+            int32_t ofs = xofs[w - nn];
             const uint8_t* pS0 = S0 + ofs;
             const uint8_t* pS1 = S1 + ofs;
-            int16_t a1         = ialphap[0];
-            int16_t a0         = INTER_RESIZE_COEF_SCALE - a1;
-            int16_t b1         = ibeta[dy];
-            int16_t b0         = INTER_RESIZE_COEF_SCALE - b1;
+            int16_t a1 = ialphap[0];
+            int16_t a0 = INTER_RESIZE_COEF_SCALE - a1;
+            int16_t b1 = ibeta[dy];
+            int16_t b0 = INTER_RESIZE_COEF_SCALE - b1;
 
             for (int32_t i = 0; i < 3; i++) {
                 int32_t kS0 = pS0[i] * a0 + pS0[i + 3] * a1;
                 int32_t kS1 = pS1[i] * a0 + pS1[i + 3] * a1;
-                Dp[i]       = uint8_t(((int16_t)((b0 * (int16_t)(kS0 >> 4)) >> 16) + (int16_t)((b1 * (int16_t)(kS1 >> 4)) >> 16) + 2) >> 2);
+                Dp[i] = uint8_t(((int16_t)((b0 * (int16_t)(kS0 >> 4)) >> 16) + (int16_t)((b1 * (int16_t)(kS1 >> 4)) >> 16) + 2) >> 2);
             }
 
             ialphap++;
@@ -935,22 +935,22 @@ void resize_generic_8UC4(
     int32_t w = dstWidth;
     int32_t h = dstHeight;
 
-    int32x4_t _v2                         = vdupq_n_s32(2);
+    int32x4_t _v2 = vdupq_n_s32(2);
     int16x4_t INTER_RESIZE_COEF_SCALE_vec = vdup_n_s16(INTER_RESIZE_COEF_SCALE);
 
     for (int32_t dy = 0; dy < h; dy++) {
-        int32_t sy             = yofs[dy];
-        const uint8_t* S0      = src + sy * srcStride; //src.ptr(sy);
-        const uint8_t* S1      = src + (sy + 1) * srcStride; //src.ptr(sy+1);
-        uint8_t* Dp            = dst + dy * dstStride; //dst.ptr(dy);
+        int32_t sy = yofs[dy];
+        const uint8_t* S0 = src + sy * srcStride; //src.ptr(sy);
+        const uint8_t* S1 = src + (sy + 1) * srcStride; //src.ptr(sy+1);
+        uint8_t* Dp = dst + dy * dstStride; //dst.ptr(dy);
         const int16_t* ialphap = ialpha;
 
-        int16x4_t _b1     = vdup_n_s16(ibeta[dy]);
-        int16x4_t _b0     = vdup_n_s16(INTER_RESIZE_COEF_SCALE - ibeta[dy]);
+        int16x4_t _b1 = vdup_n_s16(ibeta[dy]);
+        int16x4_t _b0 = vdup_n_s16(INTER_RESIZE_COEF_SCALE - ibeta[dy]);
         int32_t* tmp_xofs = xofs;
 
         int32_t remain = (w >> 2) << 2;
-        int32_t nn     = w - remain;
+        int32_t nn = w - remain;
         if (remain > 0) {
             asm volatile(
                 "ldpsw x10, x11, [%1], #8\n\t"
@@ -1080,18 +1080,18 @@ void resize_generic_8UC4(
         }
         //Corner Case
         for (; nn > 0; nn--) {
-            int32_t ofs        = xofs[w - nn];
+            int32_t ofs = xofs[w - nn];
             const uint8_t* pS0 = S0 + ofs;
             const uint8_t* pS1 = S1 + ofs;
-            int16_t a1         = ialphap[0];
-            int16_t a0         = INTER_RESIZE_COEF_SCALE - a1;
-            int16_t b1         = ibeta[dy];
-            int16_t b0         = INTER_RESIZE_COEF_SCALE - b1;
+            int16_t a1 = ialphap[0];
+            int16_t a0 = INTER_RESIZE_COEF_SCALE - a1;
+            int16_t b1 = ibeta[dy];
+            int16_t b0 = INTER_RESIZE_COEF_SCALE - b1;
 
             for (int32_t i = 0; i < 4; i++) {
                 int32_t kS0 = pS0[i] * a0 + pS0[i + 4] * a1;
                 int32_t kS1 = pS1[i] * a0 + pS1[i + 4] * a1;
-                Dp[i]       = uint8_t(((int16_t)((b0 * (int16_t)(kS0 >> 4)) >> 16) + (int16_t)((b1 * (int16_t)(kS1 >> 4)) >> 16) + 2) >> 2);
+                Dp[i] = uint8_t(((int16_t)((b0 * (int16_t)(kS0 >> 4)) >> 16) + (int16_t)((b1 * (int16_t)(kS1 >> 4)) >> 16) + 2) >> 2);
             }
 
             ialphap++;
@@ -1127,7 +1127,7 @@ void resize_linear_generic(
     int32_t* yofs = buf + w + 8;
 
     int16_t* ialpha = (int16_t*)(buf + w + 8 + h);
-    int16_t* ibeta  = (int16_t*)(buf + w + 8 + h + w);
+    int16_t* ibeta = (int16_t*)(buf + w + 8 + h + w);
 
     float fx;
     float fy;
@@ -1218,8 +1218,8 @@ void resize_bilinear_rows(
         uint8_t rweight[8];
 
         for (uint32_t i = 0; i < 8; ++i) {
-            float w            = (i + r) * hr + scale_y_offset;
-            ptrdiff_t src_row  = floorf(w);
+            float w = (i + r) * hr + scale_y_offset;
+            ptrdiff_t src_row = floorf(w);
             ptrdiff_t src_row2 = src_row + 1;
 
             rweight[i] = (uint8_t)((src_row2 - w) * 128);
@@ -1229,7 +1229,7 @@ void resize_bilinear_rows(
             if (src_row2 >= (ptrdiff_t)ssize.height)
                 src_row2 = ssize.height - 1;
 
-            rows[2 * i]     = srcBase + src_row * srcStride;
+            rows[2 * i] = srcBase + src_row * srcStride;
             rows[2 * i + 1] = srcBase + src_row2 * srcStride;
         }
 
@@ -1272,8 +1272,8 @@ void resize_bilinear_rows(
             uint8x8_t vsrc3l1 = vld1_u8(rows[6] + col);
             uint8x8_t vsrc3l2 = vld1_u8(rows[7] + col);
 
-            vdst0l            = vmlal_u8(vdst0l, vsrc0l2, vr0w2);
-            vdst1l            = vmlal_u8(vdst1l, vsrc1l2, vr1w2);
+            vdst0l = vmlal_u8(vdst0l, vsrc0l2, vr0w2);
+            vdst1l = vmlal_u8(vdst1l, vsrc1l2, vr1w2);
             uint16x8_t vdst2l = vmull_u8(vsrc2l1, vr2w);
             uint16x8_t vdst3l = vmull_u8(vsrc3l1, vr3w);
 
@@ -1282,8 +1282,8 @@ void resize_bilinear_rows(
             uint8x8_t vsrc5l1 = vld1_u8(rows[10] + col);
             uint8x8_t vsrc5l2 = vld1_u8(rows[11] + col);
 
-            vdst2l            = vmlal_u8(vdst2l, vsrc2l2, vr2w2);
-            vdst3l            = vmlal_u8(vdst3l, vsrc3l2, vr3w2);
+            vdst2l = vmlal_u8(vdst2l, vsrc2l2, vr2w2);
+            vdst3l = vmlal_u8(vdst3l, vsrc3l2, vr3w2);
             uint16x8_t vdst4l = vmull_u8(vsrc4l1, vr4w);
             uint16x8_t vdst5l = vmull_u8(vsrc5l1, vr5w);
 
@@ -1292,17 +1292,17 @@ void resize_bilinear_rows(
             uint8x8_t vsrc7l1 = vld1_u8(rows[14] + col);
             uint8x8_t vsrc7l2 = vld1_u8(rows[15] + col);
 
-            uint8x8_t vdst0   = vshrn_n_u16(vdst0l, 7);
-            uint8x8_t vdst1   = vshrn_n_u16(vdst1l, 7);
-            vdst4l            = vmlal_u8(vdst4l, vsrc4l2, vr4w2);
-            vdst5l            = vmlal_u8(vdst5l, vsrc5l2, vr5w2);
+            uint8x8_t vdst0 = vshrn_n_u16(vdst0l, 7);
+            uint8x8_t vdst1 = vshrn_n_u16(vdst1l, 7);
+            vdst4l = vmlal_u8(vdst4l, vsrc4l2, vr4w2);
+            vdst5l = vmlal_u8(vdst5l, vsrc5l2, vr5w2);
             uint16x8_t vdst6l = vmull_u8(vsrc6l1, vr6w);
             uint16x8_t vdst7l = vmull_u8(vsrc7l1, vr7w);
 
             uint8x8_t vdst2 = vshrn_n_u16(vdst2l, 7);
             uint8x8_t vdst3 = vshrn_n_u16(vdst3l, 7);
-            vdst6l          = vmlal_u8(vdst6l, vsrc6l2, vr6w2);
-            vdst7l          = vmlal_u8(vdst7l, vsrc7l2, vr7w2);
+            vdst6l = vmlal_u8(vdst6l, vsrc6l2, vr6w2);
+            vdst7l = vmlal_u8(vdst7l, vsrc7l2, vr7w2);
 
             uint8x8_t vdst4 = vshrn_n_u16(vdst4l, 7);
             uint8x8_t vdst5 = vshrn_n_u16(vdst5l, 7);
@@ -1374,9 +1374,9 @@ void resize_bilinear_rows(
             goto resize8u_ystretch;
         }
 
-        uint8_t* dst_data    = dstBase + r * dstStride;
+        uint8_t* dst_data = dstBase + r * dstStride;
         const uint8_t** cols = gcols;
-        uint8_t* cweight     = gcweight;
+        uint8_t* cweight = gcweight;
 
         int32_t dcol = 0;
         for (; dcol < dst_w8; dcol += 8, cols += 16, cweight += 8) {
@@ -1450,10 +1450,10 @@ void resize_bilinear_rows(
             uint8x8x2_t vdst32t = vtrn_u8(vdst2, vdst3);
             uint8x8x2_t vdst54t = vtrn_u8(vdst4, vdst5);
             uint8x8x2_t vdst76t = vtrn_u8(vdst6, vdst7);
-            uint8x16_t vd1d0    = vcombine_u8(vdst10t.val[0], vdst10t.val[1]);
-            uint8x16_t vd3d2    = vcombine_u8(vdst32t.val[0], vdst32t.val[1]);
-            uint8x16_t vd5d4    = vcombine_u8(vdst54t.val[0], vdst54t.val[1]);
-            uint8x16_t vd7d6    = vcombine_u8(vdst76t.val[0], vdst76t.val[1]);
+            uint8x16_t vd1d0 = vcombine_u8(vdst10t.val[0], vdst10t.val[1]);
+            uint8x16_t vd3d2 = vcombine_u8(vdst32t.val[0], vdst32t.val[1]);
+            uint8x16_t vd5d4 = vcombine_u8(vdst54t.val[0], vdst54t.val[1]);
+            uint8x16_t vd7d6 = vcombine_u8(vdst76t.val[0], vdst76t.val[1]);
             uint16x8x2_t vq1q0t = vtrnq_u16((uint16x8_t)vd1d0, (uint16x8_t)vd3d2);
             uint16x8x2_t vq3q2t = vtrnq_u16((uint16x8_t)vd5d4, (uint16x8_t)vd7d6);
             uint32x4x2_t vq2q0t = vtrnq_u32((uint32x4_t)vq1q0t.val[0], (uint32x4_t)vq3q2t.val[0]);
@@ -1471,8 +1471,8 @@ void resize_bilinear_rows(
         }
 
         if (dcol < dsize.width) {
-            dcol    = dsize.width - 8;
-            cols    = gcols + dcol * 2;
+            dcol = dsize.width - 8;
+            cols = gcols + dcol * 2;
             cweight = gcweight + dcol;
             goto resize8u_xstretch;
         }
@@ -1495,11 +1495,11 @@ struct resizeLinearInternals<1> {
     inline resizeLinearInternals(int32x4_t& vi, uint32_t srccols)
     {
         vc_upd = vdupq_n_s32(4);
-        vc0    = vdupq_n_s32(0);
-        vcmax  = vdupq_n_s32(srccols - 1);
+        vc0 = vdupq_n_s32(0);
+        vcmax = vdupq_n_s32(srccols - 1);
 
         int32_t tmp0123[] = {0, 1, 2, 3};
-        vi                = vld1q_s32(tmp0123);
+        vi = vld1q_s32(tmp0123);
     }
     inline void updateIndexes(int32x4_t& vi, int32x4_t& vsrch, int32x4_t& vsrcl)
     {
@@ -1508,7 +1508,7 @@ struct resizeLinearInternals<1> {
         vsrcl = vminq_s32(vsrcl, vcmax); //for safe tail
         vsrch = vshlq_n_s32(vsrch, 3);
         vsrcl = vshlq_n_s32(vsrcl, 3);
-        vi    = vaddq_s32(vi, vc_upd);
+        vi = vaddq_s32(vi, vc_upd);
     }
 };
 template <>
@@ -1520,11 +1520,11 @@ struct resizeLinearInternals<4> {
 
     inline resizeLinearInternals(int32x4_t& vi, uint32_t srccols)
     {
-        vc_upd              = vdupq_n_s32(1);
-        vc0                 = vdupq_n_s32(0);
-        vcmax               = vdupq_n_s32(srccols - 1);
+        vc_upd = vdupq_n_s32(1);
+        vc0 = vdupq_n_s32(0);
+        vcmax = vdupq_n_s32(srccols - 1);
         int32_t tmp0123x8[] = {0, 8, 16, 24};
-        v0123x8             = vld1q_s32(tmp0123x8);
+        v0123x8 = vld1q_s32(tmp0123x8);
 
         vi = vc0;
     }
@@ -1536,7 +1536,7 @@ struct resizeLinearInternals<4> {
         vsrcl = vshlq_n_s32(vsrcl, 5);
         vsrch = vaddq_s32(vsrch, v0123x8);
         vsrcl = vaddq_s32(vsrcl, v0123x8);
-        vi    = vaddq_s32(vi, vc_upd);
+        vi = vaddq_s32(vi, vc_upd);
     }
 };
 
@@ -1551,24 +1551,24 @@ void resize_linear_u8c1orc4(
     uint32_t dstStride,
     uint8_t* dstBase)
 {
-    float wr             = (float)srcWidth / dstWidth;
-    float hr             = (float)srcHeight / dstHeight;
+    float wr = (float)srcWidth / dstWidth;
+    float hr = (float)srcHeight / dstHeight;
     float scale_x_offset = 0.5f * wr - 0.5f;
 
     Size ssize, dsize;
-    ssize.width  = srcWidth * channels;
+    ssize.width = srcWidth * channels;
     ssize.height = srcHeight;
-    dsize.width  = dstWidth * channels;
+    dsize.width = dstWidth * channels;
     dsize.height = dstHeight;
 
     std::vector<uint8_t> gcweight((dsize.width + 7) & ~7);
     std::vector<const uint8_t*> gcols(((dsize.width + 7) & ~7) * 2);
     std::vector<uint8_t> buf(((ssize.width + 7) & ~7) * 8); // (8 rows) x (width of src)
 
-    float32x4_t vscale_x        = vdupq_n_f32(wr);
+    float32x4_t vscale_x = vdupq_n_f32(wr);
     float32x4_t vscale_x_offset = vdupq_n_f32(scale_x_offset);
-    int32x4_t vc1               = vdupq_n_s32(1);
-    float32x4_t vc128f          = vdupq_n_f32(128.0f);
+    int32x4_t vc1 = vdupq_n_s32(1);
+    float32x4_t vc128f = vdupq_n_f32(128.0f);
 
     int32x4_t vi;
     resizeLinearInternals<channels> indexes(vi, srcWidth); //uint32_t is used to store indexes
@@ -1577,35 +1577,35 @@ void resize_linear_u8c1orc4(
     for (int32_t dcol = 0; dcol < dsize.width; dcol += 8) {
         int32_t idx[16];
 
-        float32x4_t vif    = vcvtq_f32_s32(vi);
-        float32x4_t vw     = vmlaq_f32(vscale_x_offset, vscale_x, vif);
-        int32x4_t vwi      = vcvtq_s32_f32(vw);
-        float32x4_t vwif   = vcvtq_f32_s32(vwi);
-        int32x4_t vmask    = (int32x4_t)vcltq_f32(vwif, vw);
-        int32x4_t vsrch    = vsubq_s32(vwi, vmask);
-        int32x4_t vsrcl    = vsubq_s32(vsrch, vc1);
+        float32x4_t vif = vcvtq_f32_s32(vi);
+        float32x4_t vw = vmlaq_f32(vscale_x_offset, vscale_x, vif);
+        int32x4_t vwi = vcvtq_s32_f32(vw);
+        float32x4_t vwif = vcvtq_f32_s32(vwi);
+        int32x4_t vmask = (int32x4_t)vcltq_f32(vwif, vw);
+        int32x4_t vsrch = vsubq_s32(vwi, vmask);
+        int32x4_t vsrcl = vsubq_s32(vsrch, vc1);
         float32x4_t vsrchf = vcvtq_f32_s32(vsrch);
-        float32x4_t vw2    = vsubq_f32(vsrchf, vw);
+        float32x4_t vw2 = vsubq_f32(vsrchf, vw);
 
-        vw2               = vmulq_f32(vw2, vc128f);
-        uint32x4_t vw32u  = vcvtq_u32_f32(vw2);
+        vw2 = vmulq_f32(vw2, vc128f);
+        uint32x4_t vw32u = vcvtq_u32_f32(vw2);
         uint16x4_t vw16ul = vmovn_u32(vw32u);
         indexes.updateIndexes(vi, vsrch, vsrcl);
 
         vst1q_s32(idx + 0, vsrcl);
         vst1q_s32(idx + 8, vsrch);
 
-        vif    = vcvtq_f32_s32(vi);
-        vw     = vmlaq_f32(vscale_x_offset, vscale_x, vif);
-        vwi    = vcvtq_s32_f32(vw);
-        vwif   = vcvtq_f32_s32(vwi);
-        vmask  = (int32x4_t)vcltq_f32(vwif, vw);
-        vsrch  = vsubq_s32(vwi, vmask);
-        vsrcl  = vsubq_s32(vsrch, vc1);
+        vif = vcvtq_f32_s32(vi);
+        vw = vmlaq_f32(vscale_x_offset, vscale_x, vif);
+        vwi = vcvtq_s32_f32(vw);
+        vwif = vcvtq_f32_s32(vwi);
+        vmask = (int32x4_t)vcltq_f32(vwif, vw);
+        vsrch = vsubq_s32(vwi, vmask);
+        vsrcl = vsubq_s32(vsrch, vc1);
         vsrchf = vcvtq_f32_s32(vsrch);
-        vw2    = vsubq_f32(vsrchf, vw);
+        vw2 = vsubq_f32(vsrchf, vw);
 
-        vw2   = vmulq_f32(vw2, vc128f);
+        vw2 = vmulq_f32(vw2, vc128f);
         vw32u = vcvtq_u32_f32(vw2);
         indexes.updateIndexes(vi, vsrch, vsrcl);
 
@@ -1617,7 +1617,7 @@ void resize_linear_u8c1orc4(
         uint8x8_t vw8u = vmovn_u16(vcombine_u16(vw16ul, vw16uh));
 
         for (uint32_t i = 0; i < 8; ++i) {
-            gcols[dcol * 2 + i * 2]     = &buf[idx[i]];
+            gcols[dcol * 2 + i * 2] = &buf[idx[i]];
             gcols[dcol * 2 + i * 2 + 1] = &buf[idx[i + 8]];
         }
 
@@ -1645,7 +1645,7 @@ static void img_resize_cal_offset_linear_uchar(
     float inv_scale_x = (float)dstw / srcw;
     float inv_scale_y = (float)dsth / srch;
 
-    int32_t cn    = channels;
+    int32_t cn = channels;
     float scale_x = 1. / inv_scale_x;
     float scale_y = 1. / inv_scale_y;
     int32_t k, sx, sy, dx, dy;
@@ -1726,7 +1726,7 @@ void img_hresize_4channels_linear_neon_uchar(
 
     //for (k = 0; k <= count - 2; k++)
     if (count == 2) {
-        k                 = 0;
+        k = 0;
         const uint8_t *S0 = src[k], *S1 = src[k + 1];
         int32_t *D0 = dst[k], *D1 = dst[k + 1];
 
@@ -1777,9 +1777,9 @@ void img_hresize_4channels_linear_neon_uchar(
 
     //for (; k < count; k++)
     if (count == 1) {
-        k                = 0;
+        k = 0;
         const uint8_t* S = src[k];
-        int32_t* D       = dst[k];
+        int32_t* D = dst[k];
         for (dx = 0; dx < xmax; dx += 4) {
             int32_t sx = xofs[dx];
 
@@ -1802,14 +1802,14 @@ void img_hresize_4channels_linear_neon_uchar(
 
             int32_t value = *(int32_t*)(S + sx);
             int32x2_t int32_S0_vec;
-            int32_S0_vec      = vset_lane_s32(value, int32_S0_vec, 0);
+            int32_S0_vec = vset_lane_s32(value, int32_S0_vec, 0);
             //uint8x8_t u8_S0_vec = vreinterpret_u8_s32(int32_S0_vec);
             uint8x8_t dS0_vec = vreinterpret_u8_s32(int32_S0_vec);
 
             //dS0_vec = vld1_u8 (&S[sx]);
-            qS0_vec  = vreinterpretq_s16_u16(vmovl_u8(dS0_vec));
+            qS0_vec = vreinterpretq_s16_u16(vmovl_u8(dS0_vec));
             dS0_0123 = vget_low_s16(qS0_vec);
-            qT0_vec  = vmull_s16(dS0_0123, dCoeff);
+            qT0_vec = vmull_s16(dS0_0123, dCoeff);
 
             vst1q_s32(&D[dx], qT0_vec);
         }
@@ -1833,7 +1833,7 @@ static void img_hresize_linear_c_uchar(
     int32_t k0 = 0;
     //for (k = 0; k <= count - 2; k++)
     if (count == 2) {
-        k                 = 0;
+        k = 0;
         const uint8_t *S0 = src[k], *S1 = src[k + 1];
         int32_t *D0 = dst[k], *D1 = dst[k + 1];
         for (dx = k0; dx < xmax; dx++) {
@@ -1841,25 +1841,25 @@ static void img_hresize_linear_c_uchar(
             int32_t a0 = (int32_t)alpha[dx * 2], a1 = (int32_t)alpha[dx * 2 + 1];
             int32_t t0 = S0[sx] * a0 + S0[sx + cn] * a1;
             int32_t t1 = S1[sx] * a0 + S1[sx + cn] * a1;
-            D0[dx]     = t0;
-            D1[dx]     = t1;
+            D0[dx] = t0;
+            D1[dx] = t1;
         }
 
         for (; dx < dwidth; dx++) {
             int32_t sx = xofs[dx];
-            D0[dx]     = (int32_t)S0[sx] * INTER_RESIZE_COEF_SCALE;
-            D1[dx]     = (int32_t)S1[sx] * INTER_RESIZE_COEF_SCALE;
+            D0[dx] = (int32_t)S0[sx] * INTER_RESIZE_COEF_SCALE;
+            D1[dx] = (int32_t)S1[sx] * INTER_RESIZE_COEF_SCALE;
         }
     }
 
     //for (; k < count; k++)
     if (count == 1) {
-        k                = 0;
+        k = 0;
         const uint8_t* S = src[k];
-        int32_t* D       = dst[k];
+        int32_t* D = dst[k];
         for (dx = k0; dx < xmax; dx++) {
             int32_t sx = xofs[dx];
-            D[dx]      = S[sx] * alpha[dx * 2] + S[sx + cn] * alpha[dx * 2 + 1];
+            D[dx] = S[sx] * alpha[dx * 2] + S[sx + cn] * alpha[dx * 2 + 1];
         }
 
         for (; dx < dwidth; dx++)
@@ -1885,8 +1885,8 @@ void img_vresize_linear_neon_uchar(const int32_t** src, uint8_t* dst, const int1
         qS0_10 = vshrq_n_s32(vld1q_s32(S1 + x), 4);
         qS0_01 = vshrq_n_s32(vld1q_s32(S0 + x + 4), 4);
         qS0_11 = vshrq_n_s32(vld1q_s32(S1 + x + 4), 4);
-        qS_00  = vcombine_s16(vmovn_s32(qS0_00), vmovn_s32(qS0_01));
-        qS_01  = vcombine_s16(vmovn_s32(qS0_10), vmovn_s32(qS0_11));
+        qS_00 = vcombine_s16(vmovn_s32(qS0_00), vmovn_s32(qS0_01));
+        qS_01 = vcombine_s16(vmovn_s32(qS0_10), vmovn_s32(qS0_11));
 
         q_dst0 = vaddq_s16(vshrq_n_s16(vqdmulhq_s16(qS_00, dBeta_0), 1),
                            vshrq_n_s16(vqdmulhq_s16(qS_01, dBeta_1), 1));
@@ -1896,8 +1896,8 @@ void img_vresize_linear_neon_uchar(const int32_t** src, uint8_t* dst, const int1
         qS0_10 = vshrq_n_s32(vld1q_s32(S1 + x + 8), 4);
         qS0_01 = vshrq_n_s32(vld1q_s32(S0 + x + 12), 4);
         qS0_11 = vshrq_n_s32(vld1q_s32(S1 + x + 12), 4);
-        qS_00  = vcombine_s16(vmovn_s32(qS0_00), vmovn_s32(qS0_01));
-        qS_01  = vcombine_s16(vmovn_s32(qS0_10), vmovn_s32(qS0_11));
+        qS_00 = vcombine_s16(vmovn_s32(qS0_00), vmovn_s32(qS0_01));
+        qS_01 = vcombine_s16(vmovn_s32(qS0_10), vmovn_s32(qS0_11));
 
         q_dst1 = vaddq_s16(vshrq_n_s16(vqdmulhq_s16(qS_00, dBeta_0), 1),
                            vshrq_n_s16(vqdmulhq_s16(qS_01, dBeta_1), 1));
@@ -1931,8 +1931,8 @@ static void img_resize_generic_linear_neon_uchar(
     int32_t channels)
 {
     const int16_t* alpha = _alpha;
-    const int16_t* beta  = _beta;
-    int32_t cn           = channels;
+    const int16_t* beta = _beta;
+    int32_t cn = channels;
     srcw *= cn;
     dstw *= cn;
 
@@ -1951,7 +1951,7 @@ static void img_resize_generic_linear_neon_uchar(
 
     for (k = 0; k < ksize; k++) {
         prev_sy[k] = -1;
-        rows[k]    = (int32_t*)buffer_ + bufstep * k;
+        rows[k] = (int32_t*)buffer_ + bufstep * k;
     }
 
     // image resize is a separable operation. In case of not too strong
@@ -1970,7 +1970,7 @@ static void img_resize_generic_linear_neon_uchar(
             }
             if (k1 == ksize)
                 k0 = FUNC_MIN(k0, k); // remember the first row that needs to be computed
-            srows[k]   = (const uint8_t*)(src + srcstep * sy);
+            srows[k] = (const uint8_t*)(src + srcstep * sy);
             prev_sy[k] = sy;
         }
 
@@ -2033,21 +2033,21 @@ void img_resize_bilinear_neon_uchar(
         return;
     }
 
-    int32_t xmin  = 0;
-    int32_t xmax  = dstw;
+    int32_t xmin = 0;
+    int32_t xmax = dstw;
     int32_t width = dstw * cn;
     //float fx, fy;
 
     int32_t ksize = 0, ksize2;
-    ksize         = 2;
-    ksize2        = ksize / 2;
+    ksize = 2;
+    ksize2 = ksize / 2;
 
     uint8_t* buffer_ = (uint8_t*)malloc((width + dsth) * (sizeof(int32_t) + sizeof(float) * ksize));
 
-    int32_t* xofs   = (int32_t*)buffer_;
-    int32_t* yofs   = xofs + width;
+    int32_t* xofs = (int32_t*)buffer_;
+    int32_t* yofs = xofs + width;
     int16_t* ialpha = (int16_t*)(yofs + dsth);
-    int16_t* ibeta  = ialpha + width * ksize;
+    int16_t* ibeta = ialpha + width * ksize;
 
     img_resize_cal_offset_linear_uchar(xofs, ialpha, yofs, ibeta, &xmin, &xmax, ksize, ksize2, srcw, srch, dstw, dsth, cn);
 
@@ -2094,7 +2094,7 @@ static void img_resize_cal_offset_area_uchar(
     double inv_scale_x = (double)dstw / srcw;
     double inv_scale_y = (double)dsth / srch;
 
-    int32_t cn     = channels;
+    int32_t cn = channels;
     double scale_x = 1. / inv_scale_x;
     double scale_y = 1. / inv_scale_y;
     int32_t k, sx, sy, dx, dy;
@@ -2172,21 +2172,21 @@ void img_resize_area_neon_uchar(
     int32_t cn = channels; //4;
     //int32_t src_stride = srcw * cn;
 
-    int32_t xmin  = 0;
-    int32_t xmax  = dstw;
+    int32_t xmin = 0;
+    int32_t xmax = dstw;
     int32_t width = dstw * cn;
     //float fx, fy;
 
     int32_t ksize = 0, ksize2;
-    ksize         = 2;
-    ksize2        = ksize / 2;
+    ksize = 2;
+    ksize2 = ksize / 2;
 
     uint8_t* buffer_ = (uint8_t*)malloc((width + dsth) * (sizeof(int32_t) + sizeof(float) * ksize));
 
     int32_t* xofs = (int32_t*)buffer_;
     int32_t* yofs = xofs + width;
     short* ialpha = (short*)(yofs + dsth);
-    short* ibeta  = ialpha + width * ksize;
+    short* ibeta = ialpha + width * ksize;
 
     img_resize_cal_offset_area_uchar(xofs, ialpha, yofs, ibeta, &xmin, &xmax, ksize, ksize2, srcw, srch, dstw, dsth, cn);
 
@@ -2208,9 +2208,9 @@ void resizeAreaFast(
 {
     int32_t scale_x = inWidth / outWidth;
     int32_t scale_y = inHeight / outHeight;
-    int32_t area    = scale_x * scale_y;
+    int32_t area = scale_x * scale_y;
     //size_t srcstep = inWidthStride / (sizeof(Tsrc));
-    int32_t* _ofs   = (int32_t*)malloc((area + outWidth * nc) * sizeof(int32_t));
+    int32_t* _ofs = (int32_t*)malloc((area + outWidth * nc) * sizeof(int32_t));
     int32_t *ofs = _ofs, *xofs = ofs + area;
     for (int32_t sy = 0, k = 0; sy < scale_y; ++sy) {
         for (int32_t sx = 0; sx < scale_x; ++sx) {
@@ -2218,21 +2218,21 @@ void resizeAreaFast(
         }
     }
     for (int32_t dx = 0; dx < outWidth; ++dx) {
-        int32_t j  = dx * nc;
+        int32_t j = dx * nc;
         int32_t sx = scale_x * j;
         for (int32_t k = 0; k < nc; ++k) {
             xofs[j + k] = sx + k;
         }
     }
-    float scale    = 1.0f / area;
+    float scale = 1.0f / area;
     int32_t dwidth = (inWidth / scale_x) * nc;
     inWidth *= nc;
     outWidth *= nc;
     int32_t dy, dx, k = 0;
     for (dy = 0; dy < outHeight; ++dy) {
-        Tdst* D     = (Tdst*)(outData + outWidthStride * dy);
+        Tdst* D = (Tdst*)(outData + outWidthStride * dy);
         int32_t sy0 = dy * scale_y;
-        int32_t w   = sy0 + scale_y <= inHeight ? dwidth : 0;
+        int32_t w = sy0 + scale_y <= inHeight ? dwidth : 0;
         if (sy0 >= inHeight) {
             for (dx = 0; dx < outWidth; ++dx)
                 D[dx] = 0;
@@ -2240,14 +2240,14 @@ void resizeAreaFast(
         }
         for (dx = 0; dx < w; ++dx) {
             const Tsrc* S = (const Tsrc*)(inData + inWidthStride * sy0) + xofs[dx];
-            float sum     = 0;
+            float sum = 0;
             for (k = 0; k < area; ++k) {
                 sum += S[ofs[k]];
             }
             D[dx] = img_saturate_cast<Tdst>(sum * scale);
         }
         for (; dx < outWidth; ++dx) {
-            float sum     = 0;
+            float sum = 0;
             int32_t count = 0, sx0 = xofs[dx];
             if (sx0 >= inWidth)
                 D[dx] = 0;
@@ -2270,28 +2270,28 @@ static int32_t computeResizeAreaTab(int32_t src_size, int32_t dst_size, int32_t 
 {
     int32_t k = 0;
     for (int32_t dx = 0; dx < dst_size; ++dx) {
-        double fsx1      = dx * scale;
-        double fsx2      = fsx1 + scale;
+        double fsx1 = dx * scale;
+        double fsx2 = fsx1 + scale;
         double cellWidth = std::min<double>(scale, src_size - fsx1);
 
         int32_t sx1 = ceil(fsx1), sx2 = floor(fsx2);
         sx2 = std::min<int32_t>(sx2, src_size - 1);
         sx1 = std::min<int32_t>(sx1, sx2);
         if (sx1 - fsx1 > 1e-3) {
-            tab[k].di      = dx * cn;
-            tab[k].si      = (sx1 - 1) * cn;
+            tab[k].di = dx * cn;
+            tab[k].si = (sx1 - 1) * cn;
             tab[k++].alpha = (float)((sx1 - fsx1) / cellWidth);
         }
 
         for (int32_t sx = sx1; sx < sx2; ++sx) {
-            tab[k].di      = dx * cn;
-            tab[k].si      = sx * cn;
+            tab[k].di = dx * cn;
+            tab[k].si = sx * cn;
             tab[k++].alpha = float(1.0 / cellWidth);
         }
 
         if (fsx2 - sx2 > 1e-3) {
-            tab[k].di      = dx * cn;
-            tab[k].si      = sx2 * cn;
+            tab[k].di = dx * cn;
+            tab[k].si = sx2 * cn;
             tab[k++].alpha = (float)(std::min(std::min(fsx2 - sx2, 1.), cellWidth) / cellWidth);
         }
     }
@@ -2330,7 +2330,7 @@ void resizeAreaShrinkx8<uint8_t, 3, uint8_t, 3, 3>(
 
     // create x direction histgram
     int32_t xtab_hist_num = 0;
-    int32_t* xtab_hist    = (int32_t*)malloc(xtab_size * sizeof(int32_t));
+    int32_t* xtab_hist = (int32_t*)malloc(xtab_size * sizeof(int32_t));
     for (int32_t i = 1; i < xtab_size; ++i) {
         if (xtab[i].di != xtab[i - 1].di) {
             xtab_hist[xtab_hist_num] = i;
@@ -2381,7 +2381,7 @@ void resizeAreaShrinkx8<uint8_t, 3, uint8_t, 3, 3>(
         if (dy != prev_dy) {
             uint8_t* D = (uint8_t*)(outData + outWidthStride * prev_dy);
             for (dx = 0; dx < outWidth; ++dx) {
-                D[dx]   = img_saturate_cast<uint8_t>(sum[dx]);
+                D[dx] = img_saturate_cast<uint8_t>(sum[dx]);
                 sum[dx] = beta * buf[dx];
             }
             prev_dy = dy;
@@ -2427,7 +2427,7 @@ void resizeAreaShrinkx8<uint8_t, 4, uint8_t, 4, 4>(
 
     // create x direction histgram
     int32_t xtab_hist_num = 0;
-    int32_t* xtab_hist    = (int32_t*)malloc(xtab_size * sizeof(int32_t));
+    int32_t* xtab_hist = (int32_t*)malloc(xtab_size * sizeof(int32_t));
     for (int32_t i = 1; i < xtab_size; ++i) {
         if (xtab[i].di != xtab[i - 1].di) {
             xtab_hist[xtab_hist_num] = i;
@@ -2526,7 +2526,7 @@ void resizeAreaShrinkx8<uint8_t, 4, uint8_t, 4, 4>(
         if (dy != prev_dy) {
             uint8_t* D = (uint8_t*)(outData + outWidthStride * prev_dy);
             for (dx = 0; dx < outWidth; ++dx) {
-                D[dx]   = img_saturate_cast<uint8_t>(sum[dx]);
+                D[dx] = img_saturate_cast<uint8_t>(sum[dx]);
                 sum[dx] = beta * buf[dx];
             }
             prev_dy = dy;
@@ -2615,7 +2615,7 @@ void resizeArea(
         if (dy != prev_dy) {
             Tdst* D = (Tdst*)(outData + outWidthStride * prev_dy);
             for (dx = 0; dx < outWidth; ++dx) {
-                D[dx]   = img_saturate_cast<Tdst>(sum[dx]);
+                D[dx] = img_saturate_cast<Tdst>(sum[dx]);
                 sum[dx] = beta * buf[dx];
             }
             prev_dy = dy;
@@ -2707,7 +2707,7 @@ void resizeArea<uint8_t, 3, uint8_t, 3, 3>(
         if (dy != prev_dy) {
             uint8_t* D = (uint8_t*)(outData + outWidthStride * prev_dy);
             for (dx = 0; dx < outWidth; ++dx) {
-                D[dx]   = img_saturate_cast<uint8_t>(sum[dx]);
+                D[dx] = img_saturate_cast<uint8_t>(sum[dx]);
                 sum[dx] = beta * buf[dx];
             }
             prev_dy = dy;
@@ -2799,7 +2799,7 @@ void resizeArea<uint8_t, 4, uint8_t, 4, 4>(
         if (dy != prev_dy) {
             uint8_t* D = (uint8_t*)(outData + outWidthStride * prev_dy);
             for (dx = 0; dx < outWidth; ++dx) {
-                D[dx]   = img_saturate_cast<uint8_t>(sum[dx]);
+                D[dx] = img_saturate_cast<uint8_t>(sum[dx]);
                 sum[dx] = beta * buf[dx];
             }
             prev_dy = dy;

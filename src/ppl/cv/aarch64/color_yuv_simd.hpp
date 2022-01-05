@@ -41,29 +41,29 @@ struct YUV4202RGB_u8_neon {
     YUV4202RGB_u8_neon(int32_t _bIdx)
         : bIdx(_bIdx)
     {
-        v_c0    = vdupq_n_s32(ITUR_BT_601_CVR);
-        v_c1    = vdupq_n_s32(ITUR_BT_601_CVG);
-        v_c2    = vdupq_n_s32(ITUR_BT_601_CUG);
-        v_c3    = vdupq_n_s32(ITUR_BT_601_CUB);
-        v_c4    = vdupq_n_s32(ITUR_BT_601_CY);
-        v_zero  = vdupq_n_s32(0);
-        v128    = vdupq_n_s16(128);
-        v16     = vdupq_n_s32(16);
+        v_c0 = vdupq_n_s32(ITUR_BT_601_CVR);
+        v_c1 = vdupq_n_s32(ITUR_BT_601_CVG);
+        v_c2 = vdupq_n_s32(ITUR_BT_601_CUG);
+        v_c3 = vdupq_n_s32(ITUR_BT_601_CUB);
+        v_c4 = vdupq_n_s32(ITUR_BT_601_CY);
+        v_zero = vdupq_n_s32(0);
+        v128 = vdupq_n_s16(128);
+        v16 = vdupq_n_s32(16);
         v_shift = vdupq_n_s32(1 << (ITUR_BT_601_SHIFT - 1));
     }
     inline void process(int32x4x2_t ruv_zip, int32x4x2_t guv_zip, int32x4x2_t buv_zip, int16x8_t vec_y_s16, uint8x8x3_t& v_dst) const
     {
         int32x4_t vec_ylo_s32 = vmovl_s16(vget_low_s16(vec_y_s16));
-        vec_ylo_s32           = vmulq_s32(vmaxq_s32(vsubq_s32(vec_ylo_s32, v16), v_zero), v_c4);
-        int32x4_t v_b0        = vshrq_n_s32(vaddq_s32(vec_ylo_s32, ruv_zip.val[0]), ITUR_BT_601_SHIFT);
-        int32x4_t v_g0        = vshrq_n_s32(vaddq_s32(vec_ylo_s32, guv_zip.val[0]), ITUR_BT_601_SHIFT);
-        int32x4_t v_r0        = vshrq_n_s32(vaddq_s32(vec_ylo_s32, buv_zip.val[0]), ITUR_BT_601_SHIFT);
+        vec_ylo_s32 = vmulq_s32(vmaxq_s32(vsubq_s32(vec_ylo_s32, v16), v_zero), v_c4);
+        int32x4_t v_b0 = vshrq_n_s32(vaddq_s32(vec_ylo_s32, ruv_zip.val[0]), ITUR_BT_601_SHIFT);
+        int32x4_t v_g0 = vshrq_n_s32(vaddq_s32(vec_ylo_s32, guv_zip.val[0]), ITUR_BT_601_SHIFT);
+        int32x4_t v_r0 = vshrq_n_s32(vaddq_s32(vec_ylo_s32, buv_zip.val[0]), ITUR_BT_601_SHIFT);
 
         int32x4_t vec_yhi_s32 = vmovl_s16(vget_high_s16(vec_y_s16));
-        vec_yhi_s32           = vmulq_s32(vmaxq_s32(vsubq_s32(vec_yhi_s32, v16), v_zero), v_c4);
-        int32x4_t v_b1        = vshrq_n_s32(vaddq_s32(vec_yhi_s32, ruv_zip.val[1]), ITUR_BT_601_SHIFT);
-        int32x4_t v_g1        = vshrq_n_s32(vaddq_s32(vec_yhi_s32, guv_zip.val[1]), ITUR_BT_601_SHIFT);
-        int32x4_t v_r1        = vshrq_n_s32(vaddq_s32(vec_yhi_s32, buv_zip.val[1]), ITUR_BT_601_SHIFT);
+        vec_yhi_s32 = vmulq_s32(vmaxq_s32(vsubq_s32(vec_yhi_s32, v16), v_zero), v_c4);
+        int32x4_t v_b1 = vshrq_n_s32(vaddq_s32(vec_yhi_s32, ruv_zip.val[1]), ITUR_BT_601_SHIFT);
+        int32x4_t v_g1 = vshrq_n_s32(vaddq_s32(vec_yhi_s32, guv_zip.val[1]), ITUR_BT_601_SHIFT);
+        int32x4_t v_r1 = vshrq_n_s32(vaddq_s32(vec_yhi_s32, buv_zip.val[1]), ITUR_BT_601_SHIFT);
         if (bIdx == 0) { //bgr
             v_dst.val[2] = vqmovun_s16(vcombine_s16(vqmovn_s32(v_b0), vqmovn_s32(v_b1)));
             v_dst.val[1] = vqmovun_s16(vcombine_s16(vqmovn_s32(v_g0), vqmovn_s32(v_g1)));
@@ -85,7 +85,7 @@ struct YUV4202RGB_u8_neon {
         int32_t stride) const
     {
         const uint8_t* y2 = y1 + stride;
-        int32_t i         = 0;
+        int32_t i = 0;
         for (; i <= width / 2 - 8; i += 8, row1 += 6 * 8, row2 += 6 * 8) {
             uint8x8x3_t v_dst1;
             uint8x8x3_t v_dst2;
@@ -95,22 +95,22 @@ struct YUV4202RGB_u8_neon {
 
             int16x8_t vec_u_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_u_u8));
             int16x8_t vec_v_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_v_u8));
-            vec_u_s16           = vsubq_s16(vec_u_s16, v128);
-            vec_v_s16           = vsubq_s16(vec_v_s16, v128);
+            vec_u_s16 = vsubq_s16(vec_u_s16, v128);
+            vec_v_s16 = vsubq_s16(vec_v_s16, v128);
 
             int32x4_t vec_ulo_s32 = vmovl_s16(vget_low_s16(vec_u_s16));
             int32x4_t vec_vlo_s32 = vmovl_s16(vget_low_s16(vec_v_s16));
 
             int32x4_t ruv1 = vaddq_s32(vmulq_s32(vec_vlo_s32, v_c0), v_shift);
             int32x4_t guv1 = vaddq_s32(vmulq_s32(vec_vlo_s32, v_c1), v_shift);
-            guv1           = vaddq_s32(vmulq_s32(vec_ulo_s32, v_c2), guv1);
+            guv1 = vaddq_s32(vmulq_s32(vec_ulo_s32, v_c2), guv1);
             int32x4_t buv1 = vaddq_s32(vmulq_s32(vec_ulo_s32, v_c3), v_shift);
 
             int32x4x2_t ruv_zip = vzipq_s32(ruv1, ruv1);
             int32x4x2_t guv_zip = vzipq_s32(guv1, guv1);
             int32x4x2_t buv_zip = vzipq_s32(buv1, buv1);
 
-            uint8x8_t vec_y1_u8  = vld1_u8(y1 + 2 * i);
+            uint8x8_t vec_y1_u8 = vld1_u8(y1 + 2 * i);
             int16x8_t vec_y1_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_y1_u8));
             process(ruv_zip, guv_zip, buv_zip, vec_y1_s16, v_dst1);
 
@@ -128,20 +128,20 @@ struct YUV4202RGB_u8_neon {
 
             int32x4_t ruv2 = vaddq_s32(vmulq_s32(vec_vhi_s32, v_c0), v_shift);
             int32x4_t guv2 = vaddq_s32(vmulq_s32(vec_vhi_s32, v_c1), v_shift);
-            guv2           = vaddq_s32(vmulq_s32(vec_uhi_s32, v_c2), guv2);
+            guv2 = vaddq_s32(vmulq_s32(vec_uhi_s32, v_c2), guv2);
             int32x4_t buv2 = vaddq_s32(vmulq_s32(vec_uhi_s32, v_c3), v_shift);
 
             int32x4x2_t ruv2_zip = vzipq_s32(ruv2, ruv2);
             int32x4x2_t guv2_zip = vzipq_s32(guv2, guv2);
             int32x4x2_t buv2_zip = vzipq_s32(buv2, buv2);
 
-            vec_y1_u8  = vld1_u8(y1 + 2 * i + 8);
+            vec_y1_u8 = vld1_u8(y1 + 2 * i + 8);
             vec_y1_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_y1_u8));
             process(ruv2_zip, guv2_zip, buv2_zip, vec_y1_s16, v_dst1);
 
             vst3_u8(row1 + 24, v_dst1);
 
-            vec_y2_u8  = vld1_u8(y2 + 2 * i + 8);
+            vec_y2_u8 = vld1_u8(y2 + 2 * i + 8);
             vec_y2_s16 = vreinterpretq_s16_u16(vmovl_u8(vec_y2_u8));
             process(ruv2_zip, guv2_zip, buv2_zip, vec_y2_s16, v_dst2);
 
@@ -155,24 +155,24 @@ struct YUV4202RGB_u8_neon {
             int32_t guv = (1 << (ITUR_BT_601_SHIFT - 1)) + ITUR_BT_601_CVG * v + ITUR_BT_601_CUG * u;
             int32_t buv = (1 << (ITUR_BT_601_SHIFT - 1)) + ITUR_BT_601_CUB * u;
 
-            int32_t y00    = MAX(0, int32_t(y1[2 * i]) - 16) * ITUR_BT_601_CY;
+            int32_t y00 = MAX(0, int32_t(y1[2 * i]) - 16) * ITUR_BT_601_CY;
             row1[2 - bIdx] = sat_cast((y00 + ruv) >> ITUR_BT_601_SHIFT);
-            row1[1]        = sat_cast((y00 + guv) >> ITUR_BT_601_SHIFT);
-            row1[bIdx]     = sat_cast((y00 + buv) >> ITUR_BT_601_SHIFT);
+            row1[1] = sat_cast((y00 + guv) >> ITUR_BT_601_SHIFT);
+            row1[bIdx] = sat_cast((y00 + buv) >> ITUR_BT_601_SHIFT);
 
-            int32_t y01    = MAX(0, int32_t(y1[2 * i + 1]) - 16) * ITUR_BT_601_CY;
+            int32_t y01 = MAX(0, int32_t(y1[2 * i + 1]) - 16) * ITUR_BT_601_CY;
             row1[5 - bIdx] = sat_cast((y01 + ruv) >> ITUR_BT_601_SHIFT);
-            row1[4]        = sat_cast((y01 + guv) >> ITUR_BT_601_SHIFT);
+            row1[4] = sat_cast((y01 + guv) >> ITUR_BT_601_SHIFT);
             row1[3 + bIdx] = sat_cast((y01 + buv) >> ITUR_BT_601_SHIFT);
 
-            int32_t y10    = MAX(0, int32_t(y2[2 * i]) - 16) * ITUR_BT_601_CY;
+            int32_t y10 = MAX(0, int32_t(y2[2 * i]) - 16) * ITUR_BT_601_CY;
             row2[2 - bIdx] = sat_cast((y10 + ruv) >> ITUR_BT_601_SHIFT);
-            row2[1]        = sat_cast((y10 + guv) >> ITUR_BT_601_SHIFT);
-            row2[bIdx]     = sat_cast((y10 + buv) >> ITUR_BT_601_SHIFT);
+            row2[1] = sat_cast((y10 + guv) >> ITUR_BT_601_SHIFT);
+            row2[bIdx] = sat_cast((y10 + buv) >> ITUR_BT_601_SHIFT);
 
-            int32_t y11    = MAX(0, int32_t(y2[2 * i + 1]) - 16) * ITUR_BT_601_CY;
+            int32_t y11 = MAX(0, int32_t(y2[2 * i + 1]) - 16) * ITUR_BT_601_CY;
             row2[5 - bIdx] = sat_cast((y11 + ruv) >> ITUR_BT_601_SHIFT);
-            row2[4]        = sat_cast((y11 + guv) >> ITUR_BT_601_SHIFT);
+            row2[4] = sat_cast((y11 + guv) >> ITUR_BT_601_SHIFT);
             row2[3 + bIdx] = sat_cast((y11 + buv) >> ITUR_BT_601_SHIFT);
         }
     }
@@ -190,8 +190,8 @@ struct YUV4202RGB_u8_neon {
         bool isUV) const
     {
         const uint8_t* y1 = y;
-        uint8_t* u1       = (uint8_t*)malloc(width / 2);
-        uint8_t* v1       = (uint8_t*)malloc(width / 2);
+        uint8_t* u1 = (uint8_t*)malloc(width / 2);
+        uint8_t* v1 = (uint8_t*)malloc(width / 2);
         for (int32_t j = 0; j < height; j += 2, y1 += yStride * 2, uv += uvStride) {
             uint8_t* row1 = dst + j * outWidthStride;
             uint8_t* row2 = dst + (j + 1) * outWidthStride;
@@ -265,13 +265,13 @@ struct RGBtoYUV420p_u8_neon {
     RGBtoYUV420p_u8_neon(int32_t _bIdx)
         : bIdx(_bIdx)
     {
-        v_c0        = vdupq_n_s32(ITUR_BT_601_CRY);
-        v_c1        = vdupq_n_s32(ITUR_BT_601_CGY);
-        v_c2        = vdupq_n_s32(ITUR_BT_601_CBY);
-        v_zero      = vdupq_n_s32(0);
-        v16         = vdupq_n_s32(16);
-        v_shift16   = vdupq_n_s32(16 << (ITUR_BT_601_SHIFT));
-        v_shift128  = vdupq_n_s32(128 << (ITUR_BT_601_SHIFT));
+        v_c0 = vdupq_n_s32(ITUR_BT_601_CRY);
+        v_c1 = vdupq_n_s32(ITUR_BT_601_CGY);
+        v_c2 = vdupq_n_s32(ITUR_BT_601_CBY);
+        v_zero = vdupq_n_s32(0);
+        v16 = vdupq_n_s32(16);
+        v_shift16 = vdupq_n_s32(16 << (ITUR_BT_601_SHIFT));
+        v_shift128 = vdupq_n_s32(128 << (ITUR_BT_601_SHIFT));
         v_halfshift = vdupq_n_s32(1 << (ITUR_BT_601_SHIFT - 1));
     }
 
@@ -334,10 +334,10 @@ struct RGBtoYUV420p_u8_neon {
         getUV(r00_hi_s32, g00_hi_s32, b00_hi_s32, u1_s32, v1_s32);
 
         int32x4x2_t u_unpack = vuzpq_s32(u0_s32, u1_s32);
-        u_s32                = u_unpack.val[0];
+        u_s32 = u_unpack.val[0];
 
         int32x4x2_t v_unpack = vuzpq_s32(v0_s32, v1_s32);
-        v_s32                = v_unpack.val[0];
+        v_s32 = v_unpack.val[0];
     }
 
     void convert_per_2rows(
@@ -361,43 +361,43 @@ struct RGBtoYUV420p_u8_neon {
 
             if (cn == 3) {
                 if (bIdx == 0) {
-                    uint8x16x3_t v_src  = vld3q_u8(row0 + j);
-                    v_row0_u8.val[0]    = v_src.val[0];
-                    v_row0_u8.val[1]    = v_src.val[1];
-                    v_row0_u8.val[2]    = v_src.val[2];
+                    uint8x16x3_t v_src = vld3q_u8(row0 + j);
+                    v_row0_u8.val[0] = v_src.val[0];
+                    v_row0_u8.val[1] = v_src.val[1];
+                    v_row0_u8.val[2] = v_src.val[2];
                     uint8x16x3_t v_src1 = vld3q_u8(row1 + j);
-                    v_row1_u8.val[0]    = v_src1.val[0];
-                    v_row1_u8.val[1]    = v_src1.val[1];
-                    v_row1_u8.val[2]    = v_src1.val[2];
+                    v_row1_u8.val[0] = v_src1.val[0];
+                    v_row1_u8.val[1] = v_src1.val[1];
+                    v_row1_u8.val[2] = v_src1.val[2];
                 } else {
-                    uint8x16x3_t v_src  = vld3q_u8(row0 + j);
-                    v_row0_u8.val[0]    = v_src.val[2];
-                    v_row0_u8.val[1]    = v_src.val[1];
-                    v_row0_u8.val[2]    = v_src.val[0];
+                    uint8x16x3_t v_src = vld3q_u8(row0 + j);
+                    v_row0_u8.val[0] = v_src.val[2];
+                    v_row0_u8.val[1] = v_src.val[1];
+                    v_row0_u8.val[2] = v_src.val[0];
                     uint8x16x3_t v_src1 = vld3q_u8(row1 + j);
-                    v_row1_u8.val[0]    = v_src1.val[2];
-                    v_row1_u8.val[1]    = v_src1.val[1];
-                    v_row1_u8.val[2]    = v_src1.val[0];
+                    v_row1_u8.val[0] = v_src1.val[2];
+                    v_row1_u8.val[1] = v_src1.val[1];
+                    v_row1_u8.val[2] = v_src1.val[0];
                 }
             } else {
                 if (bIdx == 0) {
-                    uint8x16x4_t v_src  = vld4q_u8(row0 + j);
-                    v_row0_u8.val[0]    = v_src.val[0];
-                    v_row0_u8.val[1]    = v_src.val[1];
-                    v_row0_u8.val[2]    = v_src.val[2];
+                    uint8x16x4_t v_src = vld4q_u8(row0 + j);
+                    v_row0_u8.val[0] = v_src.val[0];
+                    v_row0_u8.val[1] = v_src.val[1];
+                    v_row0_u8.val[2] = v_src.val[2];
                     uint8x16x4_t v_src1 = vld4q_u8(row1 + j);
-                    v_row1_u8.val[0]    = v_src1.val[0];
-                    v_row1_u8.val[1]    = v_src1.val[1];
-                    v_row1_u8.val[2]    = v_src1.val[2];
+                    v_row1_u8.val[0] = v_src1.val[0];
+                    v_row1_u8.val[1] = v_src1.val[1];
+                    v_row1_u8.val[2] = v_src1.val[2];
                 } else {
-                    uint8x16x4_t v_src  = vld4q_u8(row0 + j);
-                    v_row0_u8.val[0]    = v_src.val[2];
-                    v_row0_u8.val[1]    = v_src.val[1];
-                    v_row0_u8.val[2]    = v_src.val[0];
+                    uint8x16x4_t v_src = vld4q_u8(row0 + j);
+                    v_row0_u8.val[0] = v_src.val[2];
+                    v_row0_u8.val[1] = v_src.val[1];
+                    v_row0_u8.val[2] = v_src.val[0];
                     uint8x16x4_t v_src1 = vld4q_u8(row1 + j);
-                    v_row1_u8.val[0]    = v_src1.val[2];
-                    v_row1_u8.val[1]    = v_src1.val[1];
-                    v_row1_u8.val[2]    = v_src1.val[0];
+                    v_row1_u8.val[0] = v_src1.val[2];
+                    v_row1_u8.val[1] = v_src1.val[1];
+                    v_row1_u8.val[2] = v_src1.val[0];
                 }
             }
 
@@ -451,19 +451,19 @@ struct RGBtoYUV420p_u8_neon {
 
             const int32_t shifted16 = (16 << ITUR_BT_601_SHIFT);
             const int32_t halfShift = (1 << (ITUR_BT_601_SHIFT - 1));
-            int32_t y00             = ITUR_BT_601_CRY * r00 + ITUR_BT_601_CGY * g00 + ITUR_BT_601_CBY * b00 + halfShift + shifted16;
-            int32_t y01             = ITUR_BT_601_CRY * r01 + ITUR_BT_601_CGY * g01 + ITUR_BT_601_CBY * b01 + halfShift + shifted16;
-            int32_t y10             = ITUR_BT_601_CRY * r10 + ITUR_BT_601_CGY * g10 + ITUR_BT_601_CBY * b10 + halfShift + shifted16;
-            int32_t y11             = ITUR_BT_601_CRY * r11 + ITUR_BT_601_CGY * g11 + ITUR_BT_601_CBY * b11 + halfShift + shifted16;
+            int32_t y00 = ITUR_BT_601_CRY * r00 + ITUR_BT_601_CGY * g00 + ITUR_BT_601_CBY * b00 + halfShift + shifted16;
+            int32_t y01 = ITUR_BT_601_CRY * r01 + ITUR_BT_601_CGY * g01 + ITUR_BT_601_CBY * b01 + halfShift + shifted16;
+            int32_t y10 = ITUR_BT_601_CRY * r10 + ITUR_BT_601_CGY * g10 + ITUR_BT_601_CBY * b10 + halfShift + shifted16;
+            int32_t y11 = ITUR_BT_601_CRY * r11 + ITUR_BT_601_CGY * g11 + ITUR_BT_601_CBY * b11 + halfShift + shifted16;
 
-            y[2 * k + 0]           = sat_cast(y00 >> ITUR_BT_601_SHIFT);
-            y[2 * k + 1]           = sat_cast(y01 >> ITUR_BT_601_SHIFT);
+            y[2 * k + 0] = sat_cast(y00 >> ITUR_BT_601_SHIFT);
+            y[2 * k + 1] = sat_cast(y01 >> ITUR_BT_601_SHIFT);
             y[2 * k + yStride + 0] = sat_cast(y10 >> ITUR_BT_601_SHIFT);
             y[2 * k + yStride + 1] = sat_cast(y11 >> ITUR_BT_601_SHIFT);
 
             const int32_t shifted128 = (128 << ITUR_BT_601_SHIFT);
-            int32_t u00              = ITUR_BT_601_CRU * r00 + ITUR_BT_601_CGU * g00 + ITUR_BT_601_CBU * b00 + halfShift + shifted128;
-            int32_t v00              = ITUR_BT_601_CBU * r00 + ITUR_BT_601_CGV * g00 + ITUR_BT_601_CBV * b00 + halfShift + shifted128;
+            int32_t u00 = ITUR_BT_601_CRU * r00 + ITUR_BT_601_CGU * g00 + ITUR_BT_601_CBU * b00 + halfShift + shifted128;
+            int32_t v00 = ITUR_BT_601_CBU * r00 + ITUR_BT_601_CGV * g00 + ITUR_BT_601_CBV * b00 + halfShift + shifted128;
 
             u[k] = sat_cast(u00 >> ITUR_BT_601_SHIFT);
             v[k] = sat_cast(v00 >> ITUR_BT_601_SHIFT);
@@ -551,12 +551,12 @@ struct RGBtoYUV420p_u8_neon {
 
             if (isUV) {
                 for (int32_t i = 0; i < width / 2; i++) {
-                    uv[2 * i]     = u[i];
+                    uv[2 * i] = u[i];
                     uv[2 * i + 1] = v[i];
                 }
             } else {
                 for (int32_t i = 0; i < width / 2; i++) {
-                    uv[2 * i]     = v[i];
+                    uv[2 * i] = v[i];
                     uv[2 * i + 1] = u[i];
                 }
             }

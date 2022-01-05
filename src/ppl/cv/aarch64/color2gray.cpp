@@ -39,7 +39,7 @@ template <int32_t ncSrc, int32_t ncDst>
         return ppl::common::RC_INVALID_VALUE;
     }
     const uint8_t* srcPtr = src;
-    uint8_t* dstPtr       = dst;
+    uint8_t* dstPtr = dst;
 
     typedef typename DT<ncSrc, uint8_t>::vec_DT srcType;
     typedef typename DT<ncDst, uint8_t>::vec_DT dstType;
@@ -49,17 +49,17 @@ template <int32_t ncSrc, int32_t ncDst>
     uint8_t k_b = 29; //0.114;
     if (!isBGR) {
         uint8_t temp = k_r;
-        k_r          = k_b;
-        k_b          = temp;
+        k_r = k_b;
+        k_b = temp;
     }
     uint8_t SHIFT_LEFT = 1 << 7;
 
     const int32_t src_step = srcStride;
     const int32_t dst_step = dstStride;
     for (int32_t k = 0; k < height; k++, srcPtr += src_step, dstPtr += dst_step) {
-        uint8x8_t v_kr         = vdup_n_u8(k_r);
-        uint8x8_t v_kg         = vdup_n_u8(k_g);
-        uint8x8_t v_kb         = vdup_n_u8(k_b);
+        uint8x8_t v_kr = vdup_n_u8(k_r);
+        uint8x8_t v_kg = vdup_n_u8(k_g);
+        uint8x8_t v_kb = vdup_n_u8(k_b);
         uint8x8_t v_SHIFT_LEFT = vdup_n_u8(SHIFT_LEFT);
 
         int32_t i;
@@ -67,9 +67,9 @@ template <int32_t ncSrc, int32_t ncDst>
             srcType v_src0 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i));
 
             uint16x8_t v_tmp = vmull_u8(v_src0.val[0], v_kb);
-            v_tmp            = vmlal_u8(v_tmp, v_src0.val[1], v_kg);
-            v_tmp            = vmlal_u8(v_tmp, v_src0.val[2], v_kr);
-            v_tmp            = vaddw_u8(v_tmp, v_SHIFT_LEFT);
+            v_tmp = vmlal_u8(v_tmp, v_src0.val[1], v_kg);
+            v_tmp = vmlal_u8(v_tmp, v_src0.val[2], v_kr);
+            v_tmp = vaddw_u8(v_tmp, v_SHIFT_LEFT);
 
             dstType v_dst0 = vshrn_n_u16(v_tmp, 8);
 
@@ -80,7 +80,7 @@ template <int32_t ncSrc, int32_t ncDst>
             int32_t b = srcPtr[ncSrc * i], g = srcPtr[ncSrc * i + 1], r = srcPtr[ncSrc * i + 2];
 
             int32_t gray = (k_r * r + k_b * b + k_g * g + SHIFT_LEFT) >> 8;
-            gray         = gray > 255 ? 255 : gray;
+            gray = gray > 255 ? 255 : gray;
 
             dstPtr[ncDst * i] = (uint8_t)gray;
         }
@@ -102,7 +102,7 @@ template <int32_t ncSrc, int32_t ncDst>
         return ppl::common::RC_INVALID_VALUE;
     }
     const float* srcPtr = src;
-    float* dstPtr       = dst;
+    float* dstPtr = dst;
 
     typedef typename DT<ncSrc, float>::vec_DT srcType;
     typedef typename DT<ncDst, float>::vec_DT dstType;
@@ -112,8 +112,8 @@ template <int32_t ncSrc, int32_t ncDst>
     float k_b = 0.114;
     if (!isBGR) {
         float temp = k_r;
-        k_r        = k_b;
-        k_b        = temp;
+        k_r = k_b;
+        k_b = temp;
     }
     const int32_t src_step = srcStride;
     const int32_t dst_step = dstStride;
@@ -129,12 +129,12 @@ template <int32_t ncSrc, int32_t ncDst>
             srcType v_src1 = vldx_u8_f32<ncSrc, float, srcType>(srcPtr + ncSrc * (i + 4));
 
             dstType v_dst0 = vmulq_f32(v_src0.val[0], v_kb);
-            v_dst0         = vmlaq_f32(v_dst0, v_src0.val[1], v_kg);
-            v_dst0         = vmlaq_f32(v_dst0, v_src0.val[2], v_kr);
+            v_dst0 = vmlaq_f32(v_dst0, v_src0.val[1], v_kg);
+            v_dst0 = vmlaq_f32(v_dst0, v_src0.val[2], v_kr);
 
             dstType v_dst1 = vmulq_f32(v_src1.val[0], v_kb);
-            v_dst1         = vmlaq_f32(v_dst1, v_src1.val[1], v_kg);
-            v_dst1         = vmlaq_f32(v_dst1, v_src1.val[2], v_kr);
+            v_dst1 = vmlaq_f32(v_dst1, v_src1.val[1], v_kg);
+            v_dst1 = vmlaq_f32(v_dst1, v_src1.val[2], v_kr);
 
             vstx_u8_f32<ncDst, float, dstType>(dstPtr + ncDst * i, v_dst0);
             vstx_u8_f32<ncDst, float, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
@@ -161,7 +161,7 @@ template <int32_t ncSrc, int32_t ncDst>
         return ppl::common::RC_INVALID_VALUE;
     }
     const uint8_t* srcPtr = src;
-    uint8_t* dstPtr       = dst;
+    uint8_t* dstPtr = dst;
 
     typedef typename DT<ncSrc, uint8_t>::vec_DT srcType;
     typedef typename DT<ncDst, uint8_t>::vec_DT dstType;
@@ -187,7 +187,7 @@ template <int32_t ncSrc, int32_t ncDst>
         for (; i < width; i++) {
             uint8_t gray = srcPtr[i];
 
-            dstPtr[ncDst * i]     = gray;
+            dstPtr[ncDst * i] = gray;
             dstPtr[ncDst * i + 1] = gray;
             dstPtr[ncDst * i + 2] = gray;
             if (ncDst == 4)
@@ -210,7 +210,7 @@ template <int32_t ncSrc, int32_t ncDst>
         return ppl::common::RC_INVALID_VALUE;
     }
     const float* srcPtr = src;
-    float* dstPtr       = dst;
+    float* dstPtr = dst;
 
     typedef typename DT<ncSrc, float>::vec_DT srcType;
     typedef typename DT<ncDst, float>::vec_DT dstType;
@@ -229,12 +229,12 @@ template <int32_t ncSrc, int32_t ncDst>
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src0 = vldx_u8_f32<ncSrc, float, srcType>(srcPtr + ncSrc * (i));
             srcType v_src1 = vldx_u8_f32<ncSrc, float, srcType>(srcPtr + ncSrc * (i + 4));
-            v_dst0.val[0]  = v_src0;
-            v_dst0.val[1]  = v_src0;
-            v_dst0.val[2]  = v_src0;
-            v_dst1.val[0]  = v_src1;
-            v_dst1.val[1]  = v_src1;
-            v_dst1.val[2]  = v_src1;
+            v_dst0.val[0] = v_src0;
+            v_dst0.val[1] = v_src0;
+            v_dst0.val[2] = v_src0;
+            v_dst1.val[0] = v_src1;
+            v_dst1.val[1] = v_src1;
+            v_dst1.val[2] = v_src1;
 
             vstx_u8_f32<ncDst, float, dstType>(dstPtr + ncDst * i, v_dst0);
             vstx_u8_f32<ncDst, float, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
@@ -243,7 +243,7 @@ template <int32_t ncSrc, int32_t ncDst>
         for (; i < width; i++) {
             float gray = srcPtr[i];
 
-            dstPtr[ncDst * i]     = gray;
+            dstPtr[ncDst * i] = gray;
             dstPtr[ncDst * i + 1] = gray;
             dstPtr[ncDst * i + 2] = gray;
             if (ncDst == 4)
