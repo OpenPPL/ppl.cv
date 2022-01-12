@@ -18,6 +18,7 @@
 #include "ppl/cv/types.h"
 #include "ppl/cv/x86/abs.h"
 #include <immintrin.h>
+#include <algorithm>
 
 namespace ppl {
 namespace cv {

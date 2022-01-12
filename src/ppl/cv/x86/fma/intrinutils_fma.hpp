@@ -103,10 +103,10 @@ inline void v_load_deinterleave(const float *ptr, __m256 &a, __m256 &b, __m256 &
     __m256i r0 = _mm256_unpacklo_epi32(phl, phh);
     __m256i a0 = _mm256_unpackhi_epi32(phl, phh);
 
-    a = (__m256)b0;
-    b = (__m256)g0;
-    c = (__m256)r0;
-    d = (__m256)a0;
+    a = _mm256_castsi256_ps(b0);
+    b = _mm256_castsi256_ps(g0);
+    c = _mm256_castsi256_ps(r0);
+    d = _mm256_castsi256_ps(a0);
 }
 
 }
