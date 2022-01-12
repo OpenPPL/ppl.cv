@@ -19,6 +19,7 @@
 #include "ppl/cv/types.h"
 #include <string.h>
 #include <cmath>
+#include <algorithm>
 
 namespace ppl {
 namespace cv {

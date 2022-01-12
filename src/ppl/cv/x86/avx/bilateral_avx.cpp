@@ -108,9 +108,16 @@ void bilateralFilter_32f_avx(
             space_ofs[maxk++]  = (int32_t)(i * (tempstep) + j * cn);
         }
     }
-    int32_t idxBuf[8] __attribute__((aligned(64)));
-    static const uint32_t bufSignMask[] __attribute__((aligned(64))) = {
-        0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000};
+#ifdef _MSC_VER
+    int __declspec(align(32)) idxBuf[8] ;
+    static const unsigned int __declspec(align(32)) bufSignMask[] = {
+        0x80000000, 0x80000000, 0x80000000,0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000 };
+#else
+     int idxBuf[8] __attribute__((aligned(64)));
+     static const unsigned int bufSignMask[] __attribute__((aligned(64))) = {
+         0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000 };
+
+#endif
     for (i = 0; i < height; i++) {
         const float* sptr = (const float*)(temp + (i + radius) * tempstep) + radius * cn;
         float* dptr       = (float*)(dst + i * outWidthStride);

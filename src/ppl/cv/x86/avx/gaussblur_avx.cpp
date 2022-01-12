@@ -25,6 +25,7 @@
 #include <vector>
 #include <limits.h>
 #include <immintrin.h>
+#include <algorithm>
 
 namespace ppl {
 namespace cv {
