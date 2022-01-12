@@ -18,6 +18,9 @@
 #include "ppl/cv/x86/perspectivetransform.h"
 #include "ppl/cv/types.h"
 #include <cmath>
+#ifdef _WIN32
+#include <algorithm>
+#endif
 
 #define EPS (1e-8)
 

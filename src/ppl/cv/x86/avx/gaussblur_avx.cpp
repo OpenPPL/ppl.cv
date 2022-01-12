@@ -25,6 +25,9 @@
 #include <vector>
 #include <limits.h>
 #include <immintrin.h>
+#ifdef _WIN32
+#include <algorithm>
+#endif
 
 namespace ppl {
 namespace cv {

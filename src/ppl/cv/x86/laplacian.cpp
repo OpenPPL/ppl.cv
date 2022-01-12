@@ -19,6 +19,9 @@
 #include "ppl/cv/types.h"
 #include <string.h>
 #include <cmath>
+#ifdef _WIN32
+#include <algorithm>
+#endif
 
 namespace ppl {
 namespace cv {
