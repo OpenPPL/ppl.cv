@@ -49,8 +49,8 @@ inline void MorphRow(__m128 *tprev, __m128 &tcurr, __m128 *tnext, const float *s
         case 3: {
             __m128 v_up, v_mid, v_down;
             __m128 t_left, t_mid, t_right;
-            __m128i tcurr_tmp = _mm_bslli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
-            __m128i tprev_tmp = _mm_bslli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
+            __m128i tcurr_tmp = _mm_slli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
+            __m128i tprev_tmp = _mm_slli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
 
             v_up   = rowIdx == 0 ? v_border : _mm_loadu_ps(srcCenterRow - srcStride);
             v_mid  = _mm_loadu_ps(srcCenterRow);
@@ -78,8 +78,8 @@ inline void MorphRow(__m128 *tprev, __m128 &tcurr, __m128 *tnext, const float *s
 
             __m128 t_left0, t_left1, t_mid, t_right0, t_right1;
             if (radius_vec_num == 1) {
-                __m128i tcurr_tmp = _mm_bslli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
-                __m128i tprev_tmp = _mm_bslli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
+                __m128i tcurr_tmp = _mm_slli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
+                __m128i tprev_tmp = _mm_slli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
 
                 t_left0  = _mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(tcurr), tprev_tmp, VLEN - nc * 2 * static_cast<int32_t>(sizeof(float))));
                 t_left1  = _mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(tcurr), tprev_tmp, VLEN - nc * 1 * sizeof(float)));
@@ -116,8 +116,8 @@ inline void MorphRowLast(__m128 *tprev, __m128 &tcurr, __m128 *tnext, const floa
         case 3: {
             __m128 v_up, v_mid, v_down;
             __m128 t_left, t_mid, t_right;
-            __m128i tcurr_tmp = _mm_bslli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
-            __m128i tprev_tmp = _mm_bslli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
+            __m128i tcurr_tmp = _mm_slli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
+            __m128i tprev_tmp = _mm_slli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
 
             if (colIdxInv + 1 - v_elem >= kernel_radius) { // #remaining is sufficient for current kernel.
                 v_up     = rowIdx == 0 ? v_border : _mm_loadu_ps(srcCenterRow - srcStride);
@@ -149,8 +149,8 @@ inline void MorphRowLast(__m128 *tprev, __m128 &tcurr, __m128 *tnext, const floa
         case 5: {
             __m128 v_up0, v_up1, v_mid, v_down0, v_down1;
             __m128 t_left0, t_left1, t_mid, t_right0, t_right1;
-            __m128i tcurr_tmp = _mm_bslli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
-            __m128i tprev_tmp = _mm_bslli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
+            __m128i tcurr_tmp = _mm_slli_si128(_mm_castps_si128(tcurr), invalid_byte_len);
+            __m128i tprev_tmp = _mm_slli_si128(_mm_castps_si128(tprev[0]), invalid_byte_len);
 
             v_up0 = rowIdx < 2 ? v_border : _mm_loadu_ps(srcCenterRow - 2 * srcStride + v_elem * nc * (radius_vec_num - 1));
             v_up1 = rowIdx < 1 ? v_border : _mm_loadu_ps(srcCenterRow - 1 * srcStride + v_elem * nc * (radius_vec_num - 1));

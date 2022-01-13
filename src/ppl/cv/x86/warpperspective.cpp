@@ -24,7 +24,7 @@
 #include "ppl/common/x86/sysinfo.h"
 #include <string.h>
 #include <cmath>
-
+#include <algorithm>
 #include <vector>
 #include <limits.h>
 #include <immintrin.h>
