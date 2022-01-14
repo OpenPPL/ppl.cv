@@ -26,6 +26,9 @@ namespace cv {
 namespace x86 {
 namespace fma {
 
+#define _mm256_extract_epi32(x, n)	\
+    _mm_extract_epi32 (_mm256_extractf128_si256 ((x), (n) >> 2), (n) % 4);
+
 int32_t resize_linear_w_oneline_c1_u8_fma(
     int32_t in_width,
     const uint8_t *in_data,
