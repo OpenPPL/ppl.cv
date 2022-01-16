@@ -18,7 +18,6 @@
 #include "ppl/cv/x86/medianblur.h"
 #include "ppl/cv/x86/test.h"
 #include "ppl/cv/types.h"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"

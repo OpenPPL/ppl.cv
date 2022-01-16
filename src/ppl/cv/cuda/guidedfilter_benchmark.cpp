@@ -19,8 +19,8 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "opencv2/opencv.hpp"
 #include "opencv2/ximgproc/edge_filter.hpp"
+#include "opencv2/cudaimgproc.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"

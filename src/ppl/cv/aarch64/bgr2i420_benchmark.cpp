@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 #include <benchmark/benchmark.h>
-#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include "ppl/cv/aarch64/cvtcolor.h"
 #include "ppl/cv/debug.h"

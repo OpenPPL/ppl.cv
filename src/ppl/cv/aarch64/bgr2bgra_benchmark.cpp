@@ -16,7 +16,6 @@
 // under the License.
 
 #include <benchmark/benchmark.h>
-#include <opencv2/opencv.hpp>
 #include "ppl/cv/aarch64/cvtcolor.h"
 #include "ppl/cv/debug.h"
 

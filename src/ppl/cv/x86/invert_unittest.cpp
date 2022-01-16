@@ -18,7 +18,6 @@
 #include "ppl/cv/x86/invert.h"
 #include "ppl/cv/x86/test.h"
 #include "ppl/cv/debug.h"
-#include <opencv2/opencv.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 #include <random>
@@ -116,4 +115,3 @@ constexpr int32_t c4 = 4;
 
 R(Invert_float_c1,  float, c1, 8e-2)
 R(Invert_double_c1, double, c1, 8e-2)
-

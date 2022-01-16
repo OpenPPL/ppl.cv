@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <gtest/gtest.h>
 #include <vector>
@@ -43,7 +42,7 @@ public:
         float diff_THR   = std::get<1>(param);
         int32_t height = size.height;
         int32_t width  = size.width;
-        int32_t stride = size.width * c; 
+        int32_t stride = size.width * c;
 
         std::unique_ptr<uint8_t[]> inData(new uint8_t[stride * height]);
         std::unique_ptr<T[]> pplcv_outData(new T[stride * height]);
@@ -53,7 +52,7 @@ public:
         ppl::cv::debug::randomFill<T>(opencv_outData.get(), stride * height, 0, 255);
 
         //pplcv
-        ppl::cv::x86::DistanceTransform(height, width, stride, inData.get(), stride, pplcv_outData.get(), 
+        ppl::cv::x86::DistanceTransform(height, width, stride, inData.get(), stride, pplcv_outData.get(),
             ppl::cv::DIST_L2, ppl::cv::DIST_MASK_PRECISE);
 
         //opencv

@@ -77,7 +77,6 @@ BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_x86, uint8_t, c3)->Args({320, 240})->Args({
 BENCHMARK_TEMPLATE(BM_BitwiseAnd_ppl_x86, uint8_t, c4)->Args({320, 240})->Args({640, 480});
 
 #ifdef PPLCV_BENCHMARK_OPENCV
-#include <opencv2/opencv.hpp>
 template<typename T, int32_t channels>
 static void BM_BitwiseAnd_opencv_x86(benchmark::State &state) {
     BitwiseBenchmark<T, channels> bm(state.range(1), state.range(0));

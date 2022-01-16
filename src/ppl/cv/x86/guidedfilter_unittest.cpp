@@ -17,7 +17,6 @@
 
 #include "ppl/cv/x86/guidedfilter.h"
 #include <gtest/gtest.h>
-#include <opencv2/opencv.hpp>
 #include <opencv2/ximgproc.hpp>
 #include "ppl/cv/debug.h"
 #include "ppl/cv/x86/test.h"
@@ -67,7 +66,7 @@ public:
             r,
             eps,
             ppl::cv::BORDER_TYPE_REFLECT);
-        
+
         checkResult<T, c_src>(
             dst_ref.get(),
             dst.get(),

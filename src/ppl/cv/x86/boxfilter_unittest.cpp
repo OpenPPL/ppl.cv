@@ -17,7 +17,6 @@
 
 #include "ppl/cv/x86/boxfilter.h"
 #include "ppl/cv/x86/test.h"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
@@ -187,4 +186,3 @@ TEST(BoxFilter_REPLICATE_UINT8, x86)
     BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
     BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
 }
-

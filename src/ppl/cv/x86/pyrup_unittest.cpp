@@ -18,7 +18,6 @@
 #include "ppl/cv/x86/pyrup.h"
 #include "ppl/cv/x86/test.h"
 #include <gtest/gtest.h>
-#include <opencv2/opencv.hpp>
 #include "ppl/cv/debug.h"
 #include <memory>
 

@@ -17,7 +17,6 @@
 
 #include "ppl/cv/aarch64/remap.h"
 #include <gtest/gtest.h>
-#include <opencv2/opencv.hpp>
 #include "ppl/cv/debug.h"
 #include "ppl/cv/aarch64/test.h"
 #include <math.h>

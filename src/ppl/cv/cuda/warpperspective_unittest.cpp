@@ -19,7 +19,7 @@
 #include <tuple>
 #include <sstream>
 
-#include "opencv2/opencv.hpp"
+#include "opencv2/cudawarping.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"

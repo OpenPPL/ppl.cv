@@ -17,7 +17,6 @@
 
 #include "ppl/cv/x86/filter2d.h"
 #include "ppl/cv/x86/test.h"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
@@ -30,7 +29,7 @@ void Filter2DTest(int32_t height, int32_t width, T diff) {
     std::unique_ptr<float[]> filter(new float[filter_size * filter_size]);
     ppl::cv::debug::randomFill<T>(src.get(), width * height * nc, 0, 255);
     ppl::cv::debug::randomFill<float>(filter.get(), filter_size * filter_size, 0, 1.0 / (filter_size * filter_size));
-   
+
     cv::Mat src_opencv(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), src.get(), sizeof(T) * width * nc);
     cv::Mat dst_opencv(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), dst_ref.get(), sizeof(T) * width * nc);
     cv::Mat filter_opencv(filter_size, filter_size, CV_32FC1, filter.get());
@@ -39,7 +38,7 @@ void Filter2DTest(int32_t height, int32_t width, T diff) {
     ppl::cv::x86::Filter2D<T, nc>(height, width, width * nc,
                             src.get(), filter_size, filter.get(), width * nc,
                             dst.get(), ppl::cv::BORDER_TYPE_REFLECT101);
-    
+
     checkResult<T, nc>(dst_ref.get(), dst.get(),
                     height, width,
                     width * nc, width * nc,
@@ -52,7 +51,7 @@ TEST(FILTER2D_FP32, x86)
     Filter2DTest<float, 3, 3>(720, 1080, 2.0);
     Filter2DTest<float, 3, 5>(720, 1080, 2.0);
     Filter2DTest<float, 3, 7>(720, 1080, 2.0);
-    
+
 }
 
 TEST(FILTER2D_UINT8, x86)
@@ -61,4 +60,3 @@ TEST(FILTER2D_UINT8, x86)
     Filter2DTest<uint8_t, 3, 5>(720, 1080, 2.0);
     Filter2DTest<uint8_t, 3, 7>(720, 1080, 2.0);
 }
-
