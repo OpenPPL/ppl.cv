@@ -20,10 +20,10 @@
 #include <tuple>
 #include <sstream>
 
-#include "opencv2/opencv.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
+#include "opencv2/imgproc.hpp"
 
 using namespace ppl::cv;
 using namespace ppl::cv::cuda;

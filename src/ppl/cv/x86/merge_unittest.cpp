@@ -17,7 +17,6 @@
 
 #include "ppl/cv/x86/merge.h"
 #include "ppl/cv/x86/test.h"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
@@ -29,15 +28,15 @@ void MergeTest(int32_t height, int32_t width, T diff) {
     T *dst;
     T *dst_ref;
     for (int32_t i = 0; i < nc; ++i) {
-        src[i] = new T[width * height];    
+        src[i] = new T[width * height];
         ppl::cv::debug::randomFill<T>(src[i], width * height, 0, 255);
-    } 
+    }
     dst = new T[width * height * nc];
     dst_ref = new T[width * height * nc];
 
     cv::Mat src_opencv[nc];
     cv::Mat dst_opencv;
-    
+
     for (int32_t i = 0; i < nc; ++i) {
         src_opencv[i] = cv::Mat(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1), src[i], sizeof(T) * width);
     }
@@ -60,7 +59,7 @@ void MergeTest(int32_t height, int32_t width, T diff) {
 
 
 
-    for (int32_t i = 0; i < nc; ++i) { 
+    for (int32_t i = 0; i < nc; ++i) {
         delete[] src[i];
     }
     delete[] dst;

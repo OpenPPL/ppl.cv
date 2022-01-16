@@ -17,7 +17,6 @@
 
 #include <benchmark/benchmark.h>
 #include "ppl/cv/x86/merge.h"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include "ppl/cv/debug.h"
 

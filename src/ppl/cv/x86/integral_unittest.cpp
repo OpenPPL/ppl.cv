@@ -17,7 +17,6 @@
 
 #include "ppl/cv/x86/integral.h"
 #include "ppl/cv/x86/test.h"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"

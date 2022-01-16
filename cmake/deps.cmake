@@ -58,6 +58,7 @@ set(BUILD_TESTS OFF CACHE BOOL "")
 set(BUILD_PERF_TESTS OFF CACHE BOOL "")
 set(BUILD_EXAMPLES OFF CACHE BOOL "")
 set(BUILD_opencv_apps OFF CACHE BOOL "")
+set(OPENCV_EXTRA_MODULES_PATH "${HPCC_DEPS_DIR}/opencv_contrib/modules" CACHE INTERNAL "")
 
 hpcc_declare_pkg_dep(opencv
     https://github.com/opencv/opencv/archive/refs/tags/4.2.0.zip

@@ -131,7 +131,6 @@ BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c3, INTERPOLATION_TYPE_NEAREST
 BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c4, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
 
 #ifdef PPLCV_BENCHMARK_OPENCV
-#include <opencv2/opencv.hpp>
 template<typename T, int32_t channels, int32_t mode>
 static void BM_Remap_opencv_aarch64(benchmark::State &state) {
     RemapBenchmark<T, channels, mode> bm(state.range(0), state.range(1), state.range(2), state.range(3));

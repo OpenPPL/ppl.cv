@@ -15,11 +15,11 @@
  */
 
 #include "ppl/cv/cuda/equalizehist.h"
+#include "opencv2/imgproc.hpp"
 
 #include <tuple>
 #include <sstream>
 
-#include "opencv2/opencv.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"

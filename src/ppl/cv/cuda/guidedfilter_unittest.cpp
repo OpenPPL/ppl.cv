@@ -19,8 +19,8 @@
 #include <tuple>
 #include <sstream>
 
-#include "opencv2/opencv.hpp"
 #include "opencv2/ximgproc/edge_filter.hpp"
+#include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"

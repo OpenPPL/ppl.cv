@@ -19,7 +19,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "opencv2/opencv.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"

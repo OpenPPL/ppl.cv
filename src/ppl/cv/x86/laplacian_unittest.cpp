@@ -17,7 +17,6 @@
 
 #include "ppl/cv/x86/laplacian.h"
 #include "ppl/cv/x86/test.h"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include <gtest/gtest.h>
 #include "ppl/cv/debug.h"
@@ -34,7 +33,7 @@ void LaplacianTest(int32_t height, int32_t width, double scale, double delta, T 
     cv::Laplacian(src_opencv, dst_opencv, cv::DataType<T>::depth, filter_size, scale, delta);
     ppl::cv::x86::Laplacian<T, nc>(height, width, width * nc, src.get(), width * nc, dst.get(),
                             filter_size, scale, delta, ppl::cv::BORDER_TYPE_REFLECT_101);
-    
+
     checkResult<T, nc>(dst_ref.get(), dst.get(),
                     height, width,
                     width * nc, width * nc,
@@ -61,4 +60,3 @@ TEST(Laplacian_UINT8, x86)
     LaplacianTest<uint8_t, 3, 3>(720, 1080, 2, 1, 1);
     LaplacianTest<uint8_t, 3, 4>(720, 1080, 2, 1, 1);
 }
-

@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <opencv2/opencv.hpp>
 #include "ppl/cv/x86/gaussianblur.h"
 #include "ppl/cv/debug.h"
 #include "ppl/cv/x86/test.h"
@@ -90,4 +89,3 @@ R(gaussianblur_f32c4_replicate, float, ppl::cv::BORDER_TYPE_REPLICATE, 4)
 R(gaussianblur_u8c1_replicate, uint8_t, ppl::cv::BORDER_TYPE_REPLICATE, 1)
 R(gaussianblur_u8c3_replicate, uint8_t, ppl::cv::BORDER_TYPE_REPLICATE, 3)
 R(gaussianblur_u8c4_replicate, uint8_t, ppl::cv::BORDER_TYPE_REPLICATE, 4)
-

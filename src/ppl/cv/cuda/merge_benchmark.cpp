@@ -19,7 +19,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "opencv2/opencv.hpp"
+#include "opencv2/cudaarithm.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"

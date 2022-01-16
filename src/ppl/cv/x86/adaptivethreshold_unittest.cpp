@@ -17,7 +17,6 @@
 
 #include "ppl/cv/x86/adaptivethreshold.h"
 #include <gtest/gtest.h>
-#include <opencv2/opencv.hpp>
 #include "ppl/cv/debug.h"
 #include "ppl/cv/types.h"
 #include "ppl/cv/x86/test.h"
@@ -50,7 +49,7 @@ public:
         std::unique_ptr<Tsrc[]> dst(new Tsrc[size.width * size.height * c]);
         std::unique_ptr<Tsrc[]> dst_opencv(new Tsrc[size.width * size.height * c]);
 
-        ppl::cv::x86::AdaptiveThreshold(size.height, size.width, size.width,src.get(), 
+        ppl::cv::x86::AdaptiveThreshold(size.height, size.width, size.width,src.get(),
             size.width, dst.get(), max_value, adaptive_method, threshold_type, ksize, delta,
             ppl::cv::BORDER_TYPE_REPLICATE);
 
@@ -63,7 +62,7 @@ public:
         Tsrc *ptr_opencv = dst_opencv.get();
         for (int32_t i = 0; i < size.height; ++i) {
             for (int32_t j = 0; j < size.width * c; ++j) {
-                if (ptr_dst[i * size.width * c + j] - ptr_opencv[i * size.width * c + j] > 1 || 
+                if (ptr_dst[i * size.width * c + j] - ptr_opencv[i * size.width * c + j] > 1 ||
                     ptr_dst[i * size.width * c + j] - ptr_opencv[i * size.width * c + j] < -1) {
                     printf("Diff at (%d, %d), ppl.cv: %f, opencv: %f\n",
                         i, j, (float)ptr_dst[i * size.width * c + j],
