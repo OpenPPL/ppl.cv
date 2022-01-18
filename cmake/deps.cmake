@@ -61,9 +61,9 @@ set(BUILD_opencv_apps OFF CACHE BOOL "")
 set(OPENCV_EXTRA_MODULES_PATH "${HPCC_DEPS_DIR}/opencv_contrib/modules" CACHE INTERNAL "")
 
 hpcc_declare_pkg_dep(opencv
-    https://github.com/opencv/opencv/archive/refs/tags/4.2.0.zip
-    b02b54115f1f99cb9e885d1e5988ff70)
+    https://github.com/opencv/opencv/archive/refs/tags/4.4.0.zip
+    4b00f5cdb1cf393c4a84696362c5a72a)
 
 hpcc_declare_pkg_dep(opencv_contrib
-    https://github.com/opencv/opencv_contrib/archive/refs/tags/4.2.0.zip
-    4776354662667c85a91bcd19f6a13da7)
+    https://github.com/opencv/opencv_contrib/archive/refs/tags/4.4.0.zip
+    d5fc20e0eb036f702f5b8f9b8f5531a6)
