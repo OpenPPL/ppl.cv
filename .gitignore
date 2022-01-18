@@ -1,14 +1,8 @@
 deps
 cuda-build
-x86-build
-arm-build
+x86-64-build
 aarch64-build
-log
 .vscode
-install
 .idea
-src/ppl/cv/cv.h
-docs/Doxyfile
-docs/sphinx/build
 .swp
 build

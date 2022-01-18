@@ -23,31 +23,6 @@
 namespace ppl {
 namespace cv {
 
-/**
- * \mainpage
- * The ppl.cv project is high-tuned image processing library with support
- * of \a arm, \a x86,\a CUDA, \a OpenCL, etc.
- * ### How to link ppl.cv's libraries in cmake ?
- * PPLCV provides a cmake configuration file \a PPL3Config.cmake to
- * help introducing ppl.cv's libraries to your cmake project.
- * @code{.cmake}
- * set(PPLCV_ROOT_DIR ${path-to-your-ppl.cv-location})
- * include(${PPLCV_ROOT_DIR}/cmake/PPL3Config.cmake)
- * add_executable(my_executable main.cpp)
- * target_link_libraries(my_executable PRIVATE PPLCV_static)
- * @endcode
- * If you are using PPLCV cuda version, you should also link against
- * cuda libraries:
- * @code{.cmake}
- * find_package(CUDA REQUIRED)
- * target_include_directories(my_executable PRIVATE ${CUDA_INCLUDE_DIRS})
- * target_link_libraries(my_executable PRIVATE PPLCV_static ${CUDA_LIBRARIES})
- * @endcode
- *********************************************************************/
-
-/**
- * \page tutorial
- *********************************************************************/
 /** Distance types for Distance Transform */
 enum
 {
