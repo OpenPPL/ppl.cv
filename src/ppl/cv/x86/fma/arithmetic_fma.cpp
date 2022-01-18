@@ -215,6 +215,36 @@ template ::ppl::common::RetCode Add_fma<uint8_t, 4>(
     int32_t outWidthStride,
     uint8_t *outData);
 
+template ::ppl::common::RetCode Add_fma<float, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData);
+
+template ::ppl::common::RetCode Add_fma<float, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData);
+
+template ::ppl::common::RetCode Add_fma<float, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData);
+
 template ::ppl::common::RetCode Mul_fma<uint8_t, 1>(
     int32_t height,
     int32_t width,
@@ -246,6 +276,39 @@ template ::ppl::common::RetCode Mul_fma<uint8_t, 4>(
     const uint8_t *inData1,
     int32_t outWidthStride,
     uint8_t *outData,
+    float alpha);
+
+template ::ppl::common::RetCode Mul_fma<float, 1>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData,
+    float alpha);
+
+template ::ppl::common::RetCode Mul_fma<float, 3>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData,
+    float alpha);
+
+template ::ppl::common::RetCode Mul_fma<float, 4>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride0,
+    const float *inData0,
+    int32_t inWidthStride1,
+    const float *inData1,
+    int32_t outWidthStride,
+    float *outData,
     float alpha);
 
 template ::ppl::common::RetCode Subtract<1>(
