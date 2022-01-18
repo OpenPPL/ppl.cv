@@ -1,0 +1,36 @@
+name: common-linux-aarch64
+
+on:
+  #push:
+  #  branches: [ master ]
+  #  paths-ignore: ['.**', 'docs/**', README.md]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'include/ppl/cv/arm/**'
+      - 'src/ppl/cv/arm/**'
+  workflow_dispatch:
+
+jobs:
+  build_and_test:
+    runs-on: [self-hosted, linux, arm64]
+
+    steps:
+      - name: Create Checkout Directory
+        run: |
+          echo "Create Checkout Directory: ${{ github.run_id }}."
+          [ -z "${{ github.run_id }}" ] || rm -rf ${{ github.run_id }}
+          mkdir ${{ github.run_id }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ github.run_id }}
+
+      - name: Build
+        run: |
+          cd ../../ && ./build_pplcv.sh ${{ github.run_id }} aarch64
+
+      - name: Test
+        run: |
+          cd ../../ && ./test_pplcv.sh ${{ github.run_id }} aarch64
