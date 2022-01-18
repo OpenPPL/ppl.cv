@@ -163,8 +163,8 @@ public:
             }
             return;
         }
-        iMat(height, width, CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels), inData.get());
-        oMat(height, width, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels), outData.get());
+        iMat(height, width, CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels), inData);
+        oMat(height, width, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels), outData);
     }
 
     void apply(int dx, int dy, int ksize)
