@@ -37,7 +37,7 @@ if(HPCC_USE_CUDA)
 endif()
 
 if(HPCC_USE_AARCH64)
-    include(cmake/aarch64.cmake)
+    include(cmake/arm.cmake)
 endif()
 
 hpcc_populate_dep(pplcommon)
