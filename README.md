@@ -8,6 +8,7 @@ $ cd ${path_to_ppl.cv}
 $ ./build.sh x86_64                         # for linux-x86_64
 $ ./build.sh aarch64                        # for linux-aarch64
 $ ./build.sh cuda                           # for linux-x86_64_cuda
+$ doxygen docs/Doxyfile                     # for html documentation
 ```
 ### Contact Us
 
