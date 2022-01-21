@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_CVTCOLOR_MEMORY_HPP_
-#define _ST_HPC_PPL3_CV_CUDA_CVTCOLOR_MEMORY_HPP_
+#ifndef _ST_HPC_PPL_CV_CUDA_CVTCOLOR_MEMORY_HPP_
+#define _ST_HPC_PPL_CV_CUDA_CVTCOLOR_MEMORY_HPP_
 
 #include "cuda_runtime.h"
 
@@ -1321,4 +1321,4 @@ RetCode function<uchar>(cudaStream_t stream, int rows, int cols,               \
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_CVTCOLOR_MEMORY_HPP_
+#endif  // _ST_HPC_PPL_CV_CUDA_CVTCOLOR_MEMORY_HPP_

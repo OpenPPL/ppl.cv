@@ -16,8 +16,8 @@
  * Infrastructure functions for the convenience of unittest and benchmark.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_INFRASTRUCTURE_HPP_
-#define _ST_HPC_PPL3_CV_CUDA_INFRASTRUCTURE_HPP_
+#ifndef _ST_HPC_PPL_CV_CUDA_INFRASTRUCTURE_HPP_
+#define _ST_HPC_PPL_CV_CUDA_INFRASTRUCTURE_HPP_
 
 #include <cstdlib>
 
@@ -584,4 +584,4 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
   }
 }
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_INFRASTRUCTURE_HPP_
+#endif  // _ST_HPC_PPL_CV_CUDA_INFRASTRUCTURE_HPP_

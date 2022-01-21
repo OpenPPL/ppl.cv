@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_PYRDOWN_H_
-#define _ST_HPC_PPL3_CV_CUDA_PYRDOWN_H_
+#ifndef _ST_HPC_PPL_CV_CUDA_PYRDOWN_H_
+#define _ST_HPC_PPL_CV_CUDA_PYRDOWN_H_
 
 #include "cuda_runtime.h"
 
@@ -117,4 +117,4 @@ ppl::common::RetCode PyrDown(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_PYRDOWN_H_
+#endif  // _ST_HPC_PPL_CV_CUDA_PYRDOWN_H_

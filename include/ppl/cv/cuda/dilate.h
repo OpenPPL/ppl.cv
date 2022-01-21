@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_DILATE_H_
-#define _ST_HPC_PPL3_CV_CUDA_DILATE_H_
+#ifndef _ST_HPC_PPL_CV_CUDA_DILATE_H_
+#define _ST_HPC_PPL_CV_CUDA_DILATE_H_
 
 #include <cfloat>
 
@@ -129,4 +129,4 @@ ppl::common::RetCode Dilate(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_DILATE_H_
+#endif  // _ST_HPC_PPL_CV_CUDA_DILATE_H_
