@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_UTILITY_HPP_
-#define _ST_HPC_PPL3_CV_CUDA_UTILITY_HPP_
+#ifndef _ST_HPC_PPL_CV_CUDA_UTILITY_HPP_
+#define _ST_HPC_PPL_CV_CUDA_UTILITY_HPP_
 
 #include "cuda_runtime.h"
 
@@ -860,4 +860,4 @@ typedef struct Reflect101Border DefaultBorder;
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_UTILITY_HPP_
+#endif  // _ST_HPC_PPL_CV_CUDA_UTILITY_HPP_

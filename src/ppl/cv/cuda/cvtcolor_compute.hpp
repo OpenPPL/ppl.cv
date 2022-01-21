@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL3_CV_CUDA_CVTCOLOR_COMPUTE_HPP_
-#define _ST_HPC_PPL3_CV_CUDA_CVTCOLOR_COMPUTE_HPP_
+#ifndef _ST_HPC_PPL_CV_CUDA_CVTCOLOR_COMPUTE_HPP_
+#define _ST_HPC_PPL_CV_CUDA_CVTCOLOR_COMPUTE_HPP_
 
 #include <cfloat>
 
@@ -3125,4 +3125,4 @@ struct YUYV2GRAYCompute {
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL3_CV_CUDA_CVTCOLOR_COMPUTE_HPP_
+#endif  // _ST_HPC_PPL_CV_CUDA_CVTCOLOR_COMPUTE_HPP_

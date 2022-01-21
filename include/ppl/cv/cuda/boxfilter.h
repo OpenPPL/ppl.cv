@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef __ST_HPC_PPL3_CV_CUDA_BOXFILTER_H_
-#define __ST_HPC_PPL3_CV_CUDA_BOXFILTER_H_
+#ifndef _ST_HPC_PPL_CV_CUDA_BOXFILTER_H_
+#define _ST_HPC_PPL_CV_CUDA_BOXFILTER_H_
 
 #include "cuda_runtime.h"
 
@@ -123,4 +123,4 @@ BoxFilter(cudaStream_t stream,
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // __ST_HPC_PPL3_CV_CUDA_BOXFILTER_H_
+#endif  // _ST_HPC_PPL_CV_CUDA_BOXFILTER_H_
