@@ -115,45 +115,45 @@ int roundUp(int total, int grain, int shift) {
 
 template <typename T>
 __DEVICE__
-T max(const T& value1, const T& value2) {
-  if (value1 < value2) {
-    return value2;
-  }
-  else {
+T max(const T& value0, const T& value1) {
+  if (value0 < value1) {
     return value1;
   }
+  else {
+    return value0;
+  }
 }
 
 template <typename T>
 __DEVICE__
-T min(const T& value1, const T& value2) {
-  if (value1 > value2) {
-    return value2;
-  }
-  else {
+T min(const T& value0, const T& value1) {
+  if (value0 > value1) {
     return value1;
   }
-}
-
-template <typename T>
-__DEVICE__
-T max(const T& value1, const T& value2, const T& value3) {
-  if (value1 < value2) {
-    return value2 > value3 ? value2 : value3;
-  }
   else {
-    return value1 > value3 ? value1 : value3;
+    return value0;
   }
 }
 
 template <typename T>
 __DEVICE__
-T min(const T& value1, const T& value2, const T& value3) {
-  if (value1 > value2) {
-    return value2 < value3 ? value2 : value3;
+T max(const T& value0, const T& value1, const T& value2) {
+  if (value0 < value1) {
+    return value1 > value2 ? value1 : value2;
   }
   else {
-    return value1 < value3 ? value1 : value3;
+    return value0 > value2 ? value0 : value2;
+  }
+}
+
+template <typename T>
+__DEVICE__
+T min(const T& value0, const T& value1, const T& value2) {
+  if (value0 > value1) {
+    return value1 < value2 ? value1 : value2;
+  }
+  else {
+    return value0 < value2 ? value0 : value2;
   }
 }
 
