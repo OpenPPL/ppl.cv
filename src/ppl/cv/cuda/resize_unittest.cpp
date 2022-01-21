@@ -29,7 +29,9 @@ using namespace ppl::cv::cuda;
 
 enum Scaling {
   kHalfSize,
+  kSmallerSize,
   kSameSize,
+  kBiggerSize,
   kDoubleSize,
 };
 
@@ -41,8 +43,14 @@ inline std::string convertToStringResize(const Parameters& parameters) {
   if (scale == kHalfSize) {
     formatted << "HalfSize" << "_";
   }
+  else if (scale == kSmallerSize) {
+    formatted << "SmallerSize" << "_";
+  }
   else if (scale == kSameSize) {
     formatted << "SameSize" << "_";
+  }
+  else if (scale == kBiggerSize) {
+    formatted << "BiggerSize" << "_";
   }
   else if (scale == kDoubleSize) {
     formatted << "DoubleSize" << "_";
@@ -97,11 +105,17 @@ bool PplCvCudaResizeTest<T, channels>::apply() {
   if (scale == kHalfSize) {
     scale_coeff = 0.5f;
   }
-  else if (scale == kDoubleSize) {
-    scale_coeff = 2.0f;
+  else if (scale == kSmallerSize) {
+    scale_coeff = 0.7f;
   }
-  else {
+  else if (scale == kSameSize) {
     scale_coeff = 1.0f;
+  }
+  else if (scale == kBiggerSize) {
+    scale_coeff = 1.4f;
+  }
+  else {  // scale == kDoubleSize
+    scale_coeff = 2.0f;
   }
   int dst_height = size.height * scale_coeff;
   int dst_width  = size.width * scale_coeff;
@@ -150,10 +164,10 @@ bool PplCvCudaResizeTest<T, channels>::apply() {
 
   float epsilon;
   if (sizeof(T) == 1) {
-    epsilon = EPSILON_1F;
+    epsilon = EPSILON_2F;
   }
   else {
-    epsilon = EPSILON_E4;
+    epsilon = EPSILON_E2;
   }
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
@@ -176,7 +190,8 @@ TEST_P(PplCvCudaResizeTest ## T ## channels, Standard) {                       \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaResizeTest ## T ## channels,         \
   ::testing::Combine(                                                          \
-    ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
+    ::testing::Values(kHalfSize, kSmallerSize, kSameSize, kBiggerSize,         \
+                      kDoubleSize),                                            \
     ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
                       INTERPOLATION_TYPE_NEAREST_POINT,                        \
                       INTERPOLATION_TYPE_AREA),                                \

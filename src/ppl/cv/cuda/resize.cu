@@ -24,84 +24,142 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-#define MIN(a,b)  ((a) < (b) ? (a) : (b))
-#define MAX(a,b)  ((a) > (b) ? (a) : (b))
-#define INC(x, l) ((x + 1) >= (l) ? (x) : ((x) + 1))
+#define INCREASE(x, l) ((x + 1) >= (l) ? (x) : ((x) + 1))
 #define INTER_RESIZE_COEF_BITS 11
 #define INTER_RESIZE_COEF_SCALE (1 << INTER_RESIZE_COEF_BITS)
 #define CAST_BITS (INTER_RESIZE_COEF_BITS << 1)
 
+static texture<uchar, cudaTextureType2D,
+               cudaReadModeNormalizedFloat> uchar_c1_ref;
+static texture<uchar4, cudaTextureType2D,
+               cudaReadModeNormalizedFloat> uchar_c4_ref;
+static texture<float, cudaTextureType2D,
+               cudaReadModeElementType> float_c1_ref;
+
 template <typename T>
 __DEVICE__
-T bilinearSampleUchar(T values[][2], int x0, int x1, int y0, int y1);
+T bilinearSample(T values[][2], int x0, int x1, int y0, int y1);
 
 template <>
 __DEVICE__
-uchar2 bilinearSampleUchar(uchar2 values[][2], int x0, int x1, int y0, int y1) {
+uchar2 bilinearSample(uchar2 values[][2], int x0, int x1, int y0, int y1) {
   int a0 = y0 * x0;
   int a1 = y0 * x1;
   int a2 = y1 * x0;
   int a3 = y1 * x1;
 
-  int2 ret;
-  uchar2 final_ret;
-  ret.x = values[0][0].x * a0 + values[0][1].x * a1 + values[1][0].x * a2 +
-          values[1][1].x * a3;
-  final_ret.x = (ret.x + (1 << (CAST_BITS - 1))) >> CAST_BITS;
-  ret.y = values[0][0].y * a0 + values[0][1].y * a1 + values[1][0].y * a2 +
-          values[1][1].y * a3;
-  final_ret.y = (ret.y + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  int2 value;
+  uchar2 result;
+  value.x  = values[0][0].x * a0 + values[0][1].x * a1 + values[1][0].x * a2 +
+             values[1][1].x * a3;
+  result.x = (value.x + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  value.y  = values[0][0].y * a0 + values[0][1].y * a1 + values[1][0].y * a2 +
+             values[1][1].y * a3;
+  result.y = (value.y + (1 << (CAST_BITS - 1))) >> CAST_BITS;
 
-  return final_ret;
+  return result;
 }
 
 template <>
 __DEVICE__
-uchar3 bilinearSampleUchar(uchar3 values[][2], int x0, int x1, int y0, int y1) {
+uchar3 bilinearSample(uchar3 values[][2], int x0, int x1, int y0, int y1) {
   int a0 = y0 * x0;
   int a1 = y0 * x1;
   int a2 = y1 * x0;
   int a3 = y1 * x1;
 
-  int3 ret;
-  uchar3 final_ret;
-  ret.x = values[0][0].x * a0 + values[0][1].x * a1 + values[1][0].x * a2 +
-          values[1][1].x * a3;
-  final_ret.x = (ret.x + (1 << (CAST_BITS - 1))) >> CAST_BITS;
-  ret.y = values[0][0].y * a0 + values[0][1].y * a1 + values[1][0].y * a2 +
-          values[1][1].y * a3;
-  final_ret.y = (ret.y + (1 << (CAST_BITS - 1))) >> CAST_BITS;
-  ret.z = values[0][0].z * a0 + values[0][1].z * a1 + values[1][0].z * a2 +
-          values[1][1].z * a3;
-  final_ret.z = (ret.z + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  int3 value;
+  uchar3 result;
+  value.x  = values[0][0].x * a0 + values[0][1].x * a1 + values[1][0].x * a2 +
+             values[1][1].x * a3;
+  result.x = (value.x + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  value.y  = values[0][0].y * a0 + values[0][1].y * a1 + values[1][0].y * a2 +
+             values[1][1].y * a3;
+  result.y = (value.y + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  value.z  = values[0][0].z * a0 + values[0][1].z * a1 + values[1][0].z * a2 +
+             values[1][1].z * a3;
+  result.z = (value.z + (1 << (CAST_BITS - 1))) >> CAST_BITS;
 
-  return final_ret;
+  return result;
 }
 
 template <>
 __DEVICE__
-uchar4 bilinearSampleUchar(uchar4 values[][2], int x0, int x1, int y0, int y1) {
+uchar4 bilinearSample(uchar4 values[][2], int x0, int x1, int y0, int y1) {
   int a0 = y0 * x0;
   int a1 = y0 * x1;
   int a2 = y1 * x0;
   int a3 = y1 * x1;
 
-  int4 ret;
-  uchar4 final_ret;
-  ret.x = values[0][0].x * a0 + values[0][1].x * a1 + values[1][0].x * a2 +
-          values[1][1].x * a3;
-  final_ret.x = (ret.x + (1 << (CAST_BITS - 1))) >> CAST_BITS;
-  ret.y = values[0][0].y * a0 + values[0][1].y * a1 + values[1][0].y * a2 +
-          values[1][1].y * a3;
-  final_ret.y = (ret.y + (1 << (CAST_BITS - 1))) >> CAST_BITS;
-  ret.z = values[0][0].z * a0 + values[0][1].z * a1 + values[1][0].z * a2 +
-          values[1][1].z * a3;
-  final_ret.z = (ret.z + (1 << (CAST_BITS - 1))) >> CAST_BITS;
-  ret.w = values[0][0].w * a0 + values[0][1].w * a1 + values[1][0].w * a2 +
-          values[1][1].w * a3;
-  final_ret.w = (ret.w + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  int4 value;
+  uchar4 result;
+  value.x  = values[0][0].x * a0 + values[0][1].x * a1 + values[1][0].x * a2 +
+             values[1][1].x * a3;
+  result.x = (value.x + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  value.y  = values[0][0].y * a0 + values[0][1].y * a1 + values[1][0].y * a2 +
+             values[1][1].y * a3;
+  result.y = (value.y + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  value.z  = values[0][0].z * a0 + values[0][1].z * a1 + values[1][0].z * a2 +
+             values[1][1].z * a3;
+  result.z = (value.z + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+  value.w  = values[0][0].w * a0 + values[0][1].w * a1 + values[1][0].w * a2 +
+             values[1][1].w * a3;
+  result.w = (value.w + (1 << (CAST_BITS - 1))) >> CAST_BITS;
 
-  return final_ret;
+  return result;
+}
+
+__global__
+void resizeLinearTextureKernel(uchar* dst, int dst_rows, int dst_cols,
+                               int channels, int dst_stride, float col_scale,
+                               float row_scale) {
+  int element_x = blockIdx.x * blockDim.x + threadIdx.x;
+  int element_y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (element_x >= dst_cols || element_y >= dst_rows) {
+    return;
+  }
+
+  float coordinate_x = (element_x + 0.5f) * col_scale;
+  float coordinate_y = (element_y + 0.5f) * row_scale;
+
+  if (channels == 1) {
+    float value = tex2D(uchar_c1_ref, coordinate_x, coordinate_y);
+    value *= 255.0f;
+
+    uchar* output = (uchar*)(dst + element_y * dst_stride);
+    output[element_x] = saturateCast(value);
+  }
+  else {  // channels == 4
+    float4 value = tex2D(uchar_c4_ref, coordinate_x, coordinate_y);
+    value.x *= 255.0f;
+    value.y *= 255.0f;
+    value.z *= 255.0f;
+    value.w *= 255.0f;
+
+    uchar4* output = (uchar4*)(dst + element_y * dst_stride);
+    output[element_x] = saturateCastVector<uchar4, float4>(value);
+  }
+}
+
+__global__
+void resizeLinearTextureKernel(float* dst, int dst_rows, int dst_cols,
+                               int channels, int dst_stride, float col_scale,
+                               float row_scale) {
+  int element_x = blockIdx.x * blockDim.x + threadIdx.x;
+  int element_y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (element_x >= dst_cols || element_y >= dst_rows) {
+    return;
+  }
+
+  float coordinate_x = (element_x + 0.5f) * col_scale;
+  float coordinate_y = (element_y + 0.5f) * row_scale;
+
+  if (channels == 1) {
+    float value = tex2D(float_c1_ref, coordinate_x, coordinate_y);
+
+    float* output = (float*)(dst + element_y * dst_stride);
+    output[element_x] = value;
+  }
 }
 
 __global__
@@ -111,7 +169,7 @@ void resizeLinearKernel(const uchar* src, int src_rows, int src_cols,
                         float row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
@@ -138,13 +196,13 @@ void resizeLinearKernel(const uchar* src, int src_rows, int src_cols,
     float_x = 0;
   }
 
-  int int_y1 = INC(int_y0, src_rows);
+  int int_y1 = INCREASE(int_y0, src_rows);
   int buf_y[2];
   float_y = float_y * INTER_RESIZE_COEF_SCALE;
   buf_y[0] = rint(INTER_RESIZE_COEF_SCALE - float_y);
   buf_y[1] = rint(float_y);
 
-  int int_x1 = INC(int_x0, src_cols);
+  int int_x1 = INCREASE(int_x0, src_cols);
   int buf_x[2];
   float_x = float_x * INTER_RESIZE_COEF_SCALE;
   buf_x[0] = rint(INTER_RESIZE_COEF_SCALE - rint(float_x));
@@ -155,19 +213,19 @@ void resizeLinearKernel(const uchar* src, int src_rows, int src_cols,
     int src_index1 = int_y0 * src_stride + int_x1;
     int src_index2 = int_y1 * src_stride + int_x0;
     int src_index3 = int_y1 * src_stride + int_x1;
-    int dst_index = element_y * dst_stride + element_x;
 
     int sum = 0;
     sum = buf_y[0] * buf_x[0] * src[src_index0] +
           buf_y[0] * buf_x[1] * src[src_index1] +
           buf_y[1] * buf_x[0] * src[src_index2] +
           buf_y[1] * buf_x[1] * src[src_index3];
-    dst[dst_index] = (sum + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+
+    uchar* output = (uchar*)(dst + element_y * dst_stride);
+    output[element_x] = (sum + (1 << (CAST_BITS - 1))) >> CAST_BITS;
   }
   else if (channels == 3) {
     uchar3* input0 = (uchar3*)((uchar*)src + int_y0 * src_stride);
     uchar3* input1 = (uchar3*)((uchar*)src + int_y1 * src_stride);
-    uchar3* output = (uchar3*)((uchar*)dst + element_y * dst_stride);
 
     uchar3 values[2][2];
     values[0][0] = input0[int_x0];
@@ -175,13 +233,13 @@ void resizeLinearKernel(const uchar* src, int src_rows, int src_cols,
     values[1][0] = input1[int_x0];
     values[1][1] = input1[int_x1];
 
-    output[element_x] = bilinearSampleUchar(values, buf_x[0], buf_x[1],
-                                            buf_y[0], buf_y[1]);
+    uchar3* output = (uchar3*)(dst + element_y * dst_stride);
+    output[element_x] = bilinearSample(values, buf_x[0], buf_x[1], buf_y[0],
+                                       buf_y[1]);
   }
   else {
     uchar4* input0 = (uchar4*)((uchar*)src + int_y0 * src_stride);
     uchar4* input1 = (uchar4*)((uchar*)src + int_y1 * src_stride);
-    uchar4* output = (uchar4*)((uchar*)dst + element_y * dst_stride);
 
     uchar4 values[2][2];
     values[0][0] = input0[int_x0];
@@ -189,8 +247,9 @@ void resizeLinearKernel(const uchar* src, int src_rows, int src_cols,
     values[1][0] = input1[int_x0];
     values[1][1] = input1[int_x1];
 
-    output[element_x] = bilinearSampleUchar(values, buf_x[0], buf_x[1],
-                                            buf_y[0], buf_y[1]);
+    uchar4* output = (uchar4*)(dst + element_y * dst_stride);
+    output[element_x] = bilinearSample(values, buf_x[0], buf_x[1], buf_y[0],
+                                       buf_y[1]);
   }
 }
 
@@ -201,7 +260,7 @@ void resizeLinearKernel(const float* src, int src_rows, int src_cols,
                         float row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
@@ -228,12 +287,12 @@ void resizeLinearKernel(const float* src, int src_rows, int src_cols,
     float_x = 0;
   }
 
-  int int_y1 = INC(int_y0,src_rows);
+  int int_y1 = INCREASE(int_y0,src_rows);
   float buf_y[2];
   buf_y[0] = 1.f - float_y;
   buf_y[1] = 1.f - buf_y[0];
 
-  int int_x1 = INC(int_x0,src_cols);
+  int int_x1 = INCREASE(int_x0,src_cols);
   float buf_x[2];
   buf_x[0] = 1.f - float_x;
   buf_x[1] = 1.f - buf_x[0];
@@ -254,8 +313,8 @@ void resizeLinearKernel(const float* src, int src_rows, int src_cols,
     value1 = buf_y[1] * buf_x[1] * src1;
     sum += value0 + value1;
 
-    index = element_y * dst_stride + element_x;
-    dst[index] = sum;
+    float* output = (float*)(dst + element_y * dst_stride);
+    output[element_x] = sum;
   }
   else if (channels == 3) {
     int index = int_y0 * src_stride;
@@ -309,14 +368,14 @@ void resizeNearestPointKernel(const T* src, int src_rows, int src_cols,
                               float col_scale, float row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
   int int_y = element_y * row_scale;
-  int_y = MIN(int_y, src_rows - 1);
+  int_y = min(int_y, src_rows - 1);
   int int_x = element_x * col_scale;
-  int_x = MIN(int_x, src_cols - 1);
+  int_x = min(int_x, src_cols - 1);
 
   Tn* input  = (Tn*)(src + int_y* src_stride);
   Tn* output = (Tn*)(dst + element_y * dst_stride);
@@ -325,28 +384,28 @@ void resizeNearestPointKernel(const T* src, int src_rows, int src_cols,
 
 template <typename T>
 __global__
-void resizeAreaKernel0C1(const T* src, int src_rows, int src_cols, int channels,
+void resizeAreaC1Kernel0(const T* src, int src_rows, int src_cols, int channels,
                          int src_stride, T* dst, int dst_rows, int dst_cols,
                          int dst_stride, int col_scale, int row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
-  int start_x = element_x * col_scale;
-  int start_y = element_y * row_scale;
-  int x_end = start_x + col_scale;
-  int y_end = start_y + row_scale;
+  int x_start = element_x * col_scale;
+  int y_start = element_y * row_scale;
+  int x_end = x_start + col_scale;
+  int y_end = y_start + row_scale;
   x_end = (x_end <= src_cols) ? x_end : src_cols;
   y_end = (y_end <= src_rows) ? y_end : src_rows;
-  int area = (x_end - start_x) * (y_end - start_y);
+  int area = (x_end - x_start) * (y_end - y_start);
 
   float sum = 0.f;
   T* input;
-  for (int i = start_y; i < y_end; ++i) {
+  for (int i = y_start; i < y_end; ++i) {
     input = (T*)(src + i * src_stride);
-    for (int j = start_x; j < x_end; ++j) {
+    for (int j = x_start; j < x_end; ++j) {
       sum += input[j];
     }
   }
@@ -363,29 +422,29 @@ void resizeAreaKernel0C1(const T* src, int src_rows, int src_cols, int channels,
 
 template <typename T, typename Tn>
 __global__
-void resizeAreaKernel0C3(const T* src, int src_rows, int src_cols,
+void resizeAreaC3Kernel0(const T* src, int src_rows, int src_cols,
                          int channels, int src_stride, T* dst, int dst_rows,
                          int dst_cols, int dst_stride, int col_scale,
                          int row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
-  int start_x = element_x * col_scale;
-  int start_y = element_y * row_scale;
-  int x_end = start_x + col_scale;
-  int y_end = start_y + row_scale;
+  int x_start = element_x * col_scale;
+  int y_start = element_y * row_scale;
+  int x_end = x_start + col_scale;
+  int y_end = y_start + row_scale;
   x_end = (x_end <= src_cols) ? x_end : src_cols;
   y_end = (y_end <= src_rows) ? y_end : src_rows;
-  int area = (x_end - start_x) * (y_end - start_y);
+  int area = (x_end - x_start) * (y_end - y_start);
 
   float3 sum = make_float3(0.f, 0.f, 0.f);
   Tn* input;
-  for (int i = start_y; i < y_end; ++i) {
+  for (int i = y_start; i < y_end; ++i) {
     input = (Tn*)(src + i * src_stride);
-    for (int j = start_x; j < x_end; ++j) {
+    for (int j = x_start; j < x_end; ++j) {
       sum += input[j];
     }
   }
@@ -397,29 +456,29 @@ void resizeAreaKernel0C3(const T* src, int src_rows, int src_cols,
 
 template <typename T, typename Tn>
 __global__
-void resizeAreaKernel0C4(const T* src, int src_rows, int src_cols,
+void resizeAreaC4Kernel0(const T* src, int src_rows, int src_cols,
                          int channels, int src_stride, T* dst, int dst_rows,
                          int dst_cols, int dst_stride, int col_scale,
                          int row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
-  int start_x = element_x * col_scale;
-  int start_y = element_y * row_scale;
-  int x_end = start_x + col_scale;
-  int y_end = start_y + row_scale;
+  int x_start = element_x * col_scale;
+  int y_start = element_y * row_scale;
+  int x_end = x_start + col_scale;
+  int y_end = y_start + row_scale;
   x_end = (x_end <= src_cols) ? x_end : src_cols;
   y_end = (y_end <= src_rows) ? y_end : src_rows;
-  int area = (x_end - start_x) * (y_end - start_y);
+  int area = (x_end - x_start) * (y_end - y_start);
 
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
   Tn* input;
-  for (int i = start_y; i < y_end; ++i) {
+  for (int i = y_start; i < y_end; ++i) {
     input = (Tn*)(src + i * src_stride);
-    for (int j = start_x; j < x_end; ++j) {
+    for (int j = x_start; j < x_end; ++j) {
       sum += input[j];
     }
   }
@@ -431,12 +490,12 @@ void resizeAreaKernel0C4(const T* src, int src_rows, int src_cols,
 
 template <typename T>
 __global__
-void resizeAreaKernel1C1(const T* src, int src_rows, int src_cols, int channels,
+void resizeAreaC1Kernel1(const T* src, int src_rows, int src_cols, int channels,
                          int src_stride, T* dst, int dst_rows, int dst_cols,
                          int dst_stride, float col_scale, float row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
@@ -512,13 +571,13 @@ void resizeAreaKernel1C1(const T* src, int src_rows, int src_cols, int channels,
 
 template <typename T, typename Tn>
 __global__
-void resizeAreaKernel1C3(const T* src, int src_rows, int src_cols,
+void resizeAreaC3Kernel1(const T* src, int src_rows, int src_cols,
                          int channels, int src_stride, T* dst, int dst_rows,
                          int dst_cols, int dst_stride, float col_scale,
                          float row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
@@ -598,13 +657,13 @@ void resizeAreaKernel1C3(const T* src, int src_rows, int src_cols,
 
 template <typename T, typename Tn>
 __global__
-void resizeAreaKernel1C4(const T* src, int src_rows, int src_cols,
+void resizeAreaC4Kernel1(const T* src, int src_rows, int src_cols,
                          int channels, int src_stride, T* dst, int dst_rows,
                          int dst_cols, int dst_stride, float col_scale,
                          float row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
@@ -683,6 +742,77 @@ void resizeAreaKernel1C4(const T* src, int src_rows, int src_cols,
 }
 
 __global__
+void resizeAreaTextureKernel(uchar* dst, int dst_rows, int dst_cols,
+                             int channels, int dst_stride, float col_scale,
+                             float row_scale, float inv_col_scale,
+                             float inv_row_scale) {
+  int element_x = blockIdx.x * blockDim.x + threadIdx.x;
+  int element_y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (element_x >= dst_cols || element_y >= dst_rows) {
+    return;
+  }
+
+  float float_x = element_x * col_scale;
+  float float_y = element_y * row_scale;
+  int int_x = floor(float_x);
+  int int_y = floor(float_y);
+  float_x = element_x + 1 - (int_x + 1) * inv_col_scale;
+  float_y = element_y + 1 - (int_y + 1) * inv_row_scale;
+  float_x = float_x <= 0 ? 0.f : float_x - floor(float_x);
+  float_y = float_y <= 0 ? 0.f : float_y - floor(float_y);
+  float_x += (int_x + 0.5f);
+  float_y += (int_y + 0.5f);
+
+  if (channels == 1) {
+    float value = tex2D(uchar_c1_ref, float_x, float_y);
+    value *= 255.0f;
+
+    uchar* output = (uchar*)(dst + element_y * dst_stride);
+    output[element_x] = saturateCast(value);
+  }
+  else {  // channels == 4
+    float4 value = tex2D(uchar_c4_ref, float_x, float_y);
+    value.x *= 255.0f;
+    value.y *= 255.0f;
+    value.z *= 255.0f;
+    value.w *= 255.0f;
+
+    uchar4* output = (uchar4*)(dst + element_y * dst_stride);
+    output[element_x] = saturateCastVector<uchar4, float4>(value);
+  }
+}
+
+__global__
+void resizeAreaTextureKernel(float* dst, int dst_rows, int dst_cols,
+                             int channels, int dst_stride, float col_scale,
+                             float row_scale, float inv_col_scale,
+                             float inv_row_scale) {
+  int element_x = blockIdx.x * blockDim.x + threadIdx.x;
+  int element_y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (element_x >= dst_cols || element_y >= dst_rows) {
+    return;
+  }
+
+  float float_x = element_x * col_scale;
+  float float_y = element_y * row_scale;
+  int int_x = floor(float_x);
+  int int_y = floor(float_y);
+  float_x = element_x + 1 - (int_x + 1) * inv_col_scale;
+  float_y = element_y + 1 - (int_y + 1) * inv_row_scale;
+  float_x = float_x <= 0 ? 0.f : float_x - floor(float_x);
+  float_y = float_y <= 0 ? 0.f : float_y - floor(float_y);
+  float_x += (int_x + 0.5f);
+  float_y += (int_y + 0.5f);
+
+  if (channels == 1) {
+    float value = tex2D(float_c1_ref, float_x, float_y);
+
+    float* output = (float*)(dst + element_y * dst_stride);
+    output[element_x] = value;
+  }
+}
+
+__global__
 void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
                        int channels, int src_stride, uchar* dst, int dst_rows,
                        int dst_cols, int dst_stride, float col_scale,
@@ -690,7 +820,7 @@ void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
                        float inv_row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
@@ -717,13 +847,13 @@ void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
     float_x = 0;
   }
 
-  int int_y1 = INC(int_y0, src_rows);
+  int int_y1 = INCREASE(int_y0, src_rows);
   int buf_y[2];
   float_y = float_y * INTER_RESIZE_COEF_SCALE;
   buf_y[0] = rint(INTER_RESIZE_COEF_SCALE - float_y);
   buf_y[1] = rint(float_y);
 
-  int int_x1 = INC(int_x0, src_cols);
+  int int_x1 = INCREASE(int_x0, src_cols);
   int buf_x[2];
   float_x = float_x * INTER_RESIZE_COEF_SCALE;
   buf_x[0] = rint(INTER_RESIZE_COEF_SCALE - rint(float_x));
@@ -734,19 +864,19 @@ void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
     int src_index1 = int_y0 * src_stride + int_x1;
     int src_index2 = int_y1 * src_stride + int_x0;
     int src_index3 = int_y1 * src_stride + int_x1;
-    int dst_index = element_y * dst_stride + element_x;
 
     int sum = 0;
     sum = buf_y[0] * buf_x[0] * src[src_index0] +
           buf_y[0] * buf_x[1] * src[src_index1] +
           buf_y[1] * buf_x[0] * src[src_index2] +
           buf_y[1] * buf_x[1] * src[src_index3];
-    dst[dst_index] = (sum + (1 << (CAST_BITS - 1))) >> CAST_BITS;
+
+    uchar* output = (uchar*)(dst + element_y * dst_stride);
+    output[element_x] = (sum + (1 << (CAST_BITS - 1))) >> CAST_BITS;
   }
   else if (channels == 3) {
     uchar3* input0 = (uchar3*)((uchar*)src + int_y0 * src_stride);
     uchar3* input1 = (uchar3*)((uchar*)src + int_y1 * src_stride);
-    uchar3* output = (uchar3*)((uchar*)dst + element_y * dst_stride);
 
     uchar3 values[2][2];
     values[0][0] = input0[int_x0];
@@ -754,13 +884,13 @@ void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
     values[1][0] = input1[int_x0];
     values[1][1] = input1[int_x1];
 
-    output[element_x] = bilinearSampleUchar(values, buf_x[0], buf_x[1],
+    uchar3* output = (uchar3*)((uchar*)dst + element_y * dst_stride);
+    output[element_x] = bilinearSample(values, buf_x[0], buf_x[1],
                                             buf_y[0], buf_y[1]);
   }
   else {
     uchar4* input0 = (uchar4*)((uchar*)src + int_y0 * src_stride);
     uchar4* input1 = (uchar4*)((uchar*)src + int_y1 * src_stride);
-    uchar4* output = (uchar4*)((uchar*)dst + element_y * dst_stride);
 
     uchar4 values[2][2];
     values[0][0] = input0[int_x0];
@@ -768,7 +898,8 @@ void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
     values[1][0] = input1[int_x0];
     values[1][1] = input1[int_x1];
 
-    output[element_x] = bilinearSampleUchar(values, buf_x[0], buf_x[1],
+    uchar4* output = (uchar4*)((uchar*)dst + element_y * dst_stride);
+    output[element_x] = bilinearSample(values, buf_x[0], buf_x[1],
                                             buf_y[0], buf_y[1]);
   }
 }
@@ -781,7 +912,7 @@ void resizeAreaKernel2(const float* src, int src_rows, int src_cols,
                        float inv_row_scale) {
   int element_x = blockIdx.x * blockDim.x + threadIdx.x;
   int element_y = blockIdx.y * blockDim.y + threadIdx.y;
-  if (element_y >= dst_rows || element_x >= dst_cols) {
+  if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
 
@@ -808,12 +939,12 @@ void resizeAreaKernel2(const float* src, int src_rows, int src_cols,
     float_x = 0;
   }
 
-  int int_y1 = INC(int_y0,src_rows);
+  int int_y1 = INCREASE(int_y0,src_rows);
   float buf_y[2];
   buf_y[0] = 1.f - float_y;
   buf_y[1] = 1.f - buf_y[0];
 
-  int int_x1 = INC(int_x0,src_cols);
+  int int_x1 = INCREASE(int_x0,src_cols);
   float buf_x[2];
   buf_x[0] = 1.f - float_x;
   buf_x[1] = 1.f - buf_x[0];
@@ -834,8 +965,8 @@ void resizeAreaKernel2(const float* src, int src_rows, int src_cols,
     value1 = buf_y[1] * buf_x[1] * src1;
     sum += value0 + value1;
 
-    index = element_y * dst_stride + element_x;
-    dst[index] = sum;
+    float* output = (float*)(dst + element_y * dst_stride);
+    output[element_x] = sum;
   }
   else if (channels == 3) {
     int index = int_y0 * src_stride;
@@ -910,25 +1041,62 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
     return RC_SUCCESS;
   }
 
-  int kBlockX = 32;
-  int kBlockY = 16;
+  int block_x = 32;
+  int block_y = 16;
   if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
-    kBlockY = 4;
+    block_y = 4;
   }
-  dim3 block(kBlockX, kBlockY);
+  dim3 block(block_x, block_y);
   dim3 grid;
-  grid.x = (dst_cols + kBlockX -1) / kBlockX;
-  grid.y = (dst_rows + kBlockY - 1) / kBlockY;
+  grid.x = (dst_cols + block_x -1) / block_x;
+  grid.y = (dst_rows + block_y - 1) / block_y;
 
   float col_scale = (double)src_cols / dst_cols;
   float row_scale = (double)src_rows / dst_rows;
   float inv_col_scale = 1.0 / col_scale;
   float inv_row_scale = 1.0 / row_scale;
 
+  size_t texture_alignment = 32;
+  size_t src_pitch = src_stride * sizeof(uchar);
+
   if (interpolation == INTERPOLATION_TYPE_LINEAR) {
-    resizeLinearKernel<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
-        channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
-        row_scale);
+    if (channels == 1 && (src_pitch & (texture_alignment - 1)) == 0) {
+      cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar>();
+      uchar_c1_ref.normalized = false;
+      uchar_c1_ref.filterMode = cudaFilterModeLinear;
+      uchar_c1_ref.addressMode[0] = cudaAddressModeClamp;
+      uchar_c1_ref.addressMode[1] = cudaAddressModeClamp;
+      code = cudaBindTexture2D(0, uchar_c1_ref, src, desc, src_cols, src_rows,
+                               (size_t)src_stride);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+
+      resizeLinearTextureKernel<<<grid, block, 0, stream>>>(dst, dst_rows,
+          dst_cols, channels, dst_stride, col_scale, row_scale);
+    }
+    else if (channels == 4 && (src_pitch & (texture_alignment - 1)) == 0) {
+      cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar4>();
+      uchar_c4_ref.normalized = false;
+      uchar_c4_ref.filterMode = cudaFilterModeLinear;
+      uchar_c4_ref.addressMode[0] = cudaAddressModeClamp;
+      uchar_c4_ref.addressMode[1] = cudaAddressModeClamp;
+      code = cudaBindTexture2D(0, uchar_c4_ref, src, desc, src_cols, src_rows,
+                               (size_t)src_stride);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+
+      resizeLinearTextureKernel<<<grid, block, 0, stream>>>(dst, dst_rows,
+          dst_cols, channels, dst_stride, col_scale, row_scale);
+    }
+    else {
+      resizeLinearKernel<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
+          channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
+          row_scale);
+    }
   }
   else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
     if (channels == 1) {
@@ -951,43 +1119,79 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
     if (src_cols > dst_cols && src_rows > dst_rows) {
       if (src_cols % dst_cols == 0 && src_rows % dst_rows == 0) {
         if (channels == 1) {
-          resizeAreaKernel0C1<uchar><<<grid, block, 0, stream>>>(src, src_rows,
+          resizeAreaC1Kernel0<uchar><<<grid, block, 0, stream>>>(src, src_rows,
               src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else if (channels == 3) {
-          resizeAreaKernel0C3<uchar, uchar3><<<grid, block, 0, stream>>>(src,
+          resizeAreaC3Kernel0<uchar, uchar3><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else {
-          resizeAreaKernel0C4<uchar, uchar4><<<grid, block, 0, stream>>>(src,
+          resizeAreaC4Kernel0<uchar, uchar4><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
       }
       else {
         if (channels == 1) {
-          resizeAreaKernel1C1<uchar><<<grid, block, 0, stream>>>(src, src_rows,
+          resizeAreaC1Kernel1<uchar><<<grid, block, 0, stream>>>(src, src_rows,
               src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else if (channels == 3) {
-          resizeAreaKernel1C3<uchar, uchar3><<<grid, block, 0, stream>>>(src,
+          resizeAreaC3Kernel1<uchar, uchar3><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else {
-          resizeAreaKernel1C4<uchar, uchar4><<<grid, block, 0, stream>>>(src,
+          resizeAreaC4Kernel1<uchar, uchar4><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
       }
     }
     else {
-      resizeAreaKernel2<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
-          channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
-          row_scale, inv_col_scale, inv_row_scale);
+      if (channels == 1 && (src_pitch & (texture_alignment - 1)) == 0) {
+        cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar>();
+        uchar_c1_ref.normalized = false;
+        uchar_c1_ref.filterMode = cudaFilterModeLinear;
+        uchar_c1_ref.addressMode[0] = cudaAddressModeClamp;
+        uchar_c1_ref.addressMode[1] = cudaAddressModeClamp;
+        code = cudaBindTexture2D(0, uchar_c1_ref, src, desc, src_cols, src_rows,
+                                (size_t)src_stride);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
+          return RC_DEVICE_RUNTIME_ERROR;
+        }
+
+        resizeAreaTextureKernel<<<grid, block, 0, stream>>>(dst, dst_rows,
+            dst_cols, channels, dst_stride, col_scale, row_scale, inv_col_scale,
+            inv_row_scale);
+      }
+      else if (channels == 4 && (src_pitch & (texture_alignment - 1)) == 0) {
+        cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar4>();
+        uchar_c4_ref.normalized = false;
+        uchar_c4_ref.filterMode = cudaFilterModeLinear;
+        uchar_c4_ref.addressMode[0] = cudaAddressModeClamp;
+        uchar_c4_ref.addressMode[1] = cudaAddressModeClamp;
+        code = cudaBindTexture2D(0, uchar_c4_ref, src, desc, src_cols, src_rows,
+                                (size_t)src_stride);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
+          return RC_DEVICE_RUNTIME_ERROR;
+        }
+
+        resizeAreaTextureKernel<<<grid, block, 0, stream>>>(dst, dst_rows,
+            dst_cols, channels, dst_stride, col_scale, row_scale, inv_col_scale,
+            inv_row_scale);
+      }
+      else {
+        resizeAreaKernel2<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
+            channels, src_stride, dst, dst_rows, dst_cols, dst_stride,
+            col_scale, row_scale, inv_col_scale, inv_row_scale);
+      }
     }
   }
   else {
@@ -1031,26 +1235,47 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
     return RC_SUCCESS;
   }
 
-  int kBlockX = 32;
-  int kBlockY = 16;
+  int block_x = 32;
+  int block_y = 16;
   if (interpolation == INTERPOLATION_TYPE_LINEAR ||
     interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
-    kBlockY = 4;
+    block_y = 4;
   }
-  dim3 block(kBlockX, kBlockY);
+  dim3 block(block_x, block_y);
   dim3 grid;
-  grid.x = (dst_cols + kBlockX - 1) / kBlockX;
-  grid.y = (dst_rows + kBlockY - 1) / kBlockY;
+  grid.x = (dst_cols + block_x - 1) / block_x;
+  grid.y = (dst_rows + block_y - 1) / block_y;
 
   double col_scale = (double)src_cols / dst_cols;
   float row_scale = (double)src_rows / dst_rows;
   float inv_col_scale = 1.0 / col_scale;
   float inv_row_scale = 1.0 / row_scale;
 
+  size_t texture_alignment = 32;
+  size_t src_pitch = src_stride * sizeof(float);
+
   if (interpolation == INTERPOLATION_TYPE_LINEAR) {
-    resizeLinearKernel<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
-        channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
-        row_scale);
+    if (channels == 1 && (src_pitch & (texture_alignment - 1)) == 0) {
+      cudaChannelFormatDesc desc = cudaCreateChannelDesc<float>();
+      float_c1_ref.normalized = false;
+      float_c1_ref.filterMode = cudaFilterModeLinear;
+      float_c1_ref.addressMode[0] = cudaAddressModeClamp;
+      float_c1_ref.addressMode[1] = cudaAddressModeClamp;
+      code = cudaBindTexture2D(0, float_c1_ref, src, desc, src_cols, src_rows,
+                               (size_t)src_stride * sizeof(float));
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+
+      resizeLinearTextureKernel<<<grid, block, 0, stream>>>(dst, dst_rows,
+          dst_cols, channels, dst_stride, col_scale, row_scale);
+    }
+    else {
+      resizeLinearKernel<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
+          channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
+          row_scale);
+    }
   }
   else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
     if (channels == 1) {
@@ -1073,43 +1298,62 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
     if (src_cols > dst_cols && src_rows > dst_rows) {
       if (src_cols % dst_cols == 0 && src_rows % dst_rows == 0) {
         if (channels == 1) {
-          resizeAreaKernel0C1<float><<<grid, block, 0, stream>>>(src, src_rows,
+          resizeAreaC1Kernel0<float><<<grid, block, 0, stream>>>(src, src_rows,
               src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else if (channels == 3) {
-          resizeAreaKernel0C3<float, float3><<<grid, block, 0, stream>>>(src,
+          resizeAreaC3Kernel0<float, float3><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else {
-          resizeAreaKernel0C4<float, float4><<<grid, block, 0, stream>>>(src,
+          resizeAreaC4Kernel0<float, float4><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
       }
       else {
         if (channels == 1) {
-          resizeAreaKernel1C1<float><<<grid, block, 0, stream>>>(src, src_rows,
+          resizeAreaC1Kernel1<float><<<grid, block, 0, stream>>>(src, src_rows,
               src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else if (channels == 3) {
-          resizeAreaKernel1C3<float, float3><<<grid, block, 0, stream>>>(src,
+          resizeAreaC3Kernel1<float, float3><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
         else {
-          resizeAreaKernel1C4<float, float4><<<grid, block, 0, stream>>>(src,
+          resizeAreaC4Kernel1<float, float4><<<grid, block, 0, stream>>>(src,
               src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
               dst_stride, col_scale, row_scale);
         }
       }
     }
     else {
-      resizeAreaKernel2<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
-          channels, src_stride, dst, dst_rows, dst_cols, dst_stride, col_scale,
-          row_scale, inv_col_scale, inv_row_scale);
+      if (channels == 1 && (src_pitch & (texture_alignment - 1)) == 0) {
+        cudaChannelFormatDesc desc = cudaCreateChannelDesc<float>();
+        float_c1_ref.normalized = false;
+        float_c1_ref.filterMode = cudaFilterModeLinear;
+        float_c1_ref.addressMode[0] = cudaAddressModeClamp;
+        float_c1_ref.addressMode[1] = cudaAddressModeClamp;
+        code = cudaBindTexture2D(0, float_c1_ref, src, desc, src_cols, src_rows,
+                                (size_t)src_stride * sizeof(float));
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
+          return RC_DEVICE_RUNTIME_ERROR;
+        }
+
+        resizeAreaTextureKernel<<<grid, block, 0, stream>>>(dst, dst_rows,
+            dst_cols, channels, dst_stride, col_scale, row_scale, inv_col_scale,
+            inv_row_scale);
+      }
+      else {
+        resizeAreaKernel2<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
+            channels, src_stride, dst, dst_rows, dst_cols, dst_stride,
+            col_scale, row_scale, inv_col_scale, inv_row_scale);
+      }
     }
   }
   else {
