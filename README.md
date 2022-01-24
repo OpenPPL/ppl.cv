@@ -4,13 +4,23 @@
 
 ### How To Build
 
-This project is configured by cmake script. A simple build script is provided.
+This project is configured by cmake scripts. A simple build script is provided.
+
+#### Linux
 
 ```bash
 $ cd ${path_to_ppl.cv}
 $ ./build.sh x86_64                         # for linux-x86_64
 $ ./build.sh aarch64                        # for linux-aarch64
 $ ./build.sh cuda                           # for linux-x86_64_cuda
+```
+
+#### Windows
+
+Using vs2015 for example:
+
+```
+build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_X86_64=ON
 ```
 
 ### Documents
