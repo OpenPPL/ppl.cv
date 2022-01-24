@@ -954,7 +954,7 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
   int radius_y = ksize_y >> 1;
   bool is_x_symmetric = ksize_x & 1;
   bool is_y_symmetric = ksize_y & 1;
-  float weight = 1.0 / (ksize_x * ksize_y);
+  float weight = 1.f / (ksize_x * ksize_y);
 
   if (ksize_x <= SMALL_KSIZE && ksize_y <= SMALL_KSIZE && channels == 1) {
     dim3 block, grid;

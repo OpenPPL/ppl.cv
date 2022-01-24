@@ -61,14 +61,14 @@ void createGaussianKernel(float* coefficients, float sigma, int ksize) {
     fixed_kernel = true;
   }
 
-  float value = sigma > 0 ? sigma : ((ksize - 1) * 0.5 - 1) * 0.3 + 0.8;
-  float scale_2x = -0.5 / (value * value);
+  float value = sigma > 0 ? sigma : ((ksize - 1) * 0.5f - 1) * 0.3f + 0.8f;
+  float scale_2x = -0.5f / (value * value);
   float sum = 0.f;
 
   int i;
   float x;
   for (i = 0; i < ksize; i++) {
-    x = i - (ksize - 1) * 0.5;
+    x = i - (ksize - 1) * 0.5f;
     value = fixed_kernel ? coefficients[i] : std::exp(scale_2x * x * x);
     if (!fixed_kernel) {
       coefficients[i] = value;
