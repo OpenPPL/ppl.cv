@@ -59,6 +59,7 @@ target_compile_definitions(pplcv_static PUBLIC
     PPLCV_VERSION_PATCH=${PPLCV_VERSION_PATCH})
 
 target_compile_options(pplcv_static PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fno-exceptions -Wno-strict-aliasing>)
+target_compile_features(pplcv_static PUBLIC cxx_std_11)
 
 if(PPLCV_INSTALL)
     install(DIRECTORY include DESTINATION .)
