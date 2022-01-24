@@ -1053,8 +1053,8 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
 
   float col_scale = (double)src_cols / dst_cols;
   float row_scale = (double)src_rows / dst_rows;
-  float inv_col_scale = 1.0 / col_scale;
-  float inv_row_scale = 1.0 / row_scale;
+  float inv_col_scale = 1.f / col_scale;
+  float inv_row_scale = 1.f / row_scale;
 
   size_t texture_alignment = 32;
   size_t src_pitch = src_stride * sizeof(uchar);
@@ -1248,8 +1248,8 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
 
   double col_scale = (double)src_cols / dst_cols;
   float row_scale = (double)src_rows / dst_rows;
-  float inv_col_scale = 1.0 / col_scale;
-  float inv_row_scale = 1.0 / row_scale;
+  float inv_col_scale = 1.f / col_scale;
+  float inv_row_scale = 1.f / row_scale;
 
   size_t texture_alignment = 32;
   size_t src_pitch = src_stride * sizeof(float);

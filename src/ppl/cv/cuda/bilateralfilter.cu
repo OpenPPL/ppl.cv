@@ -667,8 +667,8 @@ RetCode bilateralFilter(const uchar* src, int rows, int cols, int channels,
 
   if (sigma_color <= 0) sigma_color = 1;
   if (sigma_space <= 0) sigma_space = 1;
-  float color_coeff = -0.5 / (sigma_color * sigma_color);
-  float space_coeff = -0.5 / (sigma_space * sigma_space);
+  float color_coeff = -0.5f / (sigma_color * sigma_color);
+  float space_coeff = -0.5f / (sigma_space * sigma_space);
   int radius;
   if (diameter <= 0) {
     radius = rint(sigma_space * 1.5);
