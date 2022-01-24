@@ -1,0 +1,34 @@
+name: cuda-windows-x86-64
+
+on:
+  #push:
+  #  branches: [ master ]
+  #  paths-ignore: ['.**', 'docs/**', README.md]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'include/ppl/cv/cuda/**'
+      - 'src/ppl/cv/cuda/**'
+  workflow_dispatch:
+
+jobs:
+  build_and_test:
+    runs-on: [self-hosted, x64, windows]
+
+    steps:
+      - name: Create Checkout Directory
+        run: |
+          cd ../../ ; ./make_pplcv_dir.ps1 ${{ github.run_id }}
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ github.run_id }}
+
+      - name: Build
+        run: |
+          cd ../../ ; ./build_pplcv.ps1 ${{ github.run_id }} cuda
+
+      - name: clean
+        if: ${{ always() }}
+        run: |
+          cd ../../ ; ./clean_pplcv.ps1 ${{ github.run_id }} cuda
