@@ -47,7 +47,7 @@ public:
             this->width * channels,
             this->dev_oImage,
             kernel_len,
-            ppl::cv::BORDER_TYPE_REPLICATE);
+            ppl::cv::BORDER_REPLICATE);
     }
 
     ~MedianBlurBenchmark() {

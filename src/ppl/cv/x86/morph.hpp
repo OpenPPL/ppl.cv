@@ -78,7 +78,7 @@ void morph_u8(
     const uint8_t *srcBase,
     int32_t dstStride,
     uint8_t *dstBase,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     uint8_t borderValue    = 0);
 template <class morphOp, int32_t nc, int32_t kernel_len>
 void morph_f32(
@@ -88,7 +88,7 @@ void morph_f32(
     const float *srcBase,
     int32_t dstStride,
     float *dstBase,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     float borderValue      = 0);
 }
 }

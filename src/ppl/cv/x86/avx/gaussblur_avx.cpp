@@ -944,9 +944,9 @@ void x86GaussianBlur_f_avx(
     createGaussianKernels(kernel, kernel_len, sigma, sense32F);
 
     int32_t radius = kernel_len / 2;
-    if (radius == 1 && border_type == ppl::cv::BORDER_TYPE_REFLECT_101)
+    if (radius == 1 && border_type == ppl::cv::BORDER_REFLECT_101)
         x86GaussianBlur_fs3(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, cn);
-    else if (radius == 2 && border_type == ppl::cv::BORDER_TYPE_REFLECT_101)
+    else if (radius == 2 && border_type == ppl::cv::BORDER_REFLECT_101)
         x86GaussianBlur_fs5(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, cn);
     else
         x86GaussianBlur_flarge<cn>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);

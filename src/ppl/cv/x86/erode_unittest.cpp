@@ -49,10 +49,10 @@ TEST(Erode_FP32, x86)
     int32_t kernel_size[] = {3, 5, 7};
     float border_value[] = {0.0f, 1.0f, 2.0f, 127.0f, 254.0f};
     ppl::cv::BorderType ppl_bt[] = {
-        ppl::cv::BORDER_TYPE_REFLECT,
-        ppl::cv::BORDER_TYPE_REFLECT101,
-        ppl::cv::BORDER_TYPE_REPLICATE,
-        ppl::cv::BORDER_TYPE_CONSTANT,
+        ppl::cv::BORDER_REFLECT,
+        ppl::cv::BORDER_REFLECT101,
+        ppl::cv::BORDER_REPLICATE,
+        ppl::cv::BORDER_CONSTANT,
         };
     cv::BorderTypes cv_bt[] = {
         cv::BORDER_REFLECT,
@@ -79,10 +79,10 @@ TEST(Erode_U8, x86)
     int32_t kernel_size[] = {3, 5, 7};
     uint8_t border_value[] = {0, 1, 4, 16, 127, 254};
     ppl::cv::BorderType ppl_bt[] = {
-        ppl::cv::BORDER_TYPE_REFLECT,
-        ppl::cv::BORDER_TYPE_REFLECT101,
-        ppl::cv::BORDER_TYPE_REPLICATE,
-        ppl::cv::BORDER_TYPE_CONSTANT,
+        ppl::cv::BORDER_REFLECT,
+        ppl::cv::BORDER_REFLECT101,
+        ppl::cv::BORDER_REPLICATE,
+        ppl::cv::BORDER_CONSTANT,
         };
     cv::BorderTypes cv_bt[] = {
         cv::BORDER_REFLECT,

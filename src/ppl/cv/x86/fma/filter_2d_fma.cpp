@@ -108,25 +108,25 @@ static uint8_t sat_cast(int data)
 template <BorderType borderType>
 inline int BorderInterpolate(int p, int len)
 {
-    if (borderType == ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (borderType == ppl::cv::BORDER_REFLECT_101) {
         p = p < 0 ? (-p) : 2 * len - p - 2;
-    } else if (borderType == ppl::cv::BORDER_TYPE_REFLECT) {
+    } else if (borderType == ppl::cv::BORDER_REFLECT) {
         p = p < 0 ? (-p - 1) : 2 * len - p - 1;
-    } else if (borderType == ppl::cv::BORDER_TYPE_REPLICATE) {
+    } else if (borderType == ppl::cv::BORDER_REPLICATE) {
         p = (p < 0) ? 0 : len - 1;
-    } else if (borderType == ppl::cv::BORDER_TYPE_CONSTANT) {
+    } else if (borderType == ppl::cv::BORDER_CONSTANT) {
         p = -1;
     }
     return p;
 }
 inline int interpolate(int p, int len, BorderType border_type)
 {
-    if (border_type == ppl::cv::BORDER_TYPE_REFLECT)
-        return BorderInterpolate<ppl::cv::BORDER_TYPE_REFLECT>(p, len);
-    if (border_type == ppl::cv::BORDER_TYPE_REFLECT101)
-        return BorderInterpolate<ppl::cv::BORDER_TYPE_REFLECT101>(p, len);
-    if (border_type == ppl::cv::BORDER_TYPE_REPLICATE)
-        return BorderInterpolate<ppl::cv::BORDER_TYPE_REPLICATE>(p, len);
+    if (border_type == ppl::cv::BORDER_REFLECT)
+        return BorderInterpolate<ppl::cv::BORDER_REFLECT>(p, len);
+    if (border_type == ppl::cv::BORDER_REFLECT101)
+        return BorderInterpolate<ppl::cv::BORDER_REFLECT101>(p, len);
+    if (border_type == ppl::cv::BORDER_REPLICATE)
+        return BorderInterpolate<ppl::cv::BORDER_REPLICATE>(p, len);
 
     return 0;
 }

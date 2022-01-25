@@ -104,7 +104,7 @@ public:
     {                            \
         this->apply(GetParam()); \
     }                            \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 230, 231, 232, 233, 234), ::testing::Values(10), ::testing::Values(3, 5), ::testing::Values(ppl::cv::BORDER_TYPE_CONSTANT, ppl::cv::BORDER_TYPE_REFLECT, ppl::cv::BORDER_TYPE_REFLECT101, ppl::cv::BORDER_TYPE_REPLICATE), ::testing::Values(diff)));
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 230, 231, 232, 233, 234), ::testing::Values(10), ::testing::Values(3, 5), ::testing::Values(ppl::cv::BORDER_CONSTANT, ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_REFLECT101, ppl::cv::BORDER_REPLICATE), ::testing::Values(diff)));
 
 R1(Erode_f32c1, float, 1, 1.01)
 R1(Erode_f32c3, float, 3, 1.01)

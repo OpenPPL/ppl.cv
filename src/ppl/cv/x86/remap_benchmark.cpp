@@ -35,7 +35,7 @@ void BM_REMAP_ppl_x86(benchmark::State &state)
     ppl::cv::debug::randomFill<float>(map_y.get(), width * height, 0, height - 1);
 
     for (auto _ : state) {
-        ppl::cv::x86::RemapLinear<T, channels>(height, width, width * channels, src.get(), height, width, width * channels, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TYPE_CONSTANT);
+        ppl::cv::x86::RemapLinear<T, channels>(height, width, width * channels, src.get(), height, width, width * channels, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_CONSTANT);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

@@ -50,7 +50,7 @@ public:
         std::unique_ptr<Tdst[]> dst(new Tdst[size.width * size.height * c]);
         std::unique_ptr<Tdst[]> dst_opencv(new Tdst[size.width * size.height * c]);
 
-        ppl::cv::x86::Sobel<Tsrc, Tdst, c>(size.height, size.width, size.width * c, src.get(), size.width * c, dst.get(), dx, dy, ksize, scale, delta, ppl::cv::BORDER_TYPE_DEFAULT);
+        ppl::cv::x86::Sobel<Tsrc, Tdst, c>(size.height, size.width, size.width * c, src.get(), size.width * c, dst.get(), dx, dy, ksize, scale, delta, ppl::cv::BORDER_DEFAULT);
 
         ::cv::Mat iMat(size.height, size.width, CV_MAKETYPE(cv::DataType<Tsrc>::depth, c), src.get());
         ::cv::Mat oMat(size.height, size.width, CV_MAKETYPE(cv::DataType<Tdst>::depth, c), dst_opencv.get());

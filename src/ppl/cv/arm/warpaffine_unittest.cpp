@@ -71,7 +71,7 @@ public:
 
         cv::Scalar borderValue = {border_value, border_value, border_value, border_value};
 
-        if (inter_mode == ppl::cv::INTERPOLATION_TYPE_LINEAR) {
+        if (inter_mode == ppl::cv::INTERPOLATION_LINEAR) {
             cv::warpAffine(src_opencv, dst_opencv, affineMatrix_opencv, dst_opencv.size(), 17 /*CV_WARP_INVERSE_MAP + CV_INTER_LINEAR*/, borderType, borderValue);
 
             ppl::cv::arm::WarpAffineLinear<T, nc>(
@@ -87,7 +87,7 @@ public:
                 (ppl::cv::BorderType)borderType,
                 (T)border_value);
         }
-        if (inter_mode == ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT) {
+        if (inter_mode == ppl::cv::INTERPOLATION_NEAREST_POINT) {
             cv::warpAffine(src_opencv, dst_opencv, affineMatrix_opencv, dst_opencv.size(), cv::WARP_INVERSE_MAP | cv::INTER_NEAREST, borderType, borderValue);
 
             ppl::cv::arm::WarpAffineNearestPoint<T, nc>(
@@ -121,18 +121,18 @@ public:
     {                                          \
         this->Linearapply(GetParam());         \
     }                                          \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(512, 320, 640, 1280, 1920, 3840), ::testing::Values(512, 240, 480, 720, 1080, 2060), ::testing::Values(ppl::cv::BORDER_TYPE_CONSTANT, ppl::cv::BORDER_TYPE_REPLICATE, ppl::cv::BORDER_TYPE_TRANSPARENT), ::testing::Values(diff)));
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(512, 320, 640, 1280, 1920, 3840), ::testing::Values(512, 240, 480, 720, 1080, 2060), ::testing::Values(ppl::cv::BORDER_CONSTANT, ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_TRANSPARENT), ::testing::Values(diff)));
 
-R1(WarpAffineLinear_f32c1, float, ppl::cv::INTERPOLATION_TYPE_LINEAR, 1, 1.01)
-R1(WarpAffineLinear_f32c3, float, ppl::cv::INTERPOLATION_TYPE_LINEAR, 3, 1.01)
-R1(WarpAffineLinear_f32c4, float, ppl::cv::INTERPOLATION_TYPE_LINEAR, 4, 1.01)
-R1(WarpAffineNearest_f32c1, float, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, 1, 1.01)
-R1(WarpAffineNearest_f32c3, float, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, 3, 1.01)
-R1(WarpAffineNearest_f32c4, float, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, 4, 1.01)
+R1(WarpAffineLinear_f32c1, float, ppl::cv::INTERPOLATION_LINEAR, 1, 1.01)
+R1(WarpAffineLinear_f32c3, float, ppl::cv::INTERPOLATION_LINEAR, 3, 1.01)
+R1(WarpAffineLinear_f32c4, float, ppl::cv::INTERPOLATION_LINEAR, 4, 1.01)
+R1(WarpAffineNearest_f32c1, float, ppl::cv::INTERPOLATION_NEAREST_POINT, 1, 1.01)
+R1(WarpAffineNearest_f32c3, float, ppl::cv::INTERPOLATION_NEAREST_POINT, 3, 1.01)
+R1(WarpAffineNearest_f32c4, float, ppl::cv::INTERPOLATION_NEAREST_POINT, 4, 1.01)
 
-R1(WarpAffineLinear_u8c1, uchar, ppl::cv::INTERPOLATION_TYPE_LINEAR, 1, 1.01)
-R1(WarpAffineLinear_u8c3, uchar, ppl::cv::INTERPOLATION_TYPE_LINEAR, 3, 1.01)
-R1(WarpAffineLinear_u8c4, uchar, ppl::cv::INTERPOLATION_TYPE_LINEAR, 4, 1.01)
-R1(WarpAffineNearest_u8c1, uchar, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, 1, 1.01)
-R1(WarpAffineNearest_u8c3, uchar, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, 3, 1.01)
-R1(WarpAffineNearest_u8c4, uchar, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, 4, 1.01)
+R1(WarpAffineLinear_u8c1, uchar, ppl::cv::INTERPOLATION_LINEAR, 1, 1.01)
+R1(WarpAffineLinear_u8c3, uchar, ppl::cv::INTERPOLATION_LINEAR, 3, 1.01)
+R1(WarpAffineLinear_u8c4, uchar, ppl::cv::INTERPOLATION_LINEAR, 4, 1.01)
+R1(WarpAffineNearest_u8c1, uchar, ppl::cv::INTERPOLATION_NEAREST_POINT, 1, 1.01)
+R1(WarpAffineNearest_u8c3, uchar, ppl::cv::INTERPOLATION_NEAREST_POINT, 3, 1.01)
+R1(WarpAffineNearest_u8c4, uchar, ppl::cv::INTERPOLATION_NEAREST_POINT, 4, 1.01)

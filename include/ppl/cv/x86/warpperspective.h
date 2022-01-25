@@ -37,8 +37,8 @@ namespace x86 {
 * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
 * @param outData           output image data
 * @param affineMatrix      transformation matrix
-* @param border_type       support ppl::cv::BORDER_TYPE_CONSTANT/ppl::cv::BORDER_TYPE_REPLICATE/ppl::cv::BORDER_TYPE_TRANSPARENT
-* @param border_value      border value for BORDER_TYPE_CONSTANT 
+* @param border_type       support ppl::cv::BORDER_CONSTANT/ppl::cv::BORDER_REPLICATE/ppl::cv::BORDER_TRANSPARENT
+* @param border_value      border value for BORDER_CONSTANT 
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
 * <table>
@@ -69,7 +69,7 @@ namespace x86 {
 *     float* dev_oImage = (float*)malloc(outWidth * outHeight * C * sizeof(float));
 *     float* affineMatrix= (float*)malloc(9 * sizeof(float));
 *
-*     ppl::cv::x86::WarpPerspective<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_TYPE_CONSTANT);
+*     ppl::cv::x86::WarpPerspective<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_CONSTANT);
 *     free(dev_iImage);
 *     free(dev_oImage);
 *     free(affineMatrix);
@@ -89,7 +89,7 @@ template <typename T, int32_t numChannels>
     int outWidthStride,
     T* outData,
     const double* affineMatrix,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T border_value         = 0);
 
 /**
@@ -103,8 +103,8 @@ template <typename T, int32_t numChannels>
 * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
 * @param outData           output image data
 * @param affineMatrix      the mask of warpaffine
-* @param border_type       support ppl::cv::BORDER_TYPE_CONSTANT/ppl::cv::BORDER_TYPE_REPLICATE/ppl::cv::BORDER_TYPE_TRANSPARENT
-* @param border_value      border value for BORDER_TYPE_CONSTANT
+* @param border_type       support ppl::cv::BORDER_CONSTANT/ppl::cv::BORDER_REPLICATE/ppl::cv::BORDER_TRANSPARENT
+* @param border_value      border value for BORDER_CONSTANT
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
 * <table>
@@ -135,7 +135,7 @@ template <typename T, int32_t numChannels>
 *     float* dev_oImage = (float*)malloc(outWidth * outHeight * C * sizeof(float));
 *     float* affineMatrix = (float*)malloc(6 * sizeof(float));
 *
-*     ppl::cv::x86::WarpAffineLinear<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_TYPE_CONSTANT);
+*     ppl::cv::x86::WarpAffineLinear<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_CONSTANT);
 *
 *     free(dev_iImage);
 *     free(dev_oImage);
@@ -156,8 +156,8 @@ template <typename T, int32_t numChannels>
 * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
 * @param outData           output image data
 * @param affineMatrix      transformation matrix
-* @param border_type       support ppl::cv::BORDER_TYPE_CONSTANT/ppl::cv::BORDER_TYPE_REPLICATE/ppl::cv::BORDER_TYPE_TRANSPARENT
-* @param border_value      border value for BORDER_TYPE_CONSTANT 
+* @param border_type       support ppl::cv::BORDER_CONSTANT/ppl::cv::BORDER_REPLICATE/ppl::cv::BORDER_TRANSPARENT
+* @param border_value      border value for BORDER_CONSTANT 
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
 * <table>
@@ -188,7 +188,7 @@ template <typename T, int32_t numChannels>
 *     float* dev_oImage = (float*)malloc(outWidth * outHeight * C * sizeof(float));
 *     float* affineMatrix= (float*)malloc(9 * sizeof(float));
 *
-*     ppl::cv::x86::WarpPerspectiveLinear<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_TYPE_REPLICATE);
+*     ppl::cv::x86::WarpPerspectiveLinear<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_REPLICATE);
 *     free(dev_iImage);
 *     free(dev_oImage);
 *     free(affineMatrix);
@@ -208,7 +208,7 @@ template <typename T, int32_t numChannels>
     int outWidthStride,
     T* outData,
     const double* affineMatrix,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T border_value         = 0);
 
 }

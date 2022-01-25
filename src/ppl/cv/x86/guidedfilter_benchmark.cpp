@@ -59,7 +59,7 @@ public:
             this->dev_oImage,
             r,
             eps,
-            ppl::cv::BORDER_TYPE_DEFAULT);
+            ppl::cv::BORDER_DEFAULT);
     }
 
     void apply_opencv() {

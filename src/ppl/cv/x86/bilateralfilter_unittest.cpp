@@ -39,7 +39,7 @@ void BilateralFilterTest(int32_t height, int32_t width, T diff) {
                             space, 
                             width * nc,
                             dst.get(),
-                            ppl::cv::BORDER_TYPE_DEFAULT);
+                            ppl::cv::BORDER_DEFAULT);
     
     checkResult<T, nc>(dst_ref.get(), dst.get(),
                     height, width,

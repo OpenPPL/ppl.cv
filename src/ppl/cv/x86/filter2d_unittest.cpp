@@ -37,7 +37,7 @@ void Filter2DTest(int32_t height, int32_t width, T diff) {
     cv::filter2D(src_opencv, dst_opencv, -1, filter_opencv,cv::Point(-1,-1),0,cv::BORDER_REFLECT101);
     ppl::cv::x86::Filter2D<T, nc>(height, width, width * nc,
                             src.get(), filter_size, filter.get(), width * nc,
-                            dst.get(), ppl::cv::BORDER_TYPE_REFLECT101);
+                            dst.get(), ppl::cv::BORDER_REFLECT101);
 
     checkResult<T, nc>(dst_ref.get(), dst.get(),
                     height, width,

@@ -52,7 +52,7 @@ public:
     
     void apply() {
         ppl::cv::x86::PyrUp<T, channels>(height, width, width * channels,
-            inData, width*2*channels, outData, ppl::cv::BORDER_TYPE_DEFAULT);
+            inData, width*2*channels, outData, ppl::cv::BORDER_DEFAULT);
     }
      void apply_opencv() {
         cv::Mat iMat(height, width, T2CvType<T, channels>::type, inData);

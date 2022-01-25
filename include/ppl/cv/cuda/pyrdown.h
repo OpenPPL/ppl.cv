@@ -42,9 +42,9 @@ namespace cuda {
  * @param outWidthStride  the width stride of output image, similar to
  *                        inWidthStride.
  * @param outData         output image data.
- * @param border_type     ways to deal with border. BORDER_TYPE_REPLICATE,
- *                        BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
- *                        BORDER_TYPE_DEFAULT are supported now.
+ * @param border_type     ways to deal with border. BORDER_REPLICATE,
+ *                        BORDER_REFLECT, BORDER_REFLECT_101 and
+ *                        BORDER_DEFAULT are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
@@ -111,7 +111,7 @@ ppl::common::RetCode PyrDown(cudaStream_t stream,
                              const T* inData,
                              int outWidthStride,
                              T* outData,
-                             BorderType border_type = BORDER_TYPE_DEFAULT);
+                             BorderType border_type = BORDER_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv

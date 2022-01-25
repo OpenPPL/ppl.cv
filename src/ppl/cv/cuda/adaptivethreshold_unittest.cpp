@@ -49,16 +49,16 @@ inline std::string convertToStringThreshold(const Parameters& parameters) {
   formatted << "IntDelta" << int_delta << "_";
 
   BorderType border_type = (BorderType)std::get<5>(parameters);
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_TYPE_REFLECT_101) {
+  else if (border_type == BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_TYPE_DEFAULT
+  else {  // border_type == BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -187,7 +187,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
     ::testing::Values(THRESH_BINARY, THRESH_BINARY_INV),                       \
     ::testing::Values(0, 70, 1587, 3784),                                      \
     ::testing::Values(0, 70, 1587, 3784),                                      \
-    ::testing::Values(BORDER_TYPE_REPLICATE),                                  \
+    ::testing::Values(BORDER_REPLICATE),                                  \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

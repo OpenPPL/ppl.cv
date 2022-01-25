@@ -33,7 +33,7 @@ void BM_Filter2D_ppl_x86(benchmark::State &state) {
     for (auto _ : state) {
         ppl::cv::x86::Filter2D<T, channels>(height, width, width * channels,
                                 src.get(), filter_size, filter.get(), width * channels,
-                                dst.get(), ppl::cv::BORDER_TYPE_DEFAULT);
+                                dst.get(), ppl::cv::BORDER_DEFAULT);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

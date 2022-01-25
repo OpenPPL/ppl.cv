@@ -36,7 +36,7 @@ namespace arm {
  * @param inData            input image data
  * @param outData           output image data
  * @param ksize             the length of kernel
- * @param border_type       ways to deal with border. BORDER_TYPE_REFLECT_101 ,BORDER_TYPE_REFLECT, BORDER_TYPE_REPLICATE 
+ * @param border_type       ways to deal with border. BORDER_REFLECT_101 ,BORDER_REFLECT, BORDER_REPLICATE 
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -82,7 +82,7 @@ template<typename T, int channels>
     int outWidthStride,
     T* outData, 
     int ksize,
-    BorderType border_type = BORDER_TYPE_REPLICATE);
+    BorderType border_type = BORDER_REPLICATE);
 
 }
 }

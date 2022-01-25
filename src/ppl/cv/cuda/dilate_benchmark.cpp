@@ -76,7 +76,7 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
     Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
                         (T*)gpu_src.data, ksize, ksize, mask,
                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                        ppl::cv::BORDER_TYPE_REFLECT);
+                        ppl::cv::BORDER_REFLECT);
   }
   cudaDeviceSynchronize();
 
@@ -87,13 +87,13 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
         Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
                             gpu_src.step / sizeof(T), (T*)gpu_src.data,
                             ksize, ksize, mask, gpu_dst.step / sizeof(T),
-                            (T*)gpu_dst.data, ppl::cv::BORDER_TYPE_REFLECT);
+                            (T*)gpu_dst.data, ppl::cv::BORDER_REFLECT);
       }
       else if (function == kErode) {
         Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
                            ksize, ksize, mask, gpu_dst.step / sizeof(T),
-                           (T*)gpu_dst.data, ppl::cv::BORDER_TYPE_REFLECT);
+                           (T*)gpu_dst.data, ppl::cv::BORDER_REFLECT);
       }
       else {
       }

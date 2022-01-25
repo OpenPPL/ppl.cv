@@ -28,7 +28,7 @@ void BM_GaussianBlur_ppl_x86(benchmark::State &state) {
     std::unique_ptr<T[]> dst(new T[width * height * nc]);
     ppl::cv::debug::randomFill<T>(src.get(), width * height * nc, 0, 255);
     for (auto _ : state) {
-        ppl::cv::x86::GaussianBlur<T, nc>(height, width, width * nc, src.get(), filter_size, 0.0f, width * nc, dst.get(), ppl::cv::BORDER_TYPE_DEFAULT);
+        ppl::cv::x86::GaussianBlur<T, nc>(height, width, width * nc, src.get(), filter_size, 0.0f, width * nc, dst.get(), ppl::cv::BORDER_DEFAULT);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

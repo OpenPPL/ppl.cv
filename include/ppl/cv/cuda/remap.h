@@ -46,10 +46,10 @@ namespace cuda {
  * @param outData          output image data.
  * @param mapX             transformation matrix in the x direction.
  * @param mapY             transformation matrix in the y direction.
- * @param interpolation    Interpolation method. INTERPOLATION_TYPE_LINEAR and
- *                         INTERPOLATION_TYPE_NEAREST_POINT are supported.
- * @param border_type      ways to deal with border. BORDER_TYPE_CONSTANT,
- *                         BORDER_TYPE_REPLICATE and BORDER_TYPE_TRANSPARENT are
+ * @param interpolation    Interpolation method. INTERPOLATION_LINEAR and
+ *                         INTERPOLATION_NEAREST_POINT are supported.
+ * @param border_type      ways to deal with border. BORDER_CONSTANT,
+ *                         BORDER_REPLICATE and BORDER_TRANSPARENT are
  *                         supported now.
  * @param borderValue      value used in case of a constant border; by default,
  *                         it is 0.
@@ -101,7 +101,7 @@ namespace cuda {
  *   Remap<float, 3>(stream, src_height, src_width, input_pitch / sizeof(float),
  *                   gpu_input, dst_height, dst_width,
  *                   output_pitch / sizeof(float), gpu_output, gpu_map_x,
- *                   gpu_map, ppl::cv::INTERPOLATION_TYPE_LINEAR);
+ *                   gpu_map, ppl::cv::INTERPOLATION_LINEAR);
  *   cudaStreamSynchronize(stream);
  *   cudaStreamDestroy(stream);
  *
@@ -127,7 +127,7 @@ ppl::common::RetCode Remap(cudaStream_t stream,
                            const float* mapX,
                            const float* mapY,
                            InterpolationType interpolation,
-                           BorderType border_type = BORDER_TYPE_CONSTANT,
+                           BorderType border_type = BORDER_CONSTANT,
                            T borderValue = 0);
 
 }  // namespace cuda

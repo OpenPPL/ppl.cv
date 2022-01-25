@@ -932,10 +932,10 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_offset >= 0);
   PPL_ASSERT(ksize_x > 0);
   PPL_ASSERT(ksize_y > 0);
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   cudaError_t code;
   if (ksize_x == 1 && ksize_y == 1 && src_stride == dst_stride) {
@@ -963,10 +963,10 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
     grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CHANNEL1_SMALL_KERNELS(float, float, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CHANNEL1_SMALL_KERNELS(float, float, ReflectBorder);
     }
     else {
@@ -1011,10 +1011,10 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
     return RC_DEVICE_MEMORY_ERROR;
   }
 
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     RUN_KERNELS(float, float, ReplicateBorder);
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     RUN_KERNELS(float, float, ReflectBorder);
   }
   else {
@@ -1546,8 +1546,8 @@ RetCode guidedFilter(const uchar* src, int rows, int cols, int src_channels,
   PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(radius > 0);
   PPL_ASSERT(eps > 0.0);
-  PPL_ASSERT(border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_REFLECT);
+  PPL_ASSERT(border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_REFLECT);
 
   float* fguide;
   float* fsrc;
@@ -1599,8 +1599,8 @@ RetCode guidedFilter(const float* src, int rows, int cols, int src_channels,
   PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(radius > 0);
   PPL_ASSERT(eps > 0.0);
-  PPL_ASSERT(border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_REFLECT);
+  PPL_ASSERT(border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_REFLECT);
 
   filtering(src, rows, cols, src_channels, src_stride, guide, guide_channels,
             guide_stride, dst, dst_stride, radius, eps, border_type, stream);

@@ -53,7 +53,7 @@ public:
 
     void apply(int dx, int dy, int ksize)
     {
-        ppl::cv::x86::Sobel<Tsrc, Tdst, channels>(height, width, width * channels, inData, width * channels, outData, dx, dy, ksize, 1.0, 0.0, ppl::cv::BORDER_TYPE_DEFAULT);
+        ppl::cv::x86::Sobel<Tsrc, Tdst, channels>(height, width, width * channels, inData, width * channels, outData, dx, dy, ksize, 1.0, 0.0, ppl::cv::BORDER_DEFAULT);
     }
 
     ~SobelBenchmark()

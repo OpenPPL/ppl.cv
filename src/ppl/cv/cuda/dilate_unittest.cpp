@@ -56,10 +56,10 @@ inline std::string convertToStringDilate(const Parameters& parameters) {
   }
 
   BorderType border_type = (BorderType)std::get<1>(parameters);
-  if (border_type == BORDER_TYPE_DEFAULT) {
+  if (border_type == BORDER_DEFAULT) {
     formatted << "BORDER_DEFAULT" << "_";
   }
-  else if (border_type == BORDER_TYPE_CONSTANT) {
+  else if (border_type == BORDER_CONSTANT) {
     formatted << "BORDER_CONSTANT" << "_";
   }
   else {
@@ -123,10 +123,10 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_TYPE_DEFAULT) {
+  if (border_type == BORDER_DEFAULT) {
     cv_border = cv::BORDER_DEFAULT;
   }
-  else if (border_type == BORDER_TYPE_CONSTANT) {
+  else if (border_type == BORDER_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
   }
   else {
@@ -196,7 +196,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaDilateTest ## T ## channels,         \
   ::testing::Combine(                                                          \
     ::testing::Values(kFullyMaskedDilate, kPartiallyMaskedDilate,              \
                       kFullyMaskedErode, kPartiallyMaskedErode),               \
-    ::testing::Values(BORDER_TYPE_DEFAULT, BORDER_TYPE_CONSTANT),              \
+    ::testing::Values(BORDER_DEFAULT, BORDER_CONSTANT),              \
     ::testing::Values(1, 3, 5, 7, 11, 15),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \

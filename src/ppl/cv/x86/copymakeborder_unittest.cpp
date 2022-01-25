@@ -39,13 +39,13 @@ void CopymakeborderTest(int32_t height, int32_t width, int32_t padding, float di
     cv::Mat src_opencv(input_height, input_width, CV_MAKETYPE(cv::DataType<T>::depth, nc), src.get(), sizeof(T) * input_width * nc);
     cv::Mat dst_opencv(output_height, output_width, CV_MAKETYPE(cv::DataType<T>::depth, nc), dst_ref.get(), sizeof(T) * output_width * nc);
     cv::BorderTypes cv_border_type;
-    if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
+    if (border_type == ppl::cv::BORDER_CONSTANT) {
         cv_border_type = cv::BORDER_CONSTANT;
-    } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
+    } else if (border_type == ppl::cv::BORDER_REPLICATE) {
         cv_border_type = cv::BORDER_REPLICATE;
-    } else if (border_type == ppl::cv::BORDER_TYPE_REFLECT) {
+    } else if (border_type == ppl::cv::BORDER_REFLECT) {
         cv_border_type = cv::BORDER_REFLECT;
-    } else if (border_type == ppl::cv::BORDER_TYPE_REFLECT101) {
+    } else if (border_type == ppl::cv::BORDER_REFLECT101) {
         cv_border_type = cv::BORDER_REFLECT101;
     }
     ppl::cv::x86::CopyMakeBorder<T, nc>(input_height, input_width, input_width * nc, src.get(), output_height, 
@@ -66,29 +66,29 @@ void CopymakeborderTest(int32_t height, int32_t width, int32_t padding, float di
         CopymakeborderTest<dtype, nc, border_type>(720, 1280, 4, diff); \
     } \
 
-R(copymakeborder_u8c1_constant_x86, uint8_t, 1, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
-R(copymakeborder_u8c3_constant_x86, uint8_t, 3, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
-R(copymakeborder_u8c4_constant_x86, uint8_t, 4, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
-R(copymakeborder_u8c1_replicate_x86, uint8_t, 1, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f);
-R(copymakeborder_u8c3_replicate_x86, uint8_t, 3, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f);
-R(copymakeborder_u8c4_replicate_x86, uint8_t, 4, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f);
-R(copymakeborder_u8c1_reflect_x86, uint8_t, 1, ppl::cv::BORDER_TYPE_REFLECT, 1.01f);
-R(copymakeborder_u8c3_reflect_x86, uint8_t, 3, ppl::cv::BORDER_TYPE_REFLECT, 1.01f);
-R(copymakeborder_u8c4_reflect_x86, uint8_t, 4, ppl::cv::BORDER_TYPE_REFLECT, 1.01f);
-R(copymakeborder_u8c1_reflect101_x86, uint8_t, 1, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
-R(copymakeborder_u8c3_reflect101_x86, uint8_t, 3, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
-R(copymakeborder_u8c4_reflect101_x86, uint8_t, 4, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
+R(copymakeborder_u8c1_constant_x86, uint8_t, 1, ppl::cv::BORDER_CONSTANT, 1.01f);
+R(copymakeborder_u8c3_constant_x86, uint8_t, 3, ppl::cv::BORDER_CONSTANT, 1.01f);
+R(copymakeborder_u8c4_constant_x86, uint8_t, 4, ppl::cv::BORDER_CONSTANT, 1.01f);
+R(copymakeborder_u8c1_replicate_x86, uint8_t, 1, ppl::cv::BORDER_REPLICATE, 1.01f);
+R(copymakeborder_u8c3_replicate_x86, uint8_t, 3, ppl::cv::BORDER_REPLICATE, 1.01f);
+R(copymakeborder_u8c4_replicate_x86, uint8_t, 4, ppl::cv::BORDER_REPLICATE, 1.01f);
+R(copymakeborder_u8c1_reflect_x86, uint8_t, 1, ppl::cv::BORDER_REFLECT, 1.01f);
+R(copymakeborder_u8c3_reflect_x86, uint8_t, 3, ppl::cv::BORDER_REFLECT, 1.01f);
+R(copymakeborder_u8c4_reflect_x86, uint8_t, 4, ppl::cv::BORDER_REFLECT, 1.01f);
+R(copymakeborder_u8c1_reflect101_x86, uint8_t, 1, ppl::cv::BORDER_REFLECT_101, 1.01f);
+R(copymakeborder_u8c3_reflect101_x86, uint8_t, 3, ppl::cv::BORDER_REFLECT_101, 1.01f);
+R(copymakeborder_u8c4_reflect101_x86, uint8_t, 4, ppl::cv::BORDER_REFLECT_101, 1.01f);
 
-R(copymakeborder_fp32c1_constant_x86, float, 1, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
-R(copymakeborder_fp32c3_constant_x86, float, 3, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
-R(copymakeborder_fp32c4_constant_x86, float, 4, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f);
-R(copymakeborder_fp32c1_replicate_x86, float, 1, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f);
-R(copymakeborder_fp32c3_replicate_x86, float, 3, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f);
-R(copymakeborder_fp32c4_replicate_x86, float, 4, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f);
-R(copymakeborder_fp32c1_reflect_x86, float, 1, ppl::cv::BORDER_TYPE_REFLECT, 1.01f);
-R(copymakeborder_fp32c3_reflect_x86, float, 3, ppl::cv::BORDER_TYPE_REFLECT, 1.01f);
-R(copymakeborder_fp32c4_reflect_x86, float, 4, ppl::cv::BORDER_TYPE_REFLECT, 1.01f);
-R(copymakeborder_fp32c1_reflect101_x86, float, 1, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
-R(copymakeborder_fp32c3_reflect101_x86, float, 3, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
-R(copymakeborder_fp32c4_reflect101_x86, float, 4, ppl::cv::BORDER_TYPE_REFLECT_101, 1.01f);
+R(copymakeborder_fp32c1_constant_x86, float, 1, ppl::cv::BORDER_CONSTANT, 1.01f);
+R(copymakeborder_fp32c3_constant_x86, float, 3, ppl::cv::BORDER_CONSTANT, 1.01f);
+R(copymakeborder_fp32c4_constant_x86, float, 4, ppl::cv::BORDER_CONSTANT, 1.01f);
+R(copymakeborder_fp32c1_replicate_x86, float, 1, ppl::cv::BORDER_REPLICATE, 1.01f);
+R(copymakeborder_fp32c3_replicate_x86, float, 3, ppl::cv::BORDER_REPLICATE, 1.01f);
+R(copymakeborder_fp32c4_replicate_x86, float, 4, ppl::cv::BORDER_REPLICATE, 1.01f);
+R(copymakeborder_fp32c1_reflect_x86, float, 1, ppl::cv::BORDER_REFLECT, 1.01f);
+R(copymakeborder_fp32c3_reflect_x86, float, 3, ppl::cv::BORDER_REFLECT, 1.01f);
+R(copymakeborder_fp32c4_reflect_x86, float, 4, ppl::cv::BORDER_REFLECT, 1.01f);
+R(copymakeborder_fp32c1_reflect101_x86, float, 1, ppl::cv::BORDER_REFLECT_101, 1.01f);
+R(copymakeborder_fp32c3_reflect101_x86, float, 3, ppl::cv::BORDER_REFLECT_101, 1.01f);
+R(copymakeborder_fp32c4_reflect101_x86, float, 4, ppl::cv::BORDER_REFLECT_101, 1.01f);
 

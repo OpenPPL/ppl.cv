@@ -1134,7 +1134,7 @@ void warpAffine_nearest(
         bdelta[x] = rint(M[3] * x * AB_SCALE);
     }
 
-    if (borderMode == BORDER_TYPE_REPLICATE) {
+    if (borderMode == BORDER_REPLICATE) {
         int32x4_t v_zero4 = vdupq_n_s32(0);
         int32x4_t max_width = vdupq_n_s32(inWidth - 1);
         int32x4_t max_height = vdupq_n_s32(inHeight - 1);
@@ -1190,7 +1190,7 @@ void warpAffine_nearest(
                 }
             }
         }
-    } else if (borderMode == BORDER_TYPE_CONSTANT) {
+    } else if (borderMode == BORDER_CONSTANT) {
         int32x4_t v_nega = vdupq_n_s32(-1);
         int32x4_t max_width = vdupq_n_s32(inWidth - 1);
         int32x4_t max_height = vdupq_n_s32(inHeight - 1);
@@ -1249,7 +1249,7 @@ void warpAffine_nearest(
                 }
             }
         }
-    } else if (borderMode == BORDER_TYPE_TRANSPARENT) {
+    } else if (borderMode == BORDER_TRANSPARENT) {
         int32x4_t v_nega = vdupq_n_s32(-1);
         int32x4_t max_width = vdupq_n_s32(inWidth - 1);
         int32x4_t max_height = vdupq_n_s32(inHeight - 1);
@@ -1354,7 +1354,7 @@ void warpaffine_linear(
 
             int32_t idxDst = (i * outWidthStride + j * nc);
 
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+            if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -1370,7 +1370,7 @@ void warpaffine_linear(
                     sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                 int32_t sx1 = sx0 + 1;
                 int32_t sy1 = sy0 + 1;
                 sx0 = clip(sx0, 0, inWidth - 1);
@@ -1386,7 +1386,7 @@ void warpaffine_linear(
                     sum += t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -1481,7 +1481,7 @@ void warpAffine_linear_uint8_t(
                     x_count++;
                     end_x = x;
                 } else {
-                    if (borderMode == BORDER_TYPE_CONSTANT) {
+                    if (borderMode == BORDER_CONSTANT) {
                         int32_t mask0 = new_x_loc >= 0 &&
                                         new_x_loc <= (inWidth - 1) &&
                                         new_y_loc >= 0 &&
@@ -1525,9 +1525,9 @@ void warpAffine_linear_uint8_t(
                         }
 
                         dst[final_loc] = static_cast<uint8_t>((val_xy0 + DELTA) >> 15);
-                    } else if (borderMode == BORDER_TYPE_TRANSPARENT) {
+                    } else if (borderMode == BORDER_TRANSPARENT) {
                         continue;
-                    } else if (borderMode == BORDER_TYPE_REPLICATE) {
+                    } else if (borderMode == BORDER_REPLICATE) {
                         int32_t sx0 = clip(new_x_loc, 0, inWidth - 1);
                         int32_t sy0 = clip(new_y_loc, 0, inHeight - 1);
                         int32_t sx1 = clip((new_x_loc + 1), 0, inWidth - 1);
@@ -1715,7 +1715,7 @@ void warpAffine_linear_uint8_t(
                     x_count++;
                     end_x = x;
                 } else {
-                    if (borderMode == BORDER_TYPE_CONSTANT) {
+                    if (borderMode == BORDER_CONSTANT) {
                         int32_t loc_buffer = new_y_loc * inWidthStride + new_x_loc * 3;
                         int32_t final_loc = final_loc_base + x * 3;
 
@@ -1782,9 +1782,9 @@ void warpAffine_linear_uint8_t(
                         dst[final_loc + 0] = static_cast<uint8_t>((val_xy0 + DELTA) >> 15);
                         dst[final_loc + 1] = static_cast<uint8_t>((val_xy1 + DELTA) >> 15);
                         dst[final_loc + 2] = static_cast<uint8_t>((val_xy2 + DELTA) >> 15);
-                    } else if (borderMode == BORDER_TYPE_TRANSPARENT) {
+                    } else if (borderMode == BORDER_TRANSPARENT) {
                         continue;
-                    } else if (borderMode == BORDER_TYPE_REPLICATE) {
+                    } else if (borderMode == BORDER_REPLICATE) {
                         int32_t sx0 = clip(new_x_loc, 0, inWidth - 1);
                         int32_t sy0 = clip(new_y_loc, 0, inHeight - 1);
                         int32_t sx1 = clip((new_x_loc + 1), 0, inWidth - 1);
@@ -2024,7 +2024,7 @@ void warpAffine_linear_uint8_t(
                     x_count++;
                     end_x = x;
                 } else {
-                    if (borderMode == BORDER_TYPE_CONSTANT) {
+                    if (borderMode == BORDER_CONSTANT) {
                         int32_t loc_buffer = new_y_loc * inWidthStride + new_x_loc * 4;
                         int32_t final_loc = final_loc_base + x * 4;
 
@@ -2101,9 +2101,9 @@ void warpAffine_linear_uint8_t(
                         dst[final_loc + 1] = static_cast<uint8_t>((val_xy1 + DELTA) >> 15);
                         dst[final_loc + 2] = static_cast<uint8_t>((val_xy2 + DELTA) >> 15);
                         dst[final_loc + 3] = static_cast<uint8_t>((val_xy3 + DELTA) >> 15);
-                    } else if (borderMode == BORDER_TYPE_TRANSPARENT) {
+                    } else if (borderMode == BORDER_TRANSPARENT) {
                         continue;
-                    } else if (borderMode == BORDER_TYPE_REPLICATE) {
+                    } else if (borderMode == BORDER_REPLICATE) {
                         int32_t sx0 = clip(new_x_loc, 0, inWidth - 1);
                         int32_t sy0 = clip(new_y_loc, 0, inHeight - 1);
                         int32_t sx1 = clip((new_x_loc + 1), 0, inWidth - 1);
@@ -2319,7 +2319,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_nearest<uint8_t, 1>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -2346,7 +2346,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_nearest<uint8_t, 3>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -2373,7 +2373,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_nearest<uint8_t, 4>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -2400,7 +2400,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 1, border_type, borderValue);
@@ -2427,7 +2427,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 2, border_type, borderValue);
@@ -2454,7 +2454,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 3, border_type, borderValue);
@@ -2481,7 +2481,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     warpAffine_linear_uint8_t(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 4, border_type, borderValue);

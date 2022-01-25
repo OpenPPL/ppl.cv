@@ -51,23 +51,23 @@ inline std::string convertToStringWarpAffine(const Parameters& parameters) {
   }
 
   InterpolationType inter_type = (InterpolationType)std::get<1>(parameters);
-  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+  if (inter_type == INTERPOLATION_LINEAR) {
     formatted << "InterLinear" << "_";
   }
-  else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (inter_type == INTERPOLATION_NEAREST_POINT) {
     formatted << "InterNearest" << "_";
   }
   else {
   }
 
   BorderType border_type = (BorderType)std::get<2>(parameters);
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     formatted << "BORDER_CONSTANT" << "_";
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     formatted << "BORDER_TRANSPARENT" << "_";
   }
   else {
@@ -141,20 +141,20 @@ bool PplCvCudaWarpAffineTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   int cv_iterpolation = cv::INTER_LINEAR;
-  if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+  if (inter_type == INTERPOLATION_NEAREST_POINT) {
     cv_iterpolation = cv::INTER_NEAREST;
   }
   else {
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     cv_border = cv::BORDER_TRANSPARENT;
   }
   else {
@@ -204,9 +204,9 @@ TEST_P(PplCvCudaWarpAffineTest ## T ## channels, Standard) {                   \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaWarpAffineTest ## T ## channels,     \
   ::testing::Combine(                                                          \
     ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
-    ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
-                      INTERPOLATION_TYPE_NEAREST_POINT),                       \
-    ::testing::Values(BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE),            \
+    ::testing::Values(INTERPOLATION_LINEAR,                               \
+                      INTERPOLATION_NEAREST_POINT),                       \
+    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE),            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

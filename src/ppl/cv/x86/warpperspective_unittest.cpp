@@ -37,25 +37,25 @@ void WarpPerspectiveTest(int inHeight, int inWidth, int outHeight, int outWidth,
     cv::Mat srcMat(inHeight, inWidth, CV_MAKETYPE(cv::DataType<T>::depth, channels), src.get(), sizeof(T) * inWidth * channels);
     cv::Mat dstMat(outHeight, outWidth, CV_MAKETYPE(cv::DataType<T>::depth, channels), dst_ref.get(), sizeof(T) * outWidth * channels);
     cv::Mat affineMat(3, 3, CV_MAKETYPE(cv::DataType<double>::depth, 1), affine_matrix.get());
-    if (mode == ppl::cv::INTERPOLATION_TYPE_LINEAR) {
-        if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (mode == ppl::cv::INTERPOLATION_LINEAR) {
+        if (border_type == ppl::cv::BORDER_REPLICATE) {
             ppl::cv::x86::WarpPerspectiveLinear<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_REPLICATE);
-        } else if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
+        } else if (border_type == ppl::cv::BORDER_CONSTANT) {
             ppl::cv::x86::WarpPerspectiveLinear<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_CONSTANT);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
             ppl::cv::x86::WarpPerspectiveLinear<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_TRANSPARENT);
         }
-    } else if (mode == ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT) {
-        if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
+    } else if (mode == ppl::cv::INTERPOLATION_NEAREST_POINT) {
+        if (border_type == ppl::cv::BORDER_REPLICATE) {
             ppl::cv::x86::WarpPerspectiveNearestPoint<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_NEAREST | cv::WARP_INVERSE_MAP, cv::BORDER_REPLICATE);
-        } else if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
+        } else if (border_type == ppl::cv::BORDER_CONSTANT) {
             ppl::cv::x86::WarpPerspectiveNearestPoint<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_NEAREST | cv::WARP_INVERSE_MAP, cv::BORDER_CONSTANT);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
             ppl::cv::x86::WarpPerspectiveNearestPoint<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_NEAREST | cv::WARP_INVERSE_MAP, cv::BORDER_TRANSPARENT);
         }
@@ -65,84 +65,84 @@ void WarpPerspectiveTest(int inHeight, int inWidth, int outHeight, int outWidth,
 
 TEST(WarpPerspectiveLinear_FP32_BORDER_CONSTANT, x86)
 {
-    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT);
+    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT);
 }
 
 TEST(WarpPerspectiveLinear_FP32_BORDER_REPLICATE, x86)
 {
-    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_REPLICATE);
+    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_REPLICATE);
 }
 
 TEST(WarpPerspectiveLinear_FP32_BORDER_TRANSPARENT, x86)
 {
-    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_TRANSPARENT);
+    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_TRANSPARENT);
 }
 
 TEST(WarpPerspectiveLinear_UCHAR_BORDER_CONSTANT, x86)
 {
-    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT);
+    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT);
 }
 
 TEST(WarpPerspectiveLinear_UCHAR_BORDER_REPLICATE, x86)
 {
-    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_REPLICATE);
+    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_REPLICATE);
 }
 
 TEST(WarpPerspectiveLinear_UCHAR_BORDER_TRANSPARENT, x86)
 {
-    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_TRANSPARENT);
+    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_TRANSPARENT);
 }
 
 TEST(WarpPerspectiveNearest_FP32_BORDER_CONSTANT, x86)
 {
-    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_CONSTANT);
+    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_CONSTANT);
 }
 
 TEST(WarpPerspectiveNearest_FP32_BORDER_REPLICATE, x86)
 {
-    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_REPLICATE);
+    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_REPLICATE);
 }
 
 TEST(WarpPerspectiveNearest_FP32_BORDER_TRANSPARENT, x86)
 {
-    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_TRANSPARENT);
+    WarpPerspectiveTest<float, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<float, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<float, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_TRANSPARENT);
 }
 
 TEST(WarpPerspectiveNearest_UCHAR_BORDER_CONSTANT, x86)
 {
-    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_CONSTANT);
-    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_CONSTANT);
+    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_CONSTANT);
+    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_CONSTANT);
 }
 
 TEST(WarpPerspectiveNearest_UCHAR_BORDER_REPLICATE, x86)
 {
-    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_REPLICATE);
-    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_REPLICATE);
+    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_REPLICATE);
+    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_REPLICATE);
 }
 
 TEST(WarpPerspectiveNearest_UCHAR_BORDER_TRANSPARENT, x86)
 {
-    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_TRANSPARENT);
-    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT, ppl::cv::BORDER_TYPE_TRANSPARENT);
+    WarpPerspectiveTest<uchar, 1>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<uchar, 3>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_TRANSPARENT);
+    WarpPerspectiveTest<uchar, 4>(640, 720, 640, 720, ppl::cv::INTERPOLATION_NEAREST_POINT, ppl::cv::BORDER_TRANSPARENT);
 }

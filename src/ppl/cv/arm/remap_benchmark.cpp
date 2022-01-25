@@ -48,7 +48,7 @@ public:
     }
 
     void apply() {
-        if (mode == ppl::cv::INTERPOLATION_TYPE_LINEAR) {
+        if (mode == ppl::cv::INTERPOLATION_LINEAR) {
             ppl::cv::arm::RemapLinear<T, channels>(
                                          this->inHeight,
                                          this->inWidth,
@@ -60,7 +60,7 @@ public:
                                          this->dev_oImage,
                                          this->dev_mapX,
                                          this->dev_mapY,
-                                         ppl::cv::BORDER_TYPE_CONSTANT);
+                                         ppl::cv::BORDER_CONSTANT);
         } else {
             ppl::cv::arm::RemapNearestPoint<T, channels>(
                                          this->inHeight,
@@ -73,7 +73,7 @@ public:
                                          this->dev_oImage,
                                          this->dev_mapX,
                                          this->dev_mapY,
-                                         ppl::cv::BORDER_TYPE_CONSTANT);
+                                         ppl::cv::BORDER_CONSTANT);
         }
     }
 
@@ -84,7 +84,7 @@ public:
         cv::Mat mapy_opencv(outHeight, outWidth, CV_MAKETYPE(cv::DataType<float>::depth, 1), dev_mapX, sizeof(float) * outWidth);
         cv::Mat mapx_opencv(outHeight, outWidth, CV_MAKETYPE(cv::DataType<float>::depth, 1), dev_mapY, sizeof(float) * outWidth);
         cv::Scalar borderValue = {0, 0, 0, 0};
-        if (mode == ppl::cv::INTERPOLATION_TYPE_LINEAR) {
+        if (mode == ppl::cv::INTERPOLATION_LINEAR) {
             cv::remap(src_opencv, dst_opencv, mapx_opencv, mapy_opencv, cv::INTER_LINEAR, 
                       cv::BORDER_CONSTANT, borderValue);
         } else {
@@ -113,33 +113,33 @@ static void BM_Remap_ppl_aarch64(benchmark::State &state) {
 }
 
 using namespace ppl::cv::debug;
-using ppl::cv::INTERPOLATION_TYPE_LINEAR;
-using ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT;
+using ppl::cv::INTERPOLATION_LINEAR;
+using ppl::cv::INTERPOLATION_NEAREST_POINT;
 
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c1, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c3, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c4, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c1, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c3, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c4, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c1, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c3, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c4, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c1, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c3, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c4, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
 
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c1, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c3, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c4, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c1, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c3, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c4, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c1, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c3, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, float, c4, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c1, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c3, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_ppl_aarch64, uint8_t, c4, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
 
 #ifdef PPLCV_BENCHMARK_OPENCV
 template<typename T, int32_t channels, int32_t mode>
 static void BM_Remap_opencv_aarch64(benchmark::State &state) {
     RemapBenchmark<T, channels, mode> bm(state.range(0), state.range(1), state.range(2), state.range(3));
-    if (mode == ppl::cv::INTERPOLATION_TYPE_LINEAR) {
+    if (mode == ppl::cv::INTERPOLATION_LINEAR) {
         for (auto _: state) {
             bm.apply_opencv();
         }
     }
-    else if (mode == ppl::cv::INTERPOLATION_TYPE_NEAREST_POINT) {
+    else if (mode == ppl::cv::INTERPOLATION_NEAREST_POINT) {
         for (auto _: state) {
             bm.apply_opencv();
         }
@@ -148,17 +148,17 @@ static void BM_Remap_opencv_aarch64(benchmark::State &state) {
 
 }
 
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c1, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c3, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c4, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c1, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c3, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c4, INTERPOLATION_TYPE_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c1, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c3, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c4, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c1, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c3, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c4, INTERPOLATION_LINEAR)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
 
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c1, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c3, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c4, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c1, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c3, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
-BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c4, INTERPOLATION_TYPE_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c1, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c3, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, float, c4, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c1, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c3, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
+BENCHMARK_TEMPLATE(BM_Remap_opencv_aarch64, uint8_t, c4, INTERPOLATION_NEAREST_POINT)->Args({320, 240, 640, 480})->Args({640, 480, 320, 240});
 #endif //! PPLCV_BENCHMARK_OPENCV

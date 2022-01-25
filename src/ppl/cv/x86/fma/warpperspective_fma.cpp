@@ -83,7 +83,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
             for (int32_t k = j; k < std::min(outWidth, j + 8); ++k) {
                 int32_t sy = sy0_array[k - j];
                 int32_t sx = sx0_array[k - j];
-                if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+                if (borderMode == ppl::cv::BORDER_CONSTANT) {
                     int32_t idxSrc = sy * inWidthStride + sx * nc;
                     int32_t idxDst = i * outWidthStride + k * nc;
                     if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
@@ -94,7 +94,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                             dst[idxDst + i] = delta;
                         }
                     }
-                } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+                } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                     sx             = clip(sx, 0, inWidth - 1);
                     sy             = clip(sy, 0, inHeight - 1);
                     int32_t idxSrc = sy * inWidthStride + sx * nc;
@@ -102,7 +102,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                     for (int32_t i = 0; i < nc; i++) {
                         dst[idxDst + i] = src[idxSrc + i];
                     }
-                } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+                } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                     if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
                         int32_t idxSrc = sy * inWidthStride + sx * nc;
                         int32_t idxDst = i * outWidthStride + k * nc;
@@ -181,7 +181,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                 float tab[4] = {tab0_array[idx], tab1_array[idx], tab2_array[idx], tab3_array[idx]};
                 float v0, v1, v2, v3;
                 int32_t idxDst = (i * outWidthStride + j * nc);
-                if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+                if (borderMode == ppl::cv::BORDER_CONSTANT) {
                     bool flag0        = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                     bool flag1        = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                     bool flag2        = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -196,7 +196,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                         float sum       = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
                         dst[idxDst + k] = static_cast<float>(sum);
                     }
-                } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+                } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                     int32_t sx1     = sx0 + 1;
                     int32_t sy1     = sy0 + 1;
                     sx0             = clip(sx0, 0, inWidth - 1);
@@ -211,7 +211,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                         float sum       = tab[0] * t0[k] + tab[1] * t1[k] + tab[2] * t2[k] + tab[3] * t3[k];
                         dst[idxDst + k] = static_cast<float>(sum);
                     }
-                } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+                } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                     bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                     bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                     bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -258,7 +258,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
             tab[3]         = taby[1] * tabx[1];
             int32_t idxDst = (i * outWidthStride + j * nc);
 
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+            if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -273,7 +273,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                     float sum         = tab[0] * v0 + tab[1] * v1 + tab[2] * v2 + tab[3] * v3;
                     dst[idxDst + k]   = static_cast<float>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                 int32_t sx1     = sx0 + 1;
                 int32_t sy1     = sy0 + 1;
                 sx0             = clip(sx0, 0, inWidth - 1);
@@ -288,7 +288,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                     float sum       = tab[0] * t0[k] + tab[1] * t1[k] + tab[2] * t2[k] + tab[3] * t3[k];
                     dst[idxDst + k] = static_cast<float>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -377,7 +377,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                 int32_t sy0 = sy0_array[idx];
                 uint8_t v0, v1, v2, v3;
                 int32_t idxDst = (i * outWidthStride + j * nc);
-                if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+                if (borderMode == ppl::cv::BORDER_CONSTANT) {
                     bool all_valid = (sx0 >= 0 && sx0 < (inWidth - 1) && sy0 >= 0 && sy0 < (inHeight - 1));
                     if (all_valid) {
                         int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
@@ -415,7 +415,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                             }
                         }
                     }
-                } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+                } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                     int32_t sx1        = sx0 + 1;
                     int32_t sy1        = sy0 + 1;
                     bool valid_for_all = (sx0 >= 0 && sx0 < (inWidth - 1) && sy0 >= 0 && sy0 < (inHeight - 1));
@@ -456,7 +456,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                             dst[idxDst + k] = static_cast<uint8_t>(sum);
                         }
                     }
-                } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+                } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                     bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                     bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                     bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -508,7 +508,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                                         static_cast<int32_t>(tab[3] * QUANTIZED_BITS)};
             int32_t idxDst           = (i * outWidthStride + j * nc);
 
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+            if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -523,7 +523,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                     int32_t sum       = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
                     dst[idxDst + k]   = static_cast<uint8_t>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                 int32_t sx1       = sx0 + 1;
                 int32_t sy1       = sy0 + 1;
                 sx0               = clip(sx0, 0, inWidth - 1);
@@ -542,7 +542,7 @@ template <int32_t nc, ppl::cv::BorderType borderMode>
                     int32_t sum     = (quantized_tab[0] * v0 + quantized_tab[1] * v1 + quantized_tab[2] * v2 + quantized_tab[3] * v3 + QUANTIZED_BIAS) >> QUANTIZED_BITS;
                     dst[idxDst + k] = static_cast<uint8_t>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -584,55 +584,55 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
     return warpperspective_linear<nc, borderMode>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, dst, src, M, delta);
 }
 
-template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 1, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 2, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 3, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<float, 4, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 1, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 2, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 3, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_linear<uint8_t, 4, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
 
-template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_TYPE_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_TYPE_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
-template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_TYPE_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_CONSTANT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_TRANSPARENT>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 1, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 2, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 3, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<float, 4, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, float* dst, const float* src, const double M[][3], float delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 1, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 2, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 3, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
+template ::ppl::common::RetCode warpperspective_nearest<uint8_t, 4, BORDER_REPLICATE>(int32_t inHeight, int32_t inWidth, int32_t inWidthStride, int32_t outHeight, int32_t outWidth, int32_t outWidthStride, uint8_t* dst, const uint8_t* src, const double M[][3], uint8_t delta);
 }
 }
 }

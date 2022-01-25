@@ -45,11 +45,11 @@ namespace cuda {
  * @param bottom         number of bottom pixels.
  * @param left           number of left pixels.
  * @param right          number of right pixels.
- * @param border_type    ways to deal with border. BORDER_TYPE_CONSTANT,
- *                       BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,
- *                       BORDER_TYPE_WRAP, BORDER_TYPE_REFLECT_101 and
- *                       BORDER_TYPE_DEFAULT are supported now.
- * @param border_value   value for BORDER_TYPE_CONSTANT.
+ * @param border_type    ways to deal with border. BORDER_CONSTANT,
+ *                       BORDER_REPLICATE, BORDER_REFLECT,
+ *                       BORDER_WRAP, BORDER_REFLECT_101 and
+ *                       BORDER_DEFAULT are supported now.
+ * @param border_value   value for BORDER_CONSTANT.
  * @return The execution status, succeeds or fails with an error code.
  * @note For best performance, a 2D array allocated by cudaMallocPitch() is
  *       recommended.
@@ -97,7 +97,7 @@ namespace cuda {
  *                            input_pitch / sizeof(float), gpu_input,
  *                            output_pitch / sizeof(float), gpu_output,
  *                            border, border, border, border,
- *                            ppl::cv::BORDER_TYPE_DEFAULT);
+ *                            ppl::cv::BORDER_DEFAULT);
  *   cudaStreamSynchronize(stream);
  *   cudaStreamDestroy(stream);
  *

@@ -28,13 +28,13 @@ namespace arm {
 template <BorderType borderType>
 inline int32_t BorderInterpolate(int32_t p, int32_t len)
 {
-    if (borderType == ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (borderType == ppl::cv::BORDER_REFLECT_101) {
         p = p < 0 ? (-p) : 2 * len - p - 2;
-    } else if (borderType == ppl::cv::BORDER_TYPE_REFLECT) {
+    } else if (borderType == ppl::cv::BORDER_REFLECT) {
         p = p < 0 ? (-p - 1) : 2 * len - p - 1;
-    } else if (borderType == ppl::cv::BORDER_TYPE_REPLICATE) {
+    } else if (borderType == ppl::cv::BORDER_REPLICATE) {
         p = (p < 0) ? 0 : len - 1;
-    } else if (borderType == ppl::cv::BORDER_TYPE_CONSTANT) {
+    } else if (borderType == ppl::cv::BORDER_CONSTANT) {
         p = -1;
     }
     return p;
@@ -154,21 +154,21 @@ template <typename T, int32_t cn>
     BorderType border_type,
     T border_value)
 {
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101 &&
-        border_type != ppl::cv::BORDER_TYPE_REFLECT &&
-        border_type != ppl::cv::BORDER_TYPE_CONSTANT &&
-        border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101 &&
+        border_type != ppl::cv::BORDER_REFLECT &&
+        border_type != ppl::cv::BORDER_CONSTANT &&
+        border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
+    if (border_type == ppl::cv::BORDER_CONSTANT) {
         CopyMakeConstBorder<T, cn>(srcHeight, srcWidth, srcWidthStride, src, dstHeight, dstWidth, dstWidthStride, dst, border_value);
     } else {
-        if (border_type == ppl::cv::BORDER_TYPE_REFLECT) {
-            CopyMakeNonConstBorder<T, cn, ppl::cv::BORDER_TYPE_REFLECT>(srcHeight, srcWidth, srcWidthStride, src, dstHeight, dstWidth, dstWidthStride, dst);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REFLECT_101) {
-            CopyMakeNonConstBorder<T, cn, ppl::cv::BORDER_TYPE_REFLECT101>(srcHeight, srcWidth, srcWidthStride, src, dstHeight, dstWidth, dstWidthStride, dst);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-            CopyMakeNonConstBorder<T, cn, ppl::cv::BORDER_TYPE_REPLICATE>(srcHeight, srcWidth, srcWidthStride, src, dstHeight, dstWidth, dstWidthStride, dst);
+        if (border_type == ppl::cv::BORDER_REFLECT) {
+            CopyMakeNonConstBorder<T, cn, ppl::cv::BORDER_REFLECT>(srcHeight, srcWidth, srcWidthStride, src, dstHeight, dstWidth, dstWidthStride, dst);
+        } else if (border_type == ppl::cv::BORDER_REFLECT_101) {
+            CopyMakeNonConstBorder<T, cn, ppl::cv::BORDER_REFLECT101>(srcHeight, srcWidth, srcWidthStride, src, dstHeight, dstWidth, dstWidthStride, dst);
+        } else if (border_type == ppl::cv::BORDER_REPLICATE) {
+            CopyMakeNonConstBorder<T, cn, ppl::cv::BORDER_REPLICATE>(srcHeight, srcWidth, srcWidthStride, src, dstHeight, dstWidth, dstWidthStride, dst);
         }
     }
     return ppl::common::RC_SUCCESS;

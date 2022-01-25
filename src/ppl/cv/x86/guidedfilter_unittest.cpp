@@ -65,7 +65,7 @@ public:
             dst.get(),
             r,
             eps,
-            ppl::cv::BORDER_TYPE_REFLECT);
+            ppl::cv::BORDER_REFLECT);
 
         checkResult<T, c_src>(
             dst_ref.get(),

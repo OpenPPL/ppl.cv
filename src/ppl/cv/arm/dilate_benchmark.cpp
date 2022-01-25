@@ -36,7 +36,7 @@ void BM_Dilate_ppl_aarch64(benchmark::State &state)
 
     ppl::cv::debug::randomFill<T>(src.get(), width * height * nc, 0, 1);
     for (auto _ : state) {
-        ppl::cv::arm::Dilate<T, nc>(height, width, width * nc, src.get(), kernel_size, kernel_size, kernel.get(), width * nc, dst.get(), ppl::cv::BORDER_TYPE_CONSTANT, 0);
+        ppl::cv::arm::Dilate<T, nc>(height, width, width * nc, src.get(), kernel_size, kernel_size, kernel.get(), width * nc, dst.get(), ppl::cv::BORDER_CONSTANT, 0);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

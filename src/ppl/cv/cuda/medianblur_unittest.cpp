@@ -89,12 +89,12 @@ bool PplCvCudaMedianBlurTest<T, channels>::apply() {
 
   MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-      (T*)gpu_dst.data, ksize, BORDER_TYPE_REPLICATE);
+      (T*)gpu_dst.data, ksize, BORDER_REPLICATE);
   gpu_dst.download(dst);
 
   MedianBlur<T, channels>(0, size.height, size.width, size.width * channels,
       gpu_input, size.width * channels, gpu_output, ksize,
-      BORDER_TYPE_REPLICATE);
+      BORDER_REPLICATE);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;

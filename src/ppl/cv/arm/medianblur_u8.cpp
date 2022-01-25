@@ -35,13 +35,13 @@ static inline int32_t findIndex(int32_t p, int32_t len, int32_t borderType)
     if (p >= 0 && p < len) {
         return p;
     }
-    if (borderType == BORDER_TYPE_REPLICATE) {
+    if (borderType == BORDER_REPLICATE) {
         p = p < 0 ? 0 : len - 1;
-    } else if (borderType == BORDER_TYPE_REFLECT_101) {
+    } else if (borderType == BORDER_REFLECT_101) {
         p = p < 0 ? (-p) : 2 * len - p - 2;
-    } else if (borderType == BORDER_TYPE_REFLECT) {
+    } else if (borderType == BORDER_REFLECT) {
         p = p < 0 ? (-p - 1) : 2 * len - p - 1;
-    } else if (borderType == BORDER_TYPE_CONSTANT) {
+    } else if (borderType == BORDER_CONSTANT) {
         p = -1;
     }
     return p;
@@ -739,7 +739,7 @@ static ::ppl::common::RetCode MedianBlurUchar(
     if (height <= 0 || width <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_REFLECT_101 && border_type != BORDER_TYPE_REFLECT && border_type != BORDER_TYPE_REPLICATE) {
+    if (border_type != BORDER_REFLECT_101 && border_type != BORDER_REFLECT && border_type != BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
 

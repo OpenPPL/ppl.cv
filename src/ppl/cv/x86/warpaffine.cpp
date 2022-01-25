@@ -83,7 +83,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
         for (int32_t j = 0; j < outWidth; j++) {
             int32_t sx = (base_x + saturate_cast(M[0] * j * 1024)) >> 10;
             int32_t sy = (base_y + saturate_cast(M[3] * j * 1024)) >> 10;
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+            if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 int32_t idxSrc = sy * inWidthStride + sx * nc;
                 int32_t idxDst = i * outWidthStride + j * nc;
                 if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
@@ -94,7 +94,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                         dst[idxDst + i] = delta;
                     }
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                 sx             = clip(sx, 0, inWidth - 1);
                 sy             = clip(sy, 0, inHeight - 1);
                 int32_t idxSrc = sy * inWidthStride + sx * nc;
@@ -102,7 +102,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                 for (int32_t i = 0; i < nc; i++) {
                     dst[idxDst + i] = src[idxSrc + i];
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                 if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
                     int32_t idxSrc = sy * inWidthStride + sx * nc;
                     int32_t idxDst = i * outWidthStride + j * nc;
@@ -157,7 +157,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 
             int32_t idxDst = (i * outWidthStride + j * nc);
 
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+            if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -173,7 +173,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                     sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                 int32_t sx1 = sx0 + 1;
                 int32_t sy1 = sy0 + 1;
                 sx0         = clip(sx0, 0, inWidth - 1);
@@ -189,7 +189,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                     sum += t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3];
                     dst[idxDst + k] = static_cast<T>(sum);
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -230,20 +230,20 @@ template <typename T, int32_t nc>
     T border_value)
 {
     if (ppl::common::CpuSupports(ppl::common::ISA_X86_FMA)) {
-        if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
-            return fma::warpaffine_nearest<T, nc, ppl::cv::BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-            return fma::warpaffine_nearest<T, nc, ppl::cv::BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-            return fma::warpaffine_nearest<T, nc, ppl::cv::BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        if (border_type == ppl::cv::BORDER_CONSTANT) {
+            return fma::warpaffine_nearest<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_REPLICATE) {
+            return fma::warpaffine_nearest<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
+            return fma::warpaffine_nearest<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
         }
     } else {
-        if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
-            return warpaffine_nearest<T, nc, ppl::cv::BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-            return warpaffine_nearest<T, nc, ppl::cv::BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-            return warpaffine_nearest<T, nc, ppl::cv::BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        if (border_type == ppl::cv::BORDER_CONSTANT) {
+            return warpaffine_nearest<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_REPLICATE) {
+            return warpaffine_nearest<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
+            return warpaffine_nearest<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -368,20 +368,20 @@ template <typename T, int32_t nc>
     T border_value)
 {
     if (ppl::common::CpuSupports(ppl::common::ISA_X86_FMA)) {
-        if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
-            return fma::warpaffine_linear<T, nc, ppl::cv::BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-            return fma::warpaffine_linear<T, nc, ppl::cv::BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-            return fma::warpaffine_linear<T, nc, ppl::cv::BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        if (border_type == ppl::cv::BORDER_CONSTANT) {
+            return fma::warpaffine_linear<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_REPLICATE) {
+            return fma::warpaffine_linear<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
+            return fma::warpaffine_linear<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
         }
     } else {
-        if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
-            return warpaffine_linear<T, nc, ppl::cv::BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-            return warpaffine_linear<T, nc, ppl::cv::BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-            return warpaffine_linear<T, nc, ppl::cv::BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        if (border_type == ppl::cv::BORDER_CONSTANT) {
+            return warpaffine_linear<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_REPLICATE) {
+            return warpaffine_linear<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
+            return warpaffine_linear<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, affineMatrix, border_value);
         }
     }
     return ppl::common::RC_SUCCESS;

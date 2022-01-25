@@ -183,7 +183,7 @@ void remap_linear_float(
             int32_t sy0 = sy >> INTER_BITS;
             float* tab = BilinearTab_f[v][0];
             float v0, v1, v2, v3;
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+            if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -198,7 +198,7 @@ void remap_linear_float(
                     float sum = (v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3]);
                     outData[idxDst + k] = sum;
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                 int32_t sx1 = sx0 + 1;
                 int32_t sy1 = sy0 + 1;
                 sx0 = clip(sx0, 0, inWidth - 1);
@@ -213,7 +213,7 @@ void remap_linear_float(
                     float sum = (t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3]);
                     outData[idxDst + k] = sum;
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                 bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
                 bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
@@ -514,7 +514,7 @@ void remap_nearest_float(
                 sx = round2even(x);
                 sy = round2even(y);
             }
-            if (borderMode == ppl::cv::BORDER_TYPE_CONSTANT) {
+            if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 int32_t idxSrc = sy * inWidthStride + sx * nc;
                 if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
                     for (int32_t i = 0; i < nc; i++)
@@ -524,14 +524,14 @@ void remap_nearest_float(
                         outData[idxDst + i] = borderValue;
                     }
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_REPLICATE) {
+            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
                 sx = clip(sx, 0, inWidth - 1);
                 sy = clip(sy, 0, inHeight - 1);
                 int32_t idxSrc = sy * inWidthStride + sx * nc;
                 for (int32_t i = 0; i < nc; i++) {
                     outData[idxDst + i] = inData[idxSrc + i];
                 }
-            } else if (borderMode == ppl::cv::BORDER_TYPE_TRANSPARENT) {
+            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                 bool in = (sx >= 0) && (sx < inWidth) && (sy >= 0) && (sy < inHeight);
                 if (!in) {
                     continue;
@@ -566,16 +566,16 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || outHeight <= 0 || outWidth <= 0 || inWidthStride < inWidth || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
+    if (border_type == BORDER_CONSTANT) {
         remap_linear_float_constant<1>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_REPLICATE) {
-        remap_linear_float<1, BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_TRANSPARENT) {
-        remap_linear_float<1, BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_REPLICATE) {
+        remap_linear_float<1, BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_TRANSPARENT) {
+        remap_linear_float<1, BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
     }
     return ppl::common::RC_SUCCESS;
 }
@@ -601,16 +601,16 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || outHeight <= 0 || outWidth <= 0 || inWidthStride < inWidth || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
+    if (border_type == BORDER_CONSTANT) {
         remap_linear_float_constant<3>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_REPLICATE) {
-        remap_linear_float<3, BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_TRANSPARENT) {
-        remap_linear_float<3, BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_REPLICATE) {
+        remap_linear_float<3, BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_TRANSPARENT) {
+        remap_linear_float<3, BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
     }
     return ppl::common::RC_SUCCESS;
 }
@@ -636,16 +636,16 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || outHeight <= 0 || outWidth <= 0 || inWidthStride < inWidth || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
+    if (border_type == BORDER_CONSTANT) {
         remap_linear_float_constant<4>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_REPLICATE) {
-        remap_linear_float<4, BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_TRANSPARENT) {
-        remap_linear_float<4, BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_REPLICATE) {
+        remap_linear_float<4, BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_TRANSPARENT) {
+        remap_linear_float<4, BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
     }
     return ppl::common::RC_SUCCESS;
 }
@@ -671,16 +671,16 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || outHeight <= 0 || outWidth <= 0 || inWidthStride < inWidth || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
-        remap_nearest_float<1, BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_REPLICATE) {
-        remap_nearest_float<1, BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_TRANSPARENT) {
-        remap_nearest_float<1, BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    if (border_type == BORDER_CONSTANT) {
+        remap_nearest_float<1, BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_REPLICATE) {
+        remap_nearest_float<1, BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_TRANSPARENT) {
+        remap_nearest_float<1, BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
     }
     return ppl::common::RC_SUCCESS;
 }
@@ -706,16 +706,16 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || outHeight <= 0 || outWidth <= 0 || inWidthStride < inWidth || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
-        remap_nearest_float<3, BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_REPLICATE) {
-        remap_nearest_float<3, BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_TRANSPARENT) {
-        remap_nearest_float<3, BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    if (border_type == BORDER_CONSTANT) {
+        remap_nearest_float<3, BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_REPLICATE) {
+        remap_nearest_float<3, BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_TRANSPARENT) {
+        remap_nearest_float<3, BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
     }
     return ppl::common::RC_SUCCESS;
 }
@@ -741,16 +741,16 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || outHeight <= 0 || outWidth <= 0 || inWidthStride < inWidth || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
-        remap_nearest_float<4, BORDER_TYPE_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_REPLICATE) {
-        remap_nearest_float<4, BORDER_TYPE_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
-    } else if (border_type == BORDER_TYPE_TRANSPARENT) {
-        remap_nearest_float<4, BORDER_TYPE_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    if (border_type == BORDER_CONSTANT) {
+        remap_nearest_float<4, BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_REPLICATE) {
+        remap_nearest_float<4, BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
+    } else if (border_type == BORDER_TRANSPARENT) {
+        remap_nearest_float<4, BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, inData, outHeight, outWidth, outWidthStride, outData, mapx, mapy, borderValue);
     }
     return ppl::common::RC_SUCCESS;
 }

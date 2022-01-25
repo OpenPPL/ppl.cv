@@ -188,11 +188,11 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(kernel_y > 0 && kernel_y < rows);
   PPL_ASSERT(kernel_x > 0 && kernel_x < cols);
   PPL_ASSERT(kernel_y & 1 == 1 && kernel_x & 1 == 1);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_WRAP ||
-             border_type == BORDER_TYPE_REFLECT_101);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_WRAP ||
+             border_type == BORDER_REFLECT_101);
 
   cudaError_t code;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
@@ -391,11 +391,11 @@ RetCode erode(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(kernel_y > 0 && kernel_y < rows);
   PPL_ASSERT(kernel_x > 0 && kernel_x < cols);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_WRAP ||
-             border_type == BORDER_TYPE_REFLECT_101);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_WRAP ||
+             border_type == BORDER_REFLECT_101);
 
   cudaError_t code;
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {

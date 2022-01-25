@@ -32,7 +32,7 @@ void LaplacianTest(int32_t height, int32_t width, double scale, double delta, T 
 
     cv::Laplacian(src_opencv, dst_opencv, cv::DataType<T>::depth, filter_size, scale, delta);
     ppl::cv::x86::Laplacian<T, nc>(height, width, width * nc, src.get(), width * nc, dst.get(),
-                            filter_size, scale, delta, ppl::cv::BORDER_TYPE_REFLECT_101);
+                            filter_size, scale, delta, ppl::cv::BORDER_REFLECT_101);
 
     checkResult<T, nc>(dst_ref.get(), dst.get(),
                     height, width,

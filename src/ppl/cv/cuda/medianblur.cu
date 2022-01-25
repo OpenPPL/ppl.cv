@@ -1687,10 +1687,10 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(ksize > 1);
   PPL_ASSERT((ksize & 1) == 1);
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   uint radius = ksize >> 1;
   uint median_index = ksize * ksize >> 1;
@@ -1703,10 +1703,10 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
     grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder);
     }
     else {
@@ -1729,10 +1729,10 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
     grid.x = divideUp(cols, kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CHANNELN_SMALL_KERNELS(ReflectBorder);
     }
     else {
@@ -1755,10 +1755,10 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
   grid0.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
   int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX0, kBlockShiftX0);
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     RUN_KERNELS0(grid_x, ReplicateBorder);
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     RUN_KERNELS0(grid_x, ReflectBorder);
   }
   else {
@@ -1785,10 +1785,10 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(ksize > 1);
   PPL_ASSERT((ksize & 1) == 1);
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   uint radius = ksize >> 1;
   uint median_index = ksize * ksize >> 1;
@@ -1801,10 +1801,10 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
     grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder);
     }
     else {
@@ -1827,10 +1827,10 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
     grid.x = divideUp(cols, kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CHANNELN_SMALL_KERNELS(ReflectBorder);
     }
     else {
@@ -1853,10 +1853,10 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
   grid0.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
   int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     RUN_KERNELS1(grid_x, ReplicateBorder);
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     RUN_KERNELS1(grid_x, ReflectBorder);
   }
   else {

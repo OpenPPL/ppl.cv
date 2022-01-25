@@ -58,7 +58,7 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
   tab[2] = tab_y[1] * tab_x[0];
   tab[3] = tab_y[1] * tab_x[1];
 
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
                  int_y < src_rows;
     bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
@@ -84,7 +84,7 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
       }
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     int int_x1 = int_x + 1;
     int int_y1 = int_y + 1;
     int_x  = clip(int_x, 0, src_cols - 1);
@@ -106,7 +106,7 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
       }
     }
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
                  int_y < src_rows;
     bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
@@ -157,7 +157,7 @@ void remapNPKernel(const T* src, int src_rows, int src_cols, int channels,
   int int_x = __float2int_rn(float_x);
   int int_y = __float2int_rn(float_y);
 
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     int src_index = int_y * src_stride + int_x * channels;
     if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
       for (int i = 0; i < channels; i++) {
@@ -170,7 +170,7 @@ void remapNPKernel(const T* src, int src_rows, int src_cols, int channels,
       }
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     int_x = clip(int_x, 0, src_cols - 1);
     int_y = clip(int_y, 0, src_rows - 1);
     int src_index = int_y * src_stride + int_x * channels;
@@ -178,7 +178,7 @@ void remapNPKernel(const T* src, int src_rows, int src_cols, int channels,
       dst[dst_index + i] = src[src_index + i];
     }
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
       int src_index = int_y * src_stride + int_x * channels;
       for (int i = 0; i < channels; i++) {
@@ -204,11 +204,11 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(dst_stride >= dst_cols * channels);
   PPL_ASSERT(map_x != nullptr);
   PPL_ASSERT(map_y != nullptr);
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -216,12 +216,12 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     remapLinearKernel<uchar><<<grid, block, 0, stream>>>(src, src_rows,
         src_cols, channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
         dst_stride, border_type, border_value);
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     remapNPKernel<uchar><<<grid, block, 0, stream>>>(src, src_rows, src_cols,
         channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols, dst_stride,
         border_type, border_value);
@@ -252,11 +252,11 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(dst_stride >= dst_cols * channels);
   PPL_ASSERT(map_x != nullptr);
   PPL_ASSERT(map_y != nullptr);
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -264,12 +264,12 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     remapLinearKernel<float><<<grid, block, 0, stream>>>(src, src_rows,
         src_cols, channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
         dst_stride, border_type, border_value);
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     remapNPKernel<float><<<grid, block, 0, stream>>>(src, src_rows, src_cols,
         channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols, dst_stride,
         border_type, border_value);

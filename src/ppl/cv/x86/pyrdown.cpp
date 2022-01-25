@@ -290,7 +290,7 @@ template <>
     if (height <= 0 || width <= 0 || inWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t outHeight = (height + 1) / 2;
@@ -315,7 +315,7 @@ template <>
     if (height <= 0 || width <= 0 || inWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t outHeight = (height + 1) / 2;
@@ -340,7 +340,7 @@ template <>
     if (height <= 0 || width <= 0 || inWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t outHeight = (height + 1) / 2;
@@ -365,7 +365,7 @@ template <>
     if (height <= 0 || width <= 0 || inWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t outHeight = (height + 1) / 2;
@@ -390,7 +390,7 @@ template <>
     if (height <= 0 || width <= 0 || inWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t outHeight = (height + 1) / 2;
@@ -415,7 +415,7 @@ template <>
     if (height <= 0 || width <= 0 || inWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t outHeight = (height + 1) / 2;

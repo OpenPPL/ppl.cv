@@ -47,11 +47,11 @@ namespace cuda {
  * @param outWidthStride the width stride of output image, similar to
  *                       inWidthStride.
  * @param outData        output image data.
- * @param border_type    ways to deal with border. BORDER_TYPE_CONSTANT,
- *                       BORDER_TYPE_TYPE_REPLICATE, BORDER_TYPE_REFLECT,
- *                       BORDER_TYPE_WRAP and BORDER_TYPE_REFLECT_101 are
+ * @param border_type    ways to deal with border. BORDER_CONSTANT,
+ *                       BORDER_TYPE_TYPE_REPLICATE, BORDER_REFLECT,
+ *                       BORDER_WRAP and BORDER_REFLECT_101 are
  *                       supported now.
- * @param border_value   value for BORDER_TYPE_CONSTANT.
+ * @param border_value   value for BORDER_CONSTANT.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
@@ -100,7 +100,7 @@ namespace cuda {
  *   cudaStreamCreate(&stream);
  *   Erode<float, 3>(stream, height, width, input_pitch / sizeof(float),
  *                   gpu_input, 3, 3, nullptr, output_pitch / sizeof(float),
- *                   gpu_output, ppl::cv::BORDER_TYPE_REPLICATE);
+ *                   gpu_output, ppl::cv::BORDER_REPLICATE);
  *   cudaStreamSynchronize(stream);
  *   cudaStreamDestroy(stream);
  *
@@ -122,7 +122,7 @@ ppl::common::RetCode Erode(cudaStream_t stream,
                            const uchar* kernel,
                            int outWidthStride,
                            T* outData,
-                           BorderType border_type = BORDER_TYPE_CONSTANT,
+                           BorderType border_type = BORDER_CONSTANT,
                            const T border_value = FLT_MAX);
 
 }  // namespace cuda

@@ -99,7 +99,7 @@ public:
     {                                      \
         this->apply(GetParam());           \
     }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(8, 9, 10, 11, 12, 13, 14, 15, 16, 17), ::testing::Values(10), ::testing::Values(ppl::cv::BORDER_TYPE_CONSTANT), ::testing::Values(diff)));
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(8, 9, 10, 11, 12, 13, 14, 15, 16, 17), ::testing::Values(10), ::testing::Values(ppl::cv::BORDER_CONSTANT), ::testing::Values(diff)));
 
 R1(morph_f8c1k3, float, 1, 3, 1.01)
 R1(morph_f8c3k3, float, 3, 3, 1.01)

@@ -33,7 +33,7 @@ void BM_AdaptiveThreshold_ppl_x86(benchmark::State &state) {
     ppl::cv::debug::randomFill<T>(src.get(), width * height * nc, 0, 255);
     for (auto _ : state) {
         ppl::cv::x86::AdaptiveThreshold(height, width, width * nc, src.get(), width * nc, dst.get(), 
-                max_value, adaptive_method, threshold_type, filter_size, delta, ppl::cv::BORDER_TYPE_REPLICATE);
+                max_value, adaptive_method, threshold_type, filter_size, delta, ppl::cv::BORDER_REPLICATE);
     
     }
     state.SetItemsProcessed(state.iterations() * 1);

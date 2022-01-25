@@ -37,7 +37,7 @@ namespace x86 {
  * @param sigma             standard deviation
  * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
  * @param outData           output image data
- * @param border_type       ways to deal with border. For float, only BORDER_TYPE_REFLECT_101 or BORDER_TYPE_DEFAULT are supported now.
+ * @param border_type       ways to deal with border. For float, only BORDER_REFLECT_101 or BORDER_DEFAULT are supported now.
  *                          For uchar, all BORDER_TYPE are supported.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -66,7 +66,7 @@ namespace x86 {
  *     float* dev_iImage = (float*)malloc(W * H * C * sizeof(float));
  *     float* dev_oImage = (float*)malloc(W * H * C * sizeof(float));
  *
- *     ppl::cv::x86::GaussianBlur<float, 3>(H, W, W * 3, dev_iImage, 5, 1.2f, W * 3, dev_oImage, ppl::cv::BORDER_TYPE_DEFAULT);
+ *     ppl::cv::x86::GaussianBlur<float, 3>(H, W, W * 3, dev_iImage, 5, 1.2f, W * 3, dev_oImage, ppl::cv::BORDER_DEFAULT);
  *
  *     free(dev_iImage);
  *     free(dev_oImage);
@@ -84,7 +84,7 @@ template <typename T, int32_t numChannels>
     float sigma,
     int32_t outWidthStride,
     T *outData,
-    BorderType border_type = ppl::cv::BORDER_TYPE_DEFAULT);
+    BorderType border_type = ppl::cv::BORDER_DEFAULT);
 
 }
 }

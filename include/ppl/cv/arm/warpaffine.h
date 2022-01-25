@@ -36,7 +36,7 @@ namespace arm {
 * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
 * @param outData           output image data
 * @param affineMatrix      the mask of warpaffine
-* @param border_type       ways to deal with border. Use BORDER_TYPE_WARP as embedded type(immutable), optional type support BORDER_TYPE_CONSTANT now.
+* @param border_type       ways to deal with border. Use BORDER_TYPE_WARP as embedded type(immutable), optional type support BORDER_CONSTANT now.
 * @param borderValue       value used in case of a constant border; by default, it is 0
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
@@ -68,7 +68,7 @@ namespace arm {
 *     float* dev_oImage = (float*)malloc(outWidth * outHeight * C * sizeof(float));
 *     float* affineMatrix = (float*)malloc(6 * sizeof(float));
 *
-*     ppl::cv::arm::WarpAffineNearestPoint<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_TYPE_CONSTANT);
+*     ppl::cv::arm::WarpAffineNearestPoint<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_CONSTANT);
 *
 *     free(dev_iImage);
 *     free(dev_oImage);
@@ -87,7 +87,7 @@ template <typename T, int32_t channels>
     int32_t outWidthStride,
     T* outData,
     const float* affineMatrix,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T borderValue = 0);
 
 /**
@@ -101,7 +101,7 @@ template <typename T, int32_t channels>
 * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
 * @param outData           output image data
 * @param affineMatrix      the mask of warpaffine
-* @param border_type       ways to deal with border. Use BORDER_TYPE_WARP as embedded type(immutable), optional type support BORDER_TYPE_CONSTANT and  BORDER_TYPE_TRANSPARENT now.
+* @param border_type       ways to deal with border. Use BORDER_TYPE_WARP as embedded type(immutable), optional type support BORDER_CONSTANT and  BORDER_TRANSPARENT now.
 * @param borderValue       value used in case of a constant border; by default, it is 0
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
@@ -133,7 +133,7 @@ template <typename T, int32_t channels>
 *     float* dev_oImage = (float*)malloc(outWidth * outHeight * C * sizeof(float));
 *     float* affineMatrix = (float*)malloc(6 * sizeof(float));
 *
-*     ppl::cv::arm::WarpAffineLinear<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_TYPE_CONSTANT);
+*     ppl::cv::arm::WarpAffineLinear<float, 4>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, affineMatrix, ppl::cv::BORDER_CONSTANT);
 *
 *     free(dev_iImage);
 *     free(dev_oImage);
@@ -152,7 +152,7 @@ template <typename T, int32_t channels>
     int32_t outWidthStride,
     T* outData,
     const float* affineMatrix,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T borderValue = 0);
 
 }

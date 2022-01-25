@@ -1023,9 +1023,9 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT ||
-             interpolation == INTERPOLATION_TYPE_AREA);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT ||
+             interpolation == INTERPOLATION_AREA);
 
   cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
@@ -1043,7 +1043,7 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
 
   int block_x = 32;
   int block_y = 16;
-  if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  if (interpolation == INTERPOLATION_NEAREST_POINT) {
     block_y = 4;
   }
   dim3 block(block_x, block_y);
@@ -1059,7 +1059,7 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
   size_t texture_alignment = 32;
   size_t src_pitch = src_stride * sizeof(uchar);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     if (channels == 1 && (src_pitch & (texture_alignment - 1)) == 0) {
       cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar>();
       uchar_c1_ref.normalized = false;
@@ -1098,7 +1098,7 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
           row_scale);
     }
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
       resizeNearestPointKernel<uchar, uchar><<<grid, block, 0, stream>>>(src,
           src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
@@ -1115,7 +1115,7 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
           dst_stride, col_scale, row_scale);
     }
   }
-  else if (interpolation == INTERPOLATION_TYPE_AREA) {
+  else if (interpolation == INTERPOLATION_AREA) {
     if (src_cols > dst_cols && src_rows > dst_rows) {
       if (src_cols % dst_cols == 0 && src_rows % dst_rows == 0) {
         if (channels == 1) {
@@ -1217,9 +1217,9 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT ||
-             interpolation == INTERPOLATION_TYPE_AREA);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT ||
+             interpolation == INTERPOLATION_AREA);
 
   cudaError_t code;
   if (src_rows == dst_rows && src_cols == dst_cols &&
@@ -1237,8 +1237,8 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
 
   int block_x = 32;
   int block_y = 16;
-  if (interpolation == INTERPOLATION_TYPE_LINEAR ||
-    interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  if (interpolation == INTERPOLATION_LINEAR ||
+    interpolation == INTERPOLATION_NEAREST_POINT) {
     block_y = 4;
   }
   dim3 block(block_x, block_y);
@@ -1254,7 +1254,7 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
   size_t texture_alignment = 32;
   size_t src_pitch = src_stride * sizeof(float);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     if (channels == 1 && (src_pitch & (texture_alignment - 1)) == 0) {
       cudaChannelFormatDesc desc = cudaCreateChannelDesc<float>();
       float_c1_ref.normalized = false;
@@ -1277,7 +1277,7 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
           row_scale);
     }
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
       resizeNearestPointKernel<float, float><<<grid, block, 0, stream>>>(src,
           src_rows, src_cols, channels, src_stride, dst, dst_rows, dst_cols,
@@ -1294,7 +1294,7 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
           dst_stride, col_scale, row_scale);
     }
   }
-  else if (interpolation == INTERPOLATION_TYPE_AREA) {
+  else if (interpolation == INTERPOLATION_AREA) {
     if (src_cols > dst_cols && src_rows > dst_rows) {
       if (src_cols % dst_cols == 0 && src_rows % dst_rows == 0) {
         if (channels == 1) {

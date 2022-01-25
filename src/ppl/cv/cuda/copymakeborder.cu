@@ -26,8 +26,8 @@ namespace cuda {
 
 __DEVICE__
 int borderInterpolate0(int index, int range, BorderType border_type) {
-  if (border_type == BORDER_TYPE_DEFAULT ||
-      border_type == BORDER_TYPE_REFLECT_101) {
+  if (border_type == BORDER_DEFAULT ||
+      border_type == BORDER_REFLECT_101) {
     if (index < 0) {
       return 0 - index;
     }
@@ -38,7 +38,7 @@ int borderInterpolate0(int index, int range, BorderType border_type) {
       return (range << 1) - index - 2;
     }
   }
-  else if (border_type == BORDER_TYPE_CONSTANT) {
+  else if (border_type == BORDER_CONSTANT) {
     if (index < 0) {
       return -1;
     }
@@ -49,7 +49,7 @@ int borderInterpolate0(int index, int range, BorderType border_type) {
       return -1;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     if (index < 0) {
       return 0;
     }
@@ -60,7 +60,7 @@ int borderInterpolate0(int index, int range, BorderType border_type) {
       return range - 1;
     }
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     if (index < 0) {
       return -1 - index;
     }
@@ -71,7 +71,7 @@ int borderInterpolate0(int index, int range, BorderType border_type) {
       return (range << 1) - index - 1;
     }
   }
-  else if (border_type == BORDER_TYPE_WRAP) {
+  else if (border_type == BORDER_WRAP) {
     if (index < 0) {
       return index + range;
     }
@@ -89,8 +89,8 @@ int borderInterpolate0(int index, int range, BorderType border_type) {
 
 __DEVICE__
 int borderInterpolate1(int index, int range, BorderType border_type) {
-  if (border_type == BORDER_TYPE_DEFAULT ||
-      border_type == BORDER_TYPE_REFLECT_101) {
+  if (border_type == BORDER_DEFAULT ||
+      border_type == BORDER_REFLECT_101) {
     if (index >= 0 && index < range) {
       return index;
     }
@@ -110,7 +110,7 @@ int borderInterpolate1(int index, int range, BorderType border_type) {
       return index;
     }
   }
-  else if (border_type == BORDER_TYPE_CONSTANT) {
+  else if (border_type == BORDER_CONSTANT) {
     if (index < 0) {
       return -1;
     }
@@ -121,7 +121,7 @@ int borderInterpolate1(int index, int range, BorderType border_type) {
       return -1;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     if (index < 0) {
       return 0;
     }
@@ -132,7 +132,7 @@ int borderInterpolate1(int index, int range, BorderType border_type) {
       return range - 1;
     }
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     if (index >= 0 && index < range) {
       return index;
     }
@@ -152,7 +152,7 @@ int borderInterpolate1(int index, int range, BorderType border_type) {
       return index;
     }
   }
-  else if (border_type == BORDER_TYPE_WRAP) {
+  else if (border_type == BORDER_WRAP) {
     if (index >= 0 && index < range) {
       return index;
     }
@@ -250,7 +250,7 @@ void copyMakeBorderKernel(const T0* src, int rows, int cols, int src_stride,
 
   T0 value;
   T0 *input, *output;
-  if (border_type != BORDER_TYPE_CONSTANT) {
+  if (border_type != BORDER_CONSTANT) {
     input = (T0*)((uchar*)src + src_y * src_stride);
     value = input[src_x];
   }
@@ -282,12 +282,12 @@ RetCode copyMakeBorder(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(bottom >= 0);
   PPL_ASSERT(left >= 0);
   PPL_ASSERT(right >= 0);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_WRAP ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_WRAP ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   cudaError_t code;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&
@@ -353,12 +353,12 @@ RetCode copyMakeBorder(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(bottom >= 0);
   PPL_ASSERT(left >= 0);
   PPL_ASSERT(right >= 0);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_WRAP ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_WRAP ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   cudaError_t code;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&

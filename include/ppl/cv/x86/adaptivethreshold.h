@@ -38,7 +38,7 @@ namespace x86 {
  * @param thresholdType  thresholding type, THRESH_BINARY and THRESH_BINARY_INV are supported.
  * @param blockSize      size of a pixel neighborhood that is used to calculate a threshold value for the pixel, greater than 1 and up to 15.
  * @param delta          constant subtracted from the mean or weighted mean.
- * @param border_type    ways to deal with border, only BORDER_TYPE_REPLICATE is supported now.
+ * @param border_type    ways to deal with border, only BORDER_REPLICATE is supported now.
  * @warning There is a very small probability that some pixels will be calculated incorrectly.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -84,7 +84,7 @@ namespace x86 {
     int32_t thresholdType,
     int32_t blockSize,
     double delta,
-    BorderType border_type = BORDER_TYPE_REPLICATE);
+    BorderType border_type = BORDER_REPLICATE);
 
 }
 }

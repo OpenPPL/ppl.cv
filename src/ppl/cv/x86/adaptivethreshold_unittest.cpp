@@ -51,7 +51,7 @@ public:
 
         ppl::cv::x86::AdaptiveThreshold(size.height, size.width, size.width,src.get(),
             size.width, dst.get(), max_value, adaptive_method, threshold_type, ksize, delta,
-            ppl::cv::BORDER_TYPE_REPLICATE);
+            ppl::cv::BORDER_REPLICATE);
 
         ::cv::Mat iMat(size.height, size.width, T2CvType<Tsrc, c>::type, src.get());
         ::cv::Mat oMat(size.height, size.width, T2CvType<Tsrc, c>::type, dst_opencv.get());

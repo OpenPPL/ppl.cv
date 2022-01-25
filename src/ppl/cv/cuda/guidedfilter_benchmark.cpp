@@ -59,7 +59,7 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
     GuidedFilter<T, channels, 1>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_guide.step / sizeof(T),
         (T*)gpu_guide.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, radius,
-        eps, ppl::cv::BORDER_TYPE_REFLECT);
+        eps, ppl::cv::BORDER_REFLECT);
   }
   cudaDeviceSynchronize();
 
@@ -70,7 +70,7 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
           gpu_src.step / sizeof(T), (T*)gpu_src.data,
           gpu_guide.step / sizeof(T), (T*)gpu_guide.data,
           gpu_dst.step / sizeof(T), (T*)gpu_dst.data, radius, eps,
-          ppl::cv::BORDER_TYPE_REFLECT);
+          ppl::cv::BORDER_REFLECT);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);
