@@ -78,7 +78,7 @@ void bilateralFilter_32f_avx(
     int32_t tempstep = (tempWidth)*cn;
     std::vector<float> padded_images(tempHeight * tempWidth * cn);
     float* temp = padded_images.data();
-    CopyMakeBorder<float, cn>(height, width, inWidthStride, src, tempHeight, tempWidth, tempstep, temp, ppl::cv::BORDER_TYPE_REFLECT_101, 0);
+    CopyMakeBorder<float, cn>(height, width, inWidthStride, src, tempHeight, tempWidth, tempstep, temp, ppl::cv::BORDER_REFLECT_101, 0);
 
     std::vector<float> _space_weight(d * d);
     std::vector<int32_t> _space_ofs(d * d);

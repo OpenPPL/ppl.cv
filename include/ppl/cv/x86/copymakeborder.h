@@ -35,8 +35,8 @@ namespace x86 {
  * @param dstWidth          output image's width
  * @param dstWidthStride    the width stride of output image, usually it equals to `width * channels`
  * @param dst               output image data
- * @param border_type       ways to deal with border. BORDER_TYPE_REFLECT_101 ,BORDER_TYPE_REFLECT, BORDER_TYPE_CONSTANT and BORDER_TYPE_REPLICATE are supported
- * @param border_value      padding value when border_type is BORDER_TYPE_CONSTANT
+ * @param border_type       ways to deal with border. BORDER_REFLECT_101 ,BORDER_REFLECT, BORDER_CONSTANT and BORDER_REPLICATE are supported
+ * @param border_value      padding value when border_type is BORDER_CONSTANT
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -67,7 +67,7 @@ namespace x86 {
  *     uint8_t* dev_oImage = (uint8_t*)malloc(dstW * dstH * C * sizeof(uint8_t));
  * 
  *     ppl::cv::x86::CopyMakeBorder<uint8_t, 3>(srcH, srcW, srcW * C, dev_iImage, dstH, dstW, dstW * C, dev_oImage, 
- *                                                  ppl::cv::BORDER_TYPE_REFLECT_101, border_value);
+ *                                                  ppl::cv::BORDER_REFLECT_101, border_value);
  *               
  *     return 0;
  * }

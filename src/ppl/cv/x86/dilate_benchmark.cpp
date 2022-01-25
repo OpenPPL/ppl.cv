@@ -36,7 +36,7 @@ void BM_Dilate_ppl_x86(benchmark::State &state) {
         ppl::cv::x86::Dilate<T, channels>(height, width, width * channels, src.get(),
                                             dilation_size, dilation_size,
                                             element.ptr<uint8_t>(), width * channels,
-                                            dst.get(), ppl::cv::BORDER_TYPE_CONSTANT);
+                                            dst.get(), ppl::cv::BORDER_CONSTANT);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

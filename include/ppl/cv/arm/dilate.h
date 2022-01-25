@@ -38,8 +38,8 @@ namespace arm {
  * @param kernel            the data of the kernel mask.
  * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
  * @param outData           output image data
- * @param border_type       ways to deal with border. Only BORDER_TYPE_CONSTANT is supported now.
- * @param border_value      filling border_value for BORDER_TYPE_CONSTANT
+ * @param border_type       ways to deal with border. Only BORDER_CONSTANT is supported now.
+ * @param border_value      filling border_value for BORDER_CONSTANT
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The following table show which data type and channels are supported.
  * <table>
@@ -90,7 +90,7 @@ template <typename T, int32_t channels>
     const unsigned char* kernel,
     int32_t outWidthStride,
     T* outData,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T border_value         = 0);
 
 }

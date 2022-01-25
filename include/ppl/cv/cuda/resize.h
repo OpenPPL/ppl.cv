@@ -44,9 +44,9 @@ namespace cuda {
  * @param outWidthStride   the width stride of output image, similar to
  *                         inWidthStride.
  * @param outData          output image data.
- * @param interpolation    Interpolation method. INTERPOLATION_TYPE_LINEAR,
- *                         INTERPOLATION_TYPE_NEAREST_POINT and
- *                         INTERPOLATION_TYPE_AREA are supported.
+ * @param interpolation    Interpolation method. INTERPOLATION_LINEAR,
+ *                         INTERPOLATION_NEAREST_POINT and
+ *                         INTERPOLATION_AREA are supported.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -112,7 +112,7 @@ Resize(cudaStream_t stream,
        int outWidth,
        int outWidthStride,
        T* outData,
-       InterpolationType interpolation = INTERPOLATION_TYPE_LINEAR);
+       InterpolationType interpolation = INTERPOLATION_LINEAR);
 
 }  // namespace cuda
 }  // namespace cv

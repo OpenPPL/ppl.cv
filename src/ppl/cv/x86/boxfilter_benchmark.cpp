@@ -33,7 +33,7 @@ void BM_BoxFilter_ppl_x86(benchmark::State &state) {
         ppl::cv::x86::BoxFilter<T, nc>(height, width,
                                 width * nc, src.get(),
                                 filter_size, filter_size, normalized,
-                                width * nc, dst.get(), ppl::cv::BORDER_TYPE_DEFAULT);
+                                width * nc, dst.get(), ppl::cv::BORDER_DEFAULT);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

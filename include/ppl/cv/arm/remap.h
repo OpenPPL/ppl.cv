@@ -39,7 +39,7 @@ namespace arm {
 * @param outData           output image data
 * @param mapX              transformation matrix in the x direction
 * @param mapY              transformation matrix in the y direction
-* @param border_type       ways to deal with border. BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE and BORDER_TYPE_TRANSPARENT are supported now.
+* @param border_type       ways to deal with border. BORDER_CONSTANT, BORDER_REPLICATE and BORDER_TRANSPARENT are supported now.
 * @param borderValue       value used in case of a constant border; by default, it is 0
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
@@ -69,7 +69,7 @@ namespace arm {
 *     float* mapX= (float*)malloc(outWidth * outHeight * sizeof(float));
 *     float* mapY= (float*)malloc(outWidth * outHeight * sizeof(float));
 *
-*     ppl::cv::arm::RemapLinear<unsigend char, 3>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, mapX, mapY, ppl::cv::BORDER_TYPE_CONSTANT);
+*     ppl::cv::arm::RemapLinear<unsigend char, 3>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, mapX, mapY, ppl::cv::BORDER_CONSTANT);
 *
 *     free(dev_iImage);
 *     free(dev_oImage);
@@ -91,7 +91,7 @@ template<typename T, int32_t channels>
     T* outData,
     const float* mapx,
     const float* mapy,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T borderValue = 0);
 
 /**
@@ -108,7 +108,7 @@ template<typename T, int32_t channels>
 * @param outData           output image data
 * @param mapX              transformation matrix in the x direction
 * @param mapY              transformation matrix in the y direction
-* @param border_type       ways to deal with border. BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE and BORDER_TYPE_TRANSPARENT are supported now.
+* @param border_type       ways to deal with border. BORDER_CONSTANT, BORDER_REPLICATE and BORDER_TRANSPARENT are supported now.
 * @param borderValue       value used in case of a constant border; by default, it is 0
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
@@ -138,7 +138,7 @@ template<typename T, int32_t channels>
 *     float* mapX= (float*)malloc(outWidth * outHeight * sizeof(float));
 *     float* mapY= (float*)malloc(outWidth * outHeight * sizeof(float));
 *
-*     ppl::cv::arm::RemapNearestPoint<unsigend char, 3>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, mapX, mapY, ppl::cv::BORDER_TYPE_CONSTANT);
+*     ppl::cv::arm::RemapNearestPoint<unsigend char, 3>(inHeight, inWidth, inWidth * C, dev_iImage, outHeight, outWidth, outWidth * C, dev_oImage, mapX, mapY, ppl::cv::BORDER_CONSTANT);
 *
 *     free(dev_iImage);
 *     free(dev_oImage);
@@ -160,7 +160,7 @@ template<typename T, int32_t channels>
     T* outData,
     const float* mapx,
     const float* mapy,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T borderValue = 0);
 
 }

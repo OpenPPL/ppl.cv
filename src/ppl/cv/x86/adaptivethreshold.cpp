@@ -47,7 +47,7 @@ namespace x86 {
     if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -62,9 +62,9 @@ namespace x86 {
     }
     uint8_t* mean = outData;
     if (adaptive_method == ppl::cv::ADAPTIVE_THRESH_MEAN_C) {
-        BoxFilter<uint8_t, 1>(height, width, inWidthStride, inData, ksize, ksize, true, outWidthStride, mean, ppl::cv::BORDER_TYPE_REPLICATE);
+        BoxFilter<uint8_t, 1>(height, width, inWidthStride, inData, ksize, ksize, true, outWidthStride, mean, ppl::cv::BORDER_REPLICATE);
     } else if (adaptive_method == ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C) {
-        GaussianBlur<uint8_t, 1>(height, width, inWidthStride, inData, ksize, 0, outWidthStride, mean, ppl::cv::BORDER_TYPE_REPLICATE);
+        GaussianBlur<uint8_t, 1>(height, width, inWidthStride, inData, ksize, 0, outWidthStride, mean, ppl::cv::BORDER_REPLICATE);
     }
     int32_t idelta = threshold_type == ppl::cv::CV_THRESH_BINARY ? std::ceil(delta) : std::floor(delta);
     uint8_t tab[768];

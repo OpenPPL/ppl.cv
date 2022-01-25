@@ -301,7 +301,7 @@ template <>
     if (inData == nullptr || outData == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     } 
     if (ksize == 1) {
@@ -328,7 +328,7 @@ template <>
     if (inData == nullptr || outData == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     } 
     if (ksize == 1) {
@@ -355,7 +355,7 @@ template <>
     if (inData == nullptr || outData == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     } 
     if (ksize == 1) {
@@ -382,7 +382,7 @@ template <>
     if (inData == nullptr || outData == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     } 
     if (ksize == 1) {
@@ -409,7 +409,7 @@ template <>
     if (inData == nullptr || outData == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     } 
     if (ksize == 1) {
@@ -436,7 +436,7 @@ template <>
     if (inData == nullptr || outData == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (height <= 1 || width <= 1 || (ksize != 1 && ksize != 3) || border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     } 
     if (ksize == 1) {

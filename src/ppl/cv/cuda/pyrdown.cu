@@ -516,10 +516,10 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(dst_stride >= ((cols + 1) >> 1) * channels * (int)sizeof(uchar));
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   int dst_rows = (rows + 1) >> 1;
   dim3 block, grid;
@@ -529,10 +529,10 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
   grid.y = divideUp(dst_rows, BlockDimY, BlockShiftY);
 
   if (channels == 1) {
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_C1_BATCH4_KERNELS(uchar, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_C1_BATCH4_KERNELS(uchar, ReflectBorder);
     }
     else {
@@ -542,10 +542,10 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
   else if (channels == 3) {
     grid.x = divideUp(cols, BlockDimX, BlockShiftX);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CN_BATCH1_KERNELS(uchar, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CN_BATCH1_KERNELS(uchar, ReflectBorder);
     }
     else {
@@ -555,10 +555,10 @@ RetCode pyrdown(const uchar* src, int rows, int cols, int channels,
   else {
     grid.x = divideUp(divideUp(cols, 2, 1), BlockDimX, BlockShiftX);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CN_BATCH2_KERNELS(uchar, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CN_BATCH2_KERNELS(uchar, ReflectBorder);
     }
     else {
@@ -584,10 +584,10 @@ RetCode pyrdown(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= ((cols + 1) >> 1) * channels * (int)sizeof(float));
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   int dst_rows = (rows + 1) >> 1;
   dim3 block, grid;
@@ -597,10 +597,10 @@ RetCode pyrdown(const float* src, int rows, int cols, int channels,
   grid.y = divideUp(dst_rows, BlockDimY, BlockShiftY);
 
   if (channels == 1) {
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_C1_BATCH2_KERNELS(float, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_C1_BATCH2_KERNELS(float, ReflectBorder);
     }
     else {
@@ -610,10 +610,10 @@ RetCode pyrdown(const float* src, int rows, int cols, int channels,
   else {
     grid.x = divideUp(cols, BlockDimX, BlockShiftX);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CN_BATCH1_KERNELS(float, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CN_BATCH1_KERNELS(float, ReflectBorder);
     }
     else {

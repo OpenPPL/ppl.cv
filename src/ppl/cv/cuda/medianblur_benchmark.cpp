@@ -48,7 +48,7 @@ void BM_MedianBlur_ppl_cuda(benchmark::State &state) {
   for (int i = 0; i < iterations; i++) {
     MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-        (T*)gpu_dst.data, ksize, BORDER_TYPE_REPLICATE);
+        (T*)gpu_dst.data, ksize, BORDER_REPLICATE);
   }
   cudaDeviceSynchronize();
 
@@ -57,7 +57,7 @@ void BM_MedianBlur_ppl_cuda(benchmark::State &state) {
     for (int i = 0; i < iterations; i++) {
       MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
           gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-          (T*)gpu_dst.data, ksize, BORDER_TYPE_REPLICATE);
+          (T*)gpu_dst.data, ksize, BORDER_REPLICATE);
     }
     cudaDeviceSynchronize();
     gettimeofday(&end, NULL);

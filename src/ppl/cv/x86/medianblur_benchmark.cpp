@@ -30,7 +30,7 @@ void BM_MedianBlur_ppl_x86(benchmark::State &state) {
     ppl::cv::debug::randomFill<T>(src.get(), width * height * channels, 0, 255);
     for (auto _ : state) {
         ppl::cv::x86::MedianBlur<T, channels>(height, width, width * channels, src.get(), width * channels, dst.get(),
-                                filter_size, ppl::cv::BORDER_TYPE_DEFAULT);
+                                filter_size, ppl::cv::BORDER_DEFAULT);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

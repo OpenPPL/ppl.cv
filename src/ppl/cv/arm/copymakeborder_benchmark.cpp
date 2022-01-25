@@ -41,33 +41,33 @@ void BM_Copymakeborder_ppl_aarch64(benchmark::State &state)
 }
 
 using namespace ppl::cv::debug;
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c1, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c3, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, float, c4, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c1, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c3, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_ppl_aarch64, uint8_t, c4, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
 #ifdef PPLCV_BENCHMARK_OPENCV
 
@@ -88,13 +88,13 @@ void BM_Copymakeborder_opencv_aarch64(benchmark::State &state)
     cv::Mat src_opencv(input_height, input_width, CV_MAKETYPE(cv::DataType<T>::depth, nc), src.get(), sizeof(T) * input_width * nc);
     cv::Mat dst_opencv(output_height, output_width, CV_MAKETYPE(cv::DataType<T>::depth, nc), dst_ref.get(), sizeof(T) * output_width * nc);
     cv::BorderTypes cv_border_type;
-    if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
+    if (border_type == ppl::cv::BORDER_CONSTANT) {
         cv_border_type = cv::BORDER_CONSTANT;
-    } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
+    } else if (border_type == ppl::cv::BORDER_REPLICATE) {
         cv_border_type = cv::BORDER_REPLICATE;
-    } else if (border_type == ppl::cv::BORDER_TYPE_REFLECT) {
+    } else if (border_type == ppl::cv::BORDER_REFLECT) {
         cv_border_type = cv::BORDER_REFLECT;
-    } else if (border_type == ppl::cv::BORDER_TYPE_REFLECT101) {
+    } else if (border_type == ppl::cv::BORDER_REFLECT101) {
         cv_border_type = cv::BORDER_REFLECT101;
     }
     for (auto _ : state) {
@@ -103,32 +103,32 @@ void BM_Copymakeborder_opencv_aarch64(benchmark::State &state)
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_CONSTANT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_REPLICATE)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_REFLECT)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_TYPE_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c1, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c3, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, float, c4, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c1, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c3, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+BENCHMARK_TEMPLATE(BM_Copymakeborder_opencv_aarch64, uint8_t, c4, ppl::cv::BORDER_REFLECT101)->Args({320, 240, 320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
 #endif //! PPLCV_BENCHMARK_OPENCV
 } // namespace

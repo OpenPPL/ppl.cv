@@ -59,13 +59,13 @@ inline std::string convertToStringResize(const Parameters& parameters) {
   }
 
   InterpolationType inter_type = (InterpolationType)std::get<1>(parameters);
-  if (inter_type == INTERPOLATION_TYPE_LINEAR) {
+  if (inter_type == INTERPOLATION_LINEAR) {
     formatted << "InterLinear" << "_";
   }
-  else if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (inter_type == INTERPOLATION_NEAREST_POINT) {
     formatted << "InterNearest" << "_";
   }
-  else if (inter_type == INTERPOLATION_TYPE_AREA) {
+  else if (inter_type == INTERPOLATION_AREA) {
     formatted << "InterArea" << "_";
   }
   else {
@@ -141,10 +141,10 @@ bool PplCvCudaResizeTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   int cv_iterpolation = cv::INTER_LINEAR;
-  if (inter_type == INTERPOLATION_TYPE_NEAREST_POINT) {
+  if (inter_type == INTERPOLATION_NEAREST_POINT) {
     cv_iterpolation = cv::INTER_NEAREST;
   }
-  else if (inter_type == INTERPOLATION_TYPE_AREA) {
+  else if (inter_type == INTERPOLATION_AREA) {
     cv_iterpolation = cv::INTER_AREA;
   }
   else {
@@ -192,9 +192,9 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaResizeTest ## T ## channels,         \
   ::testing::Combine(                                                          \
     ::testing::Values(kHalfSize, kSmallerSize, kSameSize, kBiggerSize,         \
                       kDoubleSize),                                            \
-    ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
-                      INTERPOLATION_TYPE_NEAREST_POINT,                        \
-                      INTERPOLATION_TYPE_AREA),                                \
+    ::testing::Values(INTERPOLATION_LINEAR,                               \
+                      INTERPOLATION_NEAREST_POINT,                        \
+                      INTERPOLATION_AREA),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

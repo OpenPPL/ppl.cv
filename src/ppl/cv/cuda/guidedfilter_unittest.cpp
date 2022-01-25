@@ -96,7 +96,7 @@ bool PplCvCudaGuidedFilterTest<T, srcCns, guideCns>::apply() {
   GuidedFilter<T, srcCns, guideCns>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_guide.step / sizeof(T),
       (T*)gpu_guide.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-      config.radius, config.eps, ppl::cv::BORDER_TYPE_REFLECT);
+      config.radius, config.eps, ppl::cv::BORDER_REFLECT);
   gpu_dst.download(dst);
 
   float epsilon;

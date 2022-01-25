@@ -48,9 +48,9 @@ namespace cuda {
  *                       inWidthStride.
  * @param outData        output image data.
  * @param delta          optional value added to the filtered pixels.
- * @param border_type    ways to deal with border. BORDER_TYPE_REPLICATE,
- *                       BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 and
- *                       BORDER_TYPE_DEFAULT are supported now.
+ * @param border_type    ways to deal with border. BORDER_REPLICATE,
+ *                       BORDER_REFLECT, BORDER_REFLECT_101 and
+ *                       BORDER_DEFAULT are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
@@ -102,7 +102,7 @@ namespace cuda {
  *   SepFilter2D<float, float, 3>(stream, height, width,
  *       input_pitch / sizeof(float), gpu_input, ksize, gpu_kernel, gpu_kernel,
  *       output_pitch / sizeof(float), gpu_output, 0.f,
- *       ppl::cv::BORDER_TYPE_DEFAULT);
+ *       ppl::cv::BORDER_DEFAULT);
  *   cudaStreamSynchronize(stream);
  *   cudaStreamDestroy(stream);
  *
@@ -126,7 +126,7 @@ ppl::common::RetCode SepFilter2D(cudaStream_t stream,
                                  int outWidthStride,
                                  Tdst* outData,
                                  float delta = 0.f,
-                                 BorderType border_type = BORDER_TYPE_DEFAULT);
+                                 BorderType border_type = BORDER_DEFAULT);
 
 }  // namespace cuda
 }  // namespace cv

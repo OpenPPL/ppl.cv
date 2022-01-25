@@ -876,10 +876,10 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
   PPL_ASSERT(threshold_type == THRESH_BINARY ||
              threshold_type == THRESH_BINARY_INV);
   PPL_ASSERT((ksize & 1) == 1 && ksize > 1);
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   uchar setted_value = 0;
   if (max_value < 0) {
@@ -912,10 +912,10 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
     grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_SMALL_KERNELS(ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_SMALL_KERNELS(ReflectBorder);
     }
     else {
@@ -952,10 +952,10 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
       return RC_DEVICE_MEMORY_ERROR;
     }
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_LARAGE_KERNELS0(ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_LARAGE_KERNELS0(ReflectBorder);
     }
     else {
@@ -996,10 +996,10 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
       return RC_DEVICE_MEMORY_ERROR;
     }
 
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_LARAGE_KERNELS1(ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_LARAGE_KERNELS1(ReflectBorder);
     }
     else {

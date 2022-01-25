@@ -397,7 +397,7 @@ template <>
     double delta,
     BorderType border_type)
 {
-    assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
+    assert(border_type == ppl::cv::BORDER_REFLECT_101);
     sobel_kernel_reflect101_f32(height, width, 1, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
     return ppl::common::RC_SUCCESS;
 }
@@ -417,7 +417,7 @@ template <>
     double delta,
     BorderType border_type)
 {
-    assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
+    assert(border_type == ppl::cv::BORDER_REFLECT_101);
     sobel_kernel_reflect101_f32(height, width, 3, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
     return ppl::common::RC_SUCCESS;
 }
@@ -437,7 +437,7 @@ template <>
     double delta,
     BorderType border_type)
 {
-    assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
+    assert(border_type == ppl::cv::BORDER_REFLECT_101);
     sobel_kernel_reflect101_f32(height, width, 4, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
     return ppl::common::RC_SUCCESS;
 }
@@ -457,7 +457,7 @@ template <>
     double delta,
     BorderType border_type)
 {
-    assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
+    assert(border_type == ppl::cv::BORDER_REFLECT_101);
     sobel_kernel_reflect101_u8(height, width, 1, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
     return ppl::common::RC_SUCCESS;
 }
@@ -477,7 +477,7 @@ template <>
     double delta,
     BorderType border_type)
 {
-    assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
+    assert(border_type == ppl::cv::BORDER_REFLECT_101);
     sobel_kernel_reflect101_u8(height, width, 3, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
     return ppl::common::RC_SUCCESS;
 }
@@ -497,7 +497,7 @@ template <>
     double delta,
     BorderType border_type)
 {
-    assert(border_type == ppl::cv::BORDER_TYPE_REFLECT_101);
+    assert(border_type == ppl::cv::BORDER_REFLECT_101);
     sobel_kernel_reflect101_u8(height, width, 4, inWidthStride, inData, dx, dy, ksize, scale, delta, outWidthStride, outData);
     return ppl::common::RC_SUCCESS;
 }

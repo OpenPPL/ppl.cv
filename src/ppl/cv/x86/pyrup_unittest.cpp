@@ -44,7 +44,7 @@ public:
         std::unique_ptr<T> dst_opencv(new T[osize.width * osize.height * c]);
 
         ppl::cv::x86::PyrUp<T, c>(isize.height, isize.width, isize.width * c, src.get(),
-            osize.width * c, dst.get(), ppl::cv::BORDER_TYPE_DEFAULT);
+            osize.width * c, dst.get(), ppl::cv::BORDER_DEFAULT);
 
         ::cv::Mat iMat(isize.height, isize.width, T2CvType<T, c>::type, src.get());
         ::cv::Mat oMat(osize.height, osize.width, T2CvType<T, c>::type, dst_opencv.get());

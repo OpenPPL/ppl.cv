@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_HPC_PPL3_CV_TYPES_H_
-#define __ST_HPC_PPL3_CV_TYPES_H_
+#ifndef __ST_HPC_PPL_CV_TYPES_H_
+#define __ST_HPC_PPL_CV_TYPES_H_
 #include "ppl/common/types.h"
 #include <stdlib.h>
 
@@ -55,21 +55,21 @@ enum DistanceTransformMasks {
  * Interpolation algorithm type.
  **********************************/
 enum InterpolationType {
-    INTERPOLATION_TYPE_LINEAR,       //!< Linear interpolation
-    INTERPOLATION_TYPE_NEAREST_POINT, //!< Nearest point interpolation
-    INTERPOLATION_TYPE_AREA //!< Area interpolation
+    INTERPOLATION_LINEAR,       //!< Linear interpolation
+    INTERPOLATION_NEAREST_POINT, //!< Nearest point interpolation
+    INTERPOLATION_AREA //!< Area interpolation
 };
 
 enum BorderType {
-    BORDER_TYPE_CONSTANT       = 0, //!< `iiiiii|abcdefgh|iiiiii` with some specified `i`
-    BORDER_TYPE_REPLICATE      = 1, //!< `aaaaaa|abcdefgh|hhhhhh`
-    BORDER_TYPE_REFLECT        = 2, //!< `fedcba|abcdefgh|hgfedc`
-    BORDER_TYPE_WRAP           = 3, //!< `cdefgh|abcdefgh|abcdef`
-    BORDER_TYPE_REFLECT_101    = 4, //!< `gfedcb|abcdefgh|gfedcb`
-    BORDER_TYPE_TRANSPARENT    = 5, //!< `uvwxyz|abcdefgh|ijklmn`
-    BORDER_TYPE_REFLECT101     = BORDER_TYPE_REFLECT_101,
-    BORDER_TYPE_DEFAULT        = BORDER_TYPE_REFLECT_101,
-    BORDER_TYPE_ISOLATED       = 16
+    BORDER_CONSTANT       = 0, //!< `iiiiii|abcdefgh|iiiiii` with some specified `i`
+    BORDER_REPLICATE      = 1, //!< `aaaaaa|abcdefgh|hhhhhh`
+    BORDER_REFLECT        = 2, //!< `fedcba|abcdefgh|hgfedc`
+    BORDER_WRAP           = 3, //!< `cdefgh|abcdefgh|abcdef`
+    BORDER_REFLECT_101    = 4, //!< `gfedcb|abcdefgh|gfedcb`
+    BORDER_TRANSPARENT    = 5, //!< `uvwxyz|abcdefgh|ijklmn`
+    BORDER_REFLECT101     = BORDER_REFLECT_101,
+    BORDER_DEFAULT        = BORDER_REFLECT_101,
+    BORDER_ISOLATED       = 16
 };
 
 // copy liheng's code
@@ -149,4 +149,4 @@ enum
 #define CUDAC inline __host__ __device__
 #endif
 
-#endif //! __ST_HPC_PPL3_CV_TYPES_H_
+#endif //! __ST_HPC_PPL_CV_TYPES_H_

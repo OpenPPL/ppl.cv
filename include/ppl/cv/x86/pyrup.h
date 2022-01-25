@@ -35,7 +35,7 @@ namespace x86 {
 * @param inData            input image data
 * @param outWidthStride    output image's width stride, usually it equals to `outWidth * nc`
 * @param outData           output image data
-* @param border_type       ways to deal with border. Only BORDER_TYPE_REFLECT_101 or BORDER_TYPE_DEFAULT are supported now.
+* @param border_type       ways to deal with border. Only BORDER_REFLECT_101 or BORDER_DEFAULT are supported now.
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @warning outHeight == height * 2 or height * 2 + 1
 * @warning outWidth == width * 2 or width * 2 + 1
@@ -67,7 +67,7 @@ namespace x86 {
 *     float* dev_iImage = (float*)malloc(W * H * C * sizeof(float));
 *     float* dev_oImage = (float*)malloc(OW * OH * C * sizeof(float));
 *
-*     ppl::cv::x86::PyrUp<float, 3>(H, W, W * C, dev_iImage, OW * C, dev_oImage, ppl::cv::BORDER_TYPE_DEFAULT);
+*     ppl::cv::x86::PyrUp<float, 3>(H, W, W * C, dev_iImage, OW * C, dev_oImage, ppl::cv::BORDER_DEFAULT);
 *
 *     free(dev_iImage);
 *     free(dev_oImage);

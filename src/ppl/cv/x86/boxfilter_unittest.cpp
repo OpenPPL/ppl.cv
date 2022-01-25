@@ -31,32 +31,32 @@ void BoxFilterTest(int32_t height, int32_t width, T diff) {
     cv::Mat src_opencv(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), src.get(), sizeof(T) * width * nc);
     cv::Mat dst_opencv(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), dst_ref.get(), sizeof(T) * width * nc);
 
-    if (border_type == ppl::cv::BORDER_TYPE_REFLECT101) {
+    if (border_type == ppl::cv::BORDER_REFLECT101) {
         ppl::cv::x86::BoxFilter<T, nc>(height, width,
                                 width * nc, src.get(),
                                 filter_size, filter_size, normalized,
-                                width * nc, dst.get(), ppl::cv::BORDER_TYPE_DEFAULT);
+                                width * nc, dst.get(), ppl::cv::BORDER_DEFAULT);
         cv::boxFilter(src_opencv, dst_opencv, -1,
                 cv::Size(filter_size, filter_size), cv::Point(-1,-1), normalized, cv::BORDER_REFLECT101);
-    } else if (border_type == ppl::cv::BORDER_TYPE_REFLECT) {
+    } else if (border_type == ppl::cv::BORDER_REFLECT) {
         ppl::cv::x86::BoxFilter<T, nc>(height, width,
                                 width * nc, src.get(),
                                 filter_size, filter_size, normalized,
-                                width * nc, dst.get(), ppl::cv::BORDER_TYPE_REFLECT);
+                                width * nc, dst.get(), ppl::cv::BORDER_REFLECT);
         cv::boxFilter(src_opencv, dst_opencv, -1,
                 cv::Size(filter_size, filter_size), cv::Point(-1,-1), normalized, cv::BORDER_REFLECT);
-    } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
+    } else if (border_type == ppl::cv::BORDER_REPLICATE) {
         ppl::cv::x86::BoxFilter<T, nc>(height, width,
                                 width * nc, src.get(),
                                 filter_size, filter_size, normalized,
-                                width * nc, dst.get(), ppl::cv::BORDER_TYPE_REPLICATE);
+                                width * nc, dst.get(), ppl::cv::BORDER_REPLICATE);
         cv::boxFilter(src_opencv, dst_opencv, -1,
                 cv::Size(filter_size, filter_size), cv::Point(-1,-1), normalized, cv::BORDER_REPLICATE);
-    } else if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
+    } else if (border_type == ppl::cv::BORDER_CONSTANT) {
         ppl::cv::x86::BoxFilter<T, nc>(height, width,
                                 width * nc, src.get(),
                                 filter_size, filter_size, normalized,
-                                width * nc, dst.get(), ppl::cv::BORDER_TYPE_CONSTANT);
+                                width * nc, dst.get(), ppl::cv::BORDER_CONSTANT);
         cv::boxFilter(src_opencv, dst_opencv, -1,
                 cv::Size(filter_size, filter_size), cv::Point(-1,-1), normalized, cv::BORDER_CONSTANT);
     }
@@ -69,120 +69,120 @@ void BoxFilterTest(int32_t height, int32_t width, T diff) {
 
 TEST(BoxFilter_REFELCT_FP32, x86)
 {
-    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 }
 
 TEST(BoxFilter_REFELCT101_FP32, x86)
 {
-    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 }
 
 TEST(BoxFilter_CONSTANT_FP32, x86)
 {
-    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 }
 
 TEST(BoxFilter_REPLICATE_FP32, x86)
 {
-    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 3, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 3, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 3, 5, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 
-    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<float, 1, 5, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 }
 
 TEST(BoxFilter_REFELCT_UINT8, x86)
 {
-    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_TYPE_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_REFLECT>(720, 1080, 1.0f);
 }
 
 TEST(BoxFilter_REFELCT101_UINT8, x86)
 {
-    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_TYPE_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_REFLECT101>(720, 1080, 1.0f);
 }
 
 TEST(BoxFilter_CONSTANT_UINT8, x86)
 {
-    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_TYPE_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_CONSTANT>(720, 1080, 1.0f);
 }
 
 TEST(BoxFilter_REPLICATE_UINT8, x86)
 {
-    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 3, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 3, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 3, 5, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 
-    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
-    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_TYPE_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, false, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
+    BoxFilterTest<uint8_t, 1, 5, true, ppl::cv::BORDER_REPLICATE>(720, 1080, 1.0f);
 }

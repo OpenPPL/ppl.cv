@@ -40,7 +40,7 @@ namespace x86 {
 * @param dst                  output image data
 * @param radius               filter window radius
 * @param eps                  Regularization parameter (fuzzy coefficient), if input is in range of [0, 255], eps should be multiplied by 255
-* @param border_type       ways to deal with border. Only BORDER_TYPE_REFLECT, BORDER_TYPE_REFLECT_101 or BORDER_TYPE_DEFAULT are supported now.
+* @param border_type       ways to deal with border. Only BORDER_REFLECT, BORDER_REFLECT_101 or BORDER_DEFAULT are supported now.
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The fllowing table show which data type and channels are supported.
 * <table>
@@ -69,7 +69,7 @@ namespace x86 {
 *     int32_t r = 8;
 *     uint8_t eps = 0.4 * 0.4 * 255 * 255;
 *
-*     ppl::cv::x86::GuidedFilter<uint8_t, 3, 3>(H, W, W * C, iImage, H, W, W * C,guidedImage, W * C, oImage, r, eps, ppl::cv::BORDER_TYPE_DEFAULT);
+*     ppl::cv::x86::GuidedFilter<uint8_t, 3, 3>(H, W, W * C, iImage, H, W, W * C,guidedImage, W * C, oImage, r, eps, ppl::cv::BORDER_DEFAULT);
 *
 *     free(iImage);
 *     free(guidedImage);

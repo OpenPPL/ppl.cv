@@ -44,25 +44,25 @@ void RemapTest(int inHeight, int inWidth, int outHeight, int outWidth, T diff)
     cv::Mat xMat(outHeight, outWidth, CV_MAKETYPE(cv::DataType<float>::depth, 1), map_x.get(), sizeof(float) * outWidth);
 
     if (inter_linear) {
-        if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
-            ppl::cv::x86::RemapLinear<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TYPE_CONSTANT);
+        if (border_type == ppl::cv::BORDER_CONSTANT) {
+            ppl::cv::x86::RemapLinear<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_CONSTANT);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-            ppl::cv::x86::RemapLinear<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TYPE_REPLICATE);
+        } else if (border_type == ppl::cv::BORDER_REPLICATE) {
+            ppl::cv::x86::RemapLinear<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_REPLICATE);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_LINEAR, cv::BORDER_REPLICATE);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-            ppl::cv::x86::RemapLinear<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TYPE_TRANSPARENT);
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
+            ppl::cv::x86::RemapLinear<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TRANSPARENT);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_LINEAR, cv::BORDER_REPLICATE);
         }
     } else {
-        if (border_type == ppl::cv::BORDER_TYPE_CONSTANT) {
-            ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TYPE_CONSTANT);
+        if (border_type == ppl::cv::BORDER_CONSTANT) {
+            ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_CONSTANT);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_NEAREST, cv::BORDER_CONSTANT);
-        } else if (border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
-            ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TYPE_REPLICATE);
+        } else if (border_type == ppl::cv::BORDER_REPLICATE) {
+            ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_REPLICATE);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_NEAREST, cv::BORDER_REPLICATE);
-        } else if (border_type == ppl::cv::BORDER_TYPE_TRANSPARENT) {
-            ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TYPE_TRANSPARENT);
+        } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
+            ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TRANSPARENT);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_NEAREST, cv::BORDER_TRANSPARENT);
         }
     }
@@ -71,60 +71,60 @@ void RemapTest(int inHeight, int inWidth, int outHeight, int outWidth, T diff)
 
 TEST(REMAP_UINT8_LINEAR, x86)
 {
-    RemapTest<uint8_t, 1, ppl::cv::BORDER_TYPE_CONSTANT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<uint8_t, 3, ppl::cv::BORDER_TYPE_CONSTANT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<uint8_t, 4, ppl::cv::BORDER_TYPE_CONSTANT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 1, ppl::cv::BORDER_CONSTANT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 3, ppl::cv::BORDER_CONSTANT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 4, ppl::cv::BORDER_CONSTANT, true>(480, 640, 480, 640, 1.01f);
 
-    RemapTest<uint8_t, 1, ppl::cv::BORDER_TYPE_REPLICATE, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<uint8_t, 3, ppl::cv::BORDER_TYPE_REPLICATE, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<uint8_t, 4, ppl::cv::BORDER_TYPE_REPLICATE, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 1, ppl::cv::BORDER_REPLICATE, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 3, ppl::cv::BORDER_REPLICATE, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 4, ppl::cv::BORDER_REPLICATE, true>(480, 640, 480, 640, 1.01f);
 
-    RemapTest<uint8_t, 1, ppl::cv::BORDER_TYPE_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<uint8_t, 3, ppl::cv::BORDER_TYPE_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<uint8_t, 4, ppl::cv::BORDER_TYPE_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 1, ppl::cv::BORDER_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 3, ppl::cv::BORDER_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<uint8_t, 4, ppl::cv::BORDER_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
 }
 
 TEST(REMAP_FP32_LINEAR, x86)
 {
-    RemapTest<float, 1, ppl::cv::BORDER_TYPE_CONSTANT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<float, 3, ppl::cv::BORDER_TYPE_CONSTANT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<float, 4, ppl::cv::BORDER_TYPE_CONSTANT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 1, ppl::cv::BORDER_CONSTANT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 3, ppl::cv::BORDER_CONSTANT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 4, ppl::cv::BORDER_CONSTANT, true>(480, 640, 480, 640, 1.01f);
 
-    RemapTest<float, 1, ppl::cv::BORDER_TYPE_REPLICATE, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<float, 3, ppl::cv::BORDER_TYPE_REPLICATE, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<float, 4, ppl::cv::BORDER_TYPE_REPLICATE, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 1, ppl::cv::BORDER_REPLICATE, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 3, ppl::cv::BORDER_REPLICATE, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 4, ppl::cv::BORDER_REPLICATE, true>(480, 640, 480, 640, 1.01f);
 
-    RemapTest<float, 1, ppl::cv::BORDER_TYPE_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<float, 3, ppl::cv::BORDER_TYPE_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
-    RemapTest<float, 4, ppl::cv::BORDER_TYPE_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 1, ppl::cv::BORDER_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 3, ppl::cv::BORDER_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
+    RemapTest<float, 4, ppl::cv::BORDER_TRANSPARENT, true>(480, 640, 480, 640, 1.01f);
 }
 
 TEST(REMAP_UINT8_NEAREST, x86)
 {
-    RemapTest<uint8_t, 1, ppl::cv::BORDER_TYPE_CONSTANT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<uint8_t, 3, ppl::cv::BORDER_TYPE_CONSTANT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<uint8_t, 4, ppl::cv::BORDER_TYPE_CONSTANT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 1, ppl::cv::BORDER_CONSTANT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 3, ppl::cv::BORDER_CONSTANT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 4, ppl::cv::BORDER_CONSTANT, false>(48, 64, 48, 64, 1.01f);
 
-    RemapTest<uint8_t, 1, ppl::cv::BORDER_TYPE_REPLICATE, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<uint8_t, 3, ppl::cv::BORDER_TYPE_REPLICATE, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<uint8_t, 4, ppl::cv::BORDER_TYPE_REPLICATE, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 1, ppl::cv::BORDER_REPLICATE, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 3, ppl::cv::BORDER_REPLICATE, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 4, ppl::cv::BORDER_REPLICATE, false>(48, 64, 48, 64, 1.01f);
 
-    RemapTest<uint8_t, 1, ppl::cv::BORDER_TYPE_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<uint8_t, 3, ppl::cv::BORDER_TYPE_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<uint8_t, 4, ppl::cv::BORDER_TYPE_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 1, ppl::cv::BORDER_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 3, ppl::cv::BORDER_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<uint8_t, 4, ppl::cv::BORDER_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
 }
 
 TEST(REMAP_FP32_NEAREST, x86)
 {
-    RemapTest<float, 1, ppl::cv::BORDER_TYPE_CONSTANT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<float, 3, ppl::cv::BORDER_TYPE_CONSTANT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<float, 4, ppl::cv::BORDER_TYPE_CONSTANT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 1, ppl::cv::BORDER_CONSTANT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 3, ppl::cv::BORDER_CONSTANT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 4, ppl::cv::BORDER_CONSTANT, false>(48, 64, 48, 64, 1.01f);
 
-    RemapTest<float, 1, ppl::cv::BORDER_TYPE_REPLICATE, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<float, 3, ppl::cv::BORDER_TYPE_REPLICATE, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<float, 4, ppl::cv::BORDER_TYPE_REPLICATE, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 1, ppl::cv::BORDER_REPLICATE, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 3, ppl::cv::BORDER_REPLICATE, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 4, ppl::cv::BORDER_REPLICATE, false>(48, 64, 48, 64, 1.01f);
 
-    RemapTest<float, 1, ppl::cv::BORDER_TYPE_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<float, 3, ppl::cv::BORDER_TYPE_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
-    RemapTest<float, 4, ppl::cv::BORDER_TYPE_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 1, ppl::cv::BORDER_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 3, ppl::cv::BORDER_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
+    RemapTest<float, 4, ppl::cv::BORDER_TRANSPARENT, false>(48, 64, 48, 64, 1.01f);
 }

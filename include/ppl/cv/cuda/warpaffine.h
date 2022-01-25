@@ -44,10 +44,10 @@ namespace cuda {
  * @param outWidthStride  width stride of output image, similar to inWidthStride.
  * @param outData         output image data.
  * @param affineMatrix    2 x 3 transformation matrix.
- * @param interpolation   Interpolation method. INTERPOLATION_TYPE_LINEAR and
- *                        INTERPOLATION_TYPE_NEAREST_POINT are supported.
- * @param borderType      ways to deal with border. BORDER_TYPE_CONSTANT,
- *                        BORDER_TYPE_REPLICATE and BORDER_TYPE_TRANSPARENT are
+ * @param interpolation   Interpolation method. INTERPOLATION_LINEAR and
+ *                        INTERPOLATION_NEAREST_POINT are supported.
+ * @param borderType      ways to deal with border. BORDER_CONSTANT,
+ *                        BORDER_REPLICATE and BORDER_TRANSPARENT are
  *                        supported.
  * @param borderValue     value used in case of a constant border; by default,
  *                        it is 0.
@@ -98,7 +98,7 @@ namespace cuda {
  *   WarpAffine<float, 3>(stream, src_height, src_width,
  *       input_pitch / sizeof(float), gpu_input, dst_height, dst_width,
  *       output_pitch / sizeof(float), gpu_output, affine_matrix,
- *       ppl::cv::INTERPOLATION_TYPE_LINEAR, ppl::cv::BORDER_TYPE_CONSTANT, 0);
+ *       ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT, 0);
  *   cudaStreamSynchronize(stream);
  *   cudaStreamDestroy(stream);
  *
@@ -121,7 +121,7 @@ ppl::common::RetCode WarpAffine(cudaStream_t stream,
                                 T* outData,
                                 const float* affineMatrix,
                                 InterpolationType interpolation,
-                                BorderType borderType = BORDER_TYPE_CONSTANT,
+                                BorderType borderType = BORDER_CONSTANT,
                                 T borderValue = 0);
 
 }  // namespace cuda

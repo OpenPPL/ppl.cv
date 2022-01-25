@@ -37,8 +37,8 @@ namespace x86 {
  * @param kernel           the data of the mask.
  * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
  * @param outData           output image data
- * @param border_type       ways to deal with border. Only BORDER_TYPE_CONSTANT is supported now.
- * @param border_value      filling border_value for BORDER_TYPE_CONSTANT
+ * @param border_type       ways to deal with border. Only BORDER_CONSTANT is supported now.
+ * @param border_value      filling border_value for BORDER_CONSTANT
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The following table show which data type and channels are supported.
  * <table>
@@ -69,7 +69,7 @@ namespace x86 {
  *     (T*)dev_oImage = (T*)malloc(W * H * C * sizeof(T));
  *     (unsigned char*)kernel = (unsigned char*)malloc(kernel_len * kernel_len * sizeof(unsigned char));
  *
- *     ppl::cv::x86::Dilate<float, 3>(H, W, W * 3, dev_iImage, kernelx_len, kernely_len, kernel, W * 3, dev_oImage, ppl::cv::BORDER_TYPE_CONSTANT);
+ *     ppl::cv::x86::Dilate<float, 3>(H, W, W * 3, dev_iImage, kernelx_len, kernely_len, kernel, W * 3, dev_oImage, ppl::cv::BORDER_CONSTANT);
  *
  *     free(dev_iImage);
  *     free(dev_oImage);
@@ -89,7 +89,7 @@ template<typename T, int32_t numChannels>
     const uint8_t* kernel,
     int32_t outWidthStride,
     T* outData,
-    BorderType border_type = BORDER_TYPE_CONSTANT,
+    BorderType border_type = BORDER_CONSTANT,
     T border_value = 0);
 
 } //! namespace x86

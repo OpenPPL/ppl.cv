@@ -244,7 +244,7 @@ void morphColKernel0(const T1* src, int rows, int cols, int src_stride,
   T0 result;
   result = morphColDevice0<T0, T1, Morphology>(src, src_stride, element_x,
                bottom_y, top_y, morphology_swap);
-  if (border_type == BORDER_TYPE_CONSTANT && constant_border) {
+  if (border_type == BORDER_CONSTANT && constant_border) {
     morphology_swap.checkConstantResult(result, border_value);
   }
 
@@ -500,7 +500,7 @@ void morph2DKernel0(const T1* src, int rows, int cols, int src_stride,
   T0 result;
   result = morph2DDevice0<T0, T1, Morphology>(src, src_stride, bottom_x,
                bottom_y, top_x, top_y, morphology_swap);
-  if (border_type == BORDER_TYPE_CONSTANT && constant_border) {
+  if (border_type == BORDER_CONSTANT && constant_border) {
     morphology_swap.checkConstantResult(result, border_value);
   }
 
@@ -591,7 +591,7 @@ void morph2DU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
                    bottom_y, top_x, top_y, morphology_swap);
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
+    if (border_type == BORDER_CONSTANT) {
       morphology_swap.checkU8C1ConstantResult(result, border_value,
           constant_border0, constant_border1, constant_border2,
           constant_border3);
@@ -607,7 +607,7 @@ void morph2DU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
     uchar result;
     result = morph2DDevice0<uchar, uchar, Morphology>(src, src_stride, bottom_x,
                  bottom_y, top_x, top_y, morphology_swap);
-    if (border_type == BORDER_TYPE_CONSTANT && constant_border0) {
+    if (border_type == BORDER_CONSTANT && constant_border0) {
       morphology_swap.checkConstantResult(result, border_value);
     }
 
@@ -657,7 +657,7 @@ void morph2DKernel1(const T1* src, int rows, int cols, int src_stride,
   int top_y    = element_y + diameter_y;
 
   bool constant_border = false;
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     int mask_index = 0;
     for (int i = bottom_y; i <= top_y; i++) {
       if (i < 0 || i >= rows) {
@@ -708,7 +708,7 @@ void morph2DKernel1(const T1* src, int rows, int cols, int src_stride,
                  kernel_bottom_y, kernel_x, morphology_swap);
   }
 
-  if (border_type == BORDER_TYPE_CONSTANT && constant_border) {
+  if (border_type == BORDER_CONSTANT && constant_border) {
     morphology_swap.checkConstantResult(result, border_value);
   }
 
@@ -762,7 +762,7 @@ void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
   bool constant_border1 = false;
   bool constant_border2 = false;
   bool constant_border3 = false;
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     int mask_index = 0;
     for (int i = bottom_y; i <= top_y; i++) {
       if (i < 0 || i >= rows) {
@@ -872,7 +872,7 @@ void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
       }
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT) {
+    if (border_type == BORDER_CONSTANT) {
       morphology_swap.checkU8C1ConstantResult(result, border_value,
           constant_border0, constant_border1, constant_border2,
           constant_border3);
@@ -899,7 +899,7 @@ void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
                    kernel_bottom_y, kernel_x, morphology_swap);
     }
 
-    if (border_type == BORDER_TYPE_CONSTANT && constant_border0) {
+    if (border_type == BORDER_CONSTANT && constant_border0) {
       morphology_swap.checkConstantResult(result, border_value);
     }
 

@@ -45,8 +45,8 @@ void warpAffineLinearKernel(const uchar* src, int src_rows, int src_cols,
   int src_x1 = src_x0 + 1;
   int src_y1 = src_y0 + 1;
 
-  if (border_type == BORDER_TYPE_CONSTANT ||
-      border_type == BORDER_TYPE_TRANSPARENT) {
+  if (border_type == BORDER_CONSTANT ||
+      border_type == BORDER_TRANSPARENT) {
     bool flag0 = src_y0 >= 0 && src_y0 < src_rows && src_x0 >= 0 &&
                  src_x0 < src_cols;
     bool flag1 = src_y0 >= 0 && src_y0 < src_rows && src_x1 >= 0 &&
@@ -56,7 +56,7 @@ void warpAffineLinearKernel(const uchar* src, int src_rows, int src_cols,
     bool flag3 = src_y1 >= 0 && src_y1 < src_rows && src_x1 >= 0 &&
                  src_x1 < src_cols;
 
-    if ((border_type == BORDER_TYPE_TRANSPARENT) &&
+    if ((border_type == BORDER_TRANSPARENT) &&
         ((!flag0) || (!flag1) || (!flag2) || (!flag3))) {
       return;
     }
@@ -134,7 +134,7 @@ void warpAffineLinearKernel(const uchar* src, int src_rows, int src_cols,
       output[element_x] = saturateCastVector<uchar4, float4>(sum);
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     float diff_x0 = src_x - src_x0;
     float diff_x1 = src_x1 - src_x;
     float diff_y0 = src_y - src_y0;
@@ -234,8 +234,8 @@ void warpAffineLinearKernel(const float* src, int src_rows, int src_cols,
   int src_x1 = src_x0 + 1;
   int src_y1 = src_y0 + 1;
 
-  if (border_type == BORDER_TYPE_CONSTANT ||
-      border_type == BORDER_TYPE_TRANSPARENT) {
+  if (border_type == BORDER_CONSTANT ||
+      border_type == BORDER_TRANSPARENT) {
     bool flag0 = src_y0 >= 0 && src_y0 < src_rows && src_x0 >= 0 &&
                  src_x0 < src_cols;
     bool flag1 = src_y0 >= 0 && src_y0 < src_rows && src_x1 >= 0 &&
@@ -245,7 +245,7 @@ void warpAffineLinearKernel(const float* src, int src_rows, int src_cols,
     bool flag3 = src_y1 >= 0 && src_y1 < src_rows && src_x1 >= 0 &&
                  src_x1 < src_cols;
 
-    if ((border_type == BORDER_TYPE_TRANSPARENT) &&
+    if ((border_type == BORDER_TRANSPARENT) &&
         ((!flag0) || (!flag1) || (!flag2) || (!flag3))) {
       return;
     }
@@ -318,7 +318,7 @@ void warpAffineLinearKernel(const float* src, int src_rows, int src_cols,
       output[element_x] = sum;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     float diff_x0 = src_x - src_x0;
     float diff_x1 = src_x1 - src_x;
     float diff_y0 = src_y - src_y0;
@@ -424,7 +424,7 @@ void warpAffineNearestPointKernel(const T* src, int src_rows, int src_cols,
   int src_x = src_x_float;
   int src_y = src_y_float;
 
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     Tn* output = (Tn*)(dst + element_y * dst_stride);
 
     if (src_x >= 0 && src_x < src_cols && src_y >= 0 && src_y < src_rows) {
@@ -435,7 +435,7 @@ void warpAffineNearestPointKernel(const T* src, int src_rows, int src_cols,
       output[element_x] = border_value;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     src_x = clip(src_x, 0, src_cols - 1);
     src_y = clip(src_y, 0, src_rows - 1);
 
@@ -443,7 +443,7 @@ void warpAffineNearestPointKernel(const T* src, int src_rows, int src_cols,
     Tn* output = (Tn*)(dst + element_y * dst_stride);
     output[element_x] = input[src_x];
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     Tn* output = (Tn*)(dst + element_y * dst_stride);
 
     if (src_x >= 0 && src_x < src_cols && src_y >= 0 && src_y < src_rows) {
@@ -469,11 +469,11 @@ RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -481,13 +481,13 @@ RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(dst_cols, kBlockDimX0, kBlockShiftX0);
   grid.y  = divideUp(dst_rows, kBlockDimY0, kBlockShiftY0);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     warpAffineLinearKernel<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
         channels, src_stride, affine_matrix[0], affine_matrix[1],
         affine_matrix[2], affine_matrix[3], affine_matrix[4], affine_matrix[5],
         dst, dst_rows, dst_cols, dst_stride, border_type, border_value);
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
       warpAffineNearestPointKernel<uchar, uchar><<<grid, block, 0, stream>>>(
           src, src_rows, src_cols, channels, src_stride, affine_matrix[0],
@@ -540,11 +540,11 @@ RetCode warpAffine(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels);
   PPL_ASSERT(dst_stride >= dst_cols * channels);
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -552,13 +552,13 @@ RetCode warpAffine(const float* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     warpAffineLinearKernel<<<grid, block, 0, stream>>>(src, src_rows, src_cols,
         channels, src_stride, affine_matrix[0], affine_matrix[1],
         affine_matrix[2], affine_matrix[3], affine_matrix[4], affine_matrix[5],
         dst, dst_rows, dst_cols, dst_stride, border_type, border_value);
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
       warpAffineNearestPointKernel<float, float><<<grid, block, 0, stream>>>(
           src, src_rows, src_cols, channels, src_stride, affine_matrix[0],

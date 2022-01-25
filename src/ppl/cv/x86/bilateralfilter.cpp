@@ -83,7 +83,7 @@ void bilateralFilter_32f(
     int32_t tempstep = (tempWidth)*cn;
     std::vector<float> padded_images(tempHeight * tempWidth * cn);
     float* temp = padded_images.data();
-    CopyMakeBorder<float, cn>(height, width, inWidthStride, src, tempHeight, tempWidth, tempstep, temp, ppl::cv::BORDER_TYPE_REFLECT_101, 0);
+    CopyMakeBorder<float, cn>(height, width, inWidthStride, src, tempHeight, tempWidth, tempstep, temp, ppl::cv::BORDER_REFLECT_101, 0);
 
     std::vector<float> _space_weight(d * d);
     std::vector<int32_t> _space_ofs(d * d);
@@ -201,7 +201,7 @@ static void bilateralFilter_b(
     int32_t tempstep = (tempWidth)*cn;
     std::vector<uint8_t> padded_images(tempHeight * tempWidth * cn);
     uint8_t* temp = padded_images.data();
-    CopyMakeBorder<uint8_t, cn>(height, width, inWidthStride, src, tempHeight, tempWidth, tempstep, temp, ppl::cv::BORDER_TYPE_REFLECT_101, 0);
+    CopyMakeBorder<uint8_t, cn>(height, width, inWidthStride, src, tempHeight, tempWidth, tempstep, temp, ppl::cv::BORDER_REFLECT_101, 0);
 
     std::vector<float> _color_weight(cn * 255);
     std::vector<float> _space_weight(d * d);
@@ -285,7 +285,7 @@ template <>
     if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     bilateralFilter_b<1>(height, width, inWidthStride, inData, outWidthStride, outData, diameter, color, space);
@@ -311,7 +311,7 @@ template <>
     if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     bilateralFilter_b<3>(height, width, inWidthStride, inData, outWidthStride, outData, diameter, color, space);
@@ -337,7 +337,7 @@ template <>
     if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     if (ppl::common::CpuSupports(ppl::common::ISA_X86_AVX)) {
@@ -367,7 +367,7 @@ template <>
     if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     if (ppl::common::CpuSupports(ppl::common::ISA_X86_AVX)) {

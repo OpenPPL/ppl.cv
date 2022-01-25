@@ -41,16 +41,16 @@ inline std::string convertToStringBoxFilter(const Parameters& parameters) {
   formatted << "Normalize" << normalize << "_";
 
   BorderType border_type = (BorderType)std::get<3>(parameters);
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_TYPE_REFLECT_101) {
+  else if (border_type == BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_TYPE_DEFAULT
+  else {  // border_type == BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -109,13 +109,13 @@ bool PplCvCudaBoxFilterTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_TYPE_REFLECT_101) {
+  else if (border_type == BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
@@ -164,8 +164,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaBoxFilterTest ## T ## channels,      \
     ::testing::Values(1, 5, 17, 24, 43),                                       \
     ::testing::Values(1, 4, 17, 31, 44),                                       \
     ::testing::Values(true, false),                                            \
-    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
-                      BORDER_TYPE_REFLECT_101),                                \
+    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
+                      BORDER_REFLECT_101),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

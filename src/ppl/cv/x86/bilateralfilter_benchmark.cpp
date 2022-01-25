@@ -38,7 +38,7 @@ void BM_Bilateral_ppl_x86(benchmark::State &state) {
                                 space, 
                                 width * channels,
                                 dst.get(),
-                                ppl::cv::BORDER_TYPE_DEFAULT);
+                                ppl::cv::BORDER_DEFAULT);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }

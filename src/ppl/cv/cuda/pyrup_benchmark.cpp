@@ -115,13 +115,13 @@ void BM_PyrUp_opencv_x86_cuda(benchmark::State &state) {
               CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
   cv::BorderTypes border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_TYPE_REFLECT_101) {
+  else if (border_type == BORDER_REFLECT_101) {
     border = cv::BORDER_REFLECT_101;
   }
   else {
@@ -147,14 +147,14 @@ BENCHMARK_TEMPLATE(BM_PyrUp_opencv_x86_cuda, type, c4, border_type)->          \
 BENCHMARK_TEMPLATE(BM_PyrUp_ppl_cuda, type, c4, border_type)->                 \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(uchar, BORDER_TYPE_REFLECT_101, 320, 240)
-// RUN_BENCHMARK0(uchar, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(uchar, BORDER_TYPE_REFLECT_101, 1280, 720)
-// RUN_BENCHMARK0(uchar, BORDER_TYPE_REFLECT_101, 1920, 1080)
-// RUN_BENCHMARK0(float, BORDER_TYPE_REFLECT_101, 320, 240)
-// RUN_BENCHMARK0(float, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK0(float, BORDER_TYPE_REFLECT_101, 1280, 720)
-// RUN_BENCHMARK0(float, BORDER_TYPE_REFLECT_101, 1920, 1080)
+// RUN_BENCHMARK0(uchar, BORDER_REFLECT_101, 320, 240)
+// RUN_BENCHMARK0(uchar, BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, BORDER_REFLECT_101, 1280, 720)
+// RUN_BENCHMARK0(uchar, BORDER_REFLECT_101, 1920, 1080)
+// RUN_BENCHMARK0(float, BORDER_REFLECT_101, 320, 240)
+// RUN_BENCHMARK0(float, BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(float, BORDER_REFLECT_101, 1280, 720)
+// RUN_BENCHMARK0(float, BORDER_REFLECT_101, 1920, 1080)
 
 #define RUN_BENCHMARK1(type, border_type, width, height)                       \
 BENCHMARK_TEMPLATE(BM_PyrUp_opencv_cuda, type, c1, border_type)->              \
@@ -170,14 +170,14 @@ BENCHMARK_TEMPLATE(BM_PyrUp_opencv_cuda, type, c4, border_type)->              \
 BENCHMARK_TEMPLATE(BM_PyrUp_ppl_cuda, type, c4, border_type)->                 \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK1(uchar, BORDER_TYPE_REFLECT_101, 320, 240)
-// RUN_BENCHMARK1(uchar, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK1(uchar, BORDER_TYPE_REFLECT_101, 1280, 720)
-// RUN_BENCHMARK1(uchar, BORDER_TYPE_REFLECT_101, 1920, 1080)
-// RUN_BENCHMARK1(float, BORDER_TYPE_REFLECT_101, 320, 240)
-// RUN_BENCHMARK1(float, BORDER_TYPE_REFLECT_101, 640, 480)
-// RUN_BENCHMARK1(float, BORDER_TYPE_REFLECT_101, 1280, 720)
-// RUN_BENCHMARK1(float, BORDER_TYPE_REFLECT_101, 1920, 1080)
+// RUN_BENCHMARK1(uchar, BORDER_REFLECT_101, 320, 240)
+// RUN_BENCHMARK1(uchar, BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(uchar, BORDER_REFLECT_101, 1280, 720)
+// RUN_BENCHMARK1(uchar, BORDER_REFLECT_101, 1920, 1080)
+// RUN_BENCHMARK1(float, BORDER_REFLECT_101, 320, 240)
+// RUN_BENCHMARK1(float, BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK1(float, BORDER_REFLECT_101, 1280, 720)
+// RUN_BENCHMARK1(float, BORDER_REFLECT_101, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, border_type)                           \
 BENCHMARK_TEMPLATE(BM_PyrUp_opencv_x86_cuda, type, c1, border_type)->          \
@@ -231,8 +231,8 @@ BENCHMARK_TEMPLATE(BM_PyrUp_ppl_cuda, type, c3, border_type)->                 \
 BENCHMARK_TEMPLATE(BM_PyrUp_ppl_cuda, type, c4, border_type)->                 \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, BORDER_TYPE_REFLECT_101)
-RUN_OPENCV_TYPE_FUNCTIONS(float, BORDER_TYPE_REFLECT_101)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, BORDER_REFLECT_101)
+RUN_OPENCV_TYPE_FUNCTIONS(float, BORDER_REFLECT_101)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, BORDER_TYPE_REFLECT_101)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, BORDER_TYPE_REFLECT_101)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, BORDER_REFLECT_101)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, BORDER_REFLECT_101)

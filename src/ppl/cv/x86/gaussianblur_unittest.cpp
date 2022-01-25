@@ -42,11 +42,11 @@ public:
         cv::Mat src_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, c), src.get(), sizeof(T) * size.width * c);
         cv::Mat dst_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, c), dst_ref.get(), sizeof(T) * size.width * c);
         int cv_bordertype = 4;
-        if(border_type == ppl::cv::BORDER_TYPE_REFLECT_101) {
+        if(border_type == ppl::cv::BORDER_REFLECT_101) {
             cv_bordertype = 4;
-        } else if(border_type == ppl::cv::BORDER_TYPE_REFLECT) {
+        } else if(border_type == ppl::cv::BORDER_REFLECT) {
             cv_bordertype = 2;
-        } else if(border_type == ppl::cv::BORDER_TYPE_REPLICATE) {
+        } else if(border_type == ppl::cv::BORDER_REPLICATE) {
             cv_bordertype = 1;
         }
         cv::GaussianBlur(src_opencv, dst_opencv, cv::Size(kernel, kernel), 0, 0, cv_bordertype);
@@ -69,23 +69,23 @@ public:
                             ::testing::Values(Size{320, 240}, Size{640, 480}, Size{321, 241}, Size{319, 239}),\
                             ::testing::Values(3, 5, 7)));
 
-R(gaussianblur_f32c1_reflect_101, float, ppl::cv::BORDER_TYPE_REFLECT_101, 1)
-R(gaussianblur_f32c3_reflect_101, float, ppl::cv::BORDER_TYPE_REFLECT_101, 3)
-R(gaussianblur_f32c4_reflect_101, float, ppl::cv::BORDER_TYPE_REFLECT_101, 4)
-R(gaussianblur_u8c1_reflect_101, uint8_t, ppl::cv::BORDER_TYPE_REFLECT_101, 1)
-R(gaussianblur_u8c3_reflect_101, uint8_t, ppl::cv::BORDER_TYPE_REFLECT_101, 3)
-R(gaussianblur_u8c4_reflect_101, uint8_t, ppl::cv::BORDER_TYPE_REFLECT_101, 4)
+R(gaussianblur_f32c1_reflect_101, float, ppl::cv::BORDER_REFLECT_101, 1)
+R(gaussianblur_f32c3_reflect_101, float, ppl::cv::BORDER_REFLECT_101, 3)
+R(gaussianblur_f32c4_reflect_101, float, ppl::cv::BORDER_REFLECT_101, 4)
+R(gaussianblur_u8c1_reflect_101, uint8_t, ppl::cv::BORDER_REFLECT_101, 1)
+R(gaussianblur_u8c3_reflect_101, uint8_t, ppl::cv::BORDER_REFLECT_101, 3)
+R(gaussianblur_u8c4_reflect_101, uint8_t, ppl::cv::BORDER_REFLECT_101, 4)
 
-R(gaussianblur_f32c1_reflect, float, ppl::cv::BORDER_TYPE_REFLECT, 1)
-R(gaussianblur_f32c3_reflect, float, ppl::cv::BORDER_TYPE_REFLECT, 3)
-R(gaussianblur_f32c4_reflect, float, ppl::cv::BORDER_TYPE_REFLECT, 4)
-R(gaussianblur_u8c1_reflect, uint8_t, ppl::cv::BORDER_TYPE_REFLECT, 1)
-R(gaussianblur_u8c3_reflect, uint8_t, ppl::cv::BORDER_TYPE_REFLECT, 3)
-R(gaussianblur_u8c4_reflect, uint8_t, ppl::cv::BORDER_TYPE_REFLECT, 4)
+R(gaussianblur_f32c1_reflect, float, ppl::cv::BORDER_REFLECT, 1)
+R(gaussianblur_f32c3_reflect, float, ppl::cv::BORDER_REFLECT, 3)
+R(gaussianblur_f32c4_reflect, float, ppl::cv::BORDER_REFLECT, 4)
+R(gaussianblur_u8c1_reflect, uint8_t, ppl::cv::BORDER_REFLECT, 1)
+R(gaussianblur_u8c3_reflect, uint8_t, ppl::cv::BORDER_REFLECT, 3)
+R(gaussianblur_u8c4_reflect, uint8_t, ppl::cv::BORDER_REFLECT, 4)
 
-R(gaussianblur_f32c1_replicate, float, ppl::cv::BORDER_TYPE_REPLICATE, 1)
-R(gaussianblur_f32c3_replicate, float, ppl::cv::BORDER_TYPE_REPLICATE, 3)
-R(gaussianblur_f32c4_replicate, float, ppl::cv::BORDER_TYPE_REPLICATE, 4)
-R(gaussianblur_u8c1_replicate, uint8_t, ppl::cv::BORDER_TYPE_REPLICATE, 1)
-R(gaussianblur_u8c3_replicate, uint8_t, ppl::cv::BORDER_TYPE_REPLICATE, 3)
-R(gaussianblur_u8c4_replicate, uint8_t, ppl::cv::BORDER_TYPE_REPLICATE, 4)
+R(gaussianblur_f32c1_replicate, float, ppl::cv::BORDER_REPLICATE, 1)
+R(gaussianblur_f32c3_replicate, float, ppl::cv::BORDER_REPLICATE, 3)
+R(gaussianblur_f32c4_replicate, float, ppl::cv::BORDER_REPLICATE, 4)
+R(gaussianblur_u8c1_replicate, uint8_t, ppl::cv::BORDER_REPLICATE, 1)
+R(gaussianblur_u8c3_replicate, uint8_t, ppl::cv::BORDER_REPLICATE, 3)
+R(gaussianblur_u8c4_replicate, uint8_t, ppl::cv::BORDER_REPLICATE, 4)

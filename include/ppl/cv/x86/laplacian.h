@@ -38,7 +38,7 @@ namespace x86 {
  * @param ksize             the length of kernel
  * @param scale             optional scale factor for the computed derivative values; by default, no scaling is applied.
  * @param delta             optional delta value that is added to the results prior to storing them in dst.
- * @param border_type       ways to deal with border. Only BORDER_TYPE_REFLECT_101 or BORDER_TYPE_DEFAULT are supported now.
+ * @param border_type       ways to deal with border. Only BORDER_REFLECT_101 or BORDER_DEFAULT are supported now.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -86,7 +86,7 @@ template <typename T, int32_t nc>
     int32_t ksize,
     double scale           = 1.0,
     double delta           = 0.0,
-    BorderType border_type = BORDER_TYPE_DEFAULT);
+    BorderType border_type = BORDER_DEFAULT);
 
 }
 }

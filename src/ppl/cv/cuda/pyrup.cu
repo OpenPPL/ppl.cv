@@ -483,10 +483,10 @@ RetCode pyrup(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(dst_stride >= cols * 2 * channels * (int)sizeof(uchar));
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   int dst_rows = rows << 1;
   int dst_cols = cols << 1;
@@ -497,10 +497,10 @@ RetCode pyrup(const uchar* src, int rows, int cols, int channels,
   grid.y = divideUp(dst_rows, BlockDimY, BlockShiftY);
 
   if (channels == 1) {
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_C1_BATCH1_KERNELS(uchar, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_C1_BATCH1_KERNELS(uchar, ReflectBorder);
     }
     else {
@@ -509,10 +509,10 @@ RetCode pyrup(const uchar* src, int rows, int cols, int channels,
     }
   }
   else {
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CN_BATCH1_KERNELS(uchar, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CN_BATCH1_KERNELS(uchar, ReflectBorder);
     }
     else {
@@ -538,10 +538,10 @@ RetCode pyrup(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * 2 * channels * (int)sizeof(float));
-  PPL_ASSERT(border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_REFLECT ||
-             border_type == BORDER_TYPE_REFLECT_101 ||
-             border_type == BORDER_TYPE_DEFAULT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   int dst_rows = rows << 1;
   int dst_cols = cols << 1;
@@ -552,10 +552,10 @@ RetCode pyrup(const float* src, int rows, int cols, int channels,
   grid.y = divideUp(dst_rows, BlockDimY, BlockShiftY);
 
   if (channels == 1) {
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_C1_BATCH1_KERNELS(float, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_C1_BATCH1_KERNELS(float, ReflectBorder);
     }
     else {
@@ -564,10 +564,10 @@ RetCode pyrup(const float* src, int rows, int cols, int channels,
     }
   }
   else {
-    if (border_type == BORDER_TYPE_REPLICATE) {
+    if (border_type == BORDER_REPLICATE) {
       RUN_CN_BATCH1_KERNELS(float, ReplicateBorder);
     }
-    else if (border_type == BORDER_TYPE_REFLECT) {
+    else if (border_type == BORDER_REFLECT) {
       RUN_CN_BATCH1_KERNELS(float, ReflectBorder);
     }
     else {

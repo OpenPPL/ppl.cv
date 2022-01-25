@@ -35,16 +35,16 @@ inline std::string convertToStringLaplacian(const Parameters& parameters) {
   formatted << "Ksize" << ksize << "_";
 
   BorderType border_type = (BorderType)std::get<1>(parameters);
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_TYPE_REFLECT_101) {
+  else if (border_type == BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_TYPE_DEFAULT
+  else {  // border_type == BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -103,13 +103,13 @@ bool PplCvCudaLaplacianTest<Tsrc, Tdst, channels>::apply() {
   float delta = 1.5f;
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_TYPE_REPLICATE) {
+  if (border_type == BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_TYPE_REFLECT) {
+  else if (border_type == BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_TYPE_REFLECT_101) {
+  else if (border_type == BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
@@ -156,8 +156,8 @@ TEST_P(PplCvCudaLaplacianTest ## Tdst ## channels, Standard) {                 \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaLaplacianTest ## Tdst ## channels,   \
   ::testing::Combine(                                                          \
     ::testing::Values(1, 3, 5),                                                \
-    ::testing::Values(BORDER_TYPE_REPLICATE, BORDER_TYPE_REFLECT,              \
-                      BORDER_TYPE_REFLECT_101),                                \
+    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
+                      BORDER_REFLECT_101),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

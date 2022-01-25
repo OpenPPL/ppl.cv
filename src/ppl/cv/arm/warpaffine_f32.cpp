@@ -100,7 +100,7 @@ template <typename T, int32_t cn>
         bdelta[x] = rint(M[3] * x * AB_SCALE);
     }
 
-    if (borderMode == BORDER_TYPE_REPLICATE) {
+    if (borderMode == BORDER_REPLICATE) {
         int32x4_t v_zero4 = vdupq_n_s32(0);
         int32x4_t max_width = vdupq_n_s32(inWidth - 1);
         int32x4_t max_height = vdupq_n_s32(inHeight - 1);
@@ -158,7 +158,7 @@ template <typename T, int32_t cn>
                 }
             }
         }
-    } else if (borderMode == BORDER_TYPE_CONSTANT) {
+    } else if (borderMode == BORDER_CONSTANT) {
         int32x4_t v_nega = vdupq_n_s32(-1);
         int32x4_t max_width = vdupq_n_s32(inWidth - 1);
         int32x4_t max_height = vdupq_n_s32(inHeight - 1);
@@ -225,7 +225,7 @@ template <typename T, int32_t cn>
                 }
             }
         }
-    } else if (borderMode == BORDER_TYPE_TRANSPARENT) {
+    } else if (borderMode == BORDER_TRANSPARENT) {
         int32x4_t v_nega = vdupq_n_s32(-1);
         int32x4_t max_width = vdupq_n_s32(inWidth - 1);
         int32x4_t max_height = vdupq_n_s32(inHeight - 1);
@@ -351,7 +351,7 @@ static void initTab_linear_short(float *short_tab)
     int32x4_t v_nega = vdupq_n_s32(-1);
     int32x4_t max_width = vdupq_n_s32(inWidth - 1);
     int32x4_t max_height = vdupq_n_s32(inHeight - 1);
-    if (borderMode != BORDER_TYPE_REPLICATE) {
+    if (borderMode != BORDER_REPLICATE) {
         for (int32_t y = 0; y < outHeight; y += bh0) {
             int32_t bh = std::min<int32_t>(bh0, outHeight - y);
             for (int32_t x = 0; x < outWidth; x += bw0) {
@@ -450,7 +450,7 @@ static void initTab_linear_short(float *short_tab)
                         int32_t dstX = x1 + x;
                         int32_t dstIndex = dstY * outWidthStride + dstX * cn;
 
-                        if (borderMode == BORDER_TYPE_CONSTANT) {
+                        if (borderMode == BORDER_CONSTANT) {
                             float32x4_t p_s_t0 = vld1q_f32(short_tab + xy_dec_p[x1]);
                             float32x4_t p_s_t1 = vld1q_f32(short_tab + xy_dec_p[x1 + 1]);
                             float32x4_t p_s_t2 = vld1q_f32(short_tab + xy_dec_p[x1 + 2]);
@@ -577,7 +577,7 @@ static void initTab_linear_short(float *short_tab)
                                 vst1q_f32(dst + dstIndex + 4, res1);
                                 vst1q_f32(dst + dstIndex + 8, res2);
                             }
-                        } else if (borderMode == BORDER_TYPE_TRANSPARENT) {
+                        } else if (borderMode == BORDER_TRANSPARENT) {
                             float32x4_t p_s_t0 = vld1q_f32(short_tab + xy_dec_p[x1]);
                             float32x4_t p_s_t1 = vld1q_f32(short_tab + xy_dec_p[x1 + 1]);
                             float32x4_t p_s_t2 = vld1q_f32(short_tab + xy_dec_p[x1 + 2]);
@@ -918,7 +918,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     return warpAffine_nearest<float, 1>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -944,7 +944,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     return warpAffine_nearest<float, 3>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -970,7 +970,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     return warpAffine_nearest<float, 4>(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, border_type, borderValue);
@@ -996,7 +996,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     return warpAffine_linear_float(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 1, border_type, borderValue);
@@ -1022,7 +1022,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     return warpAffine_linear_float(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 3, border_type, borderValue);
@@ -1048,7 +1048,7 @@ template <>
     if (inHeight <= 0 || inWidth <= 0 || inWidthStride < inWidth || outHeight <= 0 || outWidth <= 0 || outWidthStride < outWidth) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_CONSTANT && border_type != BORDER_TYPE_REPLICATE && border_type != BORDER_TYPE_TRANSPARENT) {
+    if (border_type != BORDER_CONSTANT && border_type != BORDER_REPLICATE && border_type != BORDER_TRANSPARENT) {
         return ppl::common::RC_INVALID_VALUE;
     }
     return warpAffine_linear_float(outData, inData, inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, affineMatrix, 4, border_type, borderValue);

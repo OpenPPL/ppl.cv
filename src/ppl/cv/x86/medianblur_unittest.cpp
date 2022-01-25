@@ -34,7 +34,7 @@ void MedianBlurTest(int32_t height, int32_t width, float diff) {
 
     cv::medianBlur(src_opencv, dst_opencv, filter_size);
     ppl::cv::x86::MedianBlur<T, nc>(height, width, width * nc, src.get(), width * nc,
-                            dst.get(), filter_size, ppl::cv::BORDER_TYPE_REPLICATE);
+                            dst.get(), filter_size, ppl::cv::BORDER_REPLICATE);
 
     checkResult<T, nc>(dst_ref.get(), dst.get(),
                     height, width,

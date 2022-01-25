@@ -58,7 +58,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width || guidedWidthStride <= 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_REFLECT101) {
+    if (border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_REFLECT101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     const int32_t kernelSize = 2 * radius + 1;
@@ -177,7 +177,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width || guidedWidthStride <= 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_REFLECT101) {
+    if (border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_REFLECT101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t kernelSize = 2 * radius + 1;
@@ -374,7 +374,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width || guidedWidthStride <= 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_REFLECT101) {
+    if (border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_REFLECT101) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -408,7 +408,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width || guidedWidthStride <= 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_REFLECT101) {
+    if (border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_REFLECT101) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -442,7 +442,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width || guidedWidthStride <= 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_REFLECT101) {
+    if (border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_REFLECT101) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t kernelSize = 2 * radius + 1;
@@ -626,7 +626,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width || guidedWidthStride <= 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_REFLECT101) {
+    if (border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_REFLECT101) {
         return ppl::common::RC_INVALID_VALUE;
     }
 

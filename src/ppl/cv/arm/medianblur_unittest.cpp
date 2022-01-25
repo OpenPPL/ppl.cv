@@ -51,7 +51,7 @@ public:
         T *dst = (T*)malloc(size.width * size.height * c * sizeof(T));
 
         ppl::cv::arm::MedianBlur<T, c>(size.height, size.width, size.width * c,
-            src, size.width * c, dst, kernel, ppl::cv::BORDER_TYPE_REPLICATE);
+            src, size.width * c, dst, kernel, ppl::cv::BORDER_REPLICATE);
 
         T* dst_opencv = (T*)malloc(size.width * size.height * c * sizeof(T));
         cv::Mat iMat(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, c), src);

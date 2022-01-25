@@ -37,12 +37,12 @@ namespace x86 {
 
 bool isErodeBorderSupported(BorderType border_type)
 {
-    return border_type == BORDER_TYPE_CONSTANT ||
-           border_type == BORDER_TYPE_REPLICATE ||
-           border_type == BORDER_TYPE_REFLECT_101 ||
-           border_type == BORDER_TYPE_REFLECT101 ||
-           border_type == BORDER_TYPE_REFLECT ||
-           border_type == BORDER_TYPE_DEFAULT;
+    return border_type == BORDER_CONSTANT ||
+           border_type == BORDER_REPLICATE ||
+           border_type == BORDER_REFLECT_101 ||
+           border_type == BORDER_REFLECT101 ||
+           border_type == BORDER_REFLECT ||
+           border_type == BORDER_DEFAULT;
 }
 
 ::ppl::common::RetCode x86minFilter_b(
@@ -269,7 +269,7 @@ template <>
     if (!isErodeBorderSupported(border_type)) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    if (border_type != BORDER_TYPE_CONSTANT) {
+    if (border_type != BORDER_CONSTANT) {
         border_value = 255;
     }
     bool flag = true;
@@ -315,7 +315,7 @@ template <>
     if (!isErodeBorderSupported(border_type)) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    if (border_type != BORDER_TYPE_CONSTANT) {
+    if (border_type != BORDER_CONSTANT) {
         border_value = 255;
     }
     bool flag = true;
@@ -362,7 +362,7 @@ template <>
     if (!isErodeBorderSupported(border_type)) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    if (border_type != BORDER_TYPE_CONSTANT) {
+    if (border_type != BORDER_CONSTANT) {
         border_value = 255;
     }
     bool flag = true;
@@ -409,7 +409,7 @@ template <>
     if (!isErodeBorderSupported(border_type)) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    if (border_type != BORDER_TYPE_CONSTANT) {
+    if (border_type != BORDER_CONSTANT) {
         border_value = FLT_MAX;
     }
     bool flag = true;
@@ -456,7 +456,7 @@ template <>
     if (!isErodeBorderSupported(border_type)) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    if (border_type != BORDER_TYPE_CONSTANT) {
+    if (border_type != BORDER_CONSTANT) {
         border_value = FLT_MAX;
     }
     bool flag = true;
@@ -503,7 +503,7 @@ template <>
     if (!isErodeBorderSupported(border_type)) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    if (border_type != BORDER_TYPE_CONSTANT) {
+    if (border_type != BORDER_CONSTANT) {
         border_value = FLT_MAX;
     }
     bool flag = true;

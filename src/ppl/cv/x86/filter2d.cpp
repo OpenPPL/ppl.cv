@@ -167,7 +167,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101 && border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101 && border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_CONSTANT && border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t radius     = kernel_len / 2;
@@ -212,7 +212,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101 && border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101 && border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_CONSTANT && border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t radius     = kernel_len / 2;
@@ -258,7 +258,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101 && border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101 && border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_CONSTANT && border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t radius     = kernel_len / 2;
@@ -304,7 +304,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101 && border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101 && border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_CONSTANT && border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t radius     = kernel_len / 2;
@@ -349,7 +349,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101 && border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101 && border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_CONSTANT && border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t radius        = kernel_len / 2;
@@ -394,7 +394,7 @@ template <>
     if (width <= 0 || height <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != ppl::cv::BORDER_TYPE_REFLECT_101 && border_type != ppl::cv::BORDER_TYPE_REFLECT && border_type != ppl::cv::BORDER_TYPE_CONSTANT && border_type != ppl::cv::BORDER_TYPE_REPLICATE) {
+    if (border_type != ppl::cv::BORDER_REFLECT_101 && border_type != ppl::cv::BORDER_REFLECT && border_type != ppl::cv::BORDER_CONSTANT && border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
     int32_t radius     = kernel_len / 2;

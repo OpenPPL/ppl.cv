@@ -77,7 +77,7 @@ template <typename T, int32_t channels>
     if (height <= 0 || width <= 0 || inWidthStride < width || outWidthStride < width) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    if (border_type != BORDER_TYPE_REFLECT_101 && border_type != BORDER_TYPE_REFLECT && border_type != BORDER_TYPE_REPLICATE) {
+    if (border_type != BORDER_REFLECT_101 && border_type != BORDER_REFLECT && border_type != BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
     const int32_t cn = channels;

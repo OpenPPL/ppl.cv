@@ -44,7 +44,7 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
   float max_value = 155.f;
   float delta = 10.f;
   int threshold_type = THRESH_BINARY;
-  BorderType border_type = BORDER_TYPE_REPLICATE;
+  BorderType border_type = BORDER_REPLICATE;
 
   int iterations = 1000;
   struct timeval start, end;

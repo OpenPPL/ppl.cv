@@ -75,8 +75,8 @@ public:
         cv::Mat mapx_opencv(size.outHeight, size.outWidth, CV_MAKETYPE(cv::DataType<float>::depth, 1), map_x.get(), sizeof(float) * size.outWidth);
         cv::Scalar borderValue = {border_value, border_value, border_value, border_value};
         
-        int32_t border_mode = borderMode == ppl::cv::BORDER_TYPE_CONSTANT ? cv::BORDER_CONSTANT : 
-                         (borderMode == ppl::cv::BORDER_TYPE_REPLICATE ? cv::BORDER_REPLICATE : cv::BORDER_TRANSPARENT);
+        int32_t border_mode = borderMode == ppl::cv::BORDER_CONSTANT ? cv::BORDER_CONSTANT : 
+                         (borderMode == ppl::cv::BORDER_REPLICATE ? cv::BORDER_REPLICATE : cv::BORDER_TRANSPARENT);
         cv::remap(src_opencv, dst_opencv, mapx_opencv, mapy_opencv, (inter_linear ? cv::INTER_LINEAR : cv::INTER_NEAREST), 
                   border_mode, borderValue);
         checkResult<T, c>(dst_ref.get(), dst.get(), size.outHeight, 
@@ -94,47 +94,47 @@ public:
         ::testing::Combine(::testing::Values(remapSize{320, 240, 643, 481}, remapSize{640, 480, 321, 241}),\
                            ::testing::Values(diff)));
     
-R(Remap_u8c1_linear_constant, uint8_t, 1, true, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f)
-R(Remap_u8c3_linear_constant, uint8_t, 3, true, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f)
-R(Remap_u8c4_linear_constant, uint8_t, 4, true, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f)
-R(Remap_f32c1_linear_constant, float, 1, true, ppl::cv::BORDER_TYPE_CONSTANT, 1e-3)  
-R(Remap_f32c3_linear_constant, float, 3, true, ppl::cv::BORDER_TYPE_CONSTANT, 1e-3)
-R(Remap_f32c4_linear_constant, float, 4, true, ppl::cv::BORDER_TYPE_CONSTANT, 1e-3)
+R(Remap_u8c1_linear_constant, uint8_t, 1, true, ppl::cv::BORDER_CONSTANT, 1.01f)
+R(Remap_u8c3_linear_constant, uint8_t, 3, true, ppl::cv::BORDER_CONSTANT, 1.01f)
+R(Remap_u8c4_linear_constant, uint8_t, 4, true, ppl::cv::BORDER_CONSTANT, 1.01f)
+R(Remap_f32c1_linear_constant, float, 1, true, ppl::cv::BORDER_CONSTANT, 1e-3)  
+R(Remap_f32c3_linear_constant, float, 3, true, ppl::cv::BORDER_CONSTANT, 1e-3)
+R(Remap_f32c4_linear_constant, float, 4, true, ppl::cv::BORDER_CONSTANT, 1e-3)
 
-R(Remap_u8c1_nearest_constant, uint8_t, 1, false, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f)
-R(Remap_u8c3_nearest_constant, uint8_t, 3, false, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f)
-R(Remap_u8c4_nearest_constant, uint8_t, 4, false, ppl::cv::BORDER_TYPE_CONSTANT, 1.01f)
-R(Remap_f32c1_nearest_constant, float, 1, false, ppl::cv::BORDER_TYPE_CONSTANT, 1e-3) 
-R(Remap_f32c3_nearest_constant, float, 3, false, ppl::cv::BORDER_TYPE_CONSTANT, 1e-3)
-R(Remap_f32c4_nearest_constant, float, 4, false, ppl::cv::BORDER_TYPE_CONSTANT, 1e-3)
+R(Remap_u8c1_nearest_constant, uint8_t, 1, false, ppl::cv::BORDER_CONSTANT, 1.01f)
+R(Remap_u8c3_nearest_constant, uint8_t, 3, false, ppl::cv::BORDER_CONSTANT, 1.01f)
+R(Remap_u8c4_nearest_constant, uint8_t, 4, false, ppl::cv::BORDER_CONSTANT, 1.01f)
+R(Remap_f32c1_nearest_constant, float, 1, false, ppl::cv::BORDER_CONSTANT, 1e-3) 
+R(Remap_f32c3_nearest_constant, float, 3, false, ppl::cv::BORDER_CONSTANT, 1e-3)
+R(Remap_f32c4_nearest_constant, float, 4, false, ppl::cv::BORDER_CONSTANT, 1e-3)
 
-R(Remap_u8c1_linear_replicate, uint8_t, 1, true, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f)
-R(Remap_u8c3_linear_replicate, uint8_t, 3, true, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f)
-R(Remap_u8c4_linear_replicate, uint8_t, 4, true, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f)
-R(Remap_f32c1_linear_replicate, float, 1, true, ppl::cv::BORDER_TYPE_REPLICATE, 1e-3)  
-R(Remap_f32c3_linear_replicate, float, 3, true, ppl::cv::BORDER_TYPE_REPLICATE, 1e-3)
-R(Remap_f32c4_linear_replicate, float, 4, true, ppl::cv::BORDER_TYPE_REPLICATE, 1e-3)
+R(Remap_u8c1_linear_replicate, uint8_t, 1, true, ppl::cv::BORDER_REPLICATE, 1.01f)
+R(Remap_u8c3_linear_replicate, uint8_t, 3, true, ppl::cv::BORDER_REPLICATE, 1.01f)
+R(Remap_u8c4_linear_replicate, uint8_t, 4, true, ppl::cv::BORDER_REPLICATE, 1.01f)
+R(Remap_f32c1_linear_replicate, float, 1, true, ppl::cv::BORDER_REPLICATE, 1e-3)  
+R(Remap_f32c3_linear_replicate, float, 3, true, ppl::cv::BORDER_REPLICATE, 1e-3)
+R(Remap_f32c4_linear_replicate, float, 4, true, ppl::cv::BORDER_REPLICATE, 1e-3)
 
-R(Remap_u8c1_nearest_replicate, uint8_t, 1, false, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f)
-R(Remap_u8c3_nearest_replicate, uint8_t, 3, false, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f)
-R(Remap_u8c4_nearest_replicate, uint8_t, 4, false, ppl::cv::BORDER_TYPE_REPLICATE, 1.01f)
-R(Remap_f32c1_nearest_replicate, float, 1, false, ppl::cv::BORDER_TYPE_REPLICATE, 1e-3) 
-R(Remap_f32c3_nearest_replicate, float, 3, false, ppl::cv::BORDER_TYPE_REPLICATE, 1e-3)
-R(Remap_f32c4_nearest_replicate, float, 4, false, ppl::cv::BORDER_TYPE_REPLICATE, 1e-3)
+R(Remap_u8c1_nearest_replicate, uint8_t, 1, false, ppl::cv::BORDER_REPLICATE, 1.01f)
+R(Remap_u8c3_nearest_replicate, uint8_t, 3, false, ppl::cv::BORDER_REPLICATE, 1.01f)
+R(Remap_u8c4_nearest_replicate, uint8_t, 4, false, ppl::cv::BORDER_REPLICATE, 1.01f)
+R(Remap_f32c1_nearest_replicate, float, 1, false, ppl::cv::BORDER_REPLICATE, 1e-3) 
+R(Remap_f32c3_nearest_replicate, float, 3, false, ppl::cv::BORDER_REPLICATE, 1e-3)
+R(Remap_f32c4_nearest_replicate, float, 4, false, ppl::cv::BORDER_REPLICATE, 1e-3)
 
-R(Remap_u8c1_linear_transparent, uint8_t, 1, true, ppl::cv::BORDER_TYPE_TRANSPARENT, 1.01f)
-R(Remap_u8c3_linear_transparent, uint8_t, 3, true, ppl::cv::BORDER_TYPE_TRANSPARENT, 1.01f)
-R(Remap_u8c4_linear_transparent, uint8_t, 4, true, ppl::cv::BORDER_TYPE_TRANSPARENT, 1.01f)
-R(Remap_f32c1_linear_transparent, float, 1, true, ppl::cv::BORDER_TYPE_TRANSPARENT, 1e-3) 
-R(Remap_f32c3_linear_transparent, float, 3, true, ppl::cv::BORDER_TYPE_TRANSPARENT, 1e-3)
-R(Remap_f32c4_linear_transparent, float, 4, true, ppl::cv::BORDER_TYPE_TRANSPARENT, 1e-3)
+R(Remap_u8c1_linear_transparent, uint8_t, 1, true, ppl::cv::BORDER_TRANSPARENT, 1.01f)
+R(Remap_u8c3_linear_transparent, uint8_t, 3, true, ppl::cv::BORDER_TRANSPARENT, 1.01f)
+R(Remap_u8c4_linear_transparent, uint8_t, 4, true, ppl::cv::BORDER_TRANSPARENT, 1.01f)
+R(Remap_f32c1_linear_transparent, float, 1, true, ppl::cv::BORDER_TRANSPARENT, 1e-3) 
+R(Remap_f32c3_linear_transparent, float, 3, true, ppl::cv::BORDER_TRANSPARENT, 1e-3)
+R(Remap_f32c4_linear_transparent, float, 4, true, ppl::cv::BORDER_TRANSPARENT, 1e-3)
 
-R(Remap_u8c1_nearest_transparent, uint8_t, 1, false, ppl::cv::BORDER_TYPE_TRANSPARENT, 1.01f)
-R(Remap_u8c3_nearest_transparent, uint8_t, 3, false, ppl::cv::BORDER_TYPE_TRANSPARENT, 1.01f)
-R(Remap_u8c4_nearest_transparent, uint8_t, 4, false, ppl::cv::BORDER_TYPE_TRANSPARENT, 1.01f)
-R(Remap_f32c1_nearest_transparent, float, 1, false, ppl::cv::BORDER_TYPE_TRANSPARENT, 1e-3)
-R(Remap_f32c3_nearest_transparent, float, 3, false, ppl::cv::BORDER_TYPE_TRANSPARENT, 1e-3)
-R(Remap_f32c4_nearest_transparent, float, 4, false, ppl::cv::BORDER_TYPE_TRANSPARENT, 1e-3)
+R(Remap_u8c1_nearest_transparent, uint8_t, 1, false, ppl::cv::BORDER_TRANSPARENT, 1.01f)
+R(Remap_u8c3_nearest_transparent, uint8_t, 3, false, ppl::cv::BORDER_TRANSPARENT, 1.01f)
+R(Remap_u8c4_nearest_transparent, uint8_t, 4, false, ppl::cv::BORDER_TRANSPARENT, 1.01f)
+R(Remap_f32c1_nearest_transparent, float, 1, false, ppl::cv::BORDER_TRANSPARENT, 1e-3)
+R(Remap_f32c3_nearest_transparent, float, 3, false, ppl::cv::BORDER_TRANSPARENT, 1e-3)
+R(Remap_f32c4_nearest_transparent, float, 4, false, ppl::cv::BORDER_TRANSPARENT, 1e-3)
 
 
 
