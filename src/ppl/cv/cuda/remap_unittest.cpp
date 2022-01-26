@@ -29,7 +29,9 @@ using namespace ppl::cv::cuda;
 
 enum Scaling {
   kHalfSize,
+  kSmallerSize,
   kSameSize,
+  kBiggerSize,
   kDoubleSize,
 };
 
@@ -42,8 +44,14 @@ inline std::string convertToStringResize(const Parameters& parameters) {
   if (scale == kHalfSize) {
     formatted << "HalfSize" << "_";
   }
+  else if (scale == kSmallerSize) {
+    formatted << "SmallerSize" << "_";
+  }
   else if (scale == kSameSize) {
     formatted << "SameSize" << "_";
+  }
+  else if (scale == kBiggerSize) {
+    formatted << "BiggerSize" << "_";
   }
   else if (scale == kDoubleSize) {
     formatted << "DoubleSize" << "_";
@@ -111,11 +119,17 @@ bool PplCvCudaRemapTest<T, channels>::apply() {
   if (scale == kHalfSize) {
     scale_coeff = 0.5f;
   }
-  else if (scale == kDoubleSize) {
-    scale_coeff = 2.0f;
+  else if (scale == kSmallerSize) {
+    scale_coeff = 0.7f;
   }
-  else {
+  else if (scale == kSameSize) {
     scale_coeff = 1.0f;
+  }
+  else if (scale == kBiggerSize) {
+    scale_coeff = 1.4f;
+  }
+  else {  // scale == kDoubleSize
+    scale_coeff = 2.0f;
   }
   int dst_height = size.height * scale_coeff;
   int dst_width  = size.width * scale_coeff;
@@ -136,7 +150,7 @@ bool PplCvCudaRemapTest<T, channels>::apply() {
   int src_size = src.rows * src.cols * channels * sizeof(T);
   int map_size = dst_height * dst_width * sizeof(float);
   int dst_size = dst.rows * dst.cols * channels * sizeof(T);
-  T* input  = (T*)malloc(src_size);
+  T* input = (T*)malloc(src_size);
   float* map_x1 = (float*)malloc(map_size);
   float* map_y1 = (float*)malloc(map_size);
   T* output = (T*)malloc(dst_size);
@@ -229,11 +243,12 @@ TEST_P(PplCvCudaRemapTest ## T ## channels, Standard) {                        \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaRemapTest ## T ## channels,          \
   ::testing::Combine(                                                          \
-    ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
-    ::testing::Values(INTERPOLATION_LINEAR,                               \
-                      INTERPOLATION_NEAREST_POINT),                       \
-    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE,             \
-                      BORDER_TRANSPARENT),                                \
+    ::testing::Values(kHalfSize, kSmallerSize, kSameSize, kBiggerSize,         \
+                      kDoubleSize),                                            \
+    ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
+                      INTERPOLATION_TYPE_NEAREST_POINT),                       \
+    ::testing::Values(BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE,             \
+                      BORDER_TYPE_TRANSPARENT),                                \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

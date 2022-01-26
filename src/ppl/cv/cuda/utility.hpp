@@ -398,6 +398,48 @@ float4 operator*(float value0, uchar4 value1) {
 }
 
 __DEVICE__
+float4 operator*(uchar3 value0, float value1) {
+  float4 result;
+  result.x = value0.x * value1;
+  result.y = value0.y * value1;
+  result.z = value0.z * value1;
+
+  return result;
+}
+
+__DEVICE__
+float4 operator*(uchar4 value0, float value1) {
+  float4 result;
+  result.x = value0.x * value1;
+  result.y = value0.y * value1;
+  result.z = value0.z * value1;
+  result.w = value0.w * value1;
+
+  return result;
+}
+
+__DEVICE__
+float4 operator*(float3 value0, float value1) {
+  float4 result;
+  result.x = value0.x * value1;
+  result.y = value0.y * value1;
+  result.z = value0.z * value1;
+
+  return result;
+}
+
+__DEVICE__
+float4 operator*(float4 value0, float value1) {
+  float4 result;
+  result.x = value0.x * value1;
+  result.y = value0.y * value1;
+  result.z = value0.z * value1;
+  result.w = value0.w * value1;
+
+  return result;
+}
+
+__DEVICE__
 float4 operator*(float value0, float4 value1) {
   float4 result;
   result.x = value0 * value1.x;

@@ -19,7 +19,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "opencv2/imgproc.hpp"
 #include "opencv2/cudawarping.hpp"
 #include "benchmark/benchmark.h"
 
