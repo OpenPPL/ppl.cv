@@ -32,7 +32,7 @@ enum Scaling {
   kDoubleSize,
 };
 
-using Parameters = std::tuple<Scaling, ppl::cv::InterpolationType, 
+using Parameters = std::tuple<Scaling, ppl::cv::InterpolationType,
                               ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringResize(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -188,14 +188,14 @@ bool PplCvCudaRemapTest<T, channels>::apply() {
   }
   cv::remap(src, cv_dst, map_x0, map_y0, cv_iterpolation, cv_border);
 
-  ppl::cv::cuda::Remap<T, channels>(0, src.rows, src.cols, 
-      gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,  
-      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_map_x, gpu_map_y, 
+  ppl::cv::cuda::Remap<T, channels>(0, src.rows, src.cols,
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_map_x, gpu_map_y,
       inter_type, border_type);
   gpu_dst.download(dst);
 
   ppl::cv::cuda::Remap<T, channels>(0, src.rows, src.cols, src.cols * channels,
-      gpu_input, dst_height, dst_width, dst_width * channels, gpu_output, 
+      gpu_input, dst_height, dst_width, dst_width * channels, gpu_output,
       gpu_map_x, gpu_map_y, inter_type, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
