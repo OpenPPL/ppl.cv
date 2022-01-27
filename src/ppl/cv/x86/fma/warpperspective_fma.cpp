@@ -55,32 +55,42 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 {
     uint32_t cur_mode = _MM_GET_ROUNDING_MODE();
     _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
-    __m256 base_seq_vec = _mm256_set_ps(7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f);
-    __m256 m20_vec      = _mm256_set1_ps(M[2][0]);
-    __m256 m10_vec      = _mm256_set1_ps(M[1][0]);
-    __m256 m00_vec      = _mm256_set1_ps(M[0][0]);
+    __m256d base_seq_vec = _mm256_set_pd(3.0f, 2.0f, 1.0f, 0.0f);
+    __m256d m20_vec      = _mm256_set1_pd(M[2][0]);
+    __m256d m10_vec      = _mm256_set1_pd(M[1][0]);
+    __m256d m00_vec      = _mm256_set1_pd(M[0][0]);
+    __m256d v_zero       = _mm256_set1_pd(0);
+    __m256d v_1          = _mm256_set1_pd(1);
+    __m256d v_shrtmax     = _mm256_set1_pd(SHRT_MAX);
+    __m256d v_shrtmin     = _mm256_set1_pd(SHRT_MIN);
+    
     for (int32_t i = 0; i < outHeight; i++) {
-        float baseW      = M[2][1] * i + M[2][2];
-        float baseX      = M[0][1] * i + M[0][2];
-        float baseY      = M[1][1] * i + M[1][2];
-        __m256 baseW_vec = _mm256_set1_ps(baseW);
-        __m256 baseX_vec = _mm256_set1_ps(baseX);
-        __m256 baseY_vec = _mm256_set1_ps(baseY);
-        for (int32_t j = 0; j < round_up(outWidth, 8); j += 8) {
-            int32_t sx0_array[8];
-            int32_t sy0_array[8];
-            __m256 seq_vec          = _mm256_add_ps(base_seq_vec, _mm256_set1_ps(j));
-            __m256 w_vec            = _mm256_fmadd_ps(m20_vec, seq_vec, baseW_vec);
-            __m256 x_vec            = _mm256_fmadd_ps(m00_vec, seq_vec, baseX_vec);
-            __m256 y_vec            = _mm256_fmadd_ps(m10_vec, seq_vec, baseY_vec);
-            __m256 w_reciprocal_vec = _mm256_rcp_ps(w_vec);
-            x_vec                   = _mm256_mul_ps(x_vec, w_reciprocal_vec);
-            y_vec                   = _mm256_mul_ps(y_vec, w_reciprocal_vec);
-            __m256i sx0_vec         = _mm256_cvtps_epi32(x_vec);
-            __m256i sy0_vec         = _mm256_cvtps_epi32(y_vec);
-            _mm256_storeu_si256(reinterpret_cast<__m256i*>(sx0_array), sx0_vec);
-            _mm256_storeu_si256(reinterpret_cast<__m256i*>(sy0_array), sy0_vec);
-            for (int32_t k = j; k < std::min(outWidth, j + 8); ++k) {
+        double baseW      = M[2][1] * i + M[2][2];
+        double baseX      = M[0][1] * i + M[0][2];
+        double baseY      = M[1][1] * i + M[1][2];
+        __m256d baseW_vec = _mm256_set1_pd(baseW);
+        __m256d baseX_vec = _mm256_set1_pd(baseX);
+        __m256d baseY_vec = _mm256_set1_pd(baseY);
+        for (int32_t j = 0; j < round_up(outWidth, 4); j += 4) {
+            int32_t sx0_array[4];
+            int32_t sy0_array[4];
+            __m256d seq_vec          = _mm256_add_pd(base_seq_vec, _mm256_set1_pd(j));
+            __m256d w_vec            = _mm256_fmadd_pd(m20_vec, seq_vec, baseW_vec);
+            __m256d x_vec            = _mm256_fmadd_pd(m00_vec, seq_vec, baseX_vec);
+            __m256d y_vec            = _mm256_fmadd_pd(m10_vec, seq_vec, baseY_vec);
+            __m256d w_reciprocal_vec = _mm256_andnot_pd(_mm256_cmp_pd(w_vec, v_zero, _CMP_EQ_OQ), _mm256_div_pd(v_1, w_vec));
+            x_vec                   = _mm256_mul_pd(x_vec, w_reciprocal_vec);
+            y_vec                   = _mm256_mul_pd(y_vec, w_reciprocal_vec);
+            
+            x_vec                   = _mm256_max_pd(_mm256_min_pd(x_vec, v_shrtmax), v_shrtmin);
+            y_vec                   = _mm256_max_pd(_mm256_min_pd(y_vec, v_shrtmax), v_shrtmin);
+
+            __m128i sx0_vec         = _mm256_cvtpd_epi32(x_vec);
+            __m128i sy0_vec         = _mm256_cvtpd_epi32(y_vec);
+
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(sx0_array), sx0_vec);
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(sy0_array), sy0_vec);
+            for (int32_t k = j; k < std::min(outWidth, j + 4); ++k) {
                 int32_t sy = sy0_array[k - j];
                 int32_t sx = sx0_array[k - j];
                 if (borderMode == ppl::cv::BORDER_CONSTANT) {

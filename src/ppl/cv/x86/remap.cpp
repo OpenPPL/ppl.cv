@@ -42,6 +42,18 @@ inline T clip(T value, T min_value, T max_value)
     return std::min(std::max(value, min_value), max_value);
 }
 
+static inline int32_t saturate_cast(float value)
+{
+    int32_t round2zero = (int32_t)value;
+    if (value >= 0) {
+        return (value - round2zero != 0.5) ? (int32_t)(value + 0.5) : round2zero % 2 == 0 ? round2zero
+                                                                                          : round2zero + 1;
+    } else {
+        return (round2zero - value != 0.5) ? (int32_t)(value - 0.5) : round2zero % 2 == 0 ? round2zero
+                                                                                          : round2zero - 1;
+    }
+}
+
 template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 void remap_nearest(
     int32_t inHeight,
@@ -62,32 +74,27 @@ void remap_nearest(
             int32_t idxMap = i * outWidth + j;
             float x        = map_x[idxMap];
             float y        = map_y[idxMap];
-            int32_t sy     = static_cast<int32_t>(std::round(y));
-            int32_t sx     = static_cast<int32_t>(std::round(x));
-            if (borderMode == ppl::cv::BORDER_CONSTANT) {
-                int32_t idxSrc = sy * inWidthStride + sx * nc;
-                if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    for (int32_t i = 0; i < nc; i++)
-                        dst[idxDst + i] = src[idxSrc + i];
-                } else {
+            int32_t sy     = saturate_cast(y);
+            int32_t sx     = saturate_cast(x);
+            int32_t idxSrc = sy * inWidthStride + sx * nc;
+            if ((unsigned)sx < inWidth && (unsigned)sy < inHeight) {
+                for (int32_t i = 0; i < nc; i++)
+                    dst[idxDst + i] = src[idxSrc + i];
+            }
+            else
+            {
+                if (borderMode == ppl::cv::BORDER_CONSTANT) {
                     for (int32_t i = 0; i < nc; i++) {
                         dst[idxDst + i] = delta;
                     }
                 }
-            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
-                sx             = clip(sx, 0, inWidth - 1);
-                sy             = clip(sy, 0, inHeight - 1);
-                int32_t idxSrc = sy * inWidthStride + sx * nc;
-                for (int32_t i = 0; i < nc; i++) {
-                    dst[idxDst + i] = src[idxSrc + i];
-                }
-            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
-                if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    int32_t idxSrc = sy * inWidthStride + sx * nc;
+                else if (borderMode == ppl::cv::BORDER_REPLICATE) {
+                    sx             = clip(sx, 0, inWidth - 1);
+                    sy             = clip(sy, 0, inHeight - 1);
                     for (int32_t i = 0; i < nc; i++) {
-                        dst[idxDst + i] = src[idxSrc + i];
+                        dst[idxDst + i] = src[sy * inWidthStride + sx * nc + i];
                     }
-                } else {
+                } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
                     continue;
                 }
             }

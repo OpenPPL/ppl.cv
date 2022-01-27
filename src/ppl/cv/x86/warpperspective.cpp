@@ -97,6 +97,30 @@ inline uint8_t bilinear_sample<uint8_t, uint8_t>(uint8_t t[][2], float u, float 
     return std::min(std::max(static_cast<int32_t>((t[0][0] * a0 + t[1][0] * a1 + t[0][1] * a2 + t[1][1] * a3) * cvtScale<uint8_t, uint8_t>()), 0), 255);
 }
 
+
+static inline int32_t saturate_cast(double value)
+{
+    int32_t round2zero = (int32_t)value;
+    if (value >= 0) {
+        return (value - round2zero != 0.5) ? (int32_t)(value + 0.5) : round2zero % 2 == 0 ? round2zero
+                                                                                          : round2zero + 1;
+    } else {
+        return (round2zero - value != 0.5) ? (int32_t)(value - 0.5) : round2zero % 2 == 0 ? round2zero
+                                                                                          : round2zero - 1;
+    }
+}
+static inline int32_t floor(float value)
+{
+    int32_t i = (int32_t)value;
+    return i - (i > value);
+}
+
+static inline short saturate_cast(int32_t v)
+{
+    return (short)((unsigned)(v - SHRT_MIN) <= (unsigned)USHRT_MAX ? v : v > 0 ? SHRT_MAX
+                                                                               : SHRT_MIN);
+}
+
 template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 ::ppl::common::RetCode warpperspective_nearest(
     int32_t inHeight,
@@ -111,15 +135,23 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
     T delta = 0)
 {
     for (int32_t i = 0; i < outHeight; i++) {
-        float baseW = M[2][1] * i + M[2][2];
-        float baseX = M[0][1] * i + M[0][2];
-        float baseY = M[1][1] * i + M[1][2];
+        double baseW = M[2][1] * i + M[2][2];
+        double baseX = M[0][1] * i + M[0][2];
+        double baseY = M[1][1] * i + M[1][2];
         for (int32_t j = 0; j < outWidth; j++) {
-            float w    = M[2][0] * j + baseW;
-            float x    = M[0][0] * j + baseX;
-            float y    = M[1][0] * j + baseY;
-            int32_t sy = static_cast<int32_t>(std::round(y / w));
-            int32_t sx = static_cast<int32_t>(std::round(x / w));
+            double w    = M[2][0] * j + baseW;
+            double x    = M[0][0] * j + baseX;
+            double y    = M[1][0] * j + baseY;
+            w = w ? 1./w : 0;
+
+            double fX = std::max((double)INT_MIN, std::min((double)INT_MAX, x*w));
+            double fY = std::max((double)INT_MIN, std::min((double)INT_MAX, y*w));
+            int X = saturate_cast(fX);
+            int Y = saturate_cast(fY);
+
+            int32_t sx = saturate_cast(X);
+            int32_t sy = saturate_cast(Y);
+
             if (borderMode == ppl::cv::BORDER_CONSTANT) {
                 int32_t idxSrc = sy * inWidthStride + sx * nc;
                 int32_t idxDst = i * outWidthStride + j * nc;
@@ -325,11 +357,11 @@ template <typename T, int32_t nc>
     M[2][2] = affineMatrix[8];
     if (ppl::common::CpuSupports(ppl::common::ISA_X86_FMA)) {
         if (border_type == ppl::cv::BORDER_CONSTANT) {
-            fma::warpperspective_linear<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
+            warpperspective_linear<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
         } else if (border_type == ppl::cv::BORDER_REPLICATE) {
-            fma::warpperspective_linear<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
+            warpperspective_linear<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
         } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
-            fma::warpperspective_linear<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
+            warpperspective_linear<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
         }
     } else {
         if (border_type == ppl::cv::BORDER_CONSTANT) {

@@ -54,6 +54,7 @@ void RemapTest(int inHeight, int inWidth, int outHeight, int outWidth, T diff)
             ppl::cv::x86::RemapLinear<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TRANSPARENT);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_LINEAR, cv::BORDER_REPLICATE);
         }
+        checkResult<T, nc>(dst.get(), dst_ref.get(), outHeight, outWidth, outWidth * nc, outWidth * nc, 8.01f);
     } else {
         if (border_type == ppl::cv::BORDER_CONSTANT) {
             ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_CONSTANT);
@@ -65,8 +66,8 @@ void RemapTest(int inHeight, int inWidth, int outHeight, int outWidth, T diff)
             ppl::cv::x86::RemapNearestPoint<T, nc>(inHeight, inWidth, inWidth * nc, src.get(), outHeight, outWidth, outWidth * nc, dst.get(), map_x.get(), map_y.get(), ppl::cv::BORDER_TRANSPARENT);
             cv::remap(srcMat, dstMat, xMat, yMat, cv::INTER_NEAREST, cv::BORDER_TRANSPARENT);
         }
+        checkResult<T, nc>(dst.get(), dst_ref.get(), outHeight, outWidth, outWidth * nc, outWidth * nc, 1.01f);
     }
-    checkResult<T, nc>(dst.get(), dst_ref.get(), outHeight, outWidth, outWidth * nc, outWidth * nc, 1.01f);
 }
 
 TEST(REMAP_UINT8_LINEAR, x86)

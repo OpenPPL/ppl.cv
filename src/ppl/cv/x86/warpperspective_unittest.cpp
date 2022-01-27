@@ -48,6 +48,7 @@ void WarpPerspectiveTest(int inHeight, int inWidth, int outHeight, int outWidth,
             ppl::cv::x86::WarpPerspectiveLinear<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_TRANSPARENT);
         }
+        checkResult<T, channels>(dst.get(), dst_ref.get(), outHeight, outWidth, outWidth * channels, outWidth * channels, 7.01f); // ppl.cv is more accurate than opencv 
     } else if (mode == ppl::cv::INTERPOLATION_NEAREST_POINT) {
         if (border_type == ppl::cv::BORDER_REPLICATE) {
             ppl::cv::x86::WarpPerspectiveNearestPoint<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
@@ -59,8 +60,8 @@ void WarpPerspectiveTest(int inHeight, int inWidth, int outHeight, int outWidth,
             ppl::cv::x86::WarpPerspectiveNearestPoint<T, channels>(inHeight, inWidth, inWidth * channels, src.get(), outHeight, outWidth, outWidth * channels, dst.get(), affine_matrix.get(), border_type);
             cv::warpPerspective(srcMat, dstMat, affineMat, cv::Size(outWidth, outHeight), cv::INTER_NEAREST | cv::WARP_INVERSE_MAP, cv::BORDER_TRANSPARENT);
         }
+        checkResult<T, channels>(dst.get(), dst_ref.get(), outHeight, outWidth, outWidth * channels, outWidth * channels, 1.01f);
     }
-    checkResult<T, channels>(dst.get(), dst_ref.get(), outHeight, outWidth, outWidth * channels, outWidth * channels, 1.01f);
 }
 
 TEST(WarpPerspectiveLinear_FP32_BORDER_CONSTANT, x86)
