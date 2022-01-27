@@ -357,11 +357,11 @@ template <typename T, int32_t nc>
     M[2][2] = affineMatrix[8];
     if (ppl::common::CpuSupports(ppl::common::ISA_X86_FMA)) {
         if (border_type == ppl::cv::BORDER_CONSTANT) {
-            warpperspective_linear<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
+            fma::warpperspective_linear<T, nc, ppl::cv::BORDER_CONSTANT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
         } else if (border_type == ppl::cv::BORDER_REPLICATE) {
-            warpperspective_linear<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
+            fma::warpperspective_linear<T, nc, ppl::cv::BORDER_REPLICATE>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
         } else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
-            warpperspective_linear<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
+            fma::warpperspective_linear<T, nc, ppl::cv::BORDER_TRANSPARENT>(inHeight, inWidth, inWidthStride, outHeight, outWidth, outWidthStride, outData, inData, M, border_value);
         }
     } else {
         if (border_type == ppl::cv::BORDER_CONSTANT) {
