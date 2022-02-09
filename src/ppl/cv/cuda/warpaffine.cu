@@ -36,7 +36,7 @@ struct AffineTransform {
   float y;
 
   AffineTransform(const float* coefficients) : coeffe0(coefficients[0]),
-      coeffe1(coefficients[1]), coeffe2(coefficients[2]), 
+      coeffe1(coefficients[1]), coeffe2(coefficients[2]),
       coeffe3(coefficients[3]), coeffe4(coefficients[4]),
       coeffe5(coefficients[5]) {}
 
@@ -56,7 +56,7 @@ struct AffineTransform {
     return y;
   }
 };
-               
+
 RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
                    int src_stride, const float* affine_matrix, uchar* dst,
                    int dst_rows, int dst_cols, int dst_stride,
@@ -73,7 +73,7 @@ RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(dst_stride >= dst_cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
              interpolation == INTERPOLATION_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_CONSTANT || 
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
              border_type == BORDER_REPLICATE ||
              border_type == BORDER_TRANSPARENT);
 
@@ -110,38 +110,38 @@ RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
         LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
         return RC_DEVICE_RUNTIME_ERROR;
       }
-      
-      warpLinearTexKernel<AffineTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, affine_transform, dst, 
+
+      warpLinearTexKernel<AffineTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, affine_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
     else {
-      warpLinearKernel<AffineTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, affine_transform, dst, 
+      warpLinearKernel<AffineTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, affine_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
-      warpNearestKernel<uchar, uchar, AffineTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type, 
+      warpNearestKernel<uchar, uchar, AffineTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type,
           border_value);
     }
     else if (channels == 3) {
       uchar3 border_value1 = make_uchar3(border_value, border_value,
                                          border_value);
-      warpNearestKernel<uchar, uchar3, AffineTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type, 
+      warpNearestKernel<uchar, uchar3, AffineTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type,
           border_value1);
     }
     else {
       uchar4 border_value1 = make_uchar4(border_value, border_value,
                                          border_value, border_value);
-      warpNearestKernel<uchar, uchar4, AffineTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type, 
+      warpNearestKernel<uchar, uchar4, AffineTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type,
           border_value1);
     }
   }
@@ -210,38 +210,38 @@ RetCode warpAffine(const float* src, int src_rows, int src_cols, int channels,
         LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
         return RC_DEVICE_RUNTIME_ERROR;
       }
-      
-      warpLinearTexKernel<AffineTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, affine_transform, dst, 
+
+      warpLinearTexKernel<AffineTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, affine_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
     else {
-      warpLinearKernel<AffineTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, affine_transform, dst, 
+      warpLinearKernel<AffineTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, affine_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
-      warpNearestKernel<float, float, AffineTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type, 
+      warpNearestKernel<float, float, AffineTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type,
           border_value);
     }
     else if (channels == 3) {
       float3 border_value1 = make_float3(border_value, border_value,
                                          border_value);
-      warpNearestKernel<float, float3, AffineTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type, 
+      warpNearestKernel<float, float3, AffineTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type,
           border_value1);
     }
     else {
       float4 border_value1 = make_float4(border_value, border_value,
                                          border_value, border_value);
-      warpNearestKernel<float, float4, AffineTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type, 
+      warpNearestKernel<float, float4, AffineTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          affine_transform, dst, dst_rows, dst_cols, dst_stride, border_type,
           border_value1);
     }
   }

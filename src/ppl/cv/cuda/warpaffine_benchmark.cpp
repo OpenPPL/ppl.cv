@@ -49,9 +49,9 @@ void BM_WarpAffine_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::WarpAffine<T, channels>(0, src.rows, src.cols, 
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width, 
-        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, inter_type, 
+    ppl::cv::cuda::WarpAffine<T, channels>(0, src.rows, src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, inter_type,
         border_type);
   }
   cudaDeviceSynchronize();
@@ -59,9 +59,9 @@ void BM_WarpAffine_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      ppl::cv::cuda::WarpAffine<T, channels>(0, src.rows, src.cols, 
-          gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width, 
-          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, 
+      ppl::cv::cuda::WarpAffine<T, channels>(0, src.rows, src.cols,
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data,
           inter_type, border_type);
     }
     cudaEventRecord(stop, 0);
@@ -225,7 +225,7 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, float, channels, inter_type,     \
 BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels, inter_type,        \
                    inter_type, ppl::cv::BORDER_REPLICATE)->Args({src_width,    \
                    src_height, dst_width, dst_height})->UseManualTime()->      \
-                   Iterations(10); 
+                   Iterations(10);
 
 #define RUN_BENCHMARK1(channels, inter_type, src_width, src_height, dst_width, \
                        dst_height)                                             \
@@ -372,37 +372,37 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, c4, inter_type,              \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
 //                               ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
 //                               ppl::cv::BORDER_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                               ppl::cv::BORDER_TRANSPARENT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
 //                               ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
 //                               ppl::cv::BORDER_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                               ppl::cv::BORDER_TRANSPARENT)
 
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_REPLICATE)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_REPLICATE)
 
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_TRANSPARENT)
