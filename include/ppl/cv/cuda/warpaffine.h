@@ -29,7 +29,7 @@ namespace cuda {
 /**
  * @brief Applies an affine transformation to an image.
  * @tparam T The data type of input image and output image, currently only
- *           uint8_t(uchar) and float are supported.
+ *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream          cuda stream object.
