@@ -43,9 +43,9 @@ set_target_properties(pplcv_static PROPERTIES
 
 if(MSVC)
     set_target_properties(pplcv_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLCV_PACKAGE_ROOTDIR__}/lib/libpplcv_static.lib"
-        IMPORTED_LOCATION_DEBUG "${__PPLCV_PACKAGE_ROOTDIR__}/lib/libpplcv_static.lib"
-        IMPORTED_LOCATION_RELEASE "${__PPLCV_PACKAGE_ROOTDIR__}/lib/libpplcv_static.lib")
+        IMPORTED_LOCATION "${__PPLCV_PACKAGE_ROOTDIR__}/lib/pplcv_static.lib"
+        IMPORTED_LOCATION_DEBUG "${__PPLCV_PACKAGE_ROOTDIR__}/lib/pplcv_static.lib"
+        IMPORTED_LOCATION_RELEASE "${__PPLCV_PACKAGE_ROOTDIR__}/lib/pplcv_static.lib")
 else()
     set_target_properties(pplcv_static PROPERTIES
         IMPORTED_LOCATION "${__PPLCV_PACKAGE_ROOTDIR__}/lib/libpplcv_static.a"
