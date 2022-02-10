@@ -59,10 +59,14 @@ inline void MorphRow(float32x4_t *tprev, float32x4_t &tcurr, float32x4_t *tnext,
                 t_left  = tprev[0];
                 t_mid   = tcurr;
                 t_right = tnext[0];
-            } else {
-                t_left  = vextq_f32(tprev[0], tcurr, VLEN / sizeof(T) - nc);
+            } else if (nc == 3) {
+                t_left  = vextq_f32(tprev[0], tcurr, VLEN / sizeof(T) - 3);
                 t_mid   = tcurr;
-                t_right = vextq_f32(tcurr, tnext[0], nc);
+                t_right = vextq_f32(tcurr, tnext[0], 3);
+            } else if (nc == 1) {
+                t_left  = vextq_f32(tprev[0], tcurr, VLEN / sizeof(T) - 1);
+                t_mid   = tcurr;
+                t_right = vextq_f32(tcurr, tnext[0], 1);
             }
 
             t_mid = vop(vop(t_left, t_mid), t_right);
@@ -144,10 +148,14 @@ inline void MorphRowLast(float32x4_t *tprev, float32x4_t &tcurr, float32x4_t *tn
                 t_left  = tcurr;
                 t_mid   = tnext[0];
                 t_right = t_last;
-            } else {
-                t_left  = vextq_f32(tcurr, tnext[0], VLEN / sizeof(T) - nc);
+            } else if(nc == 3){
+                t_left  = vextq_f32(tcurr, tnext[0], VLEN / sizeof(T) - 3);
                 t_mid   = tnext[0];
-                t_right = vextq_f32(tnext[0], t_last, nc);
+                t_right = vextq_f32(tnext[0], t_last, 3);
+            } else if(nc == 1) {
+                t_left  = vextq_f32(tcurr, tnext[0], VLEN / sizeof(T) - 1);
+                t_mid   = tnext[0];
+                t_right = vextq_f32(tnext[0], t_last, 1);
             }
 
             t_res = vop(vop(t_left, t_mid), t_right);
@@ -156,10 +164,14 @@ inline void MorphRowLast(float32x4_t *tprev, float32x4_t &tcurr, float32x4_t *tn
                 t_left  = tnext[0];
                 t_mid   = t_last;
                 t_right = v_border;
-            } else {
-                t_left  = vextq_f32(tnext[0], t_last, VLEN / sizeof(T) - nc);
+            } else if (nc == 3){
+                t_left  = vextq_f32(tnext[0], t_last, VLEN / sizeof(T) - 3);
                 t_mid   = t_last;
-                t_right = vextq_f32(t_last, v_border, nc);
+                t_right = vextq_f32(t_last, v_border, 3);
+            } else if (nc == 1) {
+                t_left  = vextq_f32(tnext[0], t_last, VLEN / sizeof(T) - 1);
+                t_mid   = t_last;
+                t_right = vextq_f32(t_last, v_border, 1);
             }
 
             t_mid = vop(vop(t_left, t_mid), t_right);
