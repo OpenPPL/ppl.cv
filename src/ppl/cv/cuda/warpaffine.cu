@@ -56,7 +56,6 @@ struct AffineTransform {
     return y;
   }
 };
-
 RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
                    int src_stride, const float* affine_matrix, uchar* dst,
                    int dst_rows, int dst_cols, int dst_stride,
