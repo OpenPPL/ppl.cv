@@ -39,7 +39,7 @@ struct PerspectiveTransform {
   float y;
 
   PerspectiveTransform(const float* coefficients) : coeffe0(coefficients[0]),
-      coeffe1(coefficients[1]), coeffe2(coefficients[2]), 
+      coeffe1(coefficients[1]), coeffe2(coefficients[2]),
       coeffe3(coefficients[3]), coeffe4(coefficients[4]),
       coeffe5(coefficients[5]), coeffe6(coefficients[6]),
       coeffe7(coefficients[7]), coeffe8(coefficients[8]) {}
@@ -48,7 +48,7 @@ struct PerspectiveTransform {
   void calculateCoordinates(int element_x, int element_y) {
     x = coeffe0 * element_x + coeffe1 * element_y + coeffe2;
     y = coeffe3 * element_x + coeffe4 * element_y + coeffe5;
-    
+
     float weight = coeffe6 * element_x + coeffe7 * element_y + coeffe8;
     weight = 1.f / weight;
     x *= weight;
@@ -120,38 +120,38 @@ RetCode warpPerspective(const uchar* src, int src_rows, int src_cols,
         LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
         return RC_DEVICE_RUNTIME_ERROR;
       }
-      
-      warpLinearTexKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, perspective_transform, dst, 
+
+      warpLinearTexKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, perspective_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
     else {
-      warpLinearKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, perspective_transform, dst, 
+      warpLinearKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, perspective_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
-      warpNearestKernel<uchar, uchar, PerspectiveTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          perspective_transform, dst, dst_rows, dst_cols, dst_stride, 
+      warpNearestKernel<uchar, uchar, PerspectiveTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          perspective_transform, dst, dst_rows, dst_cols, dst_stride,
           border_type, border_value);
     }
     else if (channels == 3) {
       uchar3 border_value1 = make_uchar3(border_value, border_value,
                                          border_value);
-      warpNearestKernel<uchar, uchar3, PerspectiveTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          perspective_transform, dst, dst_rows, dst_cols, dst_stride, 
+      warpNearestKernel<uchar, uchar3, PerspectiveTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          perspective_transform, dst, dst_rows, dst_cols, dst_stride,
           border_type, border_value1);
     }
     else {
       uchar4 border_value1 = make_uchar4(border_value, border_value,
                                          border_value, border_value);
-      warpNearestKernel<uchar, uchar4, PerspectiveTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          perspective_transform, dst, dst_rows, dst_cols, dst_stride, 
+      warpNearestKernel<uchar, uchar4, PerspectiveTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          perspective_transform, dst, dst_rows, dst_cols, dst_stride,
           border_type, border_value1);
     }
   }
@@ -221,38 +221,38 @@ RetCode warpPerspective(const float* src, int src_rows, int src_cols,
         LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
         return RC_DEVICE_RUNTIME_ERROR;
       }
-      
-      warpLinearTexKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, perspective_transform, dst, 
+
+      warpLinearTexKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, perspective_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
     else {
-      warpLinearKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src, 
-          src_rows, src_cols, channels, src_stride, perspective_transform, dst, 
+      warpLinearKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, channels, src_stride, perspective_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
     }
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
-      warpNearestKernel<float, float, PerspectiveTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          perspective_transform, dst, dst_rows, dst_cols, dst_stride, 
+      warpNearestKernel<float, float, PerspectiveTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          perspective_transform, dst, dst_rows, dst_cols, dst_stride,
           border_type, border_value);
     }
     else if (channels == 3) {
       float3 border_value1 = make_float3(border_value, border_value,
                                          border_value);
-      warpNearestKernel<float, float3, PerspectiveTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          perspective_transform, dst, dst_rows, dst_cols, dst_stride, 
+      warpNearestKernel<float, float3, PerspectiveTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          perspective_transform, dst, dst_rows, dst_cols, dst_stride,
           border_type, border_value1);
     }
     else {
       float4 border_value1 = make_float4(border_value, border_value,
                                          border_value, border_value);
-      warpNearestKernel<float, float4, PerspectiveTransform><<<grid, block, 0, 
-          stream>>>(src, src_rows, src_cols, channels, src_stride, 
-          perspective_transform, dst, dst_rows, dst_cols, dst_stride, 
+      warpNearestKernel<float, float4, PerspectiveTransform><<<grid, block, 0,
+          stream>>>(src, src_rows, src_cols, channels, src_stride,
+          perspective_transform, dst, dst_rows, dst_cols, dst_stride,
           border_type, border_value1);
     }
   }

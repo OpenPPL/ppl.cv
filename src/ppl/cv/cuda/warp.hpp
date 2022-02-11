@@ -33,10 +33,10 @@ static texture<float, cudaTextureType2D,
 static texture<float4, cudaTextureType2D,
                cudaReadModeElementType> float_c4_ref;
 
-template <typename Transform>         
+template <typename Transform>
 __global__
 void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
-                         int channels, int src_stride, Transform transform, 
+                         int channels, int src_stride, Transform transform,
                          uchar* dst, int dst_rows, int dst_cols, int dst_stride,
                          BorderType border_type, uchar border_value) {
   int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
@@ -44,7 +44,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
   if (element_x >= dst_cols || element_y >= dst_rows) {
     return;
   }
-    
+
   transform.calculateCoordinates(element_x, element_y);
   float src_x = transform.getX();
   float src_y = transform.getY();
@@ -73,7 +73,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
       if (flag0 && flag1 && flag2 && flag3) {
         float value = tex2D(uchar_c1_ref, src_x + 0.5f, src_y + 0.5f);
         value *= 255.0f;
-    
+
         uchar* output = (uchar*)(dst + element_y * dst_stride);
         output[element_x] = saturateCast(value);
       }
@@ -86,7 +86,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
         float sum = 0.f;
         sum += value0;
         sum += value1;
-        
+
         input = (uchar*)(src + src_y1 * src_stride);
         src_value0 = flag2 ? input[src_x0] : border_value;
         src_value1 = flag3 ? input[src_x1] : border_value;
@@ -94,7 +94,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
         value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
         sum += value0;
         sum += value1;
-        
+
         uchar* output = (uchar*)(dst + element_y * dst_stride);
         output[element_x] = saturateCast(sum);
       }
@@ -106,7 +106,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
         value.y *= 255.0f;
         value.z *= 255.0f;
         value.w *= 255.0f;
-    
+
         uchar4* output = (uchar4*)(dst + element_y * dst_stride);
         output[element_x] = saturateCastVector<uchar4, float4>(value);
       }
@@ -139,7 +139,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
     if (channels == 1) {
       float value = tex2D(uchar_c1_ref, src_x + 0.5f, src_y + 0.5f);
       value *= 255.0f;
-  
+
       uchar* output = (uchar*)(dst + element_y * dst_stride);
       output[element_x] = saturateCast(value);
     }
@@ -149,7 +149,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
       value.y *= 255.0f;
       value.z *= 255.0f;
       value.w *= 255.0f;
-  
+
       uchar4* output = (uchar4*)(dst + element_y * dst_stride);
       output[element_x] = saturateCastVector<uchar4, float4>(value);
     }
@@ -158,10 +158,10 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
   }
 }
 
-template <typename Transform> 
+template <typename Transform>
 __global__
 void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
-                         int channels, int src_stride, Transform transform, 
+                         int channels, int src_stride, Transform transform,
                          float* dst, int dst_rows, int dst_cols, int dst_stride,
                          BorderType border_type, float border_value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
@@ -173,7 +173,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
   transform.calculateCoordinates(element_x, element_y);
   float src_x = transform.getX();
   float src_y = transform.getY();
-  
+
   if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
     int src_x0 = __float2int_rd(src_x);
     int src_y0 = __float2int_rd(src_y);
@@ -197,7 +197,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
     if (channels == 1) {
       if (flag0 && flag1 && flag2 && flag3) {
         float value = tex2D(float_c1_ref, src_x + 0.5f, src_y + 0.5f);
-    
+
         float* output = (float*)((uchar*)dst + element_y * dst_stride);
         output[element_x] = value;
       }
@@ -226,7 +226,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
     else {  // channels == 4
       if (flag0 && flag1 && flag2 && flag3) {
         float4 value = tex2D(float_c4_ref, src_x + 0.5f, src_y + 0.5f);
-    
+
         float4* output = (float4*)((uchar*)dst + element_y * dst_stride);
         output[element_x] = value;
       }
@@ -258,13 +258,13 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
   else if (border_type == BORDER_REPLICATE) {
     if (channels == 1) {
       float value = tex2D(float_c1_ref, src_x + 0.5f, src_y + 0.5f);
-    
+
       float* output = (float*)((uchar*)dst + element_y * dst_stride);
       output[element_x] = value;
     }
     else {  // channels == 4
       float4 value = tex2D(float_c4_ref, src_x + 0.5f, src_y + 0.5f);
-    
+
       float4* output = (float4*)((uchar*)dst + element_y * dst_stride);
       output[element_x] = value;
     }
@@ -276,7 +276,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
 template <typename Transform>
 __global__
 void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
-                      int channels, int src_stride, Transform transform, 
+                      int channels, int src_stride, Transform transform,
                       uchar* dst, int dst_rows, int dst_cols, int dst_stride,
                       BorderType border_type, uchar border_value) {
   int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
@@ -464,7 +464,7 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
 template <typename Transform>
 __global__
 void warpLinearKernel(const float* src, int src_rows, int src_cols,
-                      int channels, int src_stride, Transform transform, 
+                      int channels, int src_stride, Transform transform,
                       float* dst, int dst_rows, int dst_cols, int dst_stride,
                       BorderType border_type, float border_value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
@@ -646,9 +646,9 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
 
 template <typename T, typename Tn, typename Transform>
 __global__
-void warpNearestKernel(const T* src, int src_rows, int src_cols, int channels, 
-                       int src_stride, Transform transform, T* dst, 
-                       int dst_rows, int dst_cols, int dst_stride, 
+void warpNearestKernel(const T* src, int src_rows, int src_cols, int channels,
+                       int src_stride, Transform transform, T* dst,
+                       int dst_rows, int dst_cols, int dst_stride,
                        BorderType border_type, Tn border_value) {
   int element_x, element_y;
   if (sizeof(T) == 1) {

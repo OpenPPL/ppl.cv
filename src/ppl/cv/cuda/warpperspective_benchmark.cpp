@@ -221,7 +221,7 @@ BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_cuda, float, channels, inter_type,\
                    dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, channels, inter_type,   \
                    ppl::cv::BORDER_REPLICATE)->Args({src_width, src_height,    \
-                   dst_width, dst_height})->UseManualTime()->Iterations(10); 
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);
 
 #define RUN_BENCHMARK1(channels, inter_type, src_width, src_height, dst_width, \
                        dst_height)                                             \
@@ -368,37 +368,37 @@ BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, c4, inter_type,         \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
 //                               ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
 //                               ppl::cv::BORDER_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                               ppl::cv::BORDER_TRANSPARENT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
 //                               ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
 //                               ppl::cv::BORDER_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                               ppl::cv::BORDER_TRANSPARENT)
 
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_REPLICATE)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_REPLICATE)
 
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
                                ppl::cv::BORDER_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_TRANSPARENT)
