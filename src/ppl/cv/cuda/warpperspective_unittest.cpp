@@ -163,7 +163,7 @@ bool PplCvCudaWarpPerspectiveTest<T, channels>::apply() {
   }
   int border_value = 5;
   cv::cuda::warpPerspective(gpu_src, gpu_cv_dst, M, cv::Size(dst_width,
-      dst_height), cv::WARP_INVERSE_MAP | cv_iterpolation, cv_border,
+      dst_height), cv_iterpolation | cv::WARP_INVERSE_MAP, cv_border,
       cv::Scalar(border_value, border_value, border_value, border_value));
   gpu_cv_dst.download(cv_dst);
 
@@ -179,10 +179,15 @@ bool PplCvCudaWarpPerspectiveTest<T, channels>::apply() {
 
   float epsilon;
   if (sizeof(T) == 1) {
-    epsilon = EPSILON_1F;
+    epsilon = EPSILON_2F;
   }
   else {
-    epsilon = EPSILON_E4;
+    if (channels == 1 || channels == 4) {
+      epsilon = EPSILON_E2;
+    }
+    else {
+      epsilon = EPSILON_E4;
+    }
   }
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
