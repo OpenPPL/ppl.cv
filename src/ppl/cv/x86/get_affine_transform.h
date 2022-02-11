@@ -18,6 +18,8 @@
 #ifndef __ST_HPC_PPL3_CV_X86_GET_AFFINE_TRANSFORM_H_
 #define __ST_HPC_PPL3_CV_X86_GET_AFFINE_TRANSFORM_H_
 
+#include "ppl/common/retcode.h"
+
 namespace ppl {
 namespace cv {
 namespace x86 {
@@ -53,7 +55,7 @@ namespace x86 {
 * @endcode
 ***************************************************************************************************/
 
-void GetAffineTransform(
+ppl::common::RetCode GetAffineTransform(
     const double *src_points,
     const double *dst_points,
     double *mat,
