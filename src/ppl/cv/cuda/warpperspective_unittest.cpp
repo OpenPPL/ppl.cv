@@ -30,7 +30,7 @@ enum Scaling {
   kDoubleSize,
 };
 
-using Parameters = std::tuple<Scaling, ppl::cv::InterpolationType, 
+using Parameters = std::tuple<Scaling, ppl::cv::InterpolationType,
                               ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringWarpPerspect(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -165,15 +165,15 @@ bool PplCvCudaWarpPerspectiveTest<T, channels>::apply() {
       cv::Scalar(border_value, border_value, border_value, border_value));
   gpu_cv_dst.download(cv_dst);
 
-  ppl::cv::cuda::WarpPerspective<T, channels>(0, src.rows, src.cols, 
-      gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width, 
-      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, inter_type, 
+  ppl::cv::cuda::WarpPerspective<T, channels>(0, src.rows, src.cols,
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, inter_type,
       border_type, border_value);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::WarpPerspective<T, channels>(0, src.rows, src.cols, 
-      src.cols * channels, gpu_input, dst_height, dst_width, 
-      dst_width * channels, gpu_output, (float*)M.data, inter_type, border_type, 
+  ppl::cv::cuda::WarpPerspective<T, channels>(0, src.rows, src.cols,
+      src.cols * channels, gpu_input, dst_height, dst_width,
+      dst_width * channels, gpu_output, (float*)M.data, inter_type, border_type,
       border_value);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

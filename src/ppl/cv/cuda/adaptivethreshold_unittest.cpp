@@ -24,7 +24,7 @@
 
 #include "infrastructure.hpp"
 
-using Parameters = std::tuple<int, int, int, int, int, ppl::cv::BorderType, 
+using Parameters = std::tuple<int, int, int, int, int, ppl::cv::BorderType,
                               cv::Size>;
 inline std::string convertToStringThreshold(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -33,7 +33,7 @@ inline std::string convertToStringThreshold(const Parameters& parameters) {
   formatted << "Ksize" << ksize << "_";
 
   int adaptive_method = std::get<1>(parameters);
-  formatted << (adaptive_method == ppl::cv::ADAPTIVE_THRESH_MEAN_C ? 
+  formatted << (adaptive_method == ppl::cv::ADAPTIVE_THRESH_MEAN_C ?
                                    "METHOD_MEAN" : "METHOD_GAUSSIAN") << "_";
 
   int threshold_type = std::get<2>(parameters);
@@ -141,12 +141,12 @@ bool PplCvCudaAdaptiveThresholdTest<T, channels>::apply() {
                         cv_threshold_type, ksize, delta);
 
   ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
-      (uchar*)gpu_src.data, gpu_dst.step, (uchar*)gpu_dst.data, max_value, 
+      (uchar*)gpu_src.data, gpu_dst.step, (uchar*)gpu_dst.data, max_value,
       adaptive_method, threshold_type, ksize, delta, border_type);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::AdaptiveThreshold(0, size.height, size.width, 
-      size.width * channels, gpu_input, size.width * channels, gpu_output, 
+  ppl::cv::cuda::AdaptiveThreshold(0, size.height, size.width,
+      size.width * channels, gpu_input, size.width * channels, gpu_output,
       max_value, adaptive_method, threshold_type, ksize, delta, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 

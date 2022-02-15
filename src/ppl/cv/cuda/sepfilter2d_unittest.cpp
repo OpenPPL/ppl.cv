@@ -124,9 +124,9 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
   cv::sepFilter2D(src, cv_dst, cv_dst.depth(), kernel0, kernel0,
                   cv::Point(-1, -1), delta, cv_border);
 
-  ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows, 
-      gpu_src.cols, gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize, 
-      gpu_kernel, gpu_kernel, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, 
+  ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows,
+      gpu_src.cols, gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize,
+      gpu_kernel, gpu_kernel, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data,
       delta, border_type);
   gpu_dst.download(dst);
 

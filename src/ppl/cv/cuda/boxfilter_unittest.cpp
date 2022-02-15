@@ -24,7 +24,7 @@
 
 #include "infrastructure.hpp"
 
-using Parameters = std::tuple<int, int, bool, ppl::cv::BorderType, 
+using Parameters = std::tuple<int, int, bool, ppl::cv::BorderType,
                               cv::Size>;
 inline std::string convertToStringBoxFilter(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -126,8 +126,8 @@ bool PplCvCudaBoxFilterTest<T, channels>::apply() {
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::BoxFilter<T, channels>(0, size.height, size.width, 
-      size.width * channels, gpu_input, ksize_x, ksize_y, normalize, 
+  ppl::cv::cuda::BoxFilter<T, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, ksize_x, ksize_y, normalize,
       size.width * channels, gpu_output, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 

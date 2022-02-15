@@ -173,7 +173,6 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
   transform.calculateCoordinates(element_x, element_y);
   float src_x = transform.getX();
   float src_y = transform.getY();
-
   if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
     int src_x0 = __float2int_rd(src_x);
     int src_y0 = __float2int_rd(src_y);

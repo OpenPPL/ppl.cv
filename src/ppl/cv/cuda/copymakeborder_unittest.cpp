@@ -133,13 +133,13 @@ bool PplCvCudaCopyMakeBorderTest<T, channels>::apply() {
   }
   cv::copyMakeBorder(src, cv_dst, top, bottom, left, right, cv_border);
 
-  ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols, 
+  ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
       (T*)gpu_dst.data, top, bottom, left, right, border_type);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols, 
-      src.cols * channels, gpu_input, dst.cols * channels, gpu_output, top, 
+  ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols,
+      src.cols * channels, gpu_input, dst.cols * channels, gpu_output, top,
       bottom, left, right, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

@@ -135,8 +135,8 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
     cv::dilate(src, cv_dst, kernel0, cv::Point(-1, -1), 1, cv_border,
                constant_border);
     ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, nullptr, 
-        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, nullptr,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type,
         constant_border);
   }
   else if (function == kPartiallyMaskedDilate) {
@@ -144,8 +144,8 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
     cv::dilate(src, cv_dst, kernel1, cv::Point(-1, -1), 1, cv_border,
                constant_border);
     ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
-        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type,
         constant_border);
   }
   else if (function == kFullyMaskedErode) {
@@ -153,8 +153,8 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
     cv::erode(src, cv_dst, kernel0, cv::Point(-1, -1), 1, cv_border,
               constant_border);
     ppl::cv::cuda::Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, nullptr, 
-        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, nullptr,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type,
         constant_border);
   }
   else {
@@ -162,8 +162,8 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
     cv::erode(src, cv_dst, kernel1, cv::Point(-1, -1), 1, cv_border,
               constant_border);
     ppl::cv::cuda::Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
-        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type,
         constant_border);
   }
   gpu_dst.download(dst);
