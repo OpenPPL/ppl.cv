@@ -149,13 +149,13 @@ bool PplCvCudaResizeTest<T, channels>::apply() {
   cv::resize(src, cv_dst, cv::Size(dst_width, dst_height), 0, 0,
              cv_iterpolation);
 
-  ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols, 
+  ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, inter_type);
   gpu_dst.download(dst);
 
   ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols, src.cols * channels,
-      gpu_input, dst_height, dst_width, dst_width * channels, gpu_output, 
+      gpu_input, dst_height, dst_width, dst_width * channels, gpu_output,
       inter_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

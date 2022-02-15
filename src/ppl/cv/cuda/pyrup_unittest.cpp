@@ -109,13 +109,13 @@ bool PplCvCudaPyrUpTest<T, channels>::apply() {
   }
   cv::pyrUp(src, cv_dst, cv::Size(dst_width, dst_height), cv_border);
 
-  ppl::cv::cuda::PyrUp<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+  ppl::cv::cuda::PyrUp<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
       (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::PyrUp<T, channels>(0, src_height, src_width, 
-      src_width * channels, gpu_input, dst_width * channels, gpu_output, 
+  ppl::cv::cuda::PyrUp<T, channels>(0, src_height, src_width,
+      src_width * channels, gpu_input, dst_width * channels, gpu_output,
       border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

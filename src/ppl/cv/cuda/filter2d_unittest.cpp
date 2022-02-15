@@ -129,8 +129,8 @@ bool PplCvCudaFilter2DTest<Tsrc, Tdst, channels>::apply() {
       gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta, border_type);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::Filter2D<Tsrc, channels>(0, size.height, size.width, 
-      size.width * channels, gpu_input, ksize, gpu_kernel, 
+  ppl::cv::cuda::Filter2D<Tsrc, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, ksize, gpu_kernel,
       size.width * channels, gpu_output, delta, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

@@ -120,8 +120,8 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::GaussianBlur<T, channels>(0, size.height, size.width, 
-      size.width * channels, gpu_input, ksize, sigma, size.width * channels, 
+  ppl::cv::cuda::GaussianBlur<T, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, ksize, sigma, size.width * channels,
       gpu_output, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
