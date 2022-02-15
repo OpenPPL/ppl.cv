@@ -26,8 +26,7 @@ namespace cuda {
 
 __DEVICE__
 int borderInterpolate0(int index, int range, BorderType border_type) {
-  if (border_type == BORDER_DEFAULT ||
-      border_type == BORDER_REFLECT_101) {
+  if (border_type == BORDER_DEFAULT || border_type == BORDER_REFLECT_101) {
     if (index < 0) {
       return 0 - index;
     }
@@ -89,8 +88,7 @@ int borderInterpolate0(int index, int range, BorderType border_type) {
 
 __DEVICE__
 int borderInterpolate1(int index, int range, BorderType border_type) {
-  if (border_type == BORDER_DEFAULT ||
-      border_type == BORDER_REFLECT_101) {
+  if (border_type == BORDER_DEFAULT || border_type == BORDER_REFLECT_101) {
     if (index >= 0 && index < range) {
       return index;
     }

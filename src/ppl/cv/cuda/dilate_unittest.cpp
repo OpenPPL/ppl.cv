@@ -196,7 +196,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaDilateTest ## T ## channels,         \
   ::testing::Combine(                                                          \
     ::testing::Values(kFullyMaskedDilate, kPartiallyMaskedDilate,              \
                       kFullyMaskedErode, kPartiallyMaskedErode),               \
-    ::testing::Values(BORDER_DEFAULT, BORDER_CONSTANT),              \
+    ::testing::Values(BORDER_DEFAULT, BORDER_CONSTANT),                        \
     ::testing::Values(1, 3, 5, 7, 11, 15),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \

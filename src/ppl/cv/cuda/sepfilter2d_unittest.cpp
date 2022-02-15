@@ -171,8 +171,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   ::testing::Combine(                                                          \
     ::testing::Values(1, 4, 5, 13, 28, 43),                                    \
     ::testing::Values(0, 10, 43),                                              \
-    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
-                      BORDER_REFLECT_101),                                \
+    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT, BORDER_REFLECT_101),   \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

@@ -177,9 +177,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaCopyMakeBorderTest ## T ## channels, \
   ::testing::Combine(                                                          \
     ::testing::Values(0, 11, 17),                                              \
     ::testing::Values(0, 11, 17),                                              \
-    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE,             \
-                      BORDER_REFLECT, BORDER_WRAP,                   \
-                      BORDER_REFLECT_101),                                \
+    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,       \
+                      BORDER_WRAP, BORDER_REFLECT_101),                        \
     ::testing::Values(cv::Size{11, 11}, cv::Size{25, 17},                      \
                       cv::Size{320, 240}, cv::Size{647, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080})),             \

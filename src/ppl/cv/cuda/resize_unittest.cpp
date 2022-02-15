@@ -192,9 +192,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaResizeTest ## T ## channels,         \
   ::testing::Combine(                                                          \
     ::testing::Values(kHalfSize, kSmallerSize, kSameSize, kBiggerSize,         \
                       kDoubleSize),                                            \
-    ::testing::Values(INTERPOLATION_LINEAR,                               \
-                      INTERPOLATION_NEAREST_POINT,                        \
-                      INTERPOLATION_AREA),                                \
+    ::testing::Values(INTERPOLATION_LINEAR, INTERPOLATION_NEAREST_POINT,       \
+                      INTERPOLATION_AREA),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

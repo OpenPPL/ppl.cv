@@ -211,9 +211,8 @@ TEST_P(PplCvCudaWarpPerspectiveTest ## T ## channels, Standard) {              \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaWarpPerspectiveTest ## T ## channels,\
   ::testing::Combine(                                                          \
     ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
-    ::testing::Values(INTERPOLATION_LINEAR,                               \
-                      INTERPOLATION_NEAREST_POINT),                       \
-    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE),            \
+    ::testing::Values(INTERPOLATION_LINEAR, INTERPOLATION_NEAREST_POINT),      \
+    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE),                      \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

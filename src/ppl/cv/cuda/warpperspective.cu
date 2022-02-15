@@ -81,11 +81,11 @@ RetCode warpPerspective(const uchar* src, int src_rows, int src_cols,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(dst_stride >= dst_cols * channels * (int)sizeof(uchar));
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -96,7 +96,7 @@ RetCode warpPerspective(const uchar* src, int src_rows, int src_cols,
   cudaError_t code;
   PerspectiveTransform perspective_transform(affine_matrix);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     if (channels != 3 && (src_stride & (TEXTURE_ALIGNMENT - 1)) == 0) {
       if (channels == 1) {
         cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar>();
@@ -182,11 +182,11 @@ RetCode warpPerspective(const float* src, int src_rows, int src_cols,
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
   PPL_ASSERT(src_stride >= src_cols * channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= dst_cols * channels * (int)sizeof(float));
-  PPL_ASSERT(interpolation == INTERPOLATION_TYPE_LINEAR ||
-             interpolation == INTERPOLATION_TYPE_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_TYPE_CONSTANT ||
-             border_type == BORDER_TYPE_REPLICATE ||
-             border_type == BORDER_TYPE_TRANSPARENT);
+  PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
+             interpolation == INTERPOLATION_NEAREST_POINT);
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+             border_type == BORDER_REPLICATE ||
+             border_type == BORDER_TRANSPARENT);
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -197,7 +197,7 @@ RetCode warpPerspective(const float* src, int src_rows, int src_cols,
   cudaError_t code;
   PerspectiveTransform perspective_transform(affine_matrix);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     if (channels != 3 && (src_stride & (TEXTURE_ALIGNMENT - 1)) == 0) {
       if (channels == 1) {
         cudaChannelFormatDesc desc = cudaCreateChannelDesc<float>();

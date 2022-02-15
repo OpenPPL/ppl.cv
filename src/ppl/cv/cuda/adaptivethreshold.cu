@@ -876,7 +876,7 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
   PPL_ASSERT(threshold_type == THRESH_BINARY ||
              threshold_type == THRESH_BINARY_INV);
   PPL_ASSERT((ksize & 1) == 1 && ksize > 1);
-  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+  PPL_ASSERT(border_type == BORDER_REPLICATE || 
              border_type == BORDER_REFLECT ||
              border_type == BORDER_REFLECT_101 ||
              border_type == BORDER_DEFAULT);

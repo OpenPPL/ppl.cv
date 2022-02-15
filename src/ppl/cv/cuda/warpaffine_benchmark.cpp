@@ -179,111 +179,85 @@ void BM_WarpAffine_opencv_x86_cuda(benchmark::State &state) {
 
 #define RUN_BENCHMARK0(channels, inter_type, src_width, src_height, dst_width, \
                        dst_height)                                             \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, uchar, channels,             \
-                   inter_type, BORDER_CONSTANT)->Args({src_width,         \
-                   src_height, dst_width, dst_height});                        \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, uchar, channels,                 \
-                   inter_type, BORDER_CONSTANT)->Args({src_width,         \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, uchar, channels,                    \
-                   inter_type, BORDER_CONSTANT)->Args({src_width,         \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, uchar, channels,             \
-                   inter_type, BORDER_REPLICATE)->Args({src_width,        \
-                   src_height, dst_width, dst_height});                        \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, uchar, channels,                 \
-                   inter_type, BORDER_REPLICATE)->Args({src_width,        \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, uchar, channels,                    \
-                   inter_type, BORDER_REPLICATE)->Args({src_width,        \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, float, channels,             \
-                   inter_type, BORDER_TYPE_CONSTANT)->Args({src_width,         \
-                   src_height, dst_width, dst_height});                        \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, float, channels,                 \
-                   inter_type, BORDER_TYPE_CONSTANT)->Args({src_width,         \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels,                    \
-                   inter_type, BORDER_TYPE_CONSTANT)->Args({src_width,         \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, float, channels,             \
-                   inter_type, BORDER_TYPE_REPLICATE)->Args({src_width,        \
-                   src_height, dst_width, dst_height});                        \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, float, channels,                 \
-                   inter_type, BORDER_REPLICATE)->Args({src_width,        \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels,                    \
-                   inter_type, BORDER_REPLICATE)->Args({src_width,        \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10); 
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, uchar, channels, inter_type, \
+                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
+                   dst_height});                                               \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, uchar, channels, inter_type,     \
+                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
+                   dst_height})->UseManualTime()->Iterations(10);              \
+BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, uchar, channels, inter_type,        \
+                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
+                   dst_height})->UseManualTime()->Iterations(10);              \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, uchar, channels, inter_type, \
+                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
+                   dst_height});                                               \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, uchar, channels, inter_type,     \
+                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
+                   dst_height})->UseManualTime()->Iterations(10);              \
+BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, uchar, channels, inter_type,        \
+                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
+                   dst_height})->UseManualTime()->Iterations(10);              \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, float, channels, inter_type, \
+                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
+                   dst_height});                                               \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, float, channels, inter_type,     \
+                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
+                   dst_height})->UseManualTime()->Iterations(10);              \
+BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels, inter_type,        \
+                   inter_type, BORDER_CONSTANT)->Args({src_width,  src_height, \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, float, channels, inter_type, \
+                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
+                   dst_height});                                               \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, float, channels, inter_type,     \
+                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
+                   dst_height})->UseManualTime()->Iterations(10);              \
+BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels, inter_type,        \
+                   inter_type, BORDER_REPLICATE)->Args({src_width, src_height, \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10); 
 
-<<<<<<< HEAD
-// RUN_BENCHMARK(c1, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-
-// RUN_BENCHMARK(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-=======
 #define RUN_BENCHMARK1(channels, inter_type, src_width, src_height, dst_width, \
                        dst_height)                                             \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, uchar, channels,             \
-                   inter_type, BORDER_TYPE_TRANSPARENT)->Args({src_width,      \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, uchar, channels, inter_type, \
+                   BORDER_TRANSPARENT)->Args({src_width, src_height, dst_width,\
+                   dst_height});                                               \
+BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, uchar, channels, inter_type,        \
+                   BORDER_TRANSPARENT)->Args({src_width, src_height, dst_width,\
+                   dst_height})->UseManualTime()->Iterations(10);              \
+BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, float, channels, inter_type, \
+                   BORDER_TRANSPARENT)->Args({src_width, src_height, dst_width,\
                    src_height, dst_width, dst_height});                        \
-BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, uchar, channels,                    \
-                   inter_type, BORDER_TYPE_TRANSPARENT)->Args({src_width,      \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, float, channels,             \
-                   inter_type, BORDER_TYPE_TRANSPARENT)->Args({src_width,      \
-                   src_height, dst_width, dst_height});                        \
-BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels,                    \
-                   inter_type, BORDER_TYPE_TRANSPARENT)->Args({src_width,      \
-                   src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10);
+BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels, inter_type,        \
+                   BORDER_TRANSPARENT)->Args({src_width, src_height, dst_width,\
+                   dst_height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(c1, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c1, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c3, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c3, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c4, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c4, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c1, INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c1, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c3, INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c3, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c4, INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c4, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK0(c1, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c1, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c3, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c3, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c4, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c4, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK1(c1, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c1, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c3, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c3, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c4, INTERPOLATION_TYPE_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c4, INTERPOLATION_TYPE_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c1, INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c1, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c3, INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c3, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c4, INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c4, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK1(c1, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c1, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c3, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c3, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c4, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c4, INTERPOLATION_TYPE_NEAREST_POINT, 640, 480, 1280, 960)
->>>>>>> eb262ad ([perf][cuda]optimize warpperspective with texture, refactor warpaffine&warpperspective.)
+// RUN_BENCHMARK1(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
 
 #define RUN_OPENCV_X86_TYPE_FUNCTIONS(inter_type, border_type)                 \
 BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_x86_cuda, uchar, c1, inter_type,       \
@@ -387,37 +361,21 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, c4, inter_type,              \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-//                               BORDER_TYPE_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-//                               BORDER_TYPE_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-                              BORDER_TYPE_TRANSPARENT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-//                               BORDER_TYPE_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-//                               BORDER_TYPE_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-                              BORDER_TYPE_TRANSPARENT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_CONSTANT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_TRANSPARENT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_CONSTANT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_TRANSPARENT)
 
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-                               BORDER_TYPE_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-                               BORDER_TYPE_REPLICATE)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-                               BORDER_TYPE_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-                               BORDER_TYPE_REPLICATE)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_REPLICATE)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_REPLICATE)
 
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-                               BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-                               BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_LINEAR,
-                               BORDER_TYPE_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-                               BORDER_TYPE_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-                               BORDER_TYPE_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_TYPE_NEAREST_POINT,
-                               BORDER_TYPE_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_TRANSPARENT)

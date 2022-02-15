@@ -147,7 +147,7 @@ void remapLinearC1Kernel(const T* src, int src_rows, int src_cols,
       output[element_x] = sum;
     }
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
                  int_y < src_rows;
     bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
@@ -217,7 +217,7 @@ void remapLinearCnKernel(const T* src, int src_rows, int src_cols,
   Tn value0, value1;
   float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
 
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
                  int_y < src_rows;
     bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
@@ -271,7 +271,7 @@ void remapLinearCnKernel(const T* src, int src_rows, int src_cols,
     clipVector(sum, value0);
     output[element_x] = value0;
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     int int_x1 = int_x + 1;
     int int_y1 = int_y + 1;
     int_x  = clip(int_x, 0, src_cols - 1);
@@ -301,7 +301,7 @@ void remapLinearCnKernel(const T* src, int src_rows, int src_cols,
     clipVector(sum, value0);
     output[element_x] = value0;
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
                  int_y < src_rows;
     bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
@@ -356,7 +356,7 @@ void remapNPC1Kernel(const T* src, int src_rows, int src_cols, int src_stride,
   int int_x = __float2int_rn(float_x);
   int int_y = __float2int_rn(float_y);
 
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     T* input  = (T*)((uchar*)src + int_y * src_stride);
     T* output = (T*)((uchar*)dst + element_y * dst_stride);
     T value;
@@ -378,7 +378,7 @@ void remapNPC1Kernel(const T* src, int src_rows, int src_cols, int src_stride,
     T value = input[int_x];
     output[element_x] = value;
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
       T* input  = (T*)((uchar*)src + int_y * src_stride);
       T* output = (T*)((uchar*)dst + element_y * dst_stride);
@@ -408,7 +408,7 @@ void remapNPCnKernel(const T* src, int src_rows, int src_cols, int src_stride,
   int int_x = __float2int_rn(float_x);
   int int_y = __float2int_rn(float_y);
 
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     Tn* input  = (Tn*)((uchar*)src + int_y * src_stride);
     Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
     Tn value;
@@ -423,7 +423,7 @@ void remapNPCnKernel(const T* src, int src_rows, int src_cols, int src_stride,
       output[element_x] = value;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     int_x = clip(int_x, 0, src_cols - 1);
     int_y = clip(int_y, 0, src_rows - 1);
 
@@ -432,7 +432,7 @@ void remapNPCnKernel(const T* src, int src_rows, int src_cols, int src_stride,
     Tn value = input[int_x];
     output[element_x] = value;
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
       Tn* input  = (Tn*)((uchar*)src + int_y * src_stride);
       Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
@@ -460,7 +460,7 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(map_y != nullptr);
   PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
              interpolation == INTERPOLATION_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+  PPL_ASSERT(border_type == BORDER_CONSTANT || 
              border_type == BORDER_REPLICATE ||
              border_type == BORDER_TRANSPARENT);
 
@@ -470,7 +470,7 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     if (channels == 1) {
       remapLinearC1Kernel<uchar><<<grid, block, 0, stream>>>(src, src_rows,
           src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
@@ -487,7 +487,7 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
           dst_stride, border_type, border_value);
     }
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
       remapNPC1Kernel<uchar><<<grid, block, 0, stream>>>(src, src_rows,
           src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
@@ -542,7 +542,7 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
   grid.x  = divideUp(dst_cols, kBlockDimX1, kBlockShiftX1);
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
-  if (interpolation == INTERPOLATION_TYPE_LINEAR) {
+  if (interpolation == INTERPOLATION_LINEAR) {
     if (channels == 1) {
       remapLinearC1Kernel<float><<<grid, block, 0, stream>>>(src, src_rows,
           src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
@@ -559,7 +559,7 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
           dst_stride, border_type, border_value);
     }
   }
-  else if (interpolation == INTERPOLATION_TYPE_NEAREST_POINT) {
+  else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     if (channels == 1) {
       remapNPC1Kernel<float><<<grid, block, 0, stream>>>(src, src_rows,
           src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,

@@ -48,8 +48,7 @@ namespace cuda {
  * @param interpolation    Interpolation method. INTERPOLATION_LINEAR and
  *                         INTERPOLATION_NEAREST_POINT are supported.
  * @param border_type      ways to deal with border. BORDER_CONSTANT/
- *                         BORDER_REPLICATE/BORDER_TRANSPARENT are
- *                         supported.
+ *                         BORDER_REPLICATE/BORDER_TRANSPARENT are supported.
  * @param borderValue      value used in case of a constant border; by default,
  *                         it is 0.
  * @return The execution status, succeeds or fails with an error code.

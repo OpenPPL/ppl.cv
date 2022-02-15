@@ -49,8 +49,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
   float src_x = transform.getX();
   float src_y = transform.getY();
 
-  if (border_type == BORDER_TYPE_CONSTANT ||
-      border_type == BORDER_TYPE_TRANSPARENT) {
+  if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
     int src_x0 = __float2int_rd(src_x);
     int src_y0 = __float2int_rd(src_y);
     int src_x1 = src_x0 + 1;
@@ -65,7 +64,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
     bool flag3 = src_y1 >= 0 && src_y1 < src_rows && src_x1 >= 0 &&
                  src_x1 < src_cols;
 
-    if ((border_type == BORDER_TYPE_TRANSPARENT) &&
+    if ((border_type == BORDER_TRANSPARENT) &&
         ((!flag0) || (!flag1) || (!flag2) || (!flag3))) {
       return;
     }
@@ -136,7 +135,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
       }
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     if (channels == 1) {
       float value = tex2D(uchar_c1_ref, src_x + 0.5f, src_y + 0.5f);
       value *= 255.0f;
@@ -175,8 +174,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
   float src_x = transform.getX();
   float src_y = transform.getY();
   
-  if (border_type == BORDER_TYPE_CONSTANT ||
-      border_type == BORDER_TYPE_TRANSPARENT) {
+  if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
     int src_x0 = __float2int_rd(src_x);
     int src_y0 = __float2int_rd(src_y);
     int src_x1 = src_x0 + 1;
@@ -191,7 +189,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
     bool flag3 = src_y1 >= 0 && src_y1 < src_rows && src_x1 >= 0 &&
                  src_x1 < src_cols;
 
-    if ((border_type == BORDER_TYPE_TRANSPARENT) &&
+    if ((border_type == BORDER_TRANSPARENT) &&
         ((!flag0) || (!flag1) || (!flag2) || (!flag3))) {
       return;
     }
@@ -257,7 +255,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
       }
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     if (channels == 1) {
       float value = tex2D(float_c1_ref, src_x + 0.5f, src_y + 0.5f);
     
@@ -296,8 +294,7 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
   int src_x1 = src_x0 + 1;
   int src_y1 = src_y0 + 1;
 
-  if (border_type == BORDER_TYPE_CONSTANT ||
-      border_type == BORDER_TYPE_TRANSPARENT) {
+  if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
     bool flag0 = src_y0 >= 0 && src_y0 < src_rows && src_x0 >= 0 &&
                  src_x0 < src_cols;
     bool flag1 = src_y0 >= 0 && src_y0 < src_rows && src_x1 >= 0 &&
@@ -307,7 +304,7 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
     bool flag3 = src_y1 >= 0 && src_y1 < src_rows && src_x1 >= 0 &&
                  src_x1 < src_cols;
 
-    if ((border_type == BORDER_TYPE_TRANSPARENT) &&
+    if ((border_type == BORDER_TRANSPARENT) &&
         ((!flag0) || (!flag1) || (!flag2) || (!flag3))) {
       return;
     }
@@ -385,7 +382,7 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
       output[element_x] = saturateCastVector<uchar4, float4>(sum);
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     float diff_x0 = src_x - src_x0;
     float diff_x1 = src_x1 - src_x;
     float diff_y0 = src_y - src_y0;
@@ -485,8 +482,7 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
   int src_x1 = src_x0 + 1;
   int src_y1 = src_y0 + 1;
 
-  if (border_type == BORDER_TYPE_CONSTANT ||
-      border_type == BORDER_TYPE_TRANSPARENT) {
+  if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
     bool flag0 = src_y0 >= 0 && src_y0 < src_rows && src_x0 >= 0 &&
                  src_x0 < src_cols;
     bool flag1 = src_y0 >= 0 && src_y0 < src_rows && src_x1 >= 0 &&
@@ -496,7 +492,7 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
     bool flag3 = src_y1 >= 0 && src_y1 < src_rows && src_x1 >= 0 &&
                  src_x1 < src_cols;
 
-    if ((border_type == BORDER_TYPE_TRANSPARENT) &&
+    if ((border_type == BORDER_TRANSPARENT) &&
         ((!flag0) || (!flag1) || (!flag2) || (!flag3))) {
       return;
     }
@@ -569,7 +565,7 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
       output[element_x] = sum;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     float diff_x0 = src_x - src_x0;
     float diff_x1 = src_x1 - src_x;
     float diff_y0 = src_y - src_y0;
@@ -671,7 +667,7 @@ void warpNearestKernel(const T* src, int src_rows, int src_cols, int channels,
   int src_x = transform.getX();
   int src_y = transform.getY();
 
-  if (border_type == BORDER_TYPE_CONSTANT) {
+  if (border_type == BORDER_CONSTANT) {
     Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
 
     if (src_x >= 0 && src_x < src_cols && src_y >= 0 && src_y < src_rows) {
@@ -682,7 +678,7 @@ void warpNearestKernel(const T* src, int src_rows, int src_cols, int channels,
       output[element_x] = border_value;
     }
   }
-  else if (border_type == BORDER_TYPE_REPLICATE) {
+  else if (border_type == BORDER_REPLICATE) {
     src_x = clip(src_x, 0, src_cols - 1);
     src_y = clip(src_y, 0, src_rows - 1);
 
@@ -690,7 +686,7 @@ void warpNearestKernel(const T* src, int src_rows, int src_cols, int channels,
     Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
     output[element_x] = input[src_x];
   }
-  else if (border_type == BORDER_TYPE_TRANSPARENT) {
+  else if (border_type == BORDER_TRANSPARENT) {
     Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
 
     if (src_x >= 0 && src_x < src_cols && src_y >= 0 && src_y < src_rows) {

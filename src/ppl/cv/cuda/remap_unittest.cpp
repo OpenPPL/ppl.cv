@@ -245,10 +245,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaRemapTest ## T ## channels,          \
   ::testing::Combine(                                                          \
     ::testing::Values(kHalfSize, kSmallerSize, kSameSize, kBiggerSize,         \
                       kDoubleSize),                                            \
-    ::testing::Values(INTERPOLATION_TYPE_LINEAR,                               \
-                      INTERPOLATION_TYPE_NEAREST_POINT),                       \
-    ::testing::Values(BORDER_TYPE_CONSTANT, BORDER_TYPE_REPLICATE,             \
-                      BORDER_TYPE_TRANSPARENT),                                \
+    ::testing::Values(INTERPOLATION_LINEAR, INTERPOLATION_NEAREST_POINT),      \
+    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE, BORDER_TRANSPARENT),  \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

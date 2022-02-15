@@ -175,8 +175,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaSobelTest ## Tdst ## channels,       \
     ::testing::Values(Kernel{1, SCHARR}, Kernel{1, 1}, Kernel{1, 3},           \
                       Kernel{2, 3}, Kernel{1, 5}, Kernel{2, 5}, Kernel{3, 5},  \
                       Kernel{1, 7}, Kernel{2, 7}, Kernel{3, 7}),               \
-    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
-                      BORDER_REFLECT_101),                                \
+    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT, BORDER_REFLECT_101),   \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

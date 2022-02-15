@@ -225,20 +225,20 @@ BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, ksize,           \
 
 #define RUN_BENCHMARK1(src_type, dst_type, ksize, border_type, width, height)  \
 BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c1, ksize,        \
-                   border_type)->Args({width, height})->                       \
-                   UseManualTime()->Iterations(10);                            \
+                   border_type)->Args({width, height})->UseManualTime()->      \
+                   Iterations(10);                                             \
 BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c1, ksize,           \
                    border_type)->Args({width, height})->UseManualTime()->      \
                    Iterations(10);                                             \
 BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c3, ksize,        \
-                   border_type)->Args({width, height})->                       \
-                   UseManualTime()->Iterations(10);                            \
+                   border_type)->Args({width, height})->UseManualTime()->      \
+                   Iterations(10);                                             \
 BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c3, ksize,           \
                    border_type)->Args({width, height})->UseManualTime()->      \
                    Iterations(10);                                             \
 BENCHMARK_TEMPLATE(BM_Sobel_opencv_cuda, src_type, dst_type, c4, ksize,        \
-                   border_type)->Args({width, height})->                       \
-                   UseManualTime()->Iterations(10);                            \
+                   border_type)->Args({width, height})->UseManualTime()->      \
+                   Iterations(10);                                             \
 BENCHMARK_TEMPLATE(BM_Sobel_ppl_cuda, src_type, dst_type, c4, ksize,           \
                    border_type)->Args({width, height})->UseManualTime()->      \
                    Iterations(10);

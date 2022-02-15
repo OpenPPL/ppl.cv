@@ -45,8 +45,8 @@ namespace cuda {
  * @param ksize          aperture linear size; it must be odd and greater than
  *                       1, for example: 3, 5, 7 ...
  * @param border_type    ways to deal with border. BORDER_REPLICATE,
- *                       BORDER_REFLECT, BORDER_REFLECT_101 and
- *                       BORDER_DEFAULT are supported now.
+ *                       BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT 
+ *                       are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
