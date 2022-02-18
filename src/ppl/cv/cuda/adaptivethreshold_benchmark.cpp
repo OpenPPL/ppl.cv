@@ -16,12 +16,6 @@
 
 #include "ppl/cv/cuda/adaptivethreshold.h"
 
-#ifdef _MSC_VER
-#include <time.h>
-#else 
-#include <sys/time.h>
-#endif
-
 #include "opencv2/imgproc.hpp"
 #include "benchmark/benchmark.h"
 
@@ -50,7 +44,10 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
   BorderType border_type = BORDER_REPLICATE;
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -62,20 +59,23 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
                         (uchar*)gpu_src.data, gpu_dst.step,
                         (uchar*)gpu_dst.data, max_value, adaptive_method,
                         threshold_type, ksize, delta, border_type);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <int ksize, int adaptive_method>

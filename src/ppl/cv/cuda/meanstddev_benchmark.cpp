@@ -16,12 +16,6 @@
 
 #include "ppl/cv/cuda/meanstddev.h"
 
-#ifdef _MSC_VER
-#include <time.h>
-#else 
-#include <sys/time.h>
-#endif
-
 #include "opencv2/core.hpp"
 #include "opencv2/cudaarithm.hpp"
 #include "benchmark/benchmark.h"
@@ -56,7 +50,10 @@ void BM_MeanStdDev_ppl_cuda(benchmark::State &state) {
   cudaMalloc((void**)&gpu_stddev, dst_size);
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -67,7 +64,7 @@ void BM_MeanStdDev_ppl_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
         MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -82,16 +79,18 @@ void BM_MeanStdDev_ppl_cuda(benchmark::State &state) {
                                 (uchar*)gpu_mask.data);
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
 
   cudaFree(gpu_mean);
   cudaFree(gpu_stddev);
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, MaskType mask_type>
@@ -107,7 +106,10 @@ void BM_MeanStdDev_opencv_cuda(benchmark::State &state) {
   // cv::Scalar stddev_value;
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -117,18 +119,21 @@ void BM_MeanStdDev_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       cv::cuda::meanStdDev(gpu_src, gpu_dst);
       // cv::cuda::meanStdDev(gpu_src, mean_value, stddev_value);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, MaskType mask_type>

@@ -16,12 +16,6 @@
 
 #include "ppl/cv/cuda/sepfilter2d.h"
 
-#ifdef _MSC_VER
-#include <time.h>
-#else 
-#include <sys/time.h>
-#endif
-
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
 #include "benchmark/benchmark.h"
@@ -52,7 +46,10 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
   float delta = 0.f;
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -64,20 +61,23 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
           gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize,
           (float*)gpu_kernel.data, (float*)gpu_kernel.data,
           gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta, border_type);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename Tsrc, typename Tdst, int channels, int ksize,
@@ -110,7 +110,10 @@ void BM_SepFilter2D_opencv_cuda(benchmark::State &state) {
   }
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -122,20 +125,23 @@ void BM_SepFilter2D_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       cv::Ptr<cv::cuda::Filter> separable_linearfilter =
         cv::cuda::createSeparableLinearFilter(gpu_src.type(), gpu_dst.type(),
             kernel, kernel, cv::Point(-1, -1), border, border);
       separable_linearfilter->apply(gpu_src, gpu_dst);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename Tsrc, typename Tdst, int channels, int ksize,

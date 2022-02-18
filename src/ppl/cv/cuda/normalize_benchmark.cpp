@@ -16,12 +16,6 @@
 
 #include "ppl/cv/cuda/normalize.h"
 
-#ifdef _MSC_VER
-#include <time.h>
-#else 
-#include <sys/time.h>
-#endif
-
 #include "opencv2/core.hpp"
 #include "opencv2/cudaarithm.hpp"
 #include "benchmark/benchmark.h"
@@ -57,7 +51,10 @@ void BM_Normalize_ppl_cuda(benchmark::State &state) {
   float beta  = 10.f;
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -69,7 +66,7 @@ void BM_Normalize_ppl_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
         Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -84,13 +81,16 @@ void BM_Normalize_ppl_cuda(benchmark::State &state) {
             norm_type, gpu_mask.step, (uchar*)gpu_mask.data);
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, NormTypes norm_type, MaskType mask_type>
@@ -126,7 +126,10 @@ void BM_Normalize_opencv_cuda(benchmark::State &state) {
   }
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -136,7 +139,7 @@ void BM_Normalize_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
         cv::cuda::normalize(gpu_src, gpu_dst, alpha, beta, cv_norm_type,
@@ -147,13 +150,16 @@ void BM_Normalize_opencv_cuda(benchmark::State &state) {
                             CV_MAT_DEPTH(dst.type()), gpu_mask);
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, NormTypes norm_type, MaskType mask_type>

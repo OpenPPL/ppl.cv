@@ -17,12 +17,6 @@
 #include "ppl/cv/cuda/dilate.h"
 #include "ppl/cv/cuda/erode.h"
 
-#ifdef _MSC_VER
-#include <time.h>
-#else 
-#include <sys/time.h>
-#endif
-
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
 #include "benchmark/benchmark.h"
@@ -72,7 +66,10 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
   }
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -84,7 +81,7 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (function == kDilate) {
         Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -101,15 +98,17 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
       else {
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
 
   free(mask);
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, int ksize, Masks mask_type,
@@ -133,7 +132,10 @@ void BM_Dilate_opencv_cuda(benchmark::State &state) {
   }
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -151,7 +153,7 @@ void BM_Dilate_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       cv::Ptr<cv::cuda::Filter> filter;
       if (function == kDilate) {
@@ -164,13 +166,16 @@ void BM_Dilate_opencv_cuda(benchmark::State &state) {
       }
       filter->apply(gpu_src, gpu_dst);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, int ksize, Masks mask_type,

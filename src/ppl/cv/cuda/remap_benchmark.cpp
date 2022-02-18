@@ -16,12 +16,6 @@
 
 #include "ppl/cv/cuda/remap.h"
 
-#ifdef _MSC_VER
-#include <time.h>
-#else 
-#include <sys/time.h>
-#endif
-
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudawarping.hpp"
 #include "benchmark/benchmark.h"
@@ -64,7 +58,10 @@ void BM_Remap_ppl_cuda(benchmark::State &state) {
   cudaMemcpy(gpu_map_y, map_y1, map_size, cudaMemcpyHostToDevice);
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -75,16 +72,16 @@ void BM_Remap_ppl_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       Remap<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
           (T*)gpu_src.data, dst_height, dst_width, gpu_dst.step / sizeof(T),
           (T*)gpu_dst.data, gpu_map_x, gpu_map_y, inter_type, border_type);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
@@ -93,6 +90,8 @@ void BM_Remap_ppl_cuda(benchmark::State &state) {
   free(map_y1);
   cudaFree(gpu_map_x);
   cudaFree(gpu_map_y);
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, InterpolationType inter_type,
@@ -137,7 +136,10 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
   }
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -147,18 +149,21 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       cv::cuda::remap(gpu_src, gpu_dst, gpu_map_x, gpu_map_y,
                       cv_iterpolation, cv_border);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+  
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, InterpolationType inter_type,
