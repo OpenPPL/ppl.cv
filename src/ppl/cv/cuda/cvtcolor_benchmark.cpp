@@ -16,14 +16,17 @@
 
 #include "ppl/cv/cuda/cvtcolor.h"
 
+#ifdef _MSC_VER
 #include <time.h>
+#else 
 #include <sys/time.h>
+#endif
 
+#include "opencv2/imgproc.hpp"
 #include "opencv2/cudaimgproc.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
-
 #include "infrastructure.hpp"
 
 using namespace ppl::cv::cuda;

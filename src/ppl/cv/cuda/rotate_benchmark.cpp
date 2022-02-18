@@ -16,9 +16,13 @@
 
 #include "ppl/cv/cuda/rotate.h"
 
+#ifdef _MSC_VER
 #include <time.h>
+#else 
 #include <sys/time.h>
+#endif
 
+#include "opencv2/core.hpp"
 #include "opencv2/cudawarping.hpp"
 #include "benchmark/benchmark.h"
 

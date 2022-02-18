@@ -16,9 +16,13 @@
 
 #include "ppl/cv/cuda/sepfilter2d.h"
 
+#ifdef _MSC_VER
 #include <time.h>
+#else 
 #include <sys/time.h>
+#endif
 
+#include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
 #include "benchmark/benchmark.h"
 

@@ -16,13 +16,17 @@
 
 #include "ppl/cv/cuda/setvalue.h"
 
+#ifdef _MSC_VER
 #include <time.h>
+#else 
 #include <sys/time.h>
+#endif
 
+#include "opencv2/core.hpp"
+#include "opencv2/cudaarithm.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
-#include "utility.hpp"
 #include "infrastructure.hpp"
 
 using namespace ppl::cv::cuda;

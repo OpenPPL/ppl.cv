@@ -24,7 +24,6 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "utility.hpp"
 #include "infrastructure.hpp"
 #include "ppl/cv/x86/cvtcolor.h"
 

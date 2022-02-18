@@ -20,6 +20,7 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"

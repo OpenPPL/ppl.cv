@@ -16,8 +16,11 @@
 
 #include "ppl/cv/cuda/warpperspective.h"
 
+#ifdef _MSC_VER
 #include <time.h>
+#else 
 #include <sys/time.h>
+#endif
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudawarping.hpp"

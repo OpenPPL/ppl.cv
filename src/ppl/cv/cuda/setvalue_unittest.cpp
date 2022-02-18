@@ -19,9 +19,9 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "utility.hpp"
 #include "infrastructure.hpp"
 
 using namespace ppl::cv;

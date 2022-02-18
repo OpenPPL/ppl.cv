@@ -17,8 +17,11 @@
 #include "ppl/cv/cuda/dilate.h"
 #include "ppl/cv/cuda/erode.h"
 
+#ifdef _MSC_VER
 #include <time.h>
+#else 
 #include <sys/time.h>
+#endif
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"

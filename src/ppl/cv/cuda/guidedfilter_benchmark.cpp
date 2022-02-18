@@ -16,11 +16,13 @@
 
 #include "ppl/cv/cuda/guidedfilter.h"
 
+#ifdef _MSC_VER
 #include <time.h>
+#else 
 #include <sys/time.h>
+#endif
 
 #include "opencv2/ximgproc/edge_filter.hpp"
-#include "opencv2/cudaimgproc.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
