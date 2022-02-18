@@ -64,7 +64,6 @@ void BM_DistanceTransform_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
-
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
 }
