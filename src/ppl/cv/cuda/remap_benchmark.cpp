@@ -161,7 +161,6 @@ void BM_Remap_opencv_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
-
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
 }
