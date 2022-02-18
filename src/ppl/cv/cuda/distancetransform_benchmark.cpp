@@ -24,7 +24,7 @@
 
 using namespace ppl::cv::debug;
 
-template <typename T, ppl::cv::DistTypes distance_type, 
+template <typename T, ppl::cv::DistTypes distance_type,
           ppl::cv::DistanceTransformMasks mask_size>
 void BM_DistanceTransform_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -64,12 +64,12 @@ void BM_DistanceTransform_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
-  
+
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
 }
 
-template <typename T, ppl::cv::DistTypes distance_type, 
+template <typename T, ppl::cv::DistTypes distance_type,
           ppl::cv::DistanceTransformMasks mask_size>
 void BM_DistanceTransform_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);

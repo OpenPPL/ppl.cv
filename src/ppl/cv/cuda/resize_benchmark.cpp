@@ -46,7 +46,7 @@ void BM_Resize_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols, 
+    ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data, inter_type);
   }
@@ -55,7 +55,7 @@ void BM_Resize_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols, 
+      ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols,
           gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
           gpu_dst.step / sizeof(T), (T*)gpu_dst.data, inter_type);
     }

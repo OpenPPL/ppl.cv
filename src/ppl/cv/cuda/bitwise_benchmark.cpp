@@ -57,7 +57,7 @@ void BM_BitwiseAnd_ppl_cuda(benchmark::State &state) {
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
         (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
@@ -67,7 +67,7 @@ void BM_BitwiseAnd_ppl_cuda(benchmark::State &state) {
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
         ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-            gpu_src0.step / sizeof(T), (T*)gpu_src0.data, 
+            gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
             gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }

@@ -25,7 +25,7 @@
 
 using namespace ppl::cv::debug;
 
-template <typename T, int channels, int top, int left, 
+template <typename T, int channels, int top, int left,
           ppl::cv::BorderType border_type>
 void BM_CopyMakeBorder_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -49,7 +49,7 @@ void BM_CopyMakeBorder_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols, 
+    ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
         (T*)gpu_dst.data, top, bottom, left, right, border_type);
   }
@@ -59,7 +59,7 @@ void BM_CopyMakeBorder_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols,
-          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
           (T*)gpu_dst.data, top, bottom, left, right, border_type);
     }
     cudaEventRecord(stop, 0);
@@ -74,7 +74,7 @@ void BM_CopyMakeBorder_ppl_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, int top, int left, 
+template <typename T, int channels, int top, int left,
           ppl::cv::BorderType border_type>
 void BM_CopyMakeBorder_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -140,7 +140,7 @@ void BM_CopyMakeBorder_opencv_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, int top, int left, 
+template <typename T, int channels, int top, int left,
           ppl::cv::BorderType border_type>
 void BM_CopyMakeBorder_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);

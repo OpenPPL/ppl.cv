@@ -45,7 +45,7 @@ void BM_Integral_ppl_cuda(benchmark::State &state) {
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows, 
+        gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows,
         gpu_dst.cols, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
@@ -54,7 +54,7 @@ void BM_Integral_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
-          gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows, 
+          gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows,
           gpu_dst.cols, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
     }
     cudaEventRecord(stop, 0);

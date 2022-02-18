@@ -315,7 +315,7 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, float, channels,                 \
 BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels,                    \
                    inter_type, BORDER_REPLICATE)->Args({src_width,        \
                    src_height, dst_width, dst_height})->                       \
-                   UseManualTime()->Iterations(10); 
+                   UseManualTime()->Iterations(10);
 
 <<<<<<< HEAD
 // RUN_BENCHMARK(c1, INTERPOLATION_LINEAR, 640, 480, 320, 240)
@@ -368,7 +368,7 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_cuda, float, channels, inter_type,     \
                    dst_height})->UseManualTime()->Iterations(10);              \
 BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_cuda, float, channels, inter_type,        \
                    inter_type, BORDER_REPLICATE)->Args({src_width, src_height, \
-                   dst_width, dst_height})->UseManualTime()->Iterations(10); 
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);
 
 >>>>>>> d478c1f ([misc][cuda]rename interpolation&border type by removing _TYPE_.)
 #define RUN_BENCHMARK1(channels, inter_type, src_width, src_height, dst_width, \

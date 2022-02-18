@@ -57,8 +57,8 @@ void BM_MinMaxLoc_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, 
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_val, &max_val, 
+    ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_val, &max_val,
         &min_loc_x, &min_loc_y, &max_loc_x, &max_loc_y);
   }
   cudaDeviceSynchronize();
@@ -67,13 +67,13 @@ void BM_MinMaxLoc_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
-        ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, 
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_val, &max_val, 
+        ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_val, &max_val,
             &min_loc_x, &min_loc_y, &max_loc_x, &max_loc_y);
       }
       else {
-        ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, 
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_val, &max_val, 
+        ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_val, &max_val,
             &min_loc_x, &min_loc_y, &max_loc_x, &max_loc_y, gpu_mask.step,
             (uchar*)gpu_mask.data);
       }

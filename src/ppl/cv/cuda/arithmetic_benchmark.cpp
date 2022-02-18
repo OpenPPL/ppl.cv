@@ -56,7 +56,7 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::Add<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_src.step / sizeof(T), 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_src.step / sizeof(T),
         (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
@@ -66,14 +66,14 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
     for (int i = 0; i < iterations; i++) {
       if (function == kADD) {
         ppl::cv::cuda::Add<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, 
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else if (function == kADDWEITHTED) {
         ppl::cv::cuda::AddWeighted<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, double_alpha, 
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, double_beta, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, double_alpha,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, double_beta,
             double_gamma, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else if (function == kSUBTRACT) {
@@ -82,12 +82,12 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
           scalars[i] = ((T*)(src.data))[i];
         }
         ppl::cv::cuda::Subtract<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, (T*)scalars, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, (T*)scalars,
             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else if (function == kMUL) {
         ppl::cv::cuda::Mul<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
             gpu_src.step / sizeof(T), (T*)gpu_src.data,
             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
