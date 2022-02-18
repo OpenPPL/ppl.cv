@@ -49,7 +49,7 @@ void BM_Laplacian_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows, 
+    ppl::cv::cuda::Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows,
         gpu_src.cols, gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
         gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, ksize, scale, delta,
         border_type);
@@ -59,7 +59,7 @@ void BM_Laplacian_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      ppl::cv::cuda::Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows, 
+      ppl::cv::cuda::Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows,
           gpu_src.cols, gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
           gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, ksize, scale, delta,
           border_type);

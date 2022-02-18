@@ -25,7 +25,7 @@
 
 using namespace ppl::cv::debug;
 
-template <typename T, int channels, int diameter, 
+template <typename T, int channels, int diameter,
           ppl::cv::BorderType border_type>
 void BM_BilateralFilter_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -74,7 +74,7 @@ void BM_BilateralFilter_ppl_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, int diameter, 
+template <typename T, int channels, int diameter,
           ppl::cv::BorderType border_type>
 void BM_BilateralFilter_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);

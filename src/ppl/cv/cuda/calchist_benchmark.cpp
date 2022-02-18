@@ -52,7 +52,7 @@ void BM_CalcHist_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
@@ -61,11 +61,11 @@ void BM_CalcHist_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
-        ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+        ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols,
             gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data);
       }
       else {
-        ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+        ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols,
             gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data,
             gpu_mask.step / sizeof(uchar), (uchar*)gpu_mask.data);
       }

@@ -51,7 +51,7 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows, 
+    ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows,
         gpu_src.cols, gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize,
         (float*)gpu_kernel.data, (float*)gpu_kernel.data,
         gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta, border_type);
@@ -61,7 +61,7 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows, 
+      ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows,
           gpu_src.cols, gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize,
           (float*)gpu_kernel.data, (float*)gpu_kernel.data,
           gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, delta, border_type);

@@ -30,7 +30,7 @@ enum MaskType {
   WITH_MASK,
 };
 
-template <typename T, int channels, ppl::cv::NormTypes norm_type, 
+template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Norm_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -53,7 +53,7 @@ void BM_Norm_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, &result, norm_type);
   }
   cudaDeviceSynchronize();
@@ -67,7 +67,7 @@ void BM_Norm_ppl_cuda(benchmark::State &state) {
       }
       else {
         ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, &result, norm_type, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, &result, norm_type,
             gpu_mask.step, gpu_mask.data);
       }
     }
@@ -83,7 +83,7 @@ void BM_Norm_ppl_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, ppl::cv::NormTypes norm_type, 
+template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Norm_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -142,7 +142,7 @@ void BM_Norm_opencv_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, ppl::cv::NormTypes norm_type, 
+template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Norm_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);

@@ -72,7 +72,7 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data, ppl::cv::BORDER_REFLECT);
   }
@@ -83,14 +83,14 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
     for (int i = 0; i < iterations; i++) {
       if (function == kDilate) {
         ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
             ppl::cv::BORDER_REFLECT);
       }
       else if (function == kErode) {
         ppl::cv::cuda::Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
             ppl::cv::BORDER_REFLECT);
       }
       else {

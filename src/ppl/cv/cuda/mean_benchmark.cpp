@@ -52,7 +52,7 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst, 0, nullptr);
   }
   cudaDeviceSynchronize();
@@ -66,7 +66,7 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
       }
       else {
         ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
-            gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst,
             gpu_mask.step / sizeof(uchar), (uchar*)gpu_mask.data);
       }
     }

@@ -65,12 +65,12 @@ void BM_SetValue_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (function == kUnmaskedSetTo) {
-        ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
+        ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows,
             gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
       }
       else if (function == kMaskedSetTo) {
-        ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
-            gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, 
+        ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows,
+            gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value,
             gpu_mask.step, gpu_mask.data);
       }
       else if (function == kOnes) {

@@ -30,7 +30,7 @@ enum MaskType {
   kMasked,
 };
 
-template <typename T, int channels, ppl::cv::NormTypes norm_type, 
+template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Normalize_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -92,7 +92,7 @@ void BM_Normalize_ppl_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, ppl::cv::NormTypes norm_type, 
+template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Normalize_opencv_cuda(benchmark::State &state) {
   int width  = state.range(0);
@@ -162,7 +162,7 @@ void BM_Normalize_opencv_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, ppl::cv::NormTypes norm_type, 
+template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Normalize_opencv_x86_cuda(benchmark::State &state) {
   int width  = state.range(0);

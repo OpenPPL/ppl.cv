@@ -49,7 +49,7 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step, (uchar*)gpu_src.data, gpu_dst.step, (uchar*)gpu_dst.data,
         max_value, adaptive_method, threshold_type, ksize, delta, border_type);
   }
@@ -58,9 +58,9 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, 
-          gpu_src.step, (uchar*)gpu_src.data, gpu_dst.step, 
-          (uchar*)gpu_dst.data, max_value, adaptive_method, threshold_type, 
+      ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols,
+          gpu_src.step, (uchar*)gpu_src.data, gpu_dst.step,
+          (uchar*)gpu_dst.data, max_value, adaptive_method, threshold_type,
           ksize, delta, border_type);
     }
     cudaEventRecord(stop, 0);
