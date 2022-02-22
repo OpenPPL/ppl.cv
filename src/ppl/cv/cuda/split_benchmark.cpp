@@ -47,7 +47,11 @@ void BM_Split_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
+<<<<<<< HEAD
     ppl::cv::cuda::Split3Channels<T>(0, gpu_src.rows, gpu_src.cols,
+=======
+    ppl::cv::cuda::Split3Channels<T>(0, gpu_src.rows, gpu_src.cols, 
+>>>>>>> 2eb637f ([fix][cuda]remove uchar naming conflict between ppl.cv and opencv.)
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst0.step / sizeof(T),
         (T*)gpu_dst0.data, (T*)gpu_dst1.data, (T*)gpu_dst2.data);
 }

@@ -368,6 +368,7 @@ BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, c4, inter_type,         \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
+<<<<<<< HEAD
 // RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
 //                               ppl::cv::BORDER_CONSTANT)
 // RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
@@ -401,4 +402,39 @@ RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
 RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
                                ppl::cv::BORDER_REPLICATE)
 RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+=======
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                               ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                               ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+                              ppl::cv::BORDER_TRANSPARENT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                               ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                               ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+                              ppl::cv::BORDER_TRANSPARENT)
+
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+                               ppl::cv::BORDER_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+                               ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+                               ppl::cv::BORDER_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+                               ppl::cv::BORDER_REPLICATE)
+
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+                               ppl::cv::BORDER_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+                               ppl::cv::BORDER_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+                               ppl::cv::BORDER_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+                               ppl::cv::BORDER_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+                               ppl::cv::BORDER_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+>>>>>>> 2eb637f ([fix][cuda]remove uchar naming conflict between ppl.cv and opencv.)
                                ppl::cv::BORDER_TRANSPARENT)
