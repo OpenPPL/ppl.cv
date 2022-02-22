@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 enum MaskType {
   kUnmasked,
   kMasked,
@@ -110,29 +107,27 @@ bool PplCvCudaMeanStdDevTest<T, channels>::apply() {
   cv::Scalar cv_stddev;
   if (is_masked == kUnmasked) {
     cv::meanStdDev(src, cv_mean, cv_stddev);
-    MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                            gpu_mean0, gpu_stddev0);
+    ppl::cv::cuda::MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_mean0, gpu_stddev0);
     cudaMemcpy(mean0, gpu_mean0, dst_size, cudaMemcpyDeviceToHost);
     cudaMemcpy(stddev0, gpu_stddev0, dst_size, cudaMemcpyDeviceToHost);
 
-    MeanStdDev<T, channels>(0, size.height, size.width, size.width * channels,
-                            gpu_input, gpu_mean1, gpu_stddev1);
+    ppl::cv::cuda::MeanStdDev<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input, gpu_mean1, gpu_stddev1);
     cudaMemcpy(mean1, gpu_mean1, dst_size, cudaMemcpyDeviceToHost);
     cudaMemcpy(stddev1, gpu_stddev1, dst_size, cudaMemcpyDeviceToHost);
   }
   else {
     cv::meanStdDev(src, cv_mean, cv_stddev, mask0);
-    MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                            gpu_mean0, gpu_stddev0, gpu_mask0.step,
-                            (uchar*)gpu_mask0.data);
+    ppl::cv::cuda::MeanStdDev<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_mean0, gpu_stddev0, 
+        gpu_mask0.step, (uchar*)gpu_mask0.data);
     cudaMemcpy(mean0, gpu_mean0, dst_size, cudaMemcpyDeviceToHost);
     cudaMemcpy(stddev0, gpu_stddev0, dst_size, cudaMemcpyDeviceToHost);
 
-    MeanStdDev<T, channels>(0, size.height, size.width, size.width * channels,
-                            gpu_input, gpu_mean1, gpu_stddev1, size.width,
-                            gpu_mask1);
+    ppl::cv::cuda::MeanStdDev<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input, gpu_mean1, gpu_stddev1, size.width,
+        gpu_mask1);
     cudaMemcpy(mean1, gpu_mean1, dst_size, cudaMemcpyDeviceToHost);
     cudaMemcpy(stddev1, gpu_stddev1, dst_size, cudaMemcpyDeviceToHost);
   }

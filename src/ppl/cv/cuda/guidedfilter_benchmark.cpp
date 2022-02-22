@@ -22,7 +22,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels, int radius, int eps>
@@ -55,7 +54,7 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    GuidedFilter<T, channels, 1>(0, gpu_src.rows, gpu_src.cols,
+    ppl::cv::cuda::GuidedFilter<T, channels, 1>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_guide.step / sizeof(T),
         (T*)gpu_guide.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, radius,
         eps, ppl::cv::BORDER_REFLECT);
@@ -65,7 +64,7 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      GuidedFilter<T, channels, 1>(0, gpu_src.rows, gpu_src.cols,
+      ppl::cv::cuda::GuidedFilter<T, channels, 1>(0, gpu_src.rows, gpu_src.cols,
           gpu_src.step / sizeof(T), (T*)gpu_src.data,
           gpu_guide.step / sizeof(T), (T*)gpu_guide.data,
           gpu_dst.step / sizeof(T), (T*)gpu_dst.data, radius, eps,

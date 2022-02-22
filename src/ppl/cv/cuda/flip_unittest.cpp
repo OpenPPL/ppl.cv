@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 enum FlipFunctions {
   kFlipX,
   kFlipY,
@@ -100,30 +97,28 @@ bool PplCvCudaFlipTest<T, channels>::apply() {
 
   if (function == kFlipX) {
     cv::flip(src, cv_dst, 0);
-    Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 0);
-    Flip<T, channels>(0, size.height, size.width,
-                      size.width * channels, gpu_input,
-                      size.width * channels, gpu_output, 0);
+    ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        (T*)gpu_dst.data, 0);
+    ppl::cv::cuda::Flip<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input, size.width * channels, gpu_output, 0);
   }
   else if (function == kFlipY) {
     cv::flip(src, cv_dst, 1);
-    Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 1);
-    Flip<T, channels>(0, size.height, size.width,
-                      size.width * channels, gpu_input,
-                      size.width * channels, gpu_output, 1);
+    ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        (T*)gpu_dst.data, 1);
+    ppl::cv::cuda::Flip<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input, size.width * channels, gpu_output, 1);
   }
   else if (function == kFlipXY) {
     cv::flip(src, cv_dst, -1);
-    Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, -1);
-    Flip<T, channels>(0, size.height, size.width,
-                      size.width * channels, gpu_input,
-                      size.width * channels, gpu_output, -1);
+    ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        (T*)gpu_dst.data, -1);
+    ppl::cv::cuda::Flip<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input, size.width * channels, gpu_output, 
+        -1);
   }
   else {
   }

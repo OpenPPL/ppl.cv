@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 enum SetValueFunctions {
   kUnmaskedSetTo,
   kMaskedSetTo,
@@ -106,42 +103,42 @@ bool PplCvCudaSetValueTest<T, outChannels, maskChannels>::apply() {
   if (function == kUnmaskedSetTo) {
     cv_dst.setTo(value);
 
-    SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
+        gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
 
-    SetTo<T, outChannels, maskChannels>(0, size.height, size.width,
-      size.width * outChannels, gpu_output, value);
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, size.height, 
+        size.width, size.width * outChannels, gpu_output, value);
   }
   else if (function == kMaskedSetTo) {
     cv_dst.setTo(value, mask0);
 
-    SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask0.step,
-      gpu_mask0.data);
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
+        gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, 
+        gpu_mask0.step, gpu_mask0.data);
 
-    SetTo<T, outChannels, maskChannels>(0, size.height, size.width,
-      size.width * outChannels, gpu_output, value, size.width * maskChannels,
-      gpu_mask1);
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, size.height, 
+        size.width, size.width * outChannels, gpu_output, value, 
+        size.width * maskChannels, gpu_mask1);
   }
   else if (function == kOnes) {
     cv_dst = cv::Mat::ones(size.height, size.width,
                            CV_MAKETYPE(cv::DataType<T>::depth, outChannels));
 
-    Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
-                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    Ones<T, outChannels>(0, size.height, size.width,
-                         size.width * outChannels, gpu_output);
+    ppl::cv::cuda::Ones<T, outChannels>(0, size.height, size.width,
+        size.width * outChannels, gpu_output);
   }
   else {
     cv_dst = cv::Mat::zeros(size.height, size.width,
                             CV_MAKETYPE(cv::DataType<T>::depth, outChannels));
 
-    Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
-                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    Zeros<T, outChannels>(0, size.height, size.width,
-                          size.width * outChannels, gpu_output);
+    ppl::cv::cuda::Zeros<T, outChannels>(0, size.height, size.width,
+        size.width * outChannels, gpu_output);
   }
   gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);

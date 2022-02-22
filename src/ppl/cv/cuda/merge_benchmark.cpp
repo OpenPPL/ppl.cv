@@ -23,7 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels>
@@ -48,10 +47,9 @@ void BM_Merge_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                      gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                      (T*)gpu_src1.data, (T*)gpu_src2.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data, 
+        (T*)gpu_src2.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
@@ -59,17 +57,15 @@ void BM_Merge_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (channels == 3) {
-        Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                          gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                          (T*)gpu_src1.data, (T*)gpu_src2.data,
-                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        ppl::cv::cuda::Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+            gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data, 
+            (T*)gpu_src2.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {  // channels == 4
-        Merge4Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                          gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                          (T*)gpu_src1.data, (T*)gpu_src2.data,
-                          (T*)gpu_src3.data, gpu_dst.step / sizeof(T),
-                          (T*)gpu_dst.data);
+        ppl::cv::cuda::Merge4Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+            gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data, 
+            (T*)gpu_src2.data, (T*)gpu_src3.data, gpu_dst.step / sizeof(T),
+            (T*)gpu_dst.data);
       }
     }
     cudaEventRecord(stop, 0);

@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 using Parameters = std::tuple<int, cv::Size>;
 inline std::string convertToStringMedianblur(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -87,14 +84,14 @@ bool PplCvCudaMedianBlurTest<T, channels>::apply() {
     cv::medianBlur(src, cv_dst, ksize);
   }
 
-  MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
+  ppl::cv::cuda::MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-      (T*)gpu_dst.data, ksize, BORDER_REPLICATE);
+      (T*)gpu_dst.data, ksize, ppl::cv::BORDER_REPLICATE);
   gpu_dst.download(dst);
 
-  MedianBlur<T, channels>(0, size.height, size.width, size.width * channels,
-      gpu_input, size.width * channels, gpu_output, ksize,
-      BORDER_REPLICATE);
+  ppl::cv::cuda::MedianBlur<T, channels>(0, size.height, size.width, 
+      size.width * channels, gpu_input, size.width * channels, gpu_output, 
+      ksize, ppl::cv::BORDER_REPLICATE);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;

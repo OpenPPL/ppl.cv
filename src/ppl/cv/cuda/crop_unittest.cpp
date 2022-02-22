@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 using Parameters = std::tuple<int, int, int, cv::Size>;
 inline std::string convertToStringCrop(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -100,15 +97,14 @@ bool PplCvCudaCropTest<T, channels>::apply() {
   croppedImage.copyTo(cv_dst);
   cv_dst = cv_dst * scale;
 
-  Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                    (T*)gpu_src.data, gpu_dst.rows, gpu_dst.cols,
-                    gpu_dst.step / sizeof(T), (T*)gpu_dst.data, left, top,
-                    scale);
+  ppl::cv::cuda::Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.rows, gpu_dst.cols,
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, left, top, scale);
   gpu_dst.download(dst);
 
-  Crop<T, channels>(0, src_height, src_width, src_width * channels, gpu_input,
-                    size.height, size.width, size.width * channels, gpu_output,
-                    left, top, scale);
+  ppl::cv::cuda::Crop<T, channels>(0, src_height, src_width, 
+      src_width * channels, gpu_input, size.height, size.width, 
+      size.width * channels, gpu_output, left, top, scale);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;

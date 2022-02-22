@@ -23,14 +23,12 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 static cv::Mat M = createSourceImage(3, 3, CV_32FC1);
 
-template <typename T, int channels, InterpolationType inter_type,
-          BorderType border_type>
+template <typename T, int channels, ppl::cv::InterpolationType inter_type,
+          ppl::cv::BorderType border_type>
 void BM_WarpPerspective_ppl_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
   int src_height = state.range(1);
@@ -51,7 +49,7 @@ void BM_WarpPerspective_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    WarpPerspective<T, channels>(0, src.rows, src.cols,
+    ppl::cv::cuda::WarpPerspective<T, channels>(0, src.rows, src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data,
         inter_type, border_type);
@@ -61,7 +59,7 @@ void BM_WarpPerspective_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      WarpPerspective<T, channels>(0, src.rows, src.cols,
+      ppl::cv::cuda::WarpPerspective<T, channels>(0, src.rows, src.cols,
           gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
           gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data,
           inter_type, border_type);
@@ -78,8 +76,8 @@ void BM_WarpPerspective_ppl_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, InterpolationType inter_type,
-          BorderType border_type>
+template <typename T, int channels, ppl::cv::InterpolationType inter_type,
+          ppl::cv::BorderType border_type>
 void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
   int src_height = state.range(1);
@@ -93,7 +91,7 @@ void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(dst);
 
   int cv_iterpolation;
-  if (inter_type == INTERPOLATION_LINEAR) {
+  if (inter_type == ppl::cv::INTERPOLATION_LINEAR) {
     cv_iterpolation = cv::INTER_LINEAR;
   }
   else {
@@ -101,13 +99,13 @@ void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_CONSTANT) {
+  if (border_type == ppl::cv::BORDER_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
   }
-  else if (border_type == BORDER_REPLICATE) {
+  else if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_TRANSPARENT) {
+  else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
     cv_border = cv::BORDER_TRANSPARENT;
   }
   else {
@@ -146,8 +144,8 @@ void BM_WarpPerspective_opencv_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, InterpolationType inter_type,
-          BorderType border_type>
+template <typename T, int channels, ppl::cv::InterpolationType inter_type,
+          ppl::cv::BorderType border_type>
 void BM_WarpPerspective_opencv_x86_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
   int src_height = state.range(1);
@@ -159,7 +157,7 @@ void BM_WarpPerspective_opencv_x86_cuda(benchmark::State &state) {
   cv::Mat dst(dst_height, dst_width, src.type());
 
   int cv_iterpolation;
-  if (inter_type == INTERPOLATION_LINEAR) {
+  if (inter_type == ppl::cv::INTERPOLATION_LINEAR) {
     cv_iterpolation = cv::INTER_LINEAR;
   }
   else {
@@ -167,13 +165,13 @@ void BM_WarpPerspective_opencv_x86_cuda(benchmark::State &state) {
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_CONSTANT) {
+  if (border_type == ppl::cv::BORDER_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
   }
-  else if (border_type == BORDER_REPLICATE) {
+  else if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_TRANSPARENT) {
+  else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
     cv_border = cv::BORDER_TRANSPARENT;
   }
   else {
@@ -189,84 +187,84 @@ void BM_WarpPerspective_opencv_x86_cuda(benchmark::State &state) {
 #define RUN_BENCHMARK0(channels, inter_type, src_width, src_height, dst_width, \
                        dst_height)                                             \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, uchar, channels,        \
-                   inter_type, BORDER_CONSTANT)->Args({src_width, src_height,  \
-                   dst_width, dst_height});                                    \
+                   inter_type, ppl::cv::BORDER_CONSTANT)->Args({src_width,     \
+                   src_height, dst_width, dst_height});                        \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_cuda, uchar, channels, inter_type,\
-                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_CONSTANT)->Args({src_width, src_height,     \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, uchar, channels, inter_type,   \
-                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_CONSTANT)->Args({src_width, src_height,     \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, uchar, channels,        \
-                   inter_type, BORDER_REPLICATE)->Args({src_width, src_height, \
-                   dst_width, dst_height});                                    \
+                   inter_type, ppl::cv::BORDER_REPLICATE)->Args({src_width,    \
+                   src_height, dst_width, dst_height});                        \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_cuda, uchar, channels, inter_type,\
-                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_REPLICATE)->Args({src_width, src_height,    \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, uchar, channels, inter_type,   \
-                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_REPLICATE)->Args({src_width, src_height,    \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, float, channels,        \
-                   inter_type, BORDER_CONSTANT)->Args({src_width, src_height,  \
-                   dst_width, dst_height});                                    \
+                   inter_type, ppl::cv::BORDER_CONSTANT)->Args({src_width,     \
+                   src_height, dst_width, dst_height});                        \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_cuda, float, channels, inter_type,\
-                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_CONSTANT)->Args({src_width, src_height,     \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, channels, inter_type,   \
-                   BORDER_CONSTANT)->Args({src_width, src_height, dst_width,   \
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_CONSTANT)->Args({src_width, src_height,     \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, float, channels,        \
-                   inter_type, BORDER_REPLICATE)->Args({src_width, src_height, \
-                   dst_width, dst_height});                                    \
+                   inter_type, ppl::cv::BORDER_REPLICATE)->Args({src_width,    \
+                   src_height, dst_width, dst_height});                        \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_cuda, float, channels, inter_type,\
-                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_REPLICATE)->Args({src_width, src_height,    \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, channels, inter_type,   \
-                   BORDER_REPLICATE)->Args({src_width, src_height, dst_width,  \
-                   dst_height})->UseManualTime()->Iterations(10); 
+                   ppl::cv::BORDER_REPLICATE)->Args({src_width, src_height,    \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10); 
 
 #define RUN_BENCHMARK1(channels, inter_type, src_width, src_height, dst_width, \
                        dst_height)                                             \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, uchar, channels,        \
-                   inter_type, BORDER_TRANSPARENT)->Args({src_width,           \
+                   inter_type, ppl::cv::BORDER_TRANSPARENT)->Args({src_width,  \
                    src_height, dst_width, dst_height});                        \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, uchar, channels, inter_type,   \
-                   BORDER_TRANSPARENT)->Args({src_width, src_height, dst_width,\
-                   dst_height})->UseManualTime()->Iterations(10);              \
+                   ppl::cv::BORDER_TRANSPARENT)->Args({src_width, src_height,  \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);   \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, float, channels,        \
-                   inter_type, BORDER_TRANSPARENT)->Args({src_width,           \
+                   inter_type, ppl::cv::BORDER_TRANSPARENT)->Args({src_width,  \
                    src_height, dst_width, dst_height});                        \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, channels, inter_type,   \
-                   BORDER_TRANSPARENT)->Args({src_width, src_height, dst_width,\
-                   dst_height})->UseManualTime()->Iterations(10);
+                   ppl::cv::BORDER_TRANSPARENT)->Args({src_width, src_height,  \
+                   dst_width, dst_height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(c1, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c1, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c3, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c3, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c4, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c4, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c1, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c1, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c3, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c3, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c4, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c4, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK0(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK0(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK0(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c1, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c1, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c3, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c3, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK0(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK0(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK1(c1, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c1, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c3, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c3, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c4, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c4, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c1, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c1, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c3, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c3, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c4, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c4, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK1(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK1(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK1(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c1, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c1, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c3, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c3, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK1(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK1(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
 
 #define RUN_OPENCV_X86_TYPE_FUNCTIONS(inter_type, border_type)                 \
 BENCHMARK_TEMPLATE(BM_WarpPerspective_opencv_x86_cuda, uchar, c1, inter_type,  \
@@ -370,21 +368,37 @@ BENCHMARK_TEMPLATE(BM_WarpPerspective_ppl_cuda, float, c4, inter_type,         \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_TRANSPARENT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_CONSTANT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_REPLICATE)
-RUN_OPENCV_X86_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_TRANSPARENT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+//                               ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+//                               ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+                              ppl::cv::BORDER_TRANSPARENT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+//                               ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+//                               ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_X86_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+                              ppl::cv::BORDER_TRANSPARENT)
 
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_REPLICATE)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_CONSTANT)
-RUN_OPENCV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_REPLICATE)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+                               ppl::cv::BORDER_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+                               ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+                               ppl::cv::BORDER_CONSTANT)
+RUN_OPENCV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+                               ppl::cv::BORDER_REPLICATE)
 
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_LINEAR, BORDER_TRANSPARENT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_CONSTANT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_REPLICATE)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(INTERPOLATION_NEAREST_POINT, BORDER_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+                               ppl::cv::BORDER_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+                               ppl::cv::BORDER_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 
+                               ppl::cv::BORDER_TRANSPARENT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+                               ppl::cv::BORDER_CONSTANT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+                               ppl::cv::BORDER_REPLICATE)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 
+                               ppl::cv::BORDER_TRANSPARENT)

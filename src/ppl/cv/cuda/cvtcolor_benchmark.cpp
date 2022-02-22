@@ -23,7 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 #define BENCHMARK_PPL_CV_CUDA(Function)                                        \
@@ -45,17 +44,18 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
   cudaEventCreate(&stop);                                                      \
                                                                                \
   for (int i = 0; i < iterations; i++) {                                       \
-    Function<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),       \
-                (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data); \
+    ppl::cv::cuda::Function<T>(0, gpu_src.rows, gpu_src.cols,                  \
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),  \
+        (T*)gpu_dst.data);                                                     \
   }                                                                            \
   cudaDeviceSynchronize();                                                     \
                                                                                \
   for (auto _ : state) {                                                       \
     cudaEventRecord(start, 0);                                                 \
     for (int i = 0; i < iterations; i++) {                                     \
-      Function<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),     \
-                  (T*)gpu_src.data, gpu_dst.step / sizeof(T),                  \
-                  (T*)gpu_dst.data);                                           \
+      ppl::cv::cuda::Function<T>(0, gpu_src.rows, gpu_src.cols,                \
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),\
+          (T*)gpu_dst.data);                                                   \
     }                                                                          \
     cudaEventRecord(stop, 0);                                                  \
     cudaEventSynchronize(stop);                                                \
@@ -404,18 +404,16 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
   cudaEventCreate(&stop);                                                      \
                                                                                \
   for (int i = 0; i < iterations; i++) {                                       \
-    Function<T>(0, height, width, gpu_src.step / sizeof(T),                    \
-                (const T*)gpu_src.data, gpu_dst.step / sizeof(T),              \
-                (T*)gpu_dst.data);                                             \
+    ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),     \
+        (const T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);   \
   }                                                                            \
   cudaDeviceSynchronize();                                                     \
                                                                                \
   for (auto _ : state) {                                                       \
     cudaEventRecord(start, 0);                                                 \
     for (int i = 0; i < iterations; i++) {                                     \
-      Function<T>(0, height, width, gpu_src.step / sizeof(T),                  \
-                  (const T*)gpu_src.data, gpu_dst.step / sizeof(T),            \
-                  (T*)gpu_dst.data);                                           \
+      ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),   \
+          (const T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data); \
     }                                                                          \
     cudaEventRecord(stop, 0);                                                  \
     cudaEventSynchronize(stop);                                                \
@@ -796,28 +794,27 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
   cudaEventCreate(&stop);                                                      \
                                                                                \
   for (int i = 0; i < iterations; i++) {                                       \
-    Function<T>(0, height, width, gpu_src.step / sizeof(T),                    \
-                (const T*)gpu_src.data, gpu_src.step / sizeof(T),              \
-                (const T*)gpu_src.data + height * gpu_src.step,                \
-                gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                    \
-                gpu_dst.step / sizeof(T) / 2,                                  \
-                (T*)gpu_dst.data + height * gpu_dst.step,                      \
-                gpu_dst.step / sizeof(T) / 2,                                  \
-                (T*)gpu_dst.data + height * gpu_dst.step * 5 / 4);             \
+    ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),     \
+        (const T*)gpu_src.data, gpu_src.step / sizeof(T),                      \
+        (const T*)gpu_src.data + height * gpu_src.step,                        \
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                            \
+        gpu_dst.step / sizeof(T) / 2, (T*)gpu_dst.data + height * gpu_dst.step,\
+        gpu_dst.step / sizeof(T) / 2,                                          \
+        (T*)gpu_dst.data + height * gpu_dst.step * 5 / 4);                     \
   }                                                                            \
   cudaDeviceSynchronize();                                                     \
                                                                                \
   for (auto _ : state) {                                                       \
     cudaEventRecord(start, 0);                                                 \
     for (int i = 0; i < iterations; i++) {                                     \
-      Function<T>(0, height, width, gpu_src.step / sizeof(T),                  \
-                  (const T*)gpu_src.data, gpu_src.step / sizeof(T),            \
-                  (const T*)gpu_src.data + height * gpu_src.step,              \
-                  gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                  \
-                  gpu_dst.step / sizeof(T) / 2,                                \
-                  (T*)gpu_dst.data + height * gpu_dst.step,                    \
-                  gpu_dst.step / sizeof(T) / 2,                                \
-                  (T*)gpu_dst.data + height * gpu_dst.step * 5 / 4);           \
+      ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),   \
+          (const T*)gpu_src.data, gpu_src.step / sizeof(T),                    \
+          (const T*)gpu_src.data + height * gpu_src.step,                      \
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                          \
+          gpu_dst.step / sizeof(T) / 2,                                        \
+          (T*)gpu_dst.data + height * gpu_dst.step,                            \
+          gpu_dst.step / sizeof(T) / 2,                                        \
+          (T*)gpu_dst.data + height * gpu_dst.step * 5 / 4);                   \
     }                                                                          \
     cudaEventRecord(stop, 0);                                                  \
     cudaEventSynchronize(stop);                                                \
@@ -865,28 +862,28 @@ void BM_CvtColor ## Function ## _ppl_cuda(benchmark::State &state) {           \
   cudaEventCreate(&stop);                                                      \
                                                                                \
   for (int i = 0; i < iterations; i++) {                                       \
-    Function<T>(0, height, width, gpu_src.step / sizeof(T),                    \
-                (const T*)gpu_src.data, gpu_src.step / sizeof(T) / 2,          \
-                (const T*)gpu_src.data + height * gpu_src.step,                \
-                gpu_src.step / sizeof(T) / 2,                                  \
-                (T*)gpu_src.data + height * gpu_src.step * 5 / 4,              \
-                gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                    \
-                gpu_dst.step / sizeof(T),                                      \
-                (T*)gpu_dst.data + height * gpu_dst.step);                     \
+    ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),     \
+          (const T*)gpu_src.data, gpu_src.step / sizeof(T) / 2,                \
+          (const T*)gpu_src.data + height * gpu_src.step,                      \
+          gpu_src.step / sizeof(T) / 2,                                        \
+          (T*)gpu_src.data + height * gpu_src.step * 5 / 4,                    \
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                          \
+          gpu_dst.step / sizeof(T),                                            \
+          (T*)gpu_dst.data + height * gpu_dst.step);                           \
   }                                                                            \
   cudaDeviceSynchronize();                                                     \
                                                                                \
   for (auto _ : state) {                                                       \
     cudaEventRecord(start, 0);                                                 \
     for (int i = 0; i < iterations; i++) {                                     \
-      Function<T>(0, height, width, gpu_src.step / sizeof(T),                  \
-                (const T*)gpu_src.data, gpu_src.step / sizeof(T) / 2,          \
-                (const T*)gpu_src.data + height * gpu_src.step,                \
-                gpu_src.step / sizeof(T) / 2,                                  \
-                (T*)gpu_src.data + height * gpu_src.step * 5 / 4,              \
-                gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                    \
-                gpu_dst.step / sizeof(T),                                      \
-                (T*)gpu_dst.data + height * gpu_dst.step);                     \
+      ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),   \
+          (const T*)gpu_src.data, gpu_src.step / sizeof(T) / 2,                \
+          (const T*)gpu_src.data + height * gpu_src.step,                      \
+          gpu_src.step / sizeof(T) / 2,                                        \
+          (T*)gpu_src.data + height * gpu_src.step * 5 / 4,                    \
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data,                          \
+          gpu_dst.step / sizeof(T),                                            \
+          (T*)gpu_dst.data + height * gpu_dst.step);                           \
     }                                                                          \
     cudaEventRecord(stop, 0);                                                  \
     cudaEventSynchronize(stop);                                                \

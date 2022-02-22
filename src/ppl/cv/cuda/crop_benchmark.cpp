@@ -22,8 +22,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels, int left, int top, int int_scale>
@@ -49,20 +47,19 @@ void BM_Crop_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, gpu_dst.rows, gpu_dst.cols,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, left, top,
-                      scale);
+    ppl::cv::cuda::Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, left, top, scale);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                        (T*)gpu_src.data, gpu_dst.rows, gpu_dst.cols,
-                        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, left, top,
-                        scale);
+      ppl::cv::cuda::Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.rows, 
+          gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, left, top,
+          scale);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);

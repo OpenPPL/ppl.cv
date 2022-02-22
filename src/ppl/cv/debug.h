@@ -104,7 +104,7 @@ class RandomFillImpl<T, true> {
 public:
     static void randomFill(T* array, size_t N, T min, T max) {
         std::default_random_engine eng(clock());
-#ifdef _MSC_VER <= 1900
+#if _MSC_VER <= 1900
         // vs2015 does not support uniform_int_distribution<uint8_t>
         std::uniform_int_distribution<int64_t> dis(min, max);
 #else

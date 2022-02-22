@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 enum MaskType {
   kUnmasked,
   kMasked,
@@ -108,24 +105,24 @@ bool PplCvCudaCalcHistTest<T, channels>::apply() {
   if (is_masked == kUnmasked) {
     cv::calcHist(&src, 1, channel, cv::Mat(), cv_dst1, 1, hist_size, ranges,
                  true, false);
-    CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                (T*)gpu_src.data, (int*)gpu_dst.data);
+    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data);
     gpu_dst.download(dst);
 
-    CalcHist<T>(0, size.height, size.width, size.width * channels,
-                gpu_input, gpu_output);
+    ppl::cv::cuda::CalcHist<T>(0, size.height, size.width, 
+        size.width * channels, gpu_input, gpu_output);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }
   else {
     cv::calcHist(&src, 1, channel, mask0, cv_dst1, 1, hist_size, ranges, true,
                  false);
-    CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                (T*)gpu_src.data, (int*)gpu_dst.data,
-                gpu_mask0.step / sizeof(uchar), (uchar*)gpu_mask0.data);
+    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data,
+        gpu_mask0.step / sizeof(uchar), (uchar*)gpu_mask0.data);
     gpu_dst.download(dst);
 
-    CalcHist<T>(0, size.height, size.width, size.width * channels,
-                gpu_input, gpu_output, size.width, gpu_mask1);
+    ppl::cv::cuda::CalcHist<T>(0, size.height, size.width, 
+        size.width * channels, gpu_input, gpu_output, size.width, gpu_mask1);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }
   cv::Mat temp_mat;

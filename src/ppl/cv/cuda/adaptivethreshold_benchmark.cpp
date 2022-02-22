@@ -22,8 +22,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <int ksize, int adaptive_method>
@@ -40,8 +38,8 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
 
   float max_value = 155.f;
   float delta = 10.f;
-  int threshold_type = THRESH_BINARY;
-  BorderType border_type = BORDER_REPLICATE;
+  int threshold_type = ppl::cv::THRESH_BINARY;
+  ppl::cv::BorderType border_type = ppl::cv::BORDER_REPLICATE;
 
   int iterations = 1000;
   float elapsed_time;
@@ -51,20 +49,19 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
-                      (uchar*)gpu_src.data, gpu_dst.step, (uchar*)gpu_dst.data,
-                      max_value, adaptive_method, threshold_type, ksize, delta,
-                      border_type);
+    ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step, (uchar*)gpu_src.data, gpu_dst.step, (uchar*)gpu_dst.data,
+        max_value, adaptive_method, threshold_type, ksize, delta, border_type);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
-                        (uchar*)gpu_src.data, gpu_dst.step,
-                        (uchar*)gpu_dst.data, max_value, adaptive_method,
-                        threshold_type, ksize, delta, border_type);
+      ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, 
+          gpu_src.step, (uchar*)gpu_src.data, gpu_dst.step, 
+          (uchar*)gpu_dst.data, max_value, adaptive_method, threshold_type, 
+          ksize, delta, border_type);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -90,22 +87,22 @@ void BM_AdaptiveThreshold_opencv_x86_cuda(benchmark::State &state) {
 
   float max_value = 155.f;
   float delta = 10.f;
-  int threshold_type = THRESH_BINARY;
+  int threshold_type = ppl::cv::THRESH_BINARY;
 
   cv::AdaptiveThresholdTypes cv_adaptive_method = cv::ADAPTIVE_THRESH_MEAN_C;
-  if (adaptive_method == ADAPTIVE_THRESH_MEAN_C) {
+  if (adaptive_method == ppl::cv::ADAPTIVE_THRESH_MEAN_C) {
     cv_adaptive_method = cv::ADAPTIVE_THRESH_MEAN_C;
   }
-  else if (adaptive_method == ADAPTIVE_THRESH_GAUSSIAN_C) {
+  else if (adaptive_method == ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C) {
     cv_adaptive_method = cv::ADAPTIVE_THRESH_GAUSSIAN_C;
   }
   else {
   }
   cv::ThresholdTypes cv_threshold_type = cv::THRESH_BINARY;
-  if (threshold_type == THRESH_BINARY) {
+  if (threshold_type == ppl::cv::THRESH_BINARY) {
     cv_threshold_type = cv::THRESH_BINARY;
   }
-  else if (threshold_type == THRESH_BINARY_INV) {
+  else if (threshold_type == ppl::cv::THRESH_BINARY_INV) {
     cv_threshold_type = cv::THRESH_BINARY_INV;
   }
 
@@ -122,31 +119,31 @@ BENCHMARK_TEMPLATE(BM_AdaptiveThreshold_opencv_x86_cuda, ksize,                \
 BENCHMARK_TEMPLATE(BM_AdaptiveThreshold_ppl_cuda, ksize, adaptive_method)->    \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(3, ADAPTIVE_THRESH_MEAN_C, 640, 480)
-// RUN_BENCHMARK(3, ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
-// RUN_BENCHMARK(7, ADAPTIVE_THRESH_MEAN_C, 640, 480)
-// RUN_BENCHMARK(7, ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
-// RUN_BENCHMARK(13, ADAPTIVE_THRESH_MEAN_C, 640, 480)
-// RUN_BENCHMARK(13, ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
-// RUN_BENCHMARK(25, ADAPTIVE_THRESH_MEAN_C, 640, 480)
-// RUN_BENCHMARK(25, ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
-// RUN_BENCHMARK(31, ADAPTIVE_THRESH_MEAN_C, 640, 480)
-// RUN_BENCHMARK(31, ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
-// RUN_BENCHMARK(43, ADAPTIVE_THRESH_MEAN_C, 640, 480)
-// RUN_BENCHMARK(43, ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
+// RUN_BENCHMARK(3, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 640, 480)
+// RUN_BENCHMARK(3, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
+// RUN_BENCHMARK(7, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 640, 480)
+// RUN_BENCHMARK(7, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
+// RUN_BENCHMARK(13, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 640, 480)
+// RUN_BENCHMARK(13, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
+// RUN_BENCHMARK(25, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 640, 480)
+// RUN_BENCHMARK(25, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
+// RUN_BENCHMARK(31, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 640, 480)
+// RUN_BENCHMARK(31, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
+// RUN_BENCHMARK(43, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 640, 480)
+// RUN_BENCHMARK(43, ppl::cv::ADAPTIVE_THRESH_MEAN_C, 1920, 1080)
 
-// RUN_BENCHMARK(3, ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
-// RUN_BENCHMARK(3, ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
-// RUN_BENCHMARK(7, ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
-// RUN_BENCHMARK(7, ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
-// RUN_BENCHMARK(13, ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
-// RUN_BENCHMARK(13, ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
-// RUN_BENCHMARK(25, ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
-// RUN_BENCHMARK(25, ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
-// RUN_BENCHMARK(31, ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
-// RUN_BENCHMARK(31, ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
-// RUN_BENCHMARK(43, ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
-// RUN_BENCHMARK(43, ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
+// RUN_BENCHMARK(3, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
+// RUN_BENCHMARK(3, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
+// RUN_BENCHMARK(7, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
+// RUN_BENCHMARK(7, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
+// RUN_BENCHMARK(13, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
+// RUN_BENCHMARK(13, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
+// RUN_BENCHMARK(25, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
+// RUN_BENCHMARK(25, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
+// RUN_BENCHMARK(31, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
+// RUN_BENCHMARK(31, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
+// RUN_BENCHMARK(43, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 640, 480)
+// RUN_BENCHMARK(43, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(ksize, adaptive_method)                      \
 BENCHMARK_TEMPLATE(BM_AdaptiveThreshold_opencv_x86_cuda, ksize,                \
@@ -156,26 +153,26 @@ BENCHMARK_TEMPLATE(BM_AdaptiveThreshold_opencv_x86_cuda, ksize,                \
 BENCHMARK_TEMPLATE(BM_AdaptiveThreshold_ppl_cuda, ksize, adaptive_method)->    \
                    Args({640, 480})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(3, ADAPTIVE_THRESH_MEAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(7, ADAPTIVE_THRESH_MEAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(13, ADAPTIVE_THRESH_MEAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(25, ADAPTIVE_THRESH_MEAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(31, ADAPTIVE_THRESH_MEAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(3, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(7, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(13, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(25, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(31, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_OPENCV_TYPE_FUNCTIONS(43, ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(3, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(7, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(13, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(25, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(31, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(3, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(7, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(13, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(25, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(31, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_OPENCV_TYPE_FUNCTIONS(43, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(3, ADAPTIVE_THRESH_MEAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(7, ADAPTIVE_THRESH_MEAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(13, ADAPTIVE_THRESH_MEAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(25, ADAPTIVE_THRESH_MEAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(31, ADAPTIVE_THRESH_MEAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(3, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(7, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(13, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(25, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(31, ADAPTIVE_THRESH_GAUSSIAN_C)
-RUN_PPL_CV_TYPE_FUNCTIONS(43, ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(3, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(7, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(13, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(25, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(31, ppl::cv::ADAPTIVE_THRESH_MEAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(3, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(7, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(13, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(25, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(31, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)
+RUN_PPL_CV_TYPE_FUNCTIONS(43, ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C)

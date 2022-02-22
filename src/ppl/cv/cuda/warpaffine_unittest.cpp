@@ -24,16 +24,14 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 enum Scaling {
   kHalfSize,
   kSameSize,
   kDoubleSize,
 };
 
-using Parameters = std::tuple<Scaling, InterpolationType, BorderType, cv::Size>;
+using Parameters = std::tuple<Scaling, ppl::cv::InterpolationType, 
+                              ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringWarpAffine(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -50,24 +48,24 @@ inline std::string convertToStringWarpAffine(const Parameters& parameters) {
   else {
   }
 
-  InterpolationType inter_type = (InterpolationType)std::get<1>(parameters);
-  if (inter_type == INTERPOLATION_LINEAR) {
+  ppl::cv::InterpolationType inter_type = std::get<1>(parameters);
+  if (inter_type == ppl::cv::INTERPOLATION_LINEAR) {
     formatted << "InterLinear" << "_";
   }
-  else if (inter_type == INTERPOLATION_NEAREST_POINT) {
+  else if (inter_type == ppl::cv::INTERPOLATION_NEAREST_POINT) {
     formatted << "InterNearest" << "_";
   }
   else {
   }
 
-  BorderType border_type = (BorderType)std::get<2>(parameters);
-  if (border_type == BORDER_CONSTANT) {
+  ppl::cv::BorderType border_type = std::get<2>(parameters);
+  if (border_type == ppl::cv::BORDER_CONSTANT) {
     formatted << "BORDER_CONSTANT" << "_";
   }
-  else if (border_type == BORDER_REPLICATE) {
+  else if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_TRANSPARENT) {
+  else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
     formatted << "BORDER_TRANSPARENT" << "_";
   }
   else {
@@ -98,8 +96,8 @@ class PplCvCudaWarpAffineTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   Scaling scale;
-  InterpolationType inter_type;
-  BorderType border_type;
+  ppl::cv::InterpolationType inter_type;
+  ppl::cv::BorderType border_type;
   cv::Size size;
 };
 
@@ -141,18 +139,18 @@ bool PplCvCudaWarpAffineTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   int cv_iterpolation = cv::INTER_LINEAR;
-  if (inter_type == INTERPOLATION_NEAREST_POINT) {
+  if (inter_type == ppl::cv::INTERPOLATION_NEAREST_POINT) {
     cv_iterpolation = cv::INTER_NEAREST;
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_CONSTANT) {
+  if (border_type == ppl::cv::BORDER_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
   }
-  else if (border_type == BORDER_REPLICATE) {
+  else if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_TRANSPARENT) {
+  else if (border_type == ppl::cv::BORDER_TRANSPARENT) {
     cv_border = cv::BORDER_TRANSPARENT;
   }
   else {
@@ -163,14 +161,16 @@ bool PplCvCudaWarpAffineTest<T, channels>::apply() {
       cv::Scalar(border_value, border_value, border_value, border_value));
   gpu_cv_dst.download(cv_dst);
 
-  WarpAffine<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-      (T*)gpu_src.data, dst_height, dst_width, gpu_dst.step / sizeof(T),
-      (T*)gpu_dst.data, (float*)M.data, inter_type, border_type, border_value);
+  ppl::cv::cuda::WarpAffine<T, channels>(0, src.rows, src.cols, 
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width, 
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (float*)M.data, inter_type, 
+      border_type, border_value);
   gpu_dst.download(dst);
 
-  WarpAffine<T, channels>(0, src.rows, src.cols, src.cols * channels,
-      gpu_input, dst_height, dst_width, dst_width * channels, gpu_output,
-      (float*)M.data, inter_type, border_type, border_value);
+  ppl::cv::cuda::WarpAffine<T, channels>(0, src.rows, src.cols, 
+      src.cols * channels, gpu_input, dst_height, dst_width, 
+      dst_width * channels, gpu_output, (float*)M.data, inter_type, border_type, 
+      border_value);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -207,8 +207,9 @@ TEST_P(PplCvCudaWarpAffineTest ## T ## channels, Standard) {                   \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaWarpAffineTest ## T ## channels,     \
   ::testing::Combine(                                                          \
     ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                      \
-    ::testing::Values(INTERPOLATION_LINEAR, INTERPOLATION_NEAREST_POINT),      \
-    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE),                      \
+    ::testing::Values(ppl::cv::INTERPOLATION_LINEAR,                           \
+                      ppl::cv::INTERPOLATION_NEAREST_POINT),                   \
+    ::testing::Values(ppl::cv::BORDER_CONSTANT, ppl::cv::BORDER_REPLICATE),    \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

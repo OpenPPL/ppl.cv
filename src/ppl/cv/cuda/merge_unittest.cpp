@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -105,25 +102,23 @@ bool PplCvCudaMergeTest<T, channels>::apply() {
   if (channels == 3) {
     cv::Mat srcs[3] = {src0, src1, src2};
     cv::merge(srcs, 3, cv_dst);
-    Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                      gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                      (T*)gpu_src1.data, (T*)gpu_src2.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-    Merge3Channels<T>(0, size.height, size.width, size.width, gpu_input0,
-                      gpu_input1, gpu_input2, size.width * channels,
-                      gpu_output);
+    ppl::cv::cuda::Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data, 
+        (T*)gpu_src2.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Merge3Channels<T>(0, size.height, size.width, size.width, 
+        gpu_input0, gpu_input1, gpu_input2, size.width * channels,
+        gpu_output);
   }
   else {  // channels == 4
     cv::Mat srcs[4] = {src0, src1, src2, src3};
     cv::merge(srcs, 4, cv_dst);
-    Merge4Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                      gpu_src0.step / sizeof(T),
-                      (T*)gpu_src0.data, (T*)gpu_src1.data,
-                      (T*)gpu_src2.data, (T*)gpu_src3.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-    Merge4Channels<T>(0, size.height, size.width, size.width,
-                      gpu_input0, gpu_input1, gpu_input2,
-                      gpu_input3, size.width * channels, gpu_output);
+    ppl::cv::cuda::Merge4Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data,
+        (T*)gpu_src2.data, (T*)gpu_src3.data, gpu_dst.step / sizeof(T), 
+        (T*)gpu_dst.data);
+    ppl::cv::cuda::Merge4Channels<T>(0, size.height, size.width, size.width,
+        gpu_input0, gpu_input1, gpu_input2, gpu_input3, size.width * channels, 
+        gpu_output);
   }
   gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);

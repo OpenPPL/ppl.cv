@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 using Parameters = std::tuple<int, cv::Size>;
 inline std::string convertToStringRotate(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -105,14 +102,14 @@ bool PplCvCudaRotateTest<T, channels>::apply() {
 
   cv::rotate(src, cv_dst, cv_rotate_flag);
 
-  Rotate<T, channels>(0, size.height, size.width, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, dst_height, dst_width,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, degree);
+  ppl::cv::cuda::Rotate<T, channels>(0, size.height, size.width, 
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, degree);
   gpu_dst.download(dst);
 
-  Rotate<T, channels>(0, size.height, size.width, size.width * channels,
-                      gpu_input, dst_height, dst_width, dst_width * channels,
-                      gpu_output, degree);
+  ppl::cv::cuda::Rotate<T, channels>(0, size.height, size.width, 
+      size.width * channels, gpu_input, dst_height, dst_width, 
+      dst_width * channels, gpu_output, degree);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;

@@ -22,8 +22,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum MaskType {
@@ -54,8 +52,8 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, gpu_dst, 0, nullptr);
+    ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst, 0, nullptr);
   }
   cudaDeviceSynchronize();
 
@@ -63,15 +61,13 @@ void BM_Mean_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
-        Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                          gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                          gpu_dst, 0, nullptr);
+        ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst, 0, nullptr);
       }
       else {
-        Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                          gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                          gpu_dst, gpu_mask.step / sizeof(uchar),
-                          (uchar*)gpu_mask.data);
+        ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst, 
+            gpu_mask.step / sizeof(uchar), (uchar*)gpu_mask.data);
       }
     }
     cudaEventRecord(stop, 0);

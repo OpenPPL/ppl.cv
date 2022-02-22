@@ -24,7 +24,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum Masks {
@@ -73,10 +72,9 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                        (T*)gpu_src.data, ksize, ksize, mask,
-                        gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                        ppl::cv::BORDER_REFLECT);
+    ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, ppl::cv::BORDER_REFLECT);
   }
   cudaDeviceSynchronize();
 
@@ -84,16 +82,16 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (function == kDilate) {
-        Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                            gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                            ksize, ksize, mask, gpu_dst.step / sizeof(T),
-                            (T*)gpu_dst.data, ppl::cv::BORDER_REFLECT);
+        ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 
+            ppl::cv::BORDER_REFLECT);
       }
       else if (function == kErode) {
-        Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                           gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                           ksize, ksize, mask, gpu_dst.step / sizeof(T),
-                           (T*)gpu_dst.data, ppl::cv::BORDER_REFLECT);
+        ppl::cv::cuda::Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, 
+            ppl::cv::BORDER_REFLECT);
       }
       else {
       }

@@ -23,7 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum SetValueFunctions {
@@ -57,8 +56,8 @@ void BM_SetValue_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
-                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
@@ -66,20 +65,20 @@ void BM_SetValue_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (function == kUnmaskedSetTo) {
-        SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
+        ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
+            gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
       }
       else if (function == kMaskedSetTo) {
-        SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, gpu_dst.cols,
-            gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, gpu_mask.step,
-            gpu_mask.data);
+        ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
+            gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, 
+            gpu_mask.step, gpu_mask.data);
       }
       else if (function == kOnes) {
-        Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+        ppl::cv::cuda::Ones<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {
-        Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
+        ppl::cv::cuda::Zeros<T, outChannels>(0, gpu_dst.rows, gpu_dst.cols,
             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
     }

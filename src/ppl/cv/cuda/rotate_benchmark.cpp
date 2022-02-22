@@ -23,7 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels, int degree>
@@ -61,18 +60,18 @@ void BM_Rotate_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Rotate<T, channels>(0, src_height, src_width, gpu_src.step / sizeof(T),
-                        (T*)gpu_src.data, dst_height, dst_width,
-                        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, degree);
+    ppl::cv::cuda::Rotate<T, channels>(0, src_height, src_width, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, degree);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      Rotate<T, channels>(0, src_height, src_width, gpu_src.step / sizeof(T),
-                          (T*)gpu_src.data, dst_height, dst_width,
-                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, degree);
+      ppl::cv::cuda::Rotate<T, channels>(0, src_height, src_width, 
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, degree);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);

@@ -23,8 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels, int ksize>
@@ -47,18 +45,18 @@ void BM_MedianBlur_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
+    ppl::cv::cuda::MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-        (T*)gpu_dst.data, ksize, BORDER_REPLICATE);
+        (T*)gpu_dst.data, ksize, ppl::cv::BORDER_REPLICATE);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
+      ppl::cv::cuda::MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
           gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-          (T*)gpu_dst.data, ksize, BORDER_REPLICATE);
+          (T*)gpu_dst.data, ksize, ppl::cv::BORDER_REPLICATE);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);

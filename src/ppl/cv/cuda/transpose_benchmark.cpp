@@ -23,7 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels>
@@ -44,18 +43,18 @@ void BM_Transpose_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                           gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                           gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                             gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+      ppl::cv::cuda::Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+          (T*)gpu_dst.data);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);

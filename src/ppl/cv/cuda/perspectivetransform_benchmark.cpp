@@ -22,7 +22,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int srcCns, int dstCns>
@@ -50,18 +49,18 @@ void BM_PerspectiveTransform_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-        (T*)gpu_dst.data, trans_coeff1);
+    ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, 
+        gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, trans_coeff1);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, gpu_src.cols,
-          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-          (T*)gpu_dst.data, trans_coeff1);
+      ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, 
+          gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, trans_coeff1);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);

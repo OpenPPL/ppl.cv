@@ -23,11 +23,9 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
-template <typename T, int channels, InterpolationType inter_type>
+template <typename T, int channels, ppl::cv::InterpolationType inter_type>
 void BM_Resize_ppl_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
   int src_height = state.range(1);
@@ -48,20 +46,18 @@ void BM_Resize_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Resize<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-                        (T*)gpu_src.data, dst_height, dst_width,
-                        gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                        inter_type);
+    ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, inter_type);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      Resize<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-                          (T*)gpu_src.data, dst_height, dst_width,
-                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                          inter_type);
+      ppl::cv::cuda::Resize<T, channels>(0, src.rows, src.cols, 
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, inter_type);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -75,7 +71,7 @@ void BM_Resize_ppl_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, InterpolationType inter_type>
+template <typename T, int channels, ppl::cv::InterpolationType inter_type>
 void BM_Resize_opencv_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
   int src_height = state.range(1);
@@ -89,13 +85,13 @@ void BM_Resize_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(dst);
 
   int cv_iterpolation;
-  if (inter_type == INTERPOLATION_LINEAR) {
+  if (inter_type == ppl::cv::INTERPOLATION_LINEAR) {
     cv_iterpolation = cv::INTER_LINEAR;
   }
-  else if (inter_type == INTERPOLATION_NEAREST_POINT) {
+  else if (inter_type == ppl::cv::INTERPOLATION_NEAREST_POINT) {
     cv_iterpolation = cv::INTER_NEAREST;
   }
-  else if (inter_type == INTERPOLATION_AREA) {
+  else if (inter_type == ppl::cv::INTERPOLATION_AREA) {
     cv_iterpolation = cv::INTER_AREA;
   }
   else {
@@ -132,7 +128,7 @@ void BM_Resize_opencv_cuda(benchmark::State &state) {
   cudaEventDestroy(stop);
 }
 
-template <typename T, int channels, InterpolationType inter_type>
+template <typename T, int channels, ppl::cv::InterpolationType inter_type>
 void BM_Resize_opencv_x86_cuda(benchmark::State &state) {
   int src_width  = state.range(0);
   int src_height = state.range(1);
@@ -144,13 +140,13 @@ void BM_Resize_opencv_x86_cuda(benchmark::State &state) {
   cv::Mat dst(dst_height, dst_width, src.type());
 
   int cv_iterpolation;
-  if (inter_type == INTERPOLATION_LINEAR) {
+  if (inter_type == ppl::cv::INTERPOLATION_LINEAR) {
     cv_iterpolation = cv::INTER_LINEAR;
   }
-  else if (inter_type == INTERPOLATION_NEAREST_POINT) {
+  else if (inter_type == ppl::cv::INTERPOLATION_NEAREST_POINT) {
     cv_iterpolation = cv::INTER_NEAREST;
   }
-  else if (inter_type == INTERPOLATION_AREA) {
+  else if (inter_type == ppl::cv::INTERPOLATION_AREA) {
     cv_iterpolation = cv::INTER_AREA;
   }
   else {
@@ -182,26 +178,26 @@ BENCHMARK_TEMPLATE(BM_Resize_ppl_cuda, float, channels, inter_type)->          \
                    Args({src_width, src_height, dst_width, dst_height})->      \
                    UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(c1, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, INTERPOLATION_LINEAR, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK(c1, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK(c3, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK(c1, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK(c3, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
+// RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
 
-// RUN_BENCHMARK(c1, INTERPOLATION_AREA, 640, 480, 320, 240)
-// RUN_BENCHMARK(c3, INTERPOLATION_AREA, 640, 480, 320, 240)
-// RUN_BENCHMARK(c4, INTERPOLATION_AREA, 640, 480, 320, 240)
-// RUN_BENCHMARK(c1, INTERPOLATION_AREA, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c3, INTERPOLATION_AREA, 640, 480, 1280, 960)
-// RUN_BENCHMARK(c4, INTERPOLATION_AREA, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c1, ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)
+// RUN_BENCHMARK(c3, ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)
+// RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)
+// RUN_BENCHMARK(c1, ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c3, ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
+// RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
 
 #define RUN_OPENCV_X86_TYPE_FUNCTIONS(type, inter_type)                        \
 BENCHMARK_TEMPLATE(BM_Resize_opencv_x86_cuda, type, c1, inter_type)->          \
@@ -257,23 +253,23 @@ BENCHMARK_TEMPLATE(BM_Resize_ppl_cuda, type, c4, inter_type)->                 \
                    Args({640, 480, 1280, 960})->                               \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(uchar, INTERPOLATION_LINEAR)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(uchar, INTERPOLATION_NEAREST_POINT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(uchar, INTERPOLATION_AREA)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(float, INTERPOLATION_LINEAR)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(float, INTERPOLATION_NEAREST_POINT)
-// RUN_OPENCV_X86_TYPE_FUNCTIONS(float, INTERPOLATION_AREA)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_LINEAR)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_NEAREST_POINT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_AREA)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_LINEAR)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_NEAREST_POINT)
+// RUN_OPENCV_X86_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_AREA)
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_LINEAR)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_NEAREST_POINT)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, INTERPOLATION_AREA)
-RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_LINEAR)
-RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_NEAREST_POINT)
-RUN_OPENCV_TYPE_FUNCTIONS(float, INTERPOLATION_AREA)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_LINEAR)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_NEAREST_POINT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_AREA)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_LINEAR)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_NEAREST_POINT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_AREA)
 
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_LINEAR)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_NEAREST_POINT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, INTERPOLATION_AREA)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_LINEAR)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_NEAREST_POINT)
-RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, INTERPOLATION_AREA)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_LINEAR)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_NEAREST_POINT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(uchar, ppl::cv::INTERPOLATION_AREA)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_LINEAR)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_NEAREST_POINT)
+RUN_PPL_CV_CUDA_TYPE_FUNCTIONS(float, ppl::cv::INTERPOLATION_AREA)

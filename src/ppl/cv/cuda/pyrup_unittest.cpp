@@ -24,24 +24,21 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
-using Parameters = std::tuple<BorderType, cv::Size>;
+using Parameters = std::tuple<ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringPyr(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  BorderType border_type = (BorderType)std::get<0>(parameters);
-  if (border_type == BORDER_REPLICATE) {
+  ppl::cv::BorderType border_type = std::get<0>(parameters);
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_DEFAULT
+  else {  // border_type == ppl::cv::BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -67,7 +64,7 @@ class PplCvCudaPyrUpTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
-  BorderType border_type;
+  ppl::cv::BorderType border_type;
   cv::Size size;
 };
 
@@ -99,26 +96,27 @@ bool PplCvCudaPyrUpTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_REPLICATE) {
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
   }
   cv::pyrUp(src, cv_dst, cv::Size(dst_width, dst_height), cv_border);
 
-  PyrUp<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                     (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-                     (T*)gpu_dst.data, border_type);
+  ppl::cv::cuda::PyrUp<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
+      (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  PyrUp<T, channels>(0, src_height, src_width, src_width * channels,
-                     gpu_input, dst_width * channels, gpu_output, border_type);
+  ppl::cv::cuda::PyrUp<T, channels>(0, src_height, src_width, 
+      src_width * channels, gpu_input, dst_width * channels, gpu_output, 
+      border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -148,7 +146,7 @@ TEST_P(PplCvCudaPyrUpTest ## T ## channels, Standard) {                        \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaPyrUpTest ## T ## channels,          \
   ::testing::Combine(                                                          \
-    ::testing::Values(BORDER_REFLECT_101),                                     \
+    ::testing::Values(ppl::cv::BORDER_REFLECT_101),                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

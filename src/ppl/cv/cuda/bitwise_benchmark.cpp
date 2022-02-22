@@ -23,7 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum MaskType {
@@ -57,10 +56,9 @@ void BM_BitwiseAnd_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                            gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                            gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
@@ -68,18 +66,17 @@ void BM_BitwiseAnd_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
-        BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                                gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                                gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                                gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+            gpu_src0.step / sizeof(T), (T*)gpu_src0.data, 
+            gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {
-        BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                                gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                                gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                                gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                                gpu_mask.step / sizeof(uchar),
-                                (uchar*)gpu_mask.data);
+        ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+            gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
+            gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
+            gpu_mask.step / sizeof(uchar), (uchar*)gpu_mask.data);
       }
     }
     cudaEventRecord(stop, 0);

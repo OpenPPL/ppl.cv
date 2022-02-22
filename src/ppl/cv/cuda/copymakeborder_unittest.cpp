@@ -24,10 +24,7 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
-using Parameters = std::tuple<int, int, BorderType, cv::Size>;
+using Parameters = std::tuple<int, int, ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringBorder(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -37,20 +34,20 @@ inline std::string convertToStringBorder(const Parameters& parameters) {
   int left = std::get<1>(parameters);
   formatted << "LeftRight" << left << "_";
 
-  BorderType border_type = (BorderType)std::get<2>(parameters);
-  if (border_type == BORDER_CONSTANT) {
+  ppl::cv::BorderType border_type = std::get<2>(parameters);
+  if (border_type == ppl::cv::BORDER_CONSTANT) {
     formatted << "BORDER_CONSTANT" << "_";
   }
-  else if (border_type == BORDER_REPLICATE) {
+  else if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_WRAP) {
+  else if (border_type == ppl::cv::BORDER_WRAP) {
     formatted << "BORDER_WRAP" << "_";
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
   else {
@@ -88,7 +85,7 @@ class PplCvCudaCopyMakeBorderTest :
   int bottom;
   int left;
   int right;
-  BorderType border_type;
+  ppl::cv::BorderType border_type;
   cv::Size size;
 };
 
@@ -117,35 +114,33 @@ bool PplCvCudaCopyMakeBorderTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_CONSTANT) {
+  if (border_type == ppl::cv::BORDER_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
   }
-  else if (border_type == BORDER_REPLICATE) {
+  else if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_WRAP) {
+  else if (border_type == ppl::cv::BORDER_WRAP) {
     cv_border = cv::BORDER_WRAP;
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
   }
   cv::copyMakeBorder(src, cv_dst, top, bottom, left, right, cv_border);
 
-  CopyMakeBorder<T, channels>(0, src.rows, src.cols, gpu_src.step / sizeof(T),
-                              (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-                              (T*)gpu_dst.data, top, bottom, left, right,
-                              border_type);
+  ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols, 
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
+      (T*)gpu_dst.data, top, bottom, left, right, border_type);
   gpu_dst.download(dst);
 
-  CopyMakeBorder<T, channels>(0, src.rows, src.cols, src.cols * channels,
-                              gpu_input, dst.cols * channels,
-                              gpu_output, top, bottom, left, right,
-                              border_type);
+  ppl::cv::cuda::CopyMakeBorder<T, channels>(0, src.rows, src.cols, 
+      src.cols * channels, gpu_input, dst.cols * channels, gpu_output, top, 
+      bottom, left, right, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -178,8 +173,9 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaCopyMakeBorderTest ## T ## channels, \
   ::testing::Combine(                                                          \
     ::testing::Values(0, 11, 17),                                              \
     ::testing::Values(0, 11, 17),                                              \
-    ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,       \
-                      BORDER_WRAP, BORDER_REFLECT_101),                        \
+    ::testing::Values(ppl::cv::BORDER_CONSTANT, ppl::cv::BORDER_REPLICATE,     \
+                      ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_WRAP,           \
+                      ppl::cv::BORDER_REFLECT_101),                            \
     ::testing::Values(cv::Size{11, 11}, cv::Size{25, 17},                      \
                       cv::Size{320, 240}, cv::Size{647, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080})),             \

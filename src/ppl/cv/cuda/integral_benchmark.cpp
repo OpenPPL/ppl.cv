@@ -23,8 +23,6 @@
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename Tsrc, typename Tdst>
@@ -46,20 +44,18 @@ void BM_Integral_ppl_cuda(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
-                            gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
-                            gpu_dst.rows, gpu_dst.cols,
-                            gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
+    ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows, 
+        gpu_dst.cols, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
-                              gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
-                              gpu_dst.rows, gpu_dst.cols,
-                              gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
+      ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
+          gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows, 
+          gpu_dst.cols, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
