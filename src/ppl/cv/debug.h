@@ -104,11 +104,7 @@ class RandomFillImpl<T, true> {
 public:
     static void randomFill(T* array, size_t N, T min, T max) {
         std::default_random_engine eng(clock());
-<<<<<<< HEAD
 #ifdef _MSC_VER
-=======
-#if _MSC_VER <= 1900
->>>>>>> 2eb637f ([fix][cuda]remove uchar naming conflict between ppl.cv and opencv.)
         // vs2015 does not support uniform_int_distribution<uint8_t>
         std::uniform_int_distribution<int64_t> dis(min, max);
 #else

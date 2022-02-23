@@ -12,12 +12,9 @@ if(PPLCV_USE_CUDA)
     target_compile_definitions(pplcv_unittest PRIVATE PPLCV_UNITTEST_OPENCV_CUDA)
 endif()
 target_compile_features(pplcv_unittest PRIVATE cxx_std_11)
-<<<<<<< HEAD
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 endif()
-=======
->>>>>>> 1d683cd ([fix][cuda]fix opencv 4.2->4.4 compilation error.)
 if(PPLCV_USE_AARCH64)
     target_compile_definitions(pplcv_unittest PRIVATE PPLCV_UNITTEST_OPENCV)
 endif()
