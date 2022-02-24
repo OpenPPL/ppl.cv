@@ -24,10 +24,7 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
-using Parameters = std::tuple<int, int, BorderType, cv::Size>;
+using Parameters = std::tuple<int, int, ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -37,17 +34,17 @@ inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
   int int_sigma = std::get<1>(parameters);
   formatted << "Sigma" << int_sigma << "_";
 
-  BorderType border_type = (BorderType)std::get<2>(parameters);
-  if (border_type == BORDER_REPLICATE) {
+  ppl::cv::BorderType border_type = std::get<2>(parameters);
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_DEFAULT
+  else {  // border_type == ppl::cv::BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -77,7 +74,7 @@ class PplCvCudaGaussianBlurTest : public ::testing::TestWithParam<Parameters> {
  private:
   int ksize;
   float sigma;
-  BorderType border_type;
+  ppl::cv::BorderType border_type;
   cv::Size size;
 };
 
@@ -104,13 +101,13 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_REPLICATE) {
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
@@ -118,13 +115,14 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   cv::GaussianBlur(src, cv_dst, cv::Size(ksize, ksize), sigma, sigma,
                    cv_border);
 
-  GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
+  ppl::cv::cuda::GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, sigma,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  GaussianBlur<T, channels>(0, size.height, size.width, size.width * channels,
-      gpu_input, ksize, sigma, size.width * channels, gpu_output, border_type);
+  ppl::cv::cuda::GaussianBlur<T, channels>(0, size.height, size.width, 
+      size.width * channels, gpu_input, ksize, sigma, size.width * channels, 
+      gpu_output, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;
@@ -158,8 +156,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   ::testing::Combine(                                                          \
     ::testing::Values(1, 5, 13, 31, 43),                                       \
     ::testing::Values(0, 1, 7, 10, 43),                                        \
-    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
-                      BORDER_REFLECT_101),                                \
+    ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT,      \
+                      ppl::cv::BORDER_REFLECT_101),                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

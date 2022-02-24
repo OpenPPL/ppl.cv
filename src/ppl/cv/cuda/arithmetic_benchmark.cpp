@@ -16,16 +16,13 @@
 
 #include "ppl/cv/cuda/arithmetic.h"
 
-#include <time.h>
-#include <sys/time.h>
-
+#include "opencv2/core.hpp"
 #include "opencv2/cudaarithm.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 double double_alpha = 0.1;
@@ -51,65 +48,68 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(src.rows, src.cols, src.type());
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Add<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                     gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                     gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                     gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Add<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_src.step / sizeof(T), 
+        (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (function == kADD) {
-        Add<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        ppl::cv::cuda::Add<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else if (function == kADDWEITHTED) {
-        AddWeighted<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                                 gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                                 double_alpha, gpu_src.step / sizeof(T),
-                                 (T*)gpu_src.data, double_beta, double_gamma,
-                                 gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        ppl::cv::cuda::AddWeighted<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, double_alpha, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, double_beta, 
+            double_gamma, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else if (function == kSUBTRACT) {
         T scalars[4];
         for (int i = 0; i < channels; i++) {
           scalars[i] = ((T*)(src.data))[i];
         }
-        Subtract<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                              gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                              (T*)scalars, gpu_dst.step / sizeof(T),
-                              (T*)gpu_dst.data);
+        ppl::cv::cuda::Subtract<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, (T*)scalars, 
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else if (function == kMUL) {
-        Mul<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        ppl::cv::cuda::Mul<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else if (function == kDIV) {
-        Div<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        ppl::cv::cuda::Div<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, ArithFunctions function>
@@ -123,7 +123,10 @@ void BM_Arith_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(src.rows, src.cols, src.type());
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -132,7 +135,7 @@ void BM_Arith_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (function == kADD) {
         cv::cuda::add(gpu_src, gpu_src, gpu_dst);
@@ -157,13 +160,16 @@ void BM_Arith_opencv_cuda(benchmark::State &state) {
       else {
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, ArithFunctions function>

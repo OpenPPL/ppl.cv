@@ -16,16 +16,13 @@
 
 #include "ppl/cv/cuda/merge.h"
 
-#include <time.h>
-#include <sys/time.h>
-
+#include "opencv2/core.hpp"
 #include "opencv2/cudaarithm.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels>
@@ -43,41 +40,44 @@ void BM_Merge_ppl_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(dst);
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                      gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                      (T*)gpu_src1.data, (T*)gpu_src2.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data, 
+        (T*)gpu_src2.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (channels == 3) {
-        Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                          gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                          (T*)gpu_src1.data, (T*)gpu_src2.data,
-                          gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+        ppl::cv::cuda::Merge3Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+            gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data, 
+            (T*)gpu_src2.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
       }
       else {  // channels == 4
-        Merge4Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
-                          gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                          (T*)gpu_src1.data, (T*)gpu_src2.data,
-                          (T*)gpu_src3.data, gpu_dst.step / sizeof(T),
-                          (T*)gpu_dst.data);
+        ppl::cv::cuda::Merge4Channels<T>(0, gpu_src0.rows, gpu_src0.cols,
+            gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)gpu_src1.data, 
+            (T*)gpu_src2.data, (T*)gpu_src3.data, gpu_dst.step / sizeof(T),
+            (T*)gpu_dst.data);
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels>
@@ -98,7 +98,10 @@ void BM_Merge_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_srcs1[4] = {gpu_src0, gpu_src1, gpu_src2, gpu_src3};
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -109,7 +112,7 @@ void BM_Merge_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (channels == 3) {
         for (auto _ : state) {
@@ -122,13 +125,16 @@ void BM_Merge_opencv_cuda(benchmark::State &state) {
         }
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels>

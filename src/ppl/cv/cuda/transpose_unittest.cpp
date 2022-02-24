@@ -19,12 +19,10 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
@@ -77,14 +75,13 @@ bool PplCvCudaTransposeTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   cv::transpose(src, cv_dst);
-  Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                         gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+  ppl::cv::cuda::Transpose<T, channels>(0, gpu_src.rows, gpu_src.cols,
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+      (T*)gpu_dst.data);
   gpu_dst.download(dst);
 
-  Transpose<T, channels>(0, size.height, size.width,
-                         size.width * channels, gpu_input,
-                         size.height * channels, gpu_output);
+  ppl::cv::cuda::Transpose<T, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, size.height * channels, gpu_output);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   float epsilon;

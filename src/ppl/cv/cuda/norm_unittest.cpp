@@ -19,27 +19,25 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 enum MaskType {
   kUnmasked,
   kMasked,
 };
 
-using Parameters = std::tuple<NormTypes, MaskType, cv::Size>;
+using Parameters = std::tuple<ppl::cv::NormTypes, MaskType, cv::Size>;
 inline std::string convertToStringNorm(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  NormTypes norm_type = std::get<0>(parameters);
-  if (norm_type == NORM_L1) {
+  ppl::cv::NormTypes norm_type = std::get<0>(parameters);
+  if (norm_type == ppl::cv::NORM_L1) {
     formatted << "NORM_L1" << "_";
   }
-  else if (norm_type == NORM_L2) {
+  else if (norm_type == ppl::cv::NORM_L2) {
     formatted << "NORM_L2" << "_";
   }
   else {
@@ -77,7 +75,7 @@ class PplCvCudaNormTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
-  NormTypes norm_type;
+  ppl::cv::NormTypes norm_type;
   MaskType is_masked;
   cv::Size size;
 };
@@ -106,31 +104,32 @@ bool PplCvCudaNormTest<T, channels>::apply() {
   cudaMemcpy(gpu_mask1, mask1, msk_size, cudaMemcpyHostToDevice);
 
   cv::NormTypes cv_norm_type;
-  if (norm_type == NORM_INF) {
+  if (norm_type == ppl::cv::NORM_INF) {
     cv_norm_type = cv::NORM_INF;
   }
-  else if (norm_type == NORM_L1) {
+  else if (norm_type == ppl::cv::NORM_L1) {
     cv_norm_type = cv::NORM_L1;
   }
-  else {  // norm_type == NORM_L2
+  else {  // norm_type == ppl::cv::NORM_L2
     cv_norm_type = cv::NORM_L2;
   }
 
   double result0, result1, result2;
   if (is_masked == kUnmasked) {
     result0 = cv::norm(src, cv_norm_type);
-    Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, &result1, norm_type);
-    Norm<T, channels>(0, size.height, size.width, size.width * channels,
-                      gpu_input, &result2, norm_type);
+    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, &result1, norm_type);
+    ppl::cv::cuda::Norm<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input, &result2, norm_type);
   }
   else {
     result0 = cv::norm(src, cv_norm_type, mask0);
-    Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, &result1, norm_type, gpu_mask0.step,
-                      gpu_mask0.data);
-    Norm<T, channels>(0, size.height, size.width, size.width * channels,
-                      gpu_input, &result2, norm_type, size.width, gpu_mask1);
+    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, &result1, norm_type, 
+        gpu_mask0.step, gpu_mask0.data);
+    ppl::cv::cuda::Norm<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input, &result2, norm_type, size.width, 
+        gpu_mask1);
   }
 
   float epsilon;
@@ -138,7 +137,7 @@ bool PplCvCudaNormTest<T, channels>::apply() {
     epsilon = EPSILON_1F;
   }
   else {
-    if (norm_type == NORM_L1) {
+    if (norm_type == ppl::cv::NORM_L1) {
       epsilon = EPSILON_1F;
     }
     else {
@@ -172,7 +171,7 @@ TEST_P(PplCvCudaNormTest ## T ## channels, Standard) {                         \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaNormTest ## T ## channels,           \
   ::testing::Combine(                                                          \
-    ::testing::Values(NORM_INF, NORM_L1, NORM_L2),                             \
+    ::testing::Values(ppl::cv::NORM_INF, ppl::cv::NORM_L1, ppl::cv::NORM_L2),  \
     ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \

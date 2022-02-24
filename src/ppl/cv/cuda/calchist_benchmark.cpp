@@ -16,17 +16,13 @@
 
 #include "ppl/cv/cuda/calchist.h"
 
-#include <time.h>
-#include <sys/time.h>
-
+#include "opencv2/imgproc.hpp"
 #include "opencv2/cudaimgproc.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 enum MaskType {
@@ -49,35 +45,41 @@ void BM_CalcHist_ppl_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(dst);
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                (T*)gpu_src.data, (int*)gpu_dst.data);
+    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
-        CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                    (T*)gpu_src.data, (int*)gpu_dst.data);
+        ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data);
       }
       else {
-        CalcHist<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                    (T*)gpu_src.data, (int*)gpu_dst.data,
-                    gpu_mask.step / sizeof(uchar), (uchar*)gpu_mask.data);
+        ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+            gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data,
+            gpu_mask.step / sizeof(uchar), (uchar*)gpu_mask.data);
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, MaskType mask_type>
@@ -95,7 +97,10 @@ void BM_CalcHist_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(dst);
 
   int iterations = 1000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -104,7 +109,7 @@ void BM_CalcHist_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       if (mask_type == kUnmasked) {
         cv::cuda::calcHist(gpu_src, gpu_dst);
@@ -113,13 +118,16 @@ void BM_CalcHist_opencv_cuda(benchmark::State &state) {
         cv::cuda::calcHist(gpu_src, gpu_mask, gpu_dst);
       }
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, MaskType mask_type>

@@ -19,12 +19,10 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 enum MaskType {
   kUnmasked,
@@ -109,30 +107,24 @@ bool PplCvCudaBitwiseTest<T, channels>::apply() {
 
   if (is_masked == kUnmasked) {
     cv::bitwise_and(src0, src1, cv_dst);
-    BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                            gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                            gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    BitwiseAnd<T, channels>(0, size.height, size.width,
-                            size.width * channels, gpu_input0,
-                            size.width * channels, gpu_input1,
-                            size.width * channels, gpu_output);
+    ppl::cv::cuda::BitwiseAnd<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output);
   }
   else {
     cv::bitwise_and(src0, src1, cv_dst, mask0);
-    BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                            gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                            gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                            gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
-                            gpu_mask0.step / sizeof(uchar),
-                            (uchar*)gpu_mask0.data);
+    ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
+        gpu_mask0.step / sizeof(uchar), (uchar*)gpu_mask0.data);
 
-    BitwiseAnd<T, channels>(0, size.height, size.width,
-                            size.width * channels, gpu_input0,
-                            size.width * channels, gpu_input1,
-                            size.width * channels, gpu_output,
-                            size.width, gpu_mask1);
+    ppl::cv::cuda::BitwiseAnd<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output, size.width, gpu_mask1);
   }
   gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);

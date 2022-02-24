@@ -24,27 +24,24 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
-using Parameters = std::tuple<int, BorderType, cv::Size>;
+using Parameters = std::tuple<int, ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringLaplacian(const Parameters& parameters) {
   std::ostringstream formatted;
 
   int ksize = std::get<0>(parameters);
   formatted << "Ksize" << ksize << "_";
 
-  BorderType border_type = (BorderType)std::get<1>(parameters);
-  if (border_type == BORDER_REPLICATE) {
+  ppl::cv::BorderType border_type = std::get<1>(parameters);
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_DEFAULT
+  else {  // border_type == ppl::cv::BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -72,7 +69,7 @@ class PplCvCudaLaplacianTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   int ksize;
-  BorderType border_type;
+  ppl::cv::BorderType border_type;
   cv::Size size;
 };
 
@@ -103,26 +100,26 @@ bool PplCvCudaLaplacianTest<Tsrc, Tdst, channels>::apply() {
   float delta = 1.5f;
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_REPLICATE) {
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
   }
   cv::Laplacian(src, cv_dst, cv_dst.depth(), ksize, scale, delta, cv_border);
 
-  Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
+  ppl::cv::cuda::Laplacian<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
       gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, ksize, scale, delta,
       border_type);
   gpu_dst.download(dst);
 
-  Laplacian<Tsrc, Tdst, channels>(0, size.height, size.width,
+  ppl::cv::cuda::Laplacian<Tsrc, Tdst, channels>(0, size.height, size.width,
       size.width * channels, gpu_input, size.width * channels, gpu_output,
       ksize, scale, delta, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
@@ -156,8 +153,8 @@ TEST_P(PplCvCudaLaplacianTest ## Tdst ## channels, Standard) {                 \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaLaplacianTest ## Tdst ## channels,   \
   ::testing::Combine(                                                          \
     ::testing::Values(1, 3, 5),                                                \
-    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
-                      BORDER_REFLECT_101),                                \
+    ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT,      \
+                      ppl::cv::BORDER_REFLECT_101),                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

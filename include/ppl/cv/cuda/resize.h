@@ -45,8 +45,8 @@ namespace cuda {
  *                         inWidthStride.
  * @param outData          output image data.
  * @param interpolation    Interpolation method. INTERPOLATION_LINEAR,
- *                         INTERPOLATION_NEAREST_POINT and
- *                         INTERPOLATION_AREA are supported.
+ *                         INTERPOLATION_NEAREST_POINT and INTERPOLATION_AREA 
+ *                         are supported.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.

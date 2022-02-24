@@ -20,13 +20,10 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
-#include "opencv2/imgproc.hpp"
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 enum Functions {
   kFullyMaskedDilate,
@@ -35,7 +32,7 @@ enum Functions {
   kPartiallyMaskedErode,
 };
 
-using Parameters = std::tuple<Functions, BorderType, int, cv::Size>;
+using Parameters = std::tuple<Functions, ppl::cv::BorderType, int, cv::Size>;
 inline std::string convertToStringDilate(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -55,11 +52,11 @@ inline std::string convertToStringDilate(const Parameters& parameters) {
   else {
   }
 
-  BorderType border_type = (BorderType)std::get<1>(parameters);
-  if (border_type == BORDER_DEFAULT) {
+  ppl::cv::BorderType border_type = std::get<1>(parameters);
+  if (border_type == ppl::cv::BORDER_DEFAULT) {
     formatted << "BORDER_DEFAULT" << "_";
   }
-  else if (border_type == BORDER_CONSTANT) {
+  else if (border_type == ppl::cv::BORDER_CONSTANT) {
     formatted << "BORDER_CONSTANT" << "_";
   }
   else {
@@ -93,7 +90,7 @@ class PplCvCudaDilateTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   Functions function;
-  BorderType border_type;
+  ppl::cv::BorderType border_type;
   int ksize;
   cv::Size size;
 };
@@ -123,10 +120,10 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_DEFAULT) {
+  if (border_type == ppl::cv::BORDER_DEFAULT) {
     cv_border = cv::BORDER_DEFAULT;
   }
-  else if (border_type == BORDER_CONSTANT) {
+  else if (border_type == ppl::cv::BORDER_CONSTANT) {
     cv_border = cv::BORDER_CONSTANT;
   }
   else {
@@ -137,37 +134,37 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
     constant_border = 253;
     cv::dilate(src, cv_dst, kernel0, cv::Point(-1, -1), 1, cv_border,
                constant_border);
-    Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                        gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                        ksize, ksize, nullptr, gpu_dst.step / sizeof(T),
-                        (T*)gpu_dst.data, border_type, constant_border);
+    ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, nullptr, 
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        constant_border);
   }
   else if (function == kPartiallyMaskedDilate) {
     constant_border = 253;
     cv::dilate(src, cv_dst, kernel1, cv::Point(-1, -1), 1, cv_border,
                constant_border);
-    Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                        gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                        ksize, ksize, mask, gpu_dst.step / sizeof(T),
-                        (T*)gpu_dst.data, border_type, constant_border);
+    ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        constant_border);
   }
   else if (function == kFullyMaskedErode) {
     constant_border = 1;
     cv::erode(src, cv_dst, kernel0, cv::Point(-1, -1), 1, cv_border,
               constant_border);
-    Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                       gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                       ksize, ksize, nullptr, gpu_dst.step / sizeof(T),
-                       (T*)gpu_dst.data, border_type, constant_border);
+    ppl::cv::cuda::Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, nullptr, 
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        constant_border);
   }
   else {
     constant_border = 1;
     cv::erode(src, cv_dst, kernel1, cv::Point(-1, -1), 1, cv_border,
               constant_border);
-    Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                       gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                       ksize, ksize, mask, gpu_dst.step / sizeof(T),
-                       (T*)gpu_dst.data, border_type, constant_border);
+    ppl::cv::cuda::Erode<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, ksize, mask, 
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type, 
+        constant_border);
   }
   gpu_dst.download(dst);
 
@@ -196,7 +193,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaDilateTest ## T ## channels,         \
   ::testing::Combine(                                                          \
     ::testing::Values(kFullyMaskedDilate, kPartiallyMaskedDilate,              \
                       kFullyMaskedErode, kPartiallyMaskedErode),               \
-    ::testing::Values(BORDER_DEFAULT, BORDER_CONSTANT),              \
+    ::testing::Values(ppl::cv::BORDER_DEFAULT, ppl::cv::BORDER_CONSTANT),      \
     ::testing::Values(1, 3, 5, 7, 11, 15),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \

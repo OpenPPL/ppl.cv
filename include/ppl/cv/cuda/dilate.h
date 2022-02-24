@@ -48,9 +48,8 @@ namespace cuda {
  *                       inWidthStride.
  * @param outData        output image data.
  * @param border_type    ways to deal with border. BORDER_CONSTANT,
- *                       BORDER_REPLICATE, BORDER_REFLECT,
- *                       BORDER_WRAP and BORDER_REFLECT_101 are
- *                       supported now.
+ *                       BORDER_REPLICATE, BORDER_REFLECT, BORDER_WRAP 
+ *                       and BORDER_REFLECT_101 are supported now.
  * @param border_value   value for BORDER_CONSTANT.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is

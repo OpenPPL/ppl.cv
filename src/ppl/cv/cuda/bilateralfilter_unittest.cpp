@@ -24,10 +24,7 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
-using Parameters = std::tuple<int, int, int, BorderType, cv::Size>;
+using Parameters = std::tuple<int, int, int, ppl::cv::BorderType, cv::Size>;
 inline
 std::string convertToStringBilateralFilter(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -41,17 +38,17 @@ std::string convertToStringBilateralFilter(const Parameters& parameters) {
   int int_space = std::get<2>(parameters);
   formatted << "IntSpace" << int_space << "_";
 
-  BorderType border_type = (BorderType)std::get<3>(parameters);
-  if (border_type == BORDER_REPLICATE) {
+  ppl::cv::BorderType border_type = std::get<3>(parameters);
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_DEFAULT
+  else {  // border_type == ppl::cv::BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -88,7 +85,7 @@ class PplCvCudaBilateralFilterTest :
   int diameter;
   float sigma_color;
   float sigma_space;
-  BorderType border_type;
+  ppl::cv::BorderType border_type;
   cv::Size size;
 };
 
@@ -120,13 +117,13 @@ bool PplCvCudaBilateralFilterTest<T, channels>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_REPLICATE) {
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
@@ -135,12 +132,12 @@ bool PplCvCudaBilateralFilterTest<T, channels>::apply() {
                             sigma_space, cv_border);
   gpu_cv_dst.download(cv_dst);
 
-  BilateralFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,
+  ppl::cv::cuda::BilateralFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, diameter, sigma_color,
       sigma_space, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
   gpu_dst.download(dst);
 
-  BilateralFilter<T, channels>(0, size.height, size.width,
+  ppl::cv::cuda::BilateralFilter<T, channels>(0, size.height, size.width,
       size.width * channels, gpu_input, diameter, sigma_color, sigma_space,
       size.width * channels, gpu_output, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
@@ -176,8 +173,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaBilateralFilterTest ## T ## channels,\
     ::testing::Values(1, 7, 12, 21, 35, 47),                                   \
     ::testing::Values(1, 27),                                                  \
     ::testing::Values(1, 14),                                                  \
-    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
-                      BORDER_REFLECT_101),                                \
+    ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT,      \
+                      ppl::cv::BORDER_REFLECT_101),                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

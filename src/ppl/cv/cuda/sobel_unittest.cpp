@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 #define SCHARR 101
 
 struct Kernel {
@@ -34,7 +31,7 @@ struct Kernel {
   int ksize;
 };
 
-using Parameters = std::tuple<Kernel, BorderType, cv::Size>;
+using Parameters = std::tuple<Kernel, ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringSobel(const Parameters& parameters) {
   std::ostringstream formatted;
 
@@ -47,17 +44,17 @@ inline std::string convertToStringSobel(const Parameters& parameters) {
     formatted << "Ksize" << kernel.ksize << "_";
   }
 
-  BorderType border_type = (BorderType)std::get<1>(parameters);
-  if (border_type == BORDER_REPLICATE) {
+  ppl::cv::BorderType border_type = std::get<1>(parameters);
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     formatted << "BORDER_REFLECT" << "_";
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     formatted << "BORDER_REFLECT_101" << "_";
   }
-  else {  // border_type == BORDER_DEFAULT
+  else {  // border_type == ppl::cv::BORDER_DEFAULT
     formatted << "BORDER_DEFAULT" << "_";
   }
 
@@ -85,7 +82,7 @@ class PplCvCudaSobelTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   Kernel kernel;
-  BorderType border_type;
+  ppl::cv::BorderType border_type;
   cv::Size size;
 };
 
@@ -119,13 +116,13 @@ bool PplCvCudaSobelTest<Tsrc, Tdst, channels>::apply() {
   }
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
-  if (border_type == BORDER_REPLICATE) {
+  if (border_type == ppl::cv::BORDER_REPLICATE) {
     cv_border = cv::BORDER_REPLICATE;
   }
-  else if (border_type == BORDER_REFLECT) {
+  else if (border_type == ppl::cv::BORDER_REFLECT) {
     cv_border = cv::BORDER_REFLECT;
   }
-  else if (border_type == BORDER_REFLECT_101) {
+  else if (border_type == ppl::cv::BORDER_REFLECT_101) {
     cv_border = cv::BORDER_REFLECT_101;
   }
   else {
@@ -133,13 +130,13 @@ bool PplCvCudaSobelTest<Tsrc, Tdst, channels>::apply() {
   cv::Sobel(src, cv_dst, cv_dst.depth(), kernel.dxy, 0, kernel.ksize, scale,
             delta, cv_border);
 
-  Sobel<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
+  ppl::cv::cuda::Sobel<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
       gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, kernel.dxy, 0,
       kernel.ksize, scale, delta, border_type);
   gpu_dst.download(dst);
 
-  Sobel<Tsrc, Tdst, channels>(0, size.height, size.width,
+  ppl::cv::cuda::Sobel<Tsrc, Tdst, channels>(0, size.height, size.width,
       size.width * channels, gpu_input, size.width * channels, gpu_output,
       kernel.dxy, 0, kernel.ksize, scale, delta, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
@@ -175,8 +172,8 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaSobelTest ## Tdst ## channels,       \
     ::testing::Values(Kernel{1, SCHARR}, Kernel{1, 1}, Kernel{1, 3},           \
                       Kernel{2, 3}, Kernel{1, 5}, Kernel{2, 5}, Kernel{3, 5},  \
                       Kernel{1, 7}, Kernel{2, 7}, Kernel{3, 7}),               \
-    ::testing::Values(BORDER_REPLICATE, BORDER_REFLECT,              \
-                      BORDER_REFLECT_101),                                \
+    ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT,      \
+                      ppl::cv::BORDER_REFLECT_101),                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

@@ -16,15 +16,12 @@
 
 #include "ppl/cv/cuda/perspectivetransform.h"
 
-#include <time.h>
-#include <sys/time.h>
-
+#include "opencv2/core.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int srcCns, int dstCns>
@@ -45,32 +42,37 @@ void BM_PerspectiveTransform_ppl_cuda(benchmark::State &state) {
   copyMatToArray(trans_coeffs0, trans_coeff1);
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-        (T*)gpu_dst.data, trans_coeff1);
+    ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, 
+        gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, trans_coeff1);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, gpu_src.cols,
-          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
-          (T*)gpu_dst.data, trans_coeff1);
+      ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, 
+          gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+          gpu_dst.step / sizeof(T), (T*)gpu_dst.data, trans_coeff1);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
 
   free(trans_coeff1);
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int srcCns, int dstCns>

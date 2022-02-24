@@ -24,13 +24,42 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
+__DEVICE__
+void clipVector(const float4 &value, uchar3 &result) {
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
+}
+
+__DEVICE__
+void clipVector(const float4 &value, uchar4 &result) {
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
+  result.w = saturateCast(value.w);
+}
+
+__DEVICE__
+void clipVector(const float4 &value, float3 &result) {
+  result.x = value.x;
+  result.y = value.y;
+  result.z = value.z;
+}
+
+__DEVICE__
+void clipVector(const float4 &value, float4 &result) {
+  result.x = value.x;
+  result.y = value.y;
+  result.z = value.z;
+  result.w = value.w;
+}
+
 template <typename T>
 __global__
-void remapLinearKernel(const T* src, int src_rows, int src_cols,
-                       int channels, int src_stride, const float* map_x,
-                       const float* map_y, T* dst, int dst_rows,
-                       int dst_cols, int dst_stride, BorderType border_type,
-                       T border_value) {
+void remapLinearC1Kernel(const T* src, int src_rows, int src_cols,
+                         int src_stride, const float* map_x, const float* map_y,
+                         T* dst, int dst_rows, int dst_cols, int dst_stride,
+                         BorderType border_type, T border_value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= dst_rows || element_x >= dst_cols) {
@@ -38,7 +67,6 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
   }
 
   int dst_xy = element_y * dst_cols + element_x;
-  int dst_index = element_y * dst_stride + element_x * channels;
   float float_x = map_x[dst_xy];
   float float_y = map_y[dst_xy];
   int int_x = (int)(float_x);
@@ -46,17 +74,20 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
   float fractional_x = (float)(float_x - int_x);
   float fractional_y = (float)(float_y - int_y);
 
-  float value0, value1, value2, value3;
-  float tab[4];
-  float tab_y[2], tab_x[2];
-  tab_y[0] = 1.0f - fractional_y;
-  tab_y[1] = fractional_y;
-  tab_x[0] = 1.0f - fractional_x;
-  tab_x[1] = fractional_x;
-  tab[0] = tab_y[0] * tab_x[0];
-  tab[1] = tab_y[0] * tab_x[1];
-  tab[2] = tab_y[1] * tab_x[0];
-  tab[3] = tab_y[1] * tab_x[1];
+  float4 fractionals;
+  float4 coefficients;
+  fractionals.x = 1.0f - fractional_y;
+  fractionals.y = fractional_y;
+  fractionals.z = 1.0f - fractional_x;
+  fractionals.w = fractional_x;
+  coefficients.x = fractionals.x * fractionals.z;
+  coefficients.y = fractionals.x * fractionals.w;
+  coefficients.z = fractionals.y * fractionals.z;
+  coefficients.w = fractionals.y * fractionals.w;
+
+  T* input;
+  T value0, value1;
+  float sum = 0.f;
 
   if (border_type == BORDER_CONSTANT) {
     bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
@@ -67,21 +98,25 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
                  int_y + 1 < src_rows;
     bool flag3 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y + 1 >= 0 &&
                  int_y + 1 < src_rows;
-    int position0 = int_y * src_stride + int_x * channels;
-    int position1 = (int_y + 1) * src_stride + int_x * channels;
-    for (int i = 0; i < channels; i++) {
-      value0 = flag0 ? src[position0 + i] : border_value;
-      value1 = flag1 ? src[position0 + channels + i] : border_value;
-      value2 = flag2 ? src[position1 + i] : border_value;
-      value3 = flag3 ? src[position1 + channels + i] : border_value;
-      float sum = value0 * tab[0] + value1 * tab[1] + value2 * tab[2] +
-                  value3 * tab[3];
-      if (sizeof(T) == 1) {
-        dst[dst_index + i] = saturateCast(sum);
-      }
-      else {
-        dst[dst_index + i] = sum;
-      }
+
+    input = (T*)((uchar*)src + int_y * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x + 1];
+    sum += (flag0 ? value0 : border_value) * coefficients.x;
+    sum += (flag1 ? value1 : border_value) * coefficients.y;
+
+    input = (T*)((uchar*)src + (int_y + 1) * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x + 1];
+    sum += (flag2 ? value0 : border_value) * coefficients.z;
+    sum += (flag3 ? value1 : border_value) * coefficients.w;
+
+    T* output = (T*)((uchar*)dst + element_y * dst_stride);
+    if (sizeof(T) == 1) {
+      output[element_x] = saturateCast(sum);
+    }
+    else {
+      output[element_x] = sum;
     }
   }
   else if (border_type == BORDER_REPLICATE) {
@@ -91,19 +126,25 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
     int_x1 = clip(int_x1, 0, src_cols - 1);
     int_y  = clip(int_y, 0, src_rows - 1);
     int_y1 = clip(int_y1, 0, src_rows - 1);
-    const T* src0 = src + int_y * src_stride + int_x * channels;
-    const T* src1 = src + int_y * src_stride + int_x1 * channels;
-    const T* src2 = src + int_y1 * src_stride + int_x * channels;
-    const T* src3 = src + int_y1 * src_stride + int_x1 * channels;
-    for (int i = 0; i < channels; ++i) {
-      float sum = src0[i] * tab[0] + src1[i] * tab[1] + src2[i] * tab[2] +
-                  src3[i] * tab[3];
-      if (sizeof(T) == 1) {
-        dst[dst_index + i] = saturateCast(sum);
-      }
-      else {
-        dst[dst_index + i] = sum;
-      }
+
+    input = (T*)((uchar*)src + int_y * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x1];
+    sum += value0 * coefficients.x;
+    sum += value1 * coefficients.y;
+
+    input = (T*)((uchar*)src + int_y1 * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x1];
+    sum += value0 * coefficients.z;
+    sum += value1 * coefficients.w;
+
+    T* output = (T*)((uchar*)dst + element_y * dst_stride);
+    if (sizeof(T) == 1) {
+      output[element_x] = saturateCast(sum);
+    }
+    else {
+      output[element_x] = sum;
     }
   }
   else if (border_type == BORDER_TRANSPARENT) {
@@ -116,22 +157,181 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
     bool flag3 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y + 1 >= 0 &&
                  int_y + 1 < src_rows;
     if (flag0 && flag1 && flag2 && flag3) {
-      int position0 = (int_y * src_stride + int_x * channels);
-      int position1 = ((int_y + 1) * src_stride + int_x * channels);
-      for (int i = 0; i < channels; i++) {
-        value0 = src[position0 + i];
-        value1 = src[position0 + channels + i];
-        value2 = src[position1 + i];
-        value3 = src[position1 + channels +i];
-        float sum = value0 * tab[0] + value1 * tab[1] + value2 * tab[2] +
-                    value3 * tab[3];
-        if (sizeof(T) == 1) {
-          dst[dst_index + i] = saturateCast(sum);
-        }
-        else {
-          dst[dst_index + i] = sum;
-        }
+      input = (T*)((uchar*)src + int_y * src_stride);
+      value0 = input[int_x];
+      value1 = input[int_x + 1];
+      sum += value0 * coefficients.x;
+      sum += value1 * coefficients.y;
+
+      input = (T*)((uchar*)src + (int_y + 1) * src_stride);
+      value0 = input[int_x];
+      value1 = input[int_x + 1];
+      sum += value0 * coefficients.z;
+      sum += value1 * coefficients.w;
+
+      T* output = (T*)((uchar*)dst + element_y * dst_stride);
+      if (sizeof(T) == 1) {
+        output[element_x] = saturateCast(sum);
       }
+      else {
+        output[element_x] = sum;
+      }
+    }
+  }
+  else {
+  }
+}
+
+template <typename T, typename Tn>
+__global__
+void remapLinearCnKernel(const T* src, int src_rows, int src_cols,
+                         int src_stride, const float* map_x, const float* map_y,
+                         T* dst, int dst_rows, int dst_cols, int dst_stride,
+                         BorderType border_type, T border_value) {
+  int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_y >= dst_rows || element_x >= dst_cols) {
+    return;
+  }
+
+  int dst_xy = element_y * dst_cols + element_x;
+  float float_x = map_x[dst_xy];
+  float float_y = map_y[dst_xy];
+  int int_x = (int)(float_x);
+  int int_y = (int)(float_y);
+  float fractional_x = (float)(float_x - int_x);
+  float fractional_y = (float)(float_y - int_y);
+
+  float4 fractionals;
+  float4 coefficients;
+  fractionals.x = 1.0f - fractional_y;
+  fractionals.y = fractional_y;
+  fractionals.z = 1.0f - fractional_x;
+  fractionals.w = fractional_x;
+  coefficients.x = fractionals.x * fractionals.z;
+  coefficients.y = fractionals.x * fractionals.w;
+  coefficients.z = fractionals.y * fractionals.z;
+  coefficients.w = fractionals.y * fractionals.w;
+
+  Tn* input;
+  Tn value0, value1;
+  float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
+
+  if (border_type == BORDER_CONSTANT) {
+    bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag2 = int_x >= 0 && int_x < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
+    bool flag3 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
+
+    input = (Tn*)((uchar*)src + int_y * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x + 1];
+
+    if (flag0) {
+      fractionals = value0 * coefficients.x;
+      sum += fractionals;
+    }
+    else {
+      sum += border_value * coefficients.x;
+    }
+
+    if (flag1) {
+      fractionals = value1 * coefficients.y;
+      sum += fractionals;
+    }
+    else {
+      sum += border_value * coefficients.y;
+    }
+
+    input = (Tn*)((uchar*)src + (int_y + 1) * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x + 1];
+
+    if (flag2) {
+      fractionals = value0 * coefficients.z;
+      sum += fractionals;
+    }
+    else {
+      sum += border_value * coefficients.z;
+    }
+
+    if (flag3) {
+      fractionals = value1 * coefficients.w;
+      sum += fractionals;
+    }
+    else {
+      sum += border_value * coefficients.w;
+    }
+
+    Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
+    clipVector(sum, value0);
+    output[element_x] = value0;
+  }
+  else if (border_type == BORDER_REPLICATE) {
+    int int_x1 = int_x + 1;
+    int int_y1 = int_y + 1;
+    int_x  = clip(int_x, 0, src_cols - 1);
+    int_x1 = clip(int_x1, 0, src_cols - 1);
+    int_y  = clip(int_y, 0, src_rows - 1);
+    int_y1 = clip(int_y1, 0, src_rows - 1);
+
+    input = (Tn*)((uchar*)src + int_y * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x1];
+
+    fractionals = value0 * coefficients.x;
+    sum += fractionals;
+    fractionals = value1 * coefficients.y;
+    sum += fractionals;
+
+    input = (Tn*)((uchar*)src + int_y1 * src_stride);
+    value0 = input[int_x];
+    value1 = input[int_x1];
+
+    fractionals = value0 * coefficients.z;
+    sum += fractionals;
+    fractionals = value1 * coefficients.w;
+    sum += fractionals;
+
+    Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
+    clipVector(sum, value0);
+    output[element_x] = value0;
+  }
+  else if (border_type == BORDER_TRANSPARENT) {
+    bool flag0 = int_x >= 0 && int_x < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag1 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y >= 0 &&
+                 int_y < src_rows;
+    bool flag2 = int_x >= 0 && int_x < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
+    bool flag3 = int_x + 1 >= 0 && int_x + 1 < src_cols && int_y + 1 >= 0 &&
+                 int_y + 1 < src_rows;
+    if (flag0 && flag1 && flag2 && flag3) {
+      input = (Tn*)((uchar*)src + int_y * src_stride);
+      value0 = input[int_x];
+      value1 = input[int_x + 1];
+
+      fractionals = value0 * coefficients.x;
+      sum += fractionals;
+      fractionals = value1 * coefficients.y;
+      sum += fractionals;
+
+      input = (Tn*)((uchar*)src + (int_y + 1) * src_stride);
+      value0 = input[int_x];
+      value1 = input[int_x + 1];
+
+      fractionals = value0 * coefficients.z;
+      sum += fractionals;
+      fractionals = value1 * coefficients.w;
+      sum += fractionals;
+
+      Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
+      clipVector(sum, value0);
+      output[element_x] = value0;
     }
   }
   else {
@@ -140,10 +340,10 @@ void remapLinearKernel(const T* src, int src_rows, int src_cols,
 
 template <typename T>
 __global__
-void remapNPKernel(const T* src, int src_rows, int src_cols, int channels,
-                   int src_stride, const float* map_x, const float* map_y,
-                   T* dst, int dst_rows, int dst_cols, int dst_stride,
-                   BorderType border_type, T border_value) {
+void remapNPC1Kernel(const T* src, int src_rows, int src_cols, int src_stride,
+                     const float* map_x, const float* map_y, T* dst,
+                     int dst_rows, int dst_cols, int dst_stride,
+                     BorderType border_type, T border_value) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_y >= dst_rows || element_x >= dst_cols) {
@@ -151,39 +351,93 @@ void remapNPKernel(const T* src, int src_rows, int src_cols, int channels,
   }
 
   int dst_xy = element_y * dst_cols + element_x;
-  int dst_index = element_y * dst_stride + element_x * channels;
   float float_x = map_x[dst_xy];
   float float_y = map_y[dst_xy];
   int int_x = __float2int_rn(float_x);
   int int_y = __float2int_rn(float_y);
 
   if (border_type == BORDER_CONSTANT) {
-    int src_index = int_y * src_stride + int_x * channels;
+    T* input  = (T*)((uchar*)src + int_y * src_stride);
+    T* output = (T*)((uchar*)dst + element_y * dst_stride);
+    T value;
+
     if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
-      for (int i = 0; i < channels; i++) {
-        dst[dst_index + i] = src[src_index + i];
-      }
+      value = input[int_x];
+      output[element_x] = value;
     }
     else {
-      for (int i = 0; i < channels; i++) {
-        dst[dst_index + i] = border_value;
-      }
+      output[element_x] = border_value;
     }
   }
   else if (border_type == BORDER_REPLICATE) {
     int_x = clip(int_x, 0, src_cols - 1);
     int_y = clip(int_y, 0, src_rows - 1);
-    int src_index = int_y * src_stride + int_x * channels;
-    for (int i = 0; i < channels; ++i) {
-      dst[dst_index + i] = src[src_index + i];
-    }
+
+    T* input  = (T*)((uchar*)src + int_y * src_stride);
+    T* output = (T*)((uchar*)dst + element_y * dst_stride);
+    T value = input[int_x];
+    output[element_x] = value;
   }
   else if (border_type == BORDER_TRANSPARENT) {
     if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
-      int src_index = int_y * src_stride + int_x * channels;
-      for (int i = 0; i < channels; i++) {
-        dst[dst_index + i] = src[src_index + i];
-      }
+      T* input  = (T*)((uchar*)src + int_y * src_stride);
+      T* output = (T*)((uchar*)dst + element_y * dst_stride);
+      T value = input[int_x];
+      output[element_x] = value;
+    }
+  }
+  else {
+  }
+}
+
+template <typename T, typename Tn>
+__global__
+void remapNPCnKernel(const T* src, int src_rows, int src_cols, int src_stride,
+                     const float* map_x, const float* map_y, T* dst,
+                     int dst_rows, int dst_cols, int dst_stride,
+                     BorderType border_type, T border_value) {
+  int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
+  if (element_y >= dst_rows || element_x >= dst_cols) {
+    return;
+  }
+
+  int dst_xy = element_y * dst_cols + element_x;
+  float float_x = map_x[dst_xy];
+  float float_y = map_y[dst_xy];
+  int int_x = __float2int_rn(float_x);
+  int int_y = __float2int_rn(float_y);
+
+  if (border_type == BORDER_CONSTANT) {
+    Tn* input  = (Tn*)((uchar*)src + int_y * src_stride);
+    Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
+    Tn value;
+
+    if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
+      value = input[int_x];
+      output[element_x] = value;
+    }
+    else {
+      float4 border = make_float4(0.f, 0.f, 0.f, 0.f);
+      clipVector(border, value);
+      output[element_x] = value;
+    }
+  }
+  else if (border_type == BORDER_REPLICATE) {
+    int_x = clip(int_x, 0, src_cols - 1);
+    int_y = clip(int_y, 0, src_rows - 1);
+
+    Tn* input  = (Tn*)((uchar*)src + int_y * src_stride);
+    Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
+    Tn value = input[int_x];
+    output[element_x] = value;
+  }
+  else if (border_type == BORDER_TRANSPARENT) {
+    if (int_x >= 0 && int_x < src_cols && int_y >= 0 && int_y < src_rows) {
+      Tn* input  = (Tn*)((uchar*)src + int_y * src_stride);
+      Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);
+      Tn value = input[int_x];
+      output[element_x] = value;
     }
   }
   else {
@@ -200,13 +454,13 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_rows >= 1 && src_cols >= 1);
   PPL_ASSERT(dst_rows >= 1 && dst_cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
-  PPL_ASSERT(src_stride >= src_cols * channels);
-  PPL_ASSERT(dst_stride >= dst_cols * channels);
+  PPL_ASSERT(src_stride >= src_cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= dst_cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(map_x != nullptr);
   PPL_ASSERT(map_y != nullptr);
   PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
              interpolation == INTERPOLATION_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_CONSTANT ||
+  PPL_ASSERT(border_type == BORDER_CONSTANT || 
              border_type == BORDER_REPLICATE ||
              border_type == BORDER_TRANSPARENT);
 
@@ -217,14 +471,38 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
   if (interpolation == INTERPOLATION_LINEAR) {
-    remapLinearKernel<uchar><<<grid, block, 0, stream>>>(src, src_rows,
-        src_cols, channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
-        dst_stride, border_type, border_value);
+    if (channels == 1) {
+      remapLinearC1Kernel<uchar><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else if (channels == 3) {
+      remapLinearCnKernel<uchar, uchar3><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else {  // channels == 4
+      remapLinearCnKernel<uchar, uchar4><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
-    remapNPKernel<uchar><<<grid, block, 0, stream>>>(src, src_rows, src_cols,
-        channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols, dst_stride,
-        border_type, border_value);
+    if (channels == 1) {
+      remapNPC1Kernel<uchar><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else if (channels == 3) {
+      remapNPCnKernel<uchar, uchar3><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else {  // channels == 4
+      remapNPCnKernel<uchar, uchar4><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
   }
   else {
   }
@@ -248,8 +526,8 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(src_rows >= 1 && src_cols >= 1);
   PPL_ASSERT(dst_rows >= 1 && dst_cols >= 1);
   PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
-  PPL_ASSERT(src_stride >= src_cols * channels);
-  PPL_ASSERT(dst_stride >= dst_cols * channels);
+  PPL_ASSERT(src_stride >= src_cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= dst_cols * channels * (int)sizeof(float));
   PPL_ASSERT(map_x != nullptr);
   PPL_ASSERT(map_y != nullptr);
   PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
@@ -265,14 +543,38 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
   grid.y  = divideUp(dst_rows, kBlockDimY1, kBlockShiftY1);
 
   if (interpolation == INTERPOLATION_LINEAR) {
-    remapLinearKernel<float><<<grid, block, 0, stream>>>(src, src_rows,
-        src_cols, channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
-        dst_stride, border_type, border_value);
+    if (channels == 1) {
+      remapLinearC1Kernel<float><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else if (channels == 3) {
+      remapLinearCnKernel<float, float3><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else {  // channels == 4
+      remapLinearCnKernel<float, float4><<<grid, block, 0, stream>>>(src,
+          src_rows, src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
-    remapNPKernel<float><<<grid, block, 0, stream>>>(src, src_rows, src_cols,
-        channels, src_stride, map_x, map_y, dst, dst_rows, dst_cols, dst_stride,
-        border_type, border_value);
+    if (channels == 1) {
+      remapNPC1Kernel<float><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else if (channels == 3) {
+      remapNPCnKernel<float, float3><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
+    else {  // channels == 4
+      remapNPCnKernel<float, float4><<<grid, block, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, map_x, map_y, dst, dst_rows, dst_cols,
+          dst_stride, border_type, border_value);
+    }
   }
   else {
   }
@@ -288,19 +590,19 @@ RetCode remap(const float* src, int src_rows, int src_cols, int channels,
 
 template <>
 RetCode Remap<uchar, 1>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              uchar* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              InterpolationType interpolation,
-                              BorderType border_type,
-                              uchar borderValue) {
+                        int inHeight,
+                        int inWidth,
+                        int inWidthStride,
+                        const uchar* inData,
+                        int outHeight,
+                        int outWidth,
+                        int outWidthStride,
+                        uchar* outData,
+                        const float* mapX,
+                        const float* mapY,
+                        InterpolationType interpolation,
+                        BorderType border_type,
+                        uchar borderValue) {
   RetCode code = remap(inData, inHeight, inWidth, 1, inWidthStride, mapX, mapY,
                        outData, outHeight, outWidth, outWidthStride,
                        interpolation, border_type, borderValue, stream);
@@ -310,19 +612,19 @@ RetCode Remap<uchar, 1>(cudaStream_t stream,
 
 template <>
 RetCode Remap<uchar, 3>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              uchar* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              InterpolationType interpolation,
-                              BorderType border_type,
-                              uchar borderValue) {
+                        int inHeight,
+                        int inWidth,
+                        int inWidthStride,
+                        const uchar* inData,
+                        int outHeight,
+                        int outWidth,
+                        int outWidthStride,
+                        uchar* outData,
+                        const float* mapX,
+                        const float* mapY,
+                        InterpolationType interpolation,
+                        BorderType border_type,
+                        uchar borderValue) {
   RetCode code = remap(inData, inHeight, inWidth, 3, inWidthStride, mapX, mapY,
                        outData, outHeight, outWidth, outWidthStride,
                        interpolation, border_type, borderValue, stream);
@@ -332,19 +634,19 @@ RetCode Remap<uchar, 3>(cudaStream_t stream,
 
 template <>
 RetCode Remap<uchar, 4>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const uchar* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              uchar* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              InterpolationType interpolation,
-                              BorderType border_type,
-                              uchar borderValue) {
+                        int inHeight,
+                        int inWidth,
+                        int inWidthStride,
+                        const uchar* inData,
+                        int outHeight,
+                        int outWidth,
+                        int outWidthStride,
+                        uchar* outData,
+                        const float* mapX,
+                        const float* mapY,
+                        InterpolationType interpolation,
+                        BorderType border_type,
+                        uchar borderValue) {
   RetCode code = remap(inData, inHeight, inWidth, 4, inWidthStride, mapX, mapY,
                        outData, outHeight, outWidth, outWidthStride,
                        interpolation, border_type, borderValue, stream);
@@ -354,19 +656,21 @@ RetCode Remap<uchar, 4>(cudaStream_t stream,
 
 template <>
 RetCode Remap<float, 1>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const float* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              float* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              InterpolationType interpolation,
-                              BorderType border_type,
-                              float borderValue) {
+                        int inHeight,
+                        int inWidth,
+                        int inWidthStride,
+                        const float* inData,
+                        int outHeight,
+                        int outWidth,
+                        int outWidthStride,
+                        float* outData,
+                        const float* mapX,
+                        const float* mapY,
+                        InterpolationType interpolation,
+                        BorderType border_type,
+                        float borderValue) {
+  inWidthStride  *= sizeof(float);
+  outWidthStride *= sizeof(float);
   RetCode code = remap(inData, inHeight, inWidth, 1, inWidthStride, mapX, mapY,
                        outData, outHeight, outWidth, outWidthStride,
                        interpolation, border_type, borderValue, stream);
@@ -376,19 +680,21 @@ RetCode Remap<float, 1>(cudaStream_t stream,
 
 template <>
 RetCode Remap<float, 3>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const float* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              float* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              InterpolationType interpolation,
-                              BorderType border_type,
-                              float borderValue) {
+                        int inHeight,
+                        int inWidth,
+                        int inWidthStride,
+                        const float* inData,
+                        int outHeight,
+                        int outWidth,
+                        int outWidthStride,
+                        float* outData,
+                        const float* mapX,
+                        const float* mapY,
+                        InterpolationType interpolation,
+                        BorderType border_type,
+                        float borderValue) {
+  inWidthStride  *= sizeof(float);
+  outWidthStride *= sizeof(float);
   RetCode code = remap(inData, inHeight, inWidth, 3, inWidthStride, mapX, mapY,
                        outData, outHeight, outWidth, outWidthStride,
                        interpolation, border_type, borderValue, stream);
@@ -398,19 +704,21 @@ RetCode Remap<float, 3>(cudaStream_t stream,
 
 template <>
 RetCode Remap<float, 4>(cudaStream_t stream,
-                              int inHeight,
-                              int inWidth,
-                              int inWidthStride,
-                              const float* inData,
-                              int outHeight,
-                              int outWidth,
-                              int outWidthStride,
-                              float* outData,
-                              const float* mapX,
-                              const float* mapY,
-                              InterpolationType interpolation,
-                              BorderType border_type,
-                              float borderValue) {
+                        int inHeight,
+                        int inWidth,
+                        int inWidthStride,
+                        const float* inData,
+                        int outHeight,
+                        int outWidth,
+                        int outWidthStride,
+                        float* outData,
+                        const float* mapX,
+                        const float* mapY,
+                        InterpolationType interpolation,
+                        BorderType border_type,
+                        float borderValue) {
+  inWidthStride  *= sizeof(float);
+  outWidthStride *= sizeof(float);
   RetCode code = remap(inData, inHeight, inWidth, 4, inWidthStride, mapX, mapY,
                        outData, outHeight, outWidth, outWidthStride,
                        interpolation, border_type, borderValue, stream);

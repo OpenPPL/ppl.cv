@@ -19,12 +19,10 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 enum ArithFunctions {
   kADD,
@@ -114,29 +112,27 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
 
   if (function == kADD) {
     cv::add(src0, src1, cv_dst);
-    Add<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                     gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                     gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                     gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Add<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    Add<T, channels>(0, size.height, size.width,
-                     size.width * channels, gpu_input0,
-                     size.width * channels, gpu_input1,
-                     size.width * channels, gpu_output);
+    ppl::cv::cuda::Add<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output);
   }
   else if (function == kADDWEITHTED) {
     float alpha = 0.1f;
     float beta  = 0.2f;
     float gamma = 0.3f;
     cv::addWeighted(src0, alpha, src1, beta, gamma, cv_dst);
-    AddWeighted<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+    ppl::cv::cuda::AddWeighted<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
         gpu_src0.step / sizeof(T), (T*)gpu_src0.data, alpha,
         gpu_src1.step / sizeof(T), (T*)gpu_src1.data, beta, gamma,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    AddWeighted<T, channels>(0, size.height, size.width, size.width * channels,
-        gpu_input0, alpha, size.width * channels, gpu_input1, beta, gamma,
-        size.width * channels, gpu_output);
+    ppl::cv::cuda::AddWeighted<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input0, alpha, size.width * channels, 
+        gpu_input1, beta, gamma, size.width * channels, gpu_output);
   }
   else if (function == kSUBTRACT) {
     cv::Scalar scalar;
@@ -147,38 +143,33 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
     }
     cv::subtract(src0, scalar, cv_dst);
 
-    Subtract<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                          gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                          (T*)scalars, gpu_dst.step / sizeof(T),
-                          (T*)gpu_dst.data);
+    ppl::cv::cuda::Subtract<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)scalars, 
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    Subtract<T, channels>(0, size.height, size.width, size.width * channels,
-                          gpu_input0, (T*)scalars, size.width * channels,
-                          gpu_output);
+    ppl::cv::cuda::Subtract<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input0, (T*)scalars, size.width * channels,
+        gpu_output);
   }
   else if (function == kMUL) {
     cv::multiply(src0, src1, cv_dst);
-    Mul<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                     gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                     gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                     gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Mul<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    Mul<T, channels>(0, size.height, size.width,
-                     size.width * channels, gpu_input0,
-                     size.width * channels, gpu_input1,
-                     size.width * channels, gpu_output);
+    ppl::cv::cuda::Mul<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1, 
+        size.width * channels, gpu_output);
   }
   else if (function == kDIV) {
     cv::divide(src0, src1, cv_dst);
-    Div<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-                     gpu_src0.step / sizeof(T), (T*)gpu_src0.data,
-                     gpu_src1.step / sizeof(T), (T*)gpu_src1.data,
-                     gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Div<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
-    Div<T, channels>(0, size.height, size.width,
-                     size.width * channels, gpu_input0,
-                     size.width * channels, gpu_input1,
-                     size.width * channels, gpu_output);
+    ppl::cv::cuda::Div<T, channels>(0, size.height, size.width, 
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1, 
+        size.width * channels, gpu_output);
   }
   else {
   }

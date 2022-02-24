@@ -29,7 +29,7 @@ namespace cuda {
 /**
  * @brief Applies an affine transformation to an image.
  * @tparam T The data type of input image and output image, currently only
- *           uint8_t(uchar) and float are supported.
+ *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
  * @param stream          cuda stream object.
@@ -47,8 +47,7 @@ namespace cuda {
  * @param interpolation   Interpolation method. INTERPOLATION_LINEAR and
  *                        INTERPOLATION_NEAREST_POINT are supported.
  * @param borderType      ways to deal with border. BORDER_CONSTANT,
- *                        BORDER_REPLICATE and BORDER_TRANSPARENT are
- *                        supported.
+ *                        BORDER_REPLICATE and BORDER_TRANSPARENT are supported.
  * @param borderValue     value used in case of a constant border; by default,
  *                        it is 0.
  * @return The execution status, succeeds or fails with an error code.

@@ -19,12 +19,10 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
@@ -100,23 +98,23 @@ bool PplCvCudaSplitTest<T, channels>::apply() {
   if (channels == 3) {
     cv::Mat dsts[3] = {cv_dst0, cv_dst1, cv_dst2};
     cv::split(src, dsts);
-    Split3Channels<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, gpu_dst0.step / sizeof(T),
-                      (T*)gpu_dst0.data, (T*)gpu_dst1.data, (T*)gpu_dst2.data);
-    Split3Channels<T>(0, size.height, size.width, size.width * channels,
-                      gpu_input, size.width, gpu_output0, gpu_output1,
-                      gpu_output2);
+    ppl::cv::cuda::Split3Channels<T>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst0.step / sizeof(T),
+        (T*)gpu_dst0.data, (T*)gpu_dst1.data, (T*)gpu_dst2.data);
+    ppl::cv::cuda::Split3Channels<T>(0, size.height, size.width, 
+        size.width * channels, gpu_input, size.width, gpu_output0, gpu_output1,
+        gpu_output2);
   }
   else {  // channels == 4
     cv::Mat dsts[4] = {cv_dst0, cv_dst1, cv_dst2, cv_dst3};
     cv::split(src, dsts);
-    Split4Channels<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),
-                      (T*)gpu_src.data, gpu_dst0.step / sizeof(T),
-                      (T*)gpu_dst0.data, (T*)gpu_dst1.data, (T*)gpu_dst2.data,
-                      (T*)gpu_dst3.data);
-    Split4Channels<T>(0, size.height, size.width, size.width * channels,
-                      gpu_input, size.width, gpu_output0, gpu_output1,
-                      gpu_output2, gpu_output3);
+    ppl::cv::cuda::Split4Channels<T>(0, gpu_src.rows, gpu_src.cols, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst0.step / sizeof(T),
+        (T*)gpu_dst0.data, (T*)gpu_dst1.data, (T*)gpu_dst2.data,
+        (T*)gpu_dst3.data);
+    ppl::cv::cuda::Split4Channels<T>(0, size.height, size.width, 
+        size.width * channels, gpu_input, size.width, gpu_output0, gpu_output1, 
+        gpu_output2, gpu_output3);
   }
   gpu_dst0.download(dst0);
   gpu_dst1.download(dst1);

@@ -46,9 +46,9 @@ namespace cuda {
  * @param left           number of left pixels.
  * @param right          number of right pixels.
  * @param border_type    ways to deal with border. BORDER_CONSTANT,
- *                       BORDER_REPLICATE, BORDER_REFLECT,
- *                       BORDER_WRAP, BORDER_REFLECT_101 and
- *                       BORDER_DEFAULT are supported now.
+ *                       BORDER_REPLICATE, BORDER_REFLECT, BORDER_WRAP, 
+ *                       BORDER_REFLECT_101 and BORDER_DEFAULT are supported 
+ *                       now.
  * @param border_value   value for BORDER_CONSTANT.
  * @return The execution status, succeeds or fails with an error code.
  * @note For best performance, a 2D array allocated by cudaMallocPitch() is

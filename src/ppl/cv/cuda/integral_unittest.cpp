@@ -24,9 +24,6 @@
 
 #include "infrastructure.hpp"
 
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
-
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
   std::ostringstream formatted;
@@ -89,14 +86,13 @@ bool PplCvCudaIntegralTest<Tsrc, Tdst, channels>::apply() {
     cv_dst = tmp;
   }
 
-  Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
-                          gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
-                          gpu_dst.rows, gpu_dst.cols,
-                          gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
+  ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
+      gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows, 
+      gpu_dst.cols, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
   gpu_dst.download(dst);
 
-  Integral<Tsrc, Tdst, 1>(0, size.height, size.width, size.width, gpu_input,
-                          dst.rows, dst.cols, dst.cols, gpu_output);
+  ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, size.height, size.width, size.width, 
+      gpu_input, dst.rows, dst.cols, dst.cols, gpu_output);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
   float epsilon;

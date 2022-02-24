@@ -49,8 +49,8 @@ namespace cuda {
  * @param outData        output image data.
  * @param delta          optional value added to the filtered pixels.
  * @param border_type    ways to deal with border. BORDER_REPLICATE,
- *                       BORDER_REFLECT, BORDER_REFLECT_101 and
- *                       BORDER_DEFAULT are supported now.
+ *                       BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT 
+ *                       are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.

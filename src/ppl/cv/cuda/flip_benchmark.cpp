@@ -16,16 +16,13 @@
 
 #include "ppl/cv/cuda/flip.h"
 
-#include <time.h>
-#include <sys/time.h>
-
+#include "opencv2/core.hpp"
 #include "opencv2/cudaarithm.hpp"
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
 #include "infrastructure.hpp"
 
-using namespace ppl::cv::cuda;
 using namespace ppl::cv::debug;
 
 template <typename T, int channels, int flip_code>
@@ -39,30 +36,36 @@ void BM_Flip_ppl_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(src.rows, src.cols, src.type());
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                      gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                      gpu_dst.step / sizeof(T), (T*)gpu_dst.data, flip_code);
+    ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        (T*)gpu_dst.data, flip_code);
   }
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-                        gpu_src.step / sizeof(T), (T*)gpu_src.data,
-                        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, flip_code);
+      ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
+          gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+          (T*)gpu_dst.data, flip_code);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, int flip_code>
@@ -76,7 +79,10 @@ void BM_Flip_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_dst(src.rows, src.cols, src.type());
 
   int iterations = 3000;
-  struct timeval start, end;
+  float elapsed_time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -85,17 +91,20 @@ void BM_Flip_opencv_cuda(benchmark::State &state) {
   cudaDeviceSynchronize();
 
   for (auto _ : state) {
-    gettimeofday(&start, NULL);
+    cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
       cv::cuda::flip(gpu_src, gpu_dst, flip_code);
     }
-    cudaDeviceSynchronize();
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    int time = elapsed_time * 1000 / iterations;
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 template <typename T, int channels, int flip_code>

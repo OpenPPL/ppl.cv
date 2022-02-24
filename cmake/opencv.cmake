@@ -1,6 +1,9 @@
 if(PPLCV_USE_CUDA)
     set(WITH_CUDA ON)
     set(BUILD_LIST "cudev,cudaarithm,cudafilters,cudaimgproc,cudawarping")
+    if(CMAKE_COMPILER_IS_GNUCC)
+        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+    endif()
 endif()
 
 set(BUILD_LIST "ximgproc,core,imgproc,features2d,flann,calib3d,${BUILD_LIST}" CACHE INTERNAL "")

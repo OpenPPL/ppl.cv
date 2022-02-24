@@ -901,7 +901,7 @@ RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(ksize_x > 0);
   PPL_ASSERT(ksize_y > 0);
-  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+  PPL_ASSERT(border_type == BORDER_REPLICATE || 
              border_type == BORDER_REFLECT ||
              border_type == BORDER_REFLECT_101 ||
              border_type == BORDER_DEFAULT);
@@ -1048,7 +1048,7 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(ksize_x > 0);
   PPL_ASSERT(ksize_y > 0);
-  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+  PPL_ASSERT(border_type == BORDER_REPLICATE || 
              border_type == BORDER_REFLECT ||
              border_type == BORDER_REFLECT_101 ||
              border_type == BORDER_DEFAULT);

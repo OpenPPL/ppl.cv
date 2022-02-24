@@ -19,14 +19,12 @@
 #include <tuple>
 #include <sstream>
 
+#include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
 #include "infrastructure.hpp"
 
 #define BASE 50
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 using Parameters = std::tuple<int, int, cv::Size>;
 inline std::string convertToStringConvertto(const Parameters& parameters) {
@@ -91,12 +89,12 @@ bool PplCvCudaConvertToTest<Tsrc, Tdst, channels>::apply() {
 
   src.convertTo(cv_dst, cv_dst.type(), alpha, beta);
 
-  ConvertTo<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
+  ppl::cv::cuda::ConvertTo<Tsrc, Tdst, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data,
       gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data, alpha, beta);
   gpu_dst.download(dst);
 
-  ConvertTo<Tsrc, Tdst, channels>(0, size.height, size.width,
+  ppl::cv::cuda::ConvertTo<Tsrc, Tdst, channels>(0, size.height, size.width,
       size.width * channels, gpu_input, size.width * channels, gpu_output,
       alpha, beta);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);

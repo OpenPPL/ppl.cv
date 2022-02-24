@@ -24,12 +24,8 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "utility.hpp"
 #include "infrastructure.hpp"
 #include "ppl/cv/x86/cvtcolor.h"
-
-using namespace ppl::cv;
-using namespace ppl::cv::cuda;
 
 template <typename T>
 bool checkArraysIdentity(const T* image0, const T* image1, int rows, int cols,
@@ -119,12 +115,14 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
                                                                                \
   cv::cvtColor(src, cv_dst, cv::COLOR_ ## Function);                           \
                                                                                \
-  Function<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),         \
-              (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);   \
+  ppl::cv::cuda::Function<T>(0, gpu_src.rows, gpu_src.cols,                    \
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),    \
+      (T*)gpu_dst.data);                                                       \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, size.height, size.width, size.width * src_channel, gpu_input, \
-              size.width * dst_channel, gpu_output);                           \
+  ppl::cv::cuda::Function<T>(0, size.height, size.width,                       \
+      size.width * src_channel, gpu_input, size.width * dst_channel,           \
+      gpu_output);                                                             \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   float epsilon;                                                               \
@@ -218,12 +216,14 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   cv::cvtColor(src, src1, cv::COLOR_ ## F1);                                   \
   cv::cvtColor(src1, cv_dst, cv::COLOR_ ## F2);                                \
                                                                                \
-  Function<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),         \
-              (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);   \
+  ppl::cv::cuda::Function<T>(0, gpu_src.rows, gpu_src.cols,                    \
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),    \
+      (T*)gpu_dst.data);                                                       \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, size.height, size.width, size.width * src_channel, gpu_input, \
-              size.width * dst_channel, gpu_output);                           \
+  ppl::cv::cuda::Function<T>(0, size.height, size.width,                       \
+      size.width * src_channel, gpu_input, size.width * dst_channel,           \
+      gpu_output);                                                             \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   float epsilon;                                                               \
@@ -296,12 +296,14 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
                                                                                \
   cv::cvtColor(src, cv_dst, cv::COLOR_ ## Function);                           \
                                                                                \
-  Function<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),         \
-              (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);   \
+  ppl::cv::cuda::Function<T>(0, gpu_src.rows, gpu_src.cols,                    \
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),    \
+      (T*)gpu_dst.data);                                                       \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, size.height, size.width, size.width * src_channel, gpu_input, \
-              size.width * dst_channel, gpu_output);                           \
+  ppl::cv::cuda::Function<T>(0, size.height, size.width,                       \
+      size.width * src_channel, gpu_input, size.width * dst_channel,           \
+      gpu_output);                                                             \
                                                                                \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
@@ -419,12 +421,14 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   else {                                                                       \
   }                                                                            \
                                                                                \
-  Function<T>(0, gpu_src.rows, gpu_src.cols, gpu_src.step / sizeof(T),         \
-              (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);   \
+  ppl::cv::cuda::Function<T>(0, gpu_src.rows, gpu_src.cols,                    \
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),    \
+      (T*)gpu_dst.data);                                                       \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, size.height, size.width, size.width * src_channel, gpu_input, \
-              size.width * dst_channel, gpu_output);                           \
+  ppl::cv::cuda::Function<T>(0, size.height, size.width,                       \
+      size.width * src_channel, gpu_input, size.width * dst_channel,           \
+      gpu_output);                                                             \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   float epsilon;                                                               \
@@ -537,12 +541,12 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   else {                                                                       \
   }                                                                            \
                                                                                \
-  Function<T>(0, height, width, gpu_src.step / sizeof(T), (T*)gpu_src.data,    \
-              gpu_dst.step / sizeof(T), (T*)gpu_dst.data);                     \
+  ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),       \
+      (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);           \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * dst_channel, gpu_output);                                \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * dst_channel, gpu_output);                                        \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, EPSILON_1F);          \
@@ -656,12 +660,12 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   else {                                                                       \
   }                                                                            \
                                                                                \
-  Function<T>(0, height, width, gpu_src.step / sizeof(T), (T*)gpu_src.data,    \
-              gpu_dst.step / sizeof(T), (T*)gpu_dst.data);                     \
+  ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),       \
+      (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);           \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * dst_channel, gpu_output);                                \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * dst_channel, gpu_output);                                        \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, EPSILON_1F);          \
@@ -776,12 +780,12 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   else {                                                                       \
   }                                                                            \
                                                                                \
-  Function<T>(0, height, width, gpu_src.step / sizeof(T), (T*)gpu_src.data,    \
-              gpu_dst.step / sizeof(T), (T*)gpu_dst.data);                     \
+  ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),       \
+      (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);           \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * dst_channel, gpu_output);                                \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * dst_channel, gpu_output);                                        \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, EPSILON_1F);          \
@@ -849,10 +853,10 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);              \
                                                                                \
   ppl::cv::x86::Function<T>(height, width, width * src_channel, input,         \
-                            width * dst_channel, output_x86);                  \
+      width * dst_channel, output_x86);                                        \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * dst_channel, gpu_output);                                \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * dst_channel, gpu_output);                                        \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity = checkArraysIdentity<T>(output_x86, output, dst_height,       \
@@ -922,20 +926,19 @@ bool PplCvCudaCvtColorDisc ## Function<T, src_channel, dst_channel>::apply() { \
                                                                                \
   if (src_channel == 1) {                                                      \
     ppl::cv::x86::Function<T>(height, width, width * src_channel, input,       \
-                              width * src_channel, input + height * width,     \
-                              width * dst_channel, output_x86);                \
-    Function<T>(0, height, width, width * src_channel, gpu_input,              \
-                width * src_channel, gpu_input + height * width,               \
-                width * dst_channel, gpu_output);                              \
+        width * src_channel, input + height * width, width * dst_channel,      \
+        output_x86);                                                           \
+    ppl::cv::cuda::Function<T>(0, height, width, width * src_channel,          \
+        gpu_input, width * src_channel, gpu_input + height * width,            \
+        width * dst_channel, gpu_output);                                      \
   }                                                                            \
   else {                                                                       \
     ppl::cv::x86::Function<T>(height, width, width * src_channel, input,       \
-                              width * dst_channel, output_x86,                 \
-                              width * dst_channel,                             \
-                              output_x86 + height * width);                    \
-    Function<T>(0, height, width, width * src_channel, gpu_input,              \
-                width * dst_channel, gpu_output, width * dst_channel,          \
-                gpu_output + height * width);                                  \
+        width * dst_channel, output_x86, width * dst_channel,                  \
+        output_x86 + height * width);                                          \
+    ppl::cv::cuda::Function<T>(0, height, width, width * src_channel,          \
+        gpu_input, width * dst_channel, gpu_output, width * dst_channel,       \
+        gpu_output + height * width);                                          \
   }                                                                            \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
@@ -1028,23 +1031,21 @@ bool PplCvCudaCvtColorDisc ## Function<T, src_channel, dst_channel>::apply() { \
   int stride1 = stride0 + ((height * width) >> 2);                             \
   if (src_channel == 1) {                                                      \
     ppl::cv::x86::Function<T>(height, width, width * src_channel, input,       \
-                              width * src_channel / 2, input + stride0,        \
-                              width * src_channel / 2, input + stride1,        \
-                              width * dst_channel, output_x86);                \
-    Function<T>(0, height, width, width * src_channel, gpu_input,              \
-                width * src_channel / 2, gpu_input + stride0,                  \
-                width * src_channel / 2, gpu_input + stride1,                  \
-                width * dst_channel, gpu_output);                              \
+        width * src_channel / 2, input + stride0, width * src_channel / 2,     \
+        input + stride1, width * dst_channel, output_x86);                     \
+    ppl::cv::cuda::Function<T>(0, height, width, width * src_channel,          \
+        gpu_input, width * src_channel / 2, gpu_input + stride0,               \
+        width * src_channel / 2, gpu_input + stride1, width * dst_channel,     \
+        gpu_output);                                                           \
   }                                                                            \
   else {                                                                       \
     ppl::cv::x86::Function<T>(height, width, width * src_channel, input,       \
-                              width * dst_channel, output_x86,                 \
-                              width * dst_channel / 2, output_x86 + stride0,   \
-                              width * dst_channel / 2, output_x86 + stride1);  \
-    Function<T>(0, height, width, width * src_channel, gpu_input,              \
-                width * dst_channel, gpu_output,                               \
-                width * dst_channel / 2, gpu_output + stride0,                 \
-                width * dst_channel / 2, gpu_output + stride1);                \
+        width * dst_channel, output_x86, width * dst_channel / 2,              \
+        output_x86 + stride0, width * dst_channel / 2, output_x86 + stride1);  \
+    ppl::cv::cuda::Function<T>(0, height, width, width * src_channel,          \
+        gpu_input, width * dst_channel, gpu_output,                            \
+        width * dst_channel / 2, gpu_output + stride0,                         \
+        width * dst_channel / 2, gpu_output + stride1);                        \
   }                                                                            \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
@@ -1116,14 +1117,14 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);              \
                                                                                \
   ppl::cv::x86::Function<T>(height, width, src.step / sizeof(T), (T*)src.data, \
-                            cv_dst.step / sizeof(T), (T*)cv_dst.data);         \
+      cv_dst.step / sizeof(T), (T*)cv_dst.data);                               \
                                                                                \
-  Function<T>(0, height, width, gpu_src.step / sizeof(T), (T*)gpu_src.data,    \
-              gpu_dst.step / sizeof(T), (T*)gpu_dst.data);                     \
+  ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),       \
+      (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);           \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * dst_channel, gpu_output);                                \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * dst_channel, gpu_output);                                        \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, EPSILON_1F, false);   \
@@ -1195,12 +1196,12 @@ bool PplCvCudaCvtColor ## Function<T, src_channel, dst_channel>::apply() {     \
   else {                                                                       \
   }                                                                            \
                                                                                \
-  Function<T>(0, height, width, gpu_src.step / sizeof(T), (T*)gpu_src.data,    \
-              gpu_dst.step / sizeof(T), (T*)gpu_dst.data);                     \
+  ppl::cv::cuda::Function<T>(0, height, width, gpu_src.step / sizeof(T),       \
+      (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);           \
   gpu_dst.download(dst);                                                       \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * dst_channel, gpu_output);                                \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * dst_channel, gpu_output);                                        \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, EPSILON_1F);          \
@@ -1267,12 +1268,12 @@ bool PplCvCudaCvtColorDisc ## Function<T, src_channel, dst_channel>::apply() { \
                                                                                \
   int stride = height * width;                                                 \
   ppl::cv::x86::Function<T>(height, width, width * src_channel, input,         \
-                            width * src_channel, input + stride,               \
-                            dst_width * dst_channel, output_x86);              \
+      width * src_channel, input + stride, dst_width * dst_channel,            \
+      output_x86);                                                             \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * src_channel, gpu_input + stride, dst_width * dst_channel,\
-              gpu_output);                                                     \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * src_channel, gpu_input + stride, dst_width * dst_channel,        \
+      gpu_output);                                                             \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity = checkArraysIdentity<T>(output_x86, output, height,           \
@@ -1337,15 +1338,14 @@ bool PplCvCudaCvtColorDisc ## Function<T, src_channel, dst_channel>::apply() { \
   int stride0 = height * width;                                                \
   int stride1 = height * width * 5 / 4;                                        \
   ppl::cv::x86::Function<T>(height, width, width * src_channel, input,         \
-                            width * src_channel, input + stride0,              \
-                            width * dst_channel, output_x86,                   \
-                            width * dst_channel / 2, output_x86 + stride0,     \
-                            width * dst_channel / 2, output_x86 + stride1);    \
+      width * src_channel, input + stride0, width * dst_channel, output_x86,   \
+      width * dst_channel / 2, output_x86 + stride0, width * dst_channel / 2,  \
+      output_x86 + stride1);                                                   \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * src_channel, gpu_input + stride0, width * dst_channel,   \
-              gpu_output, width * dst_channel / 2, gpu_output + stride0,       \
-              width * dst_channel / 2, gpu_output + stride1);                  \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * src_channel, gpu_input + stride0, width * dst_channel,           \
+      gpu_output, width * dst_channel / 2, gpu_output + stride0,               \
+      width * dst_channel / 2, gpu_output + stride1);                          \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity = checkArraysIdentity<T>(output_x86, output, dst_height,       \
@@ -1410,16 +1410,14 @@ bool PplCvCudaCvtColorDisc ## Function<T, src_channel, dst_channel>::apply() { \
   int stride0 = height * width;                                                \
   int stride1 = height * width * 5 / 4;                                        \
   ppl::cv::x86::Function<T>(height, width, width * src_channel, input,         \
-                            width * src_channel / 2, input + stride0,          \
-                            width * src_channel / 2, input + stride1,          \
-                            width * dst_channel, output_x86,                   \
-                            width * dst_channel, output_x86 + stride0);        \
+      width * src_channel / 2, input + stride0, width * src_channel / 2,       \
+      input + stride1, width * dst_channel, output_x86, width * dst_channel,   \
+      output_x86 + stride0);                                                   \
                                                                                \
-  Function<T>(0, height, width, width * src_channel, gpu_input,                \
-              width * src_channel / 2, gpu_input + stride0,                    \
-              width * src_channel / 2, gpu_input + stride1,                    \
-              width * dst_channel, gpu_output, width * dst_channel,            \
-              gpu_output + stride0);                                           \
+  ppl::cv::cuda::Function<T>(0, height, width, width * src_channel, gpu_input, \
+      width * src_channel / 2, gpu_input + stride0, width * src_channel / 2,   \
+      gpu_input + stride1, width * dst_channel, gpu_output,                    \
+      width * dst_channel, gpu_output + stride0);                              \
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);            \
                                                                                \
   bool identity = checkArraysIdentity<T>(output_x86, output, dst_height,       \

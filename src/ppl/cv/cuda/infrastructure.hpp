@@ -26,7 +26,7 @@
 #include "opencv2/core.hpp"
 #include "opencv2/core/cuda.hpp"
 
-#include "utility.hpp"
+#include "ppl/common/log.h"
 
 #define EPSILON_1F 1.1f
 #define EPSILON_2F 2.1f
