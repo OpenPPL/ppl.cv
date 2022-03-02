@@ -627,6 +627,7 @@ void morph2DKernel1(const T1* src, int rows, int cols, int src_stride,
                     BorderType border_type, const T1 border_value,
                     Morphology morphology_swap) {
   __shared__ uchar mask[MAX_SIZE];
+
   if (kernel_y <= 32 && kernel_x <= 32) {
     int kernel_elements = kernel_y * kernel_x;
     int threads = blockDim.y * blockDim.x;
@@ -728,6 +729,7 @@ void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
                         BorderType border_type, const uchar border_value,
                         Morphology morphology_swap) {
   __shared__ uchar mask[MAX_SIZE];
+
   if (kernel_y <= 32 && kernel_x <= 32) {
     int kernel_elements = kernel_y * kernel_x;
     int threads = blockDim.y * blockDim.x;

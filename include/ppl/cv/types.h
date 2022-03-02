@@ -24,15 +24,7 @@ namespace ppl {
 namespace cv {
 
 /** Distance types for Distance Transform */
-enum
-{
-    PPLCV_DIST_USER    =-1,  /**< User defined distance */
-    PPLCV_DIST_L1      =1,   /**< distance = |x1-x2| + |y1-y2| */
-    PPLCV_DIST_L2      =2,   /**< the simple euclidean distance */
-    PPLCV_DIST_C       =3,   /**< distance = max(|x1-x2|,|y1-y2|) */
-};
-
-enum DistTypes{
+enum DistTypes {
     DIST_USER    =-1,  /**< User defined distance */
     DIST_L1      =1,   /**< distance = |x1-x2| + |y1-y2| */
     DIST_L2      =2,   /**< the simple euclidean distance */
@@ -102,8 +94,7 @@ enum ThresholdTypes {
 };
 
 /* Sub-pixel interpolation methods */
-enum
-{
+enum {
     INTER_NN        =0,
     INTER_LINEAR    =1,
     INTER_CUBIC     =2,
@@ -125,8 +116,7 @@ enum AdaptiveThresholdTypes {
     ADAPTIVE_THRESH_GAUSSIAN_C = 1
 };
 
-enum
-{
+enum {
     CV_THRESH_BINARY      =0,  /**< value = value > threshold ? max_value : 0       */
     CV_THRESH_BINARY_INV  =1,  /**< value = value > threshold ? 0 : max_value       */
     CV_THRESH_TRUNC       =2,  /**< value = value > threshold ? threshold : value   */
