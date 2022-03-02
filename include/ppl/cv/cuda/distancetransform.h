@@ -40,11 +40,11 @@ namespace cuda {
  * @param inData          input image data.
  * @param outWidthStride  the width stride of out, similar to inWidthStride.
  * @param outData         output image with calculated distances..
- * @param distanceType    Type of distance, see enum DistTypes. currently only
- *                        DIST_L2 is supported.
+ * @param distanceType    Type of distance, see enum DistTypes. DIST_C, DIST_L1
+ *                        and DIST_L2 are supported.
  * @param maskSize        Size of the distance transform mask,
- *                        see DistanceTransformMasks. currently only
- *                        DIST_MASK_PRECISE is supported.
+ *                        see DistanceTransformMasks. DIST_MASK_3, DIST_MASK_5
+ *                        and DIST_MASK_PRECISE are supported.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.

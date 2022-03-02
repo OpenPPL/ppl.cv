@@ -64,6 +64,10 @@ void BM_DistanceTransform_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4e5b1fb ([perf][cuda]add functions of distancetransform and optimize it.)
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
 }
@@ -79,24 +83,24 @@ void BM_DistanceTransform_opencv_x86_cuda(benchmark::State &state) {
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, 1));
 
   cv::DistanceTypes cv_distance;
-  if (distance_type == ppl::cv::DIST_L1) {
-    cv_distance = cv::DIST_L1;
-  }
-  else if (distance_type == ppl::cv::DIST_L2) {
-    cv_distance = cv::DIST_L2;
-  }
-  else {
+  if (distance_type == ppl::cv::DIST_C) {
     cv_distance = cv::DIST_C;
   }
-  cv::DistanceTransformMasks cv_mask;
-  if (mask_size == ppl::cv::DIST_MASK_PRECISE) {
-    cv_mask = cv::DIST_MASK_PRECISE;
-  }
-  else if (mask_size == ppl::cv::DIST_MASK_3) {
-    cv_mask = cv::DIST_MASK_3;
+  else if (distance_type == ppl::cv::DIST_L1) {
+    cv_distance = cv::DIST_L1;
   }
   else {
+    cv_distance = cv::DIST_L2;
+  }
+  cv::DistanceTransformMasks cv_mask;
+  if (mask_size == ppl::cv::DIST_MASK_3) {
+    cv_mask = cv::DIST_MASK_3;
+  }
+  else if (mask_size == ppl::cv::DIST_MASK_5) {
     cv_mask = cv::DIST_MASK_5;
+  }
+  else {
+    cv_mask = cv::DIST_MASK_PRECISE;
   }
 
   for (auto _ : state) {
@@ -111,6 +115,26 @@ BENCHMARK_TEMPLATE(BM_DistanceTransform_opencv_x86_cuda, float, distance_type, \
 BENCHMARK_TEMPLATE(BM_DistanceTransform_ppl_cuda, float, distance_type,        \
                    mask_size)->Args({width, height})->UseManualTime()->        \
                    Iterations(10);
+
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_3, 320, 240)
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_3, 640, 480)
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_3, 1280, 720)
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_3, 1920, 1080)
+
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_5, 320, 240)
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_5, 640, 480)
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_5, 1280, 720)
+// RUN_BENCHMARK(ppl::cv::DIST_C, ppl::cv::DIST_MASK_5, 1920, 1080)
+
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_3, 320, 240)
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_3, 640, 480)
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_3, 1280, 720)
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_3, 1920, 1080)
+
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_5, 320, 240)
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_5, 640, 480)
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_5, 1280, 720)
+// RUN_BENCHMARK(ppl::cv::DIST_L1, ppl::cv::DIST_MASK_5, 1920, 1080)
 
 // RUN_BENCHMARK(ppl::cv::DIST_L2, ppl::cv::DIST_MASK_PRECISE, 320, 240)
 // RUN_BENCHMARK(ppl::cv::DIST_L2, ppl::cv::DIST_MASK_PRECISE, 640, 480)
@@ -141,6 +165,14 @@ BENCHMARK_TEMPLATE(BM_DistanceTransform_ppl_cuda, type, distance_type,         \
                    mask_size)->Args({1920, 1080})->UseManualTime()->           \
                    Iterations(10);
 
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::DIST_C, ppl::cv::DIST_MASK_3)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::DIST_C, ppl::cv::DIST_MASK_5)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::DIST_L1, ppl::cv::DIST_MASK_3)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::DIST_L1, ppl::cv::DIST_MASK_5)
 RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::DIST_L2, ppl::cv::DIST_MASK_PRECISE)
 
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::DIST_C, ppl::cv::DIST_MASK_3)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::DIST_C, ppl::cv::DIST_MASK_5)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::DIST_L1, ppl::cv::DIST_MASK_3)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::DIST_L1, ppl::cv::DIST_MASK_5)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::DIST_L2, ppl::cv::DIST_MASK_PRECISE)

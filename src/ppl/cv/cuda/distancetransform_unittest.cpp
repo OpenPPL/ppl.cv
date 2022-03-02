@@ -24,31 +24,31 @@
 
 #include "infrastructure.hpp"
 
-using Parameters = std::tuple<ppl::cv::DistTypes, 
+using Parameters = std::tuple<ppl::cv::DistTypes,
                               ppl::cv::DistanceTransformMasks, cv::Size>;
 inline std::string convertToStringDistTransform(const Parameters& parameters) {
   std::ostringstream formatted;
 
   ppl::cv::DistTypes distance_type = std::get<0>(parameters);
-  if (distance_type == ppl::cv::DIST_L1) {
+  if (distance_type == ppl::cv::DIST_C) {
+    formatted << "DIST_C" << "_";
+  }
+  else if (distance_type == ppl::cv::DIST_L1) {
     formatted << "DIST_L1" << "_";
   }
-  else if (distance_type == ppl::cv::DIST_L2) {
-    formatted << "DIST_L2" << "_";
-  }
   else {
-    formatted << "DIST_C" << "_";
+    formatted << "DIST_L2" << "_";
   }
 
   ppl::cv::DistanceTransformMasks mask_size = std::get<1>(parameters);
-  if (mask_size == ppl::cv::DIST_MASK_PRECISE) {
-    formatted << "MASK_PRECISE" << "_";
-  }
-  else if (mask_size == ppl::cv::DIST_MASK_3) {
+  if (mask_size == ppl::cv::DIST_MASK_3) {
     formatted << "MASK_3" << "_";
   }
-  else {
+  else if (mask_size == ppl::cv::DIST_MASK_5) {
     formatted << "MASK_5" << "_";
+  }
+  else {
+    formatted << "MASK_PRECISE" << "_";
   }
 
   cv::Size size = std::get<2>(parameters);
@@ -102,25 +102,35 @@ bool PplCvCudaDistanceTransformTest<T>::apply() {
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
-  cv::DistanceTypes cv_distance;
-  if (distance_type == ppl::cv::DIST_L1) {
-    cv_distance = cv::DIST_L1;
+  if ((distance_type == ppl::cv::DIST_C || distance_type == ppl::cv::DIST_L1)
+      && mask_size == ppl::cv::DIST_MASK_PRECISE) {
+    mask_size = ppl::cv::DIST_MASK_3;
   }
   else if (distance_type == ppl::cv::DIST_L2) {
-    cv_distance = cv::DIST_L2;
+    mask_size = ppl::cv::DIST_MASK_PRECISE;
   }
   else {
+  }
+
+  cv::DistanceTypes cv_distance;
+  if (distance_type == ppl::cv::DIST_C) {
     cv_distance = cv::DIST_C;
   }
-  cv::DistanceTransformMasks cv_mask;
-  if (mask_size == ppl::cv::DIST_MASK_PRECISE) {
-    cv_mask = cv::DIST_MASK_PRECISE;
-  }
-  else if (mask_size == ppl::cv::DIST_MASK_3) {
-    cv_mask = cv::DIST_MASK_3;
+  else if (distance_type == ppl::cv::DIST_L1) {
+    cv_distance = cv::DIST_L1;
   }
   else {
+    cv_distance = cv::DIST_L2;
+  }
+  cv::DistanceTransformMasks cv_mask;
+  if (mask_size == ppl::cv::DIST_MASK_3) {
+    cv_mask = cv::DIST_MASK_3;
+  }
+  else if (mask_size == ppl::cv::DIST_MASK_5) {
     cv_mask = cv::DIST_MASK_5;
+  }
+  else {
+    cv_mask = cv::DIST_MASK_PRECISE;
   }
   cv::distanceTransform(src, cv_dst, cv_distance, cv_mask);
 
@@ -129,7 +139,7 @@ bool PplCvCudaDistanceTransformTest<T>::apply() {
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, distance_type, mask_size);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::DistanceTransform<T>(0, size.height, size.width, size.width, 
+  ppl::cv::cuda::DistanceTransform<T>(0, size.height, size.width, size.width,
       gpu_input, size.width, gpu_output, distance_type, mask_size);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
@@ -160,14 +170,13 @@ TEST_P(PplCvCudaDistanceTransformTest ## T, Standard) {                        \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaDistanceTransformTest ## T,          \
   ::testing::Combine(                                                          \
-    ::testing::Values(ppl::cv::DIST_L2),                                       \
-    ::testing::Values(ppl::cv::DIST_MASK_PRECISE),                             \
+    ::testing::Values(ppl::cv::DIST_C, ppl::cv::DIST_L1, ppl::cv::DIST_L2),    \
+    ::testing::Values(ppl::cv::DIST_MASK_3, ppl::cv::DIST_MASK_5,              \
+                      ppl::cv::DIST_MASK_PRECISE),                             \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
-                      cv::Size{2283, 2720}, cv::Size{2934, 3080},              \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
-                      cv::Size{1280, 720}, cv::Size{1920, 1080},               \
-                      cv::Size{2280, 2720}, cv::Size{2920, 3080})),            \
+                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaDistanceTransformTest ## T::ParamType>& info) {                 \
     return convertToStringDistTransform(info.param);                           \
