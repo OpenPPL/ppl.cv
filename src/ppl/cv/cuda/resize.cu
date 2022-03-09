@@ -1032,7 +1032,7 @@ RetCode resize(const uchar* src, int src_rows, int src_cols, int channels,
       src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(uchar),
-                             cudaMemcpyDeviceToDevice);
+                             cudaMemcpyDeviceToDevice, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -1226,7 +1226,7 @@ RetCode resize(const float* src, int src_rows, int src_cols, int channels,
       src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, src_rows * src_stride * sizeof(float),
-                             cudaMemcpyDeviceToDevice);
+                             cudaMemcpyDeviceToDevice, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;

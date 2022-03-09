@@ -292,7 +292,7 @@ RetCode copyMakeBorder(const uchar* src, int rows, int cols, int channels,
       src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,
-                             cudaMemcpyDeviceToDevice);
+                             cudaMemcpyDeviceToDevice, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -363,7 +363,7 @@ RetCode copyMakeBorder(const float* src, int rows, int cols, int channels,
       src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, rows * src_stride,
-                             cudaMemcpyDeviceToDevice);
+                             cudaMemcpyDeviceToDevice, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;

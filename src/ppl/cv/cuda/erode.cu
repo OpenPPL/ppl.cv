@@ -198,7 +198,7 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, src_stride * rows,
-                             cudaMemcpyDeviceToDevice);
+                             cudaMemcpyDeviceToDevice, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -327,7 +327,7 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
-    code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice);
+    code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice, stream);
     if (code != cudaSuccess) {
       cudaFree(mask);
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -401,7 +401,7 @@ RetCode erode(const float* src, int rows, int cols, int channels,
   if (kernel_x == 1 && kernel_y == 1 && src_stride == dst_stride) {
     if (src != dst) {
       code = cudaMemcpyAsync(dst, src, src_stride * rows,
-                             cudaMemcpyDeviceToDevice);
+                             cudaMemcpyDeviceToDevice, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -508,7 +508,7 @@ RetCode erode(const float* src, int rows, int cols, int channels,
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
-    code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice);
+    code = cudaMemcpyAsync(mask, kernel, size, cudaMemcpyHostToDevice, stream);
     if (code != cudaSuccess) {
       cudaFree(mask);
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
