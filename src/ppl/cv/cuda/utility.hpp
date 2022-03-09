@@ -268,6 +268,29 @@ uchar4 saturateCastVector(short4 value) {
 
 template <>
 __DEVICE__
+uchar3 saturateCastVector(int3 value) {
+  uchar3 result;
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
+
+  return result;
+}
+
+template <>
+__DEVICE__
+uchar4 saturateCastVector(int4 value) {
+  uchar4 result;
+  result.x = saturateCast(value.x);
+  result.y = saturateCast(value.y);
+  result.z = saturateCast(value.z);
+  result.w = saturateCast(value.w);
+
+  return result;
+}
+
+template <>
+__DEVICE__
 uchar4 saturateCastVector(float4 value) {
   uchar4 result;
   result.x = saturateCast(value.x);

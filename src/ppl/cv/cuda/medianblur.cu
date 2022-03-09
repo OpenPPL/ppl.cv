@@ -32,6 +32,14 @@ namespace cuda {
 #define RADIUS1 8
 #define SMALL_KSIZE1 RADIUS1 * 2 + 1
 
+#define HIST_SIZE (16 + 256)
+
+#define VERTICAL_ELEMENTS 256
+#define VERTICAL_SHIFT 8
+
+#define BLOCK_WIDTH 8
+#define BLOCK_SHIFT 3
+
 template <typename BorderInterpolation>
 __global__
 void medianC1SharedKernel(const uchar* src, int rows, int cols, int src_stride,
@@ -754,169 +762,796 @@ void medianC4SharedKernel(const float* src, int rows, int cols, int src_stride,
 
 template <typename BorderInterpolation>
 __global__
-void medianC1Kernel(const uchar* src, int rows, int cols, int src_stride,
-                    int median_index, int radius, uchar* dst, int dst_stride,
-                    BorderInterpolation interpolation) {
-  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 2;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+void medianC1HistKernel(const uchar* src, int rows, int cols, int src_stride,
+                        ushort* histograms, int median_index, int radius,
+                        uchar* dst, int dst_stride,
+                        BorderInterpolation interpolation) {
+  int element_x = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
+  int element_y = blockIdx.y << VERTICAL_SHIFT;
   if (element_x >= cols || element_y >= rows) {
     return;
   }
 
-  int origin_x = element_x - radius;
-  int origin_y = element_y - radius;
-  int top_x    = element_x + radius;
-  int top_y    = element_y + radius;
-
-  int data_index;
-  bool unchecked0, unchecked1, unchecked2, unchecked3;
-  uint4 local_count  = make_uint4(0, 0, 0, 0);
-  uint4 global_count = make_uint4(0, 0, 0, 0);
   uchar* input;
+  ushort* coarse_histogram = (ushort*)((uchar*)histograms + (cols * blockIdx.y +
+                                       element_x) * HIST_SIZE * sizeof(ushort));
+  ushort* dense_histogram = coarse_histogram + 16;
+  int row_end = element_y + VERTICAL_ELEMENTS < rows ?
+                element_y + VERTICAL_ELEMENTS : rows;
+
+  // processes the 1st row of each thread block and initializes the histograms.
+  uchar value;
+  int row, row_index, index, i;
+  for (row = element_y; row < element_y + radius * 2 + 1; row++) {
+    row_index = row - radius;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+    }
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+    }
+  }
+
+  int count = 0;
+  for (index = 0; index < 16; index++) {
+    count += coarse_histogram[index];
+    if (count - 1 >= median_index) {
+      count -= coarse_histogram[index];
+      for (int i = 0; i < 16; i++) {
+        count += dense_histogram[(index << 4) + i];
+        if (count - 1 >= median_index) {
+          count = (index << 4) + i;
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  uchar* output;
+  output = (uchar*)((uchar*)dst + element_y * dst_stride);
+  output[element_x] = saturateCast(count);
+
+  // processes the rest rows of each thread block.
+  for (row = element_y + 1; row < row_end; row++) {
+    row_index = row - radius - 1;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram[(value >> 4)]--;
+        dense_histogram[value]--;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram[(value >> 4)]--;
+        dense_histogram[value]--;
+      }
+    }
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram[(value >> 4)]--;
+        dense_histogram[value]--;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram[(value >> 4)]--;
+        dense_histogram[value]--;
+      }
+    }
+
+    row_index = row + radius;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+    }
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram[(value >> 4)]++;
+        dense_histogram[value]++;
+      }
+    }
+
+    count = 0;
+    for (index = 0; index < 16; index++) {
+      count += coarse_histogram[index];
+      if (count - 1 >= median_index) {
+        count -= coarse_histogram[index];
+        for (int i = 0; i < 16; i++) {
+          count += dense_histogram[(index << 4) + i];
+          if (count - 1 >= median_index) {
+            count = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+
+    output = (uchar*)((uchar*)dst + row * dst_stride);
+    output[element_x] = saturateCast(count);
+  }
+}
+
+template <typename BorderInterpolation>
+__global__
+void medianC3HistKernel(const uchar* src, int rows, int cols, int src_stride,
+                        ushort* histograms, int median_index, int radius,
+                        uchar* dst, int dst_stride,
+                        BorderInterpolation interpolation) {
+  int element_x = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
+  int element_y = blockIdx.y << VERTICAL_SHIFT;
+  if (element_x >= cols || element_y >= rows) {
+    return;
+  }
+
+  uchar3* input;
+  ushort* coarse_histogram0 = (ushort*)((uchar*)histograms + (cols * blockIdx.y
+                              + element_x) * 3 * HIST_SIZE * sizeof(ushort));
+  ushort* dense_histogram0  = coarse_histogram0 + 16;
+  ushort* dense_histogram1  = dense_histogram0 + HIST_SIZE;
+  ushort* dense_histogram2  = dense_histogram1 + HIST_SIZE;
+  ushort* coarse_histogram1 = coarse_histogram0 + HIST_SIZE;
+  ushort* coarse_histogram2 = coarse_histogram1 + HIST_SIZE;
+  int row_end = element_y + VERTICAL_ELEMENTS < rows ?
+                element_y + VERTICAL_ELEMENTS : rows;
+
+  // processes the 1st row of each thread block and initializes the histograms.
+  uchar3 value;
+  int row, row_index, index, i;
+  for (row = element_y; row < element_y + radius * 2 + 1; row++) {
+    row_index = row - radius;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar3*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+    }
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+    }
+  }
+
+  int3 count = make_int3(0, 0, 0);
+  for (index = 0; index < 16; index++) {
+    count.x += coarse_histogram0[index];
+    if (count.x - 1 >= median_index) {
+      count.x -= coarse_histogram0[index];
+      for (int i = 0; i < 16; i++) {
+        count.x += dense_histogram0[(index << 4) + i];
+        if (count.x - 1 >= median_index) {
+          count.x = (index << 4) + i;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  for (index = 0; index < 16; index++) {
+    count.y += coarse_histogram1[index];
+    if (count.y - 1 >= median_index) {
+      count.y -= coarse_histogram1[index];
+      for (int i = 0; i < 16; i++) {
+        count.y += dense_histogram1[(index << 4) + i];
+        if (count.y - 1 >= median_index) {
+          count.y = (index << 4) + i;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  for (index = 0; index < 16; index++) {
+    count.z += coarse_histogram2[index];
+    if (count.z - 1 >= median_index) {
+      count.z -= coarse_histogram2[index];
+      for (int i = 0; i < 16; i++) {
+        count.z += dense_histogram2[(index << 4) + i];
+        if (count.z - 1 >= median_index) {
+          count.z = (index << 4) + i;
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  uchar3* output;
+  output = (uchar3*)((uchar*)dst + element_y * dst_stride);
+  output[element_x] = saturateCastVector<uchar3, int3>(count);
+
+  // processes the rest rows of each thread block.
+  for (row = element_y + 1; row < row_end; row++) {
+    row_index = row - radius - 1;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar3*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+      }
+    }
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+      }
+    }
+
+    row_index = row + radius;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar3*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+    }
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+      }
+    }
+
+    count = make_int3(0, 0, 0);
+    for (index = 0; index < 16; index++) {
+      count.x += coarse_histogram0[index];
+      if (count.x - 1 >= median_index) {
+        count.x -= coarse_histogram0[index];
+        for (int i = 0; i < 16; i++) {
+          count.x += dense_histogram0[(index << 4) + i];
+          if (count.x - 1 >= median_index) {
+            count.x = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    for (index = 0; index < 16; index++) {
+      count.y += coarse_histogram1[index];
+      if (count.y - 1 >= median_index) {
+        count.y -= coarse_histogram1[index];
+        for (int i = 0; i < 16; i++) {
+          count.y += dense_histogram1[(index << 4) + i];
+          if (count.y - 1 >= median_index) {
+            count.y = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    for (index = 0; index < 16; index++) {
+      count.z += coarse_histogram2[index];
+      if (count.z - 1 >= median_index) {
+        count.z -= coarse_histogram2[index];
+        for (int i = 0; i < 16; i++) {
+          count.z += dense_histogram2[(index << 4) + i];
+          if (count.z - 1 >= median_index) {
+            count.z = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+
+    output = (uchar3*)((uchar*)dst + row * dst_stride);
+    output[element_x] = saturateCastVector<uchar3, int3>(count);
+  }
+}
+
+template <typename BorderInterpolation>
+__global__
+void medianC4HistKernel(const uchar* src, int rows, int cols, int src_stride,
+                        ushort* histograms, int median_index, int radius,
+                        uchar* dst, int dst_stride,
+                        BorderInterpolation interpolation) {
+  int element_x = (blockIdx.x << BLOCK_SHIFT) + threadIdx.x;
+  int element_y = blockIdx.y << VERTICAL_SHIFT;
+  if (element_x >= cols || element_y >= rows) {
+    return;
+  }
+
+  uchar4* input;
+  ushort* coarse_histogram0 = (ushort*)((uchar*)histograms + ((cols * blockIdx.y
+                              + element_x) << 2) * HIST_SIZE * sizeof(ushort));
+  ushort* dense_histogram0  = coarse_histogram0 + 16;
+  ushort* dense_histogram1  = dense_histogram0 + HIST_SIZE;
+  ushort* dense_histogram2  = dense_histogram1 + HIST_SIZE;
+  ushort* coarse_histogram1 = coarse_histogram0 + HIST_SIZE;
+  ushort* coarse_histogram2 = coarse_histogram1 + HIST_SIZE;
+  ushort* coarse_histogram3 = coarse_histogram2 + HIST_SIZE;
+  ushort* dense_histogram3 = dense_histogram2 + HIST_SIZE;
+  int row_end = element_y + VERTICAL_ELEMENTS < rows ?
+                element_y + VERTICAL_ELEMENTS : rows;
+
+  // processes the 1st row of each thread block and initializes the histograms.
   uchar4 value;
-  short4 max;
-  short4 top = make_short4(256, 256, 256, 256);
+  int row, row_index, index, i;
+  for (row = element_y; row < element_y + radius * 2 + 1; row++) {
+    row_index = row - radius;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar4*)((uchar*)src + index * src_stride);
 
-  bool isnt_border_block = true;
-  data_index = radius >> (kBlockShiftX0 + 2);
-  if (blockIdx.x <= data_index) isnt_border_block = false;
-  data_index = (cols - radius) >> (kBlockShiftX0 + 2);
-  if (blockIdx.x >= data_index) isnt_border_block = false;
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+    }
 
-  if (isnt_border_block) {
-    for (int index = 0; index <= median_index; index++) {
-      max = make_short4(-1, -1, -1, -1);
-      unchecked0 = true;
-      unchecked1 = true;
-      unchecked2 = true;
-      unchecked3 = true;
-      for (int i = origin_y; i <= top_y; i++) {
-        data_index = interpolation(rows, radius, i);
-        input = (uchar*)((uchar*)src + data_index * src_stride);
-        for (int j = origin_x; j <= top_x; j++) {
-          value.x = input[j];
-          value.y = input[j + 1];
-          value.z = input[j + 2];
-          value.w = input[j + 3];
-          if ((!unchecked0) && max.x == value.x) unchecked0 = false;
-          if ((!unchecked1) && max.y == value.y) unchecked1 = false;
-          if ((!unchecked2) && max.z == value.z) unchecked2 = false;
-          if ((!unchecked3) && max.w == value.w) unchecked3 = false;
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+    }
+  }
 
-          if (unchecked0 && max.x == value.x) local_count.x++;
-          if (unchecked1 && max.y == value.y) local_count.y++;
-          if (unchecked2 && max.z == value.z) local_count.z++;
-          if (unchecked3 && max.w == value.w) local_count.w++;
-
-          if (index + global_count.x <= median_index && max.x < value.x &&
-              value.x < top.x) {
-            max.x = value.x;
-            local_count.x = 0;
-          }
-          if (index + global_count.y <= median_index && max.y < value.y &&
-              value.y < top.y) {
-            max.y = value.y;
-            local_count.y = 0;
-          }
-          if (index + global_count.z <= median_index && max.z < value.z &&
-              value.z < top.z) {
-            max.z = value.z;
-            local_count.z = 0;
-          }
-          if (index + global_count.w <= median_index && max.w < value.w &&
-              value.w < top.w) {
-            max.w = value.w;
-            local_count.w = 0;
-          }
+  int4 count = make_int4(0, 0, 0, 0);
+  for (index = 0; index < 16; index++) {
+    count.x += coarse_histogram0[index];
+    if (count.x - 1 >= median_index) {
+      count.x -= coarse_histogram0[index];
+      for (int i = 0; i < 16; i++) {
+        count.x += dense_histogram0[(index << 4) + i];
+        if (count.x - 1 >= median_index) {
+          count.x = (index << 4) + i;
+          break;
         }
       }
-      global_count.x += local_count.x;
-      global_count.y += local_count.y;
-      global_count.z += local_count.z;
-      global_count.w += local_count.w;
-      if (max.x != -1) top.x = max.x;
-      if (max.y != -1) top.y = max.y;
-      if (max.z != -1) top.z = max.z;
-      if (max.w != -1) top.w = max.w;
+      break;
     }
   }
-  else {
-    for (int index = 0; index <= median_index; index++) {
-      max = make_short4(-1, -1, -1, -1);
-      unchecked0 = true;
-      unchecked1 = true;
-      unchecked2 = true;
-      unchecked3 = true;
-      for (int i = origin_y; i <= top_y; i++) {
-        data_index = interpolation(rows, radius, i);
-        input = (uchar*)((uchar*)src + data_index * src_stride);
-        for (int j = origin_x; j <= top_x; j++) {
-          data_index = interpolation(cols, radius, j);
-          value.x = input[data_index];
-          data_index = interpolation(cols, radius, j + 1);
-          value.y = input[data_index];
-          data_index = interpolation(cols, radius, j + 2);
-          value.z = input[data_index];
-          data_index = interpolation(cols, radius, j + 3);
-          value.w = input[data_index];
-          if ((!unchecked0) && max.x == value.x) unchecked0 = false;
-          if ((!unchecked1) && max.y == value.y) unchecked1 = false;
-          if ((!unchecked2) && max.z == value.z) unchecked2 = false;
-          if ((!unchecked3) && max.w == value.w) unchecked3 = false;
-
-          if (unchecked0 && max.x == value.x) local_count.x++;
-          if (unchecked1 && max.y == value.y) local_count.y++;
-          if (unchecked2 && max.z == value.z) local_count.z++;
-          if (unchecked3 && max.w == value.w) local_count.w++;
-
-          if (index + global_count.x <= median_index && max.x < value.x &&
-              value.x < top.x) {
-            max.x = value.x;
-            local_count.x = 0;
-          }
-          if (index + global_count.y <= median_index && max.y < value.y &&
-              value.y < top.y) {
-            max.y = value.y;
-            local_count.y = 0;
-          }
-          if (index + global_count.z <= median_index && max.z < value.z &&
-              value.z < top.z) {
-            max.z = value.z;
-            local_count.z = 0;
-          }
-          if (index + global_count.w <= median_index && max.w < value.w &&
-              value.w < top.w) {
-            max.w = value.w;
-            local_count.w = 0;
-          }
+  for (index = 0; index < 16; index++) {
+    count.y += coarse_histogram1[index];
+    if (count.y - 1 >= median_index) {
+      count.y -= coarse_histogram1[index];
+      for (int i = 0; i < 16; i++) {
+        count.y += dense_histogram1[(index << 4) + i];
+        if (count.y - 1 >= median_index) {
+          count.y = (index << 4) + i;
+          break;
         }
       }
-      global_count.x += local_count.x;
-      global_count.y += local_count.y;
-      global_count.z += local_count.z;
-      global_count.w += local_count.w;
-      if (max.x != -1) top.x = max.x;
-      if (max.y != -1) top.y = max.y;
-      if (max.z != -1) top.z = max.z;
-      if (max.w != -1) top.w = max.w;
+      break;
+    }
+  }
+  for (index = 0; index < 16; index++) {
+    count.z += coarse_histogram2[index];
+    if (count.z - 1 >= median_index) {
+      count.z -= coarse_histogram2[index];
+      for (int i = 0; i < 16; i++) {
+        count.z += dense_histogram2[(index << 4) + i];
+        if (count.z - 1 >= median_index) {
+          count.z = (index << 4) + i;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  for (index = 0; index < 16; index++) {
+    count.w += coarse_histogram3[index];
+    if (count.w - 1 >= median_index) {
+      count.w -= coarse_histogram3[index];
+      for (int i = 0; i < 16; i++) {
+        count.w += dense_histogram3[(index << 4) + i];
+        if (count.w - 1 >= median_index) {
+          count.w = (index << 4) + i;
+          break;
+        }
+      }
+      break;
     }
   }
 
-  uchar* output = (uchar*)((uchar*)dst + element_y * dst_stride);
-  if (element_x < cols - 3) {
-    output[element_x]     = saturateCast(top.x);
-    output[element_x + 1] = saturateCast(top.y);
-    output[element_x + 2] = saturateCast(top.z);
-    output[element_x + 3] = saturateCast(top.w);
-  }
-  else {
-    output[element_x] = saturateCast(top.x);
-    if (element_x < cols - 1) {
-      output[element_x + 1] = saturateCast(top.y);
+  uchar4* output;
+  output = (uchar4*)((uchar*)dst + element_y * dst_stride);
+  output[element_x] = saturateCastVector<uchar4, int4>(count);
+
+  // processes the rest rows of each thread block.
+  for (row = element_y + 1; row < row_end; row++) {
+    row_index = row - radius - 1;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar4*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+        coarse_histogram3[(value.w >> 4)]--;
+        dense_histogram3[value.w]--;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+        coarse_histogram3[(value.w >> 4)]--;
+        dense_histogram3[value.w]--;
+      }
     }
-    if (element_x < cols - 2) {
-      output[element_x + 2] = saturateCast(top.z);
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+        coarse_histogram3[(value.w >> 4)]--;
+        dense_histogram3[value.w]--;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]--;
+        dense_histogram0[value.x]--;
+        coarse_histogram1[(value.y >> 4)]--;
+        dense_histogram1[value.y]--;
+        coarse_histogram2[(value.z >> 4)]--;
+        dense_histogram2[value.z]--;
+        coarse_histogram3[(value.w >> 4)]--;
+        dense_histogram3[value.w]--;
+      }
     }
+
+    row_index = row + radius;
+    index = interpolation(rows, radius, row_index);
+    input = (uchar4*)((uchar*)src + index * src_stride);
+
+    for (i = 0; i <= radius; i++) {
+      if (element_x < radius) {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+      else {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+    }
+
+    for (; i < radius * 2 + 1; i++) {
+      if (element_x + radius < cols) {
+        index = element_x - radius + i;
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+      else {
+        index = element_x - radius + i;
+        index = interpolation(cols, radius, index);
+        value = input[index];
+        coarse_histogram0[(value.x >> 4)]++;
+        dense_histogram0[value.x]++;
+        coarse_histogram1[(value.y >> 4)]++;
+        dense_histogram1[value.y]++;
+        coarse_histogram2[(value.z >> 4)]++;
+        dense_histogram2[value.z]++;
+        coarse_histogram3[(value.w >> 4)]++;
+        dense_histogram3[value.w]++;
+      }
+    }
+
+    count = make_int4(0, 0, 0, 0);
+    for (index = 0; index < 16; index++) {
+      count.x += coarse_histogram0[index];
+      if (count.x - 1 >= median_index) {
+        count.x -= coarse_histogram0[index];
+        for (int i = 0; i < 16; i++) {
+          count.x += dense_histogram0[(index << 4) + i];
+          if (count.x - 1 >= median_index) {
+            count.x = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    for (index = 0; index < 16; index++) {
+      count.y += coarse_histogram1[index];
+      if (count.y - 1 >= median_index) {
+        count.y -= coarse_histogram1[index];
+        for (int i = 0; i < 16; i++) {
+          count.y += dense_histogram1[(index << 4) + i];
+          if (count.y - 1 >= median_index) {
+            count.y = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    for (index = 0; index < 16; index++) {
+      count.z += coarse_histogram2[index];
+      if (count.z - 1 >= median_index) {
+        count.z -= coarse_histogram2[index];
+        for (int i = 0; i < 16; i++) {
+          count.z += dense_histogram2[(index << 4) + i];
+          if (count.z - 1 >= median_index) {
+            count.z = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    for (index = 0; index < 16; index++) {
+      count.w += coarse_histogram3[index];
+      if (count.w - 1 >= median_index) {
+        count.w -= coarse_histogram3[index];
+        for (int i = 0; i < 16; i++) {
+          count.w += dense_histogram3[(index << 4) + i];
+          if (count.w - 1 >= median_index) {
+            count.w = (index << 4) + i;
+            break;
+          }
+        }
+        break;
+      }
+    }
+
+    output = (uchar4*)((uchar*)dst + row * dst_stride);
+    output[element_x] = saturateCastVector<uchar4, int4>(count);
   }
 }
 
@@ -1090,131 +1725,6 @@ void medianC1Kernel(const float* src, int rows, int cols, int src_stride,
 
 template <typename BorderInterpolation>
 __global__
-void medianC3Kernel(const uchar* src, int rows, int cols, int src_stride,
-                    int median_index, int radius, uchar* dst, int dst_stride,
-                    BorderInterpolation interpolation) {
-  int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_x >= cols || element_y >= rows) {
-    return;
-  }
-
-  int origin_x = element_x - radius;
-  int origin_y = element_y - radius;
-  int top_x    = element_x + radius;
-  int top_y    = element_y + radius;
-
-  int data_index;
-  bool unchecked0, unchecked1, unchecked2;
-  uint3 local_count  = make_uint3(0, 0, 0);
-  uint3 global_count = make_uint3(0, 0, 0);
-  uchar3* input;
-  uchar3 value;
-  short3 max;
-  short3 top = make_short3(256, 256, 256);
-
-  bool isnt_border_block = true;
-  data_index = radius >> (kBlockShiftX0 + 2);
-  if (blockIdx.x <= data_index) isnt_border_block = false;
-  data_index = (cols - radius) >> (kBlockShiftX0 + 2);
-  if (blockIdx.x >= data_index) isnt_border_block = false;
-
-  if (isnt_border_block) {
-    for (int index = 0; index <= median_index; index++) {
-      max = make_short3(-1, -1, -1);
-      unchecked0 = true;
-      unchecked1 = true;
-      unchecked2 = true;
-      for (int i = origin_y; i <= top_y; i++) {
-        data_index = interpolation(rows, radius, i);
-        input = (uchar3*)((uchar*)src + data_index * src_stride);
-        for (int j = origin_x; j <= top_x; j++) {
-          value = input[j];
-          if ((!unchecked0) && max.x == value.x) unchecked0 = false;
-          if ((!unchecked1) && max.y == value.y) unchecked1 = false;
-          if ((!unchecked2) && max.z == value.z) unchecked2 = false;
-
-          if (unchecked0 && max.x == value.x) local_count.x++;
-          if (unchecked1 && max.y == value.y) local_count.y++;
-          if (unchecked2 && max.z == value.z) local_count.z++;
-
-          if (index + global_count.x <= median_index && max.x < value.x &&
-              value.x < top.x) {
-            max.x = value.x;
-            local_count.x = 0;
-          }
-          if (index + global_count.y <= median_index && max.y < value.y &&
-              value.y < top.y) {
-            max.y = value.y;
-            local_count.y = 0;
-          }
-          if (index + global_count.z <= median_index && max.z < value.z &&
-              value.z < top.z) {
-            max.z = value.z;
-            local_count.z = 0;
-          }
-        }
-      }
-      global_count.x += local_count.x;
-      global_count.y += local_count.y;
-      global_count.z += local_count.z;
-      if (max.x != -1) top.x = max.x;
-      if (max.y != -1) top.y = max.y;
-      if (max.z != -1) top.z = max.z;
-    }
-  }
-  else {
-    for (int index = 0; index <= median_index; index++) {
-      max = make_short3(-1, -1, -1);
-      unchecked0 = true;
-      unchecked1 = true;
-      unchecked2 = true;
-      for (int i = origin_y; i <= top_y; i++) {
-        data_index = interpolation(rows, radius, i);
-        input = (uchar3*)((uchar*)src + data_index * src_stride);
-        for (int j = origin_x; j <= top_x; j++) {
-          data_index = interpolation(cols, radius, j);
-          value = input[data_index];
-          if ((!unchecked0) && max.x == value.x) unchecked0 = false;
-          if ((!unchecked1) && max.y == value.y) unchecked1 = false;
-          if ((!unchecked2) && max.z == value.z) unchecked2 = false;
-
-          if (unchecked0 && max.x == value.x) local_count.x++;
-          if (unchecked1 && max.y == value.y) local_count.y++;
-          if (unchecked2 && max.z == value.z) local_count.z++;
-
-          if (index + global_count.x <= median_index && max.x < value.x &&
-              value.x < top.x) {
-            max.x = value.x;
-            local_count.x = 0;
-          }
-          if (index + global_count.y <= median_index && max.y < value.y &&
-              value.y < top.y) {
-            max.y = value.y;
-            local_count.y = 0;
-          }
-          if (index + global_count.z <= median_index && max.z < value.z &&
-              value.z < top.z) {
-            max.z = value.z;
-            local_count.z = 0;
-          }
-        }
-      }
-      global_count.x += local_count.x;
-      global_count.y += local_count.y;
-      global_count.z += local_count.z;
-      if (max.x != -1) top.x = max.x;
-      if (max.y != -1) top.y = max.y;
-      if (max.z != -1) top.z = max.z;
-    }
-  }
-
-  uchar3* output = (uchar3*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturateCastVector<uchar3, short3>(top);
-}
-
-template <typename BorderInterpolation>
-__global__
 void medianC3Kernel(const float* src, int rows, int cols, int src_stride,
                     int median_index, int radius, float* dst, int dst_stride,
                     BorderInterpolation interpolation) {
@@ -1336,151 +1846,6 @@ void medianC3Kernel(const float* src, int rows, int cols, int src_stride,
 
   float3* output = (float3*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = top;
-}
-
-template <typename BorderInterpolation>
-__global__
-void medianC4Kernel(const uchar* src, int rows, int cols, int src_stride,
-                    int median_index, int radius, uchar* dst, int dst_stride,
-                    BorderInterpolation interpolation) {
-  int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
-  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
-  if (element_x >= cols || element_y >= rows) {
-    return;
-  }
-
-  int origin_x = element_x - radius;
-  int origin_y = element_y - radius;
-  int top_x    = element_x + radius;
-  int top_y    = element_y + radius;
-
-  int data_index;
-  bool unchecked0, unchecked1, unchecked2, unchecked3;
-  uint4 local_count  = make_uint4(0, 0, 0, 0);
-  uint4 global_count = make_uint4(0, 0, 0, 0);
-  uchar4* input;
-  uchar4 value;
-  short4 max;
-  short4 top = make_short4(256, 256, 256, 256);
-
-  bool isnt_border_block = true;
-  data_index = radius >> (kBlockShiftX0 + 2);
-  if (blockIdx.x <= data_index) isnt_border_block = false;
-  data_index = (cols - radius) >> (kBlockShiftX0 + 2);
-  if (blockIdx.x >= data_index) isnt_border_block = false;
-
-  if (isnt_border_block) {
-    for (int index = 0; index <= median_index; index++) {
-      max = make_short4(-1, -1, -1, -1);
-      unchecked0 = true;
-      unchecked1 = true;
-      unchecked2 = true;
-      unchecked3 = true;
-      for (int i = origin_y; i <= top_y; i++) {
-        data_index = interpolation(rows, radius, i);
-        input = (uchar4*)((uchar*)src + data_index * src_stride);
-        for (int j = origin_x; j <= top_x; j++) {
-          value = input[j];
-          if ((!unchecked0) && max.x == value.x) unchecked0 = false;
-          if ((!unchecked1) && max.y == value.y) unchecked1 = false;
-          if ((!unchecked2) && max.z == value.z) unchecked2 = false;
-          if ((!unchecked3) && max.w == value.w) unchecked3 = false;
-
-          if (unchecked0 && max.x == value.x) local_count.x++;
-          if (unchecked1 && max.y == value.y) local_count.y++;
-          if (unchecked2 && max.z == value.z) local_count.z++;
-          if (unchecked3 && max.w == value.w) local_count.w++;
-
-          if (index + global_count.x <= median_index && max.x < value.x &&
-              value.x < top.x) {
-            max.x = value.x;
-            local_count.x = 0;
-          }
-          if (index + global_count.y <= median_index && max.y < value.y &&
-              value.y < top.y) {
-            max.y = value.y;
-            local_count.y = 0;
-          }
-          if (index + global_count.z <= median_index && max.z < value.z &&
-              value.z < top.z) {
-            max.z = value.z;
-            local_count.z = 0;
-          }
-          if (index + global_count.w <= median_index && max.w < value.w &&
-              value.w < top.w) {
-            max.w = value.w;
-            local_count.w = 0;
-          }
-        }
-      }
-      global_count.x += local_count.x;
-      global_count.y += local_count.y;
-      global_count.z += local_count.z;
-      global_count.w += local_count.w;
-      if (max.x != -1) top.x = max.x;
-      if (max.y != -1) top.y = max.y;
-      if (max.z != -1) top.z = max.z;
-      if (max.w != -1) top.w = max.w;
-    }
-  }
-  else {
-    for (int index = 0; index <= median_index; index++) {
-      max = make_short4(-1, -1, -1, -1);
-      unchecked0 = true;
-      unchecked1 = true;
-      unchecked2 = true;
-      unchecked3 = true;
-      for (int i = origin_y; i <= top_y; i++) {
-        data_index = interpolation(rows, radius, i);
-        input = (uchar4*)((uchar*)src + data_index * src_stride);
-        for (int j = origin_x; j <= top_x; j++) {
-          data_index = interpolation(cols, radius, j);
-          value = input[data_index];
-          if ((!unchecked0) && max.x == value.x) unchecked0 = false;
-          if ((!unchecked1) && max.y == value.y) unchecked1 = false;
-          if ((!unchecked2) && max.z == value.z) unchecked2 = false;
-          if ((!unchecked3) && max.w == value.w) unchecked3 = false;
-
-          if (unchecked0 && max.x == value.x) local_count.x++;
-          if (unchecked1 && max.y == value.y) local_count.y++;
-          if (unchecked2 && max.z == value.z) local_count.z++;
-          if (unchecked3 && max.w == value.w) local_count.w++;
-
-          if (index + global_count.x <= median_index && max.x < value.x &&
-              value.x < top.x) {
-            max.x = value.x;
-            local_count.x = 0;
-          }
-          if (index + global_count.y <= median_index && max.y < value.y &&
-              value.y < top.y) {
-            max.y = value.y;
-            local_count.y = 0;
-          }
-          if (index + global_count.z <= median_index && max.z < value.z &&
-              value.z < top.z) {
-            max.z = value.z;
-            local_count.z = 0;
-          }
-          if (index + global_count.w <= median_index && max.w < value.w &&
-              value.w < top.w) {
-            max.w = value.w;
-            local_count.w = 0;
-          }
-        }
-      }
-      global_count.x += local_count.x;
-      global_count.y += local_count.y;
-      global_count.z += local_count.z;
-      global_count.w += local_count.w;
-      if (max.x != -1) top.x = max.x;
-      if (max.y != -1) top.y = max.y;
-      if (max.z != -1) top.z = max.z;
-      if (max.w != -1) top.w = max.w;
-    }
-  }
-
-  uchar4* output = (uchar4*)((uchar*)dst + element_y * dst_stride);
-  output[element_x] = saturateCastVector<uchar4, short4>(top);
 }
 
 template <typename BorderInterpolation>
@@ -1628,12 +1993,12 @@ void medianC4Kernel(const float* src, int rows, int cols, int src_stride,
   output[element_x] = top;
 }
 
-#define RUN_CHANNEL1_SMALL_KERNELS(Interpolation)                              \
+#define RUN_C1_SMALL_KERNELS(Interpolation)                                    \
 Interpolation interpolation;                                                   \
 medianC1SharedKernel<Interpolation><<<grid, block, 0, stream>>>(src, rows,     \
     cols, src_stride, median_index, radius, dst, dst_stride, interpolation);
 
-#define RUN_CHANNELN_SMALL_KERNELS(Interpolation)                              \
+#define RUN_CN_SMALL_KERNELS(Interpolation)                                    \
 Interpolation interpolation;                                                   \
 if (channels == 3) {                                                           \
   medianC3SharedKernel<Interpolation><<<grid, block, 0, stream>>>(src, rows,   \
@@ -1644,35 +2009,38 @@ else {                                                                         \
       cols, src_stride, median_index, radius, dst, dst_stride, interpolation); \
 }
 
-#define RUN_KERNELS0(grid_x, Interpolation)                                    \
+#define RUN_HISTOGRAM_C1_SMALL_KERNELS(Interpolation)                          \
 Interpolation interpolation;                                                   \
-if (channels == 1) {                                                           \
-  grid0.x = grid_x;                                                            \
-  medianC1Kernel<Interpolation><<<grid0, block0, 0, stream>>>(src, rows, cols, \
-      src_stride, median_index, radius, dst, dst_stride, interpolation);       \
-}                                                                              \
-else if (channels == 3) {                                                      \
-  medianC3Kernel<Interpolation><<<grid0, block0, 0, stream>>>(src, rows, cols, \
-      src_stride, median_index, radius, dst, dst_stride, interpolation);       \
+medianC1HistKernel<Interpolation><<<grid, block, 0, stream>>>(src, rows, cols, \
+    src_stride, histograms, median_index, radius, dst, dst_stride,             \
+    interpolation);
+
+#define RUN_HISTOGRAM_CN_SMALL_KERNELS(Interpolation)                          \
+Interpolation interpolation;                                                   \
+if (channels == 3) {                                                           \
+  medianC3HistKernel<Interpolation><<<grid, block, 0, stream>>>(src, rows,     \
+      cols, src_stride, histograms, median_index, radius, dst, dst_stride,     \
+      interpolation);                                                          \
 }                                                                              \
 else {                                                                         \
-  medianC4Kernel<Interpolation><<<grid0, block0, 0, stream>>>(src, rows, cols, \
-      src_stride, median_index, radius, dst, dst_stride, interpolation);       \
+  medianC4HistKernel<Interpolation><<<grid, block, 0, stream>>>(src, rows,     \
+      cols, src_stride, histograms, median_index, radius, dst, dst_stride,     \
+      interpolation);                                                          \
 }
 
-#define RUN_KERNELS1(grid_x, Interpolation)                                    \
+#define RUN_FLOAT_KERNELS(grid_x, Interpolation)                               \
 Interpolation interpolation;                                                   \
 if (channels == 1) {                                                           \
-  grid0.x = grid_x;                                                            \
-  medianC1Kernel<Interpolation><<<grid0, block0, 0, stream>>>(src, rows, cols, \
+  grid.x = grid_x;                                                             \
+  medianC1Kernel<Interpolation><<<grid, block, 0, stream>>>(src, rows, cols,   \
       src_stride, median_index, radius, dst, dst_stride, interpolation);       \
 }                                                                              \
 else if (channels == 3) {                                                      \
-  medianC3Kernel<Interpolation><<<grid0, block0, 0, stream>>>(src, rows, cols, \
+  medianC3Kernel<Interpolation><<<grid, block, 0, stream>>>(src, rows, cols,   \
       src_stride, median_index, radius, dst, dst_stride, interpolation);       \
 }                                                                              \
 else {                                                                         \
-  medianC4Kernel<Interpolation><<<grid0, block0, 0, stream>>>(src, rows, cols, \
+  medianC4Kernel<Interpolation><<<grid, block, 0, stream>>>(src, rows, cols,   \
       src_stride, median_index, radius, dst, dst_stride, interpolation);       \
 }
 
@@ -1694,75 +2062,100 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
 
   uint radius = ksize >> 1;
   uint median_index = ksize * ksize >> 1;
+  dim3 block, grid;
 
   cudaError_t code;
-  if (ksize <= SMALL_KSIZE0 && channels == 1) {
-    dim3 block, grid;
-    block.x = kDimX0;
-    block.y = kDimY0;
-    grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
-    grid.y = divideUp(rows, kDimY0, kShiftY0);
+  if (channels == 1) {
+    if (ksize <= 7) {
+      block.x = kDimX0;
+      block.y = kDimY0;
+      grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
+      grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    if (border_type == BORDER_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder);
-    }
-    else if (border_type == BORDER_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder);
-    }
-    else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border);
-    }
-
-    code = cudaGetLastError();
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_RUNTIME_ERROR;
-    }
-
-    return RC_SUCCESS;
-  }
-
-  if (ksize <= SMALL_KSIZE1 && (channels == 3 || channels == 4)) {
-    dim3 block, grid;
-    block.x = kDimX0;
-    block.y = kDimY0;
-    grid.x = divideUp(cols, kDimX0, kShiftX0);
-    grid.y = divideUp(rows, kDimY0, kShiftY0);
-
-    if (border_type == BORDER_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder);
-    }
-    else if (border_type == BORDER_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder);
+      if (border_type == BORDER_REPLICATE) {
+        RUN_C1_SMALL_KERNELS(ReplicateBorder);
+      }
+      else if (border_type == BORDER_REFLECT) {
+        RUN_C1_SMALL_KERNELS(ReflectBorder);
+      }
+      else {
+        RUN_C1_SMALL_KERNELS(Reflect101Border);
+      }
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border);
+      block.x = BLOCK_WIDTH;
+      block.y = 1;
+      grid.x = divideUp(cols, BLOCK_WIDTH, BLOCK_SHIFT);
+      grid.y = divideUp(rows, VERTICAL_ELEMENTS, VERTICAL_SHIFT);
+
+      ushort* histograms;
+      code = cudaMalloc((void**)&histograms,
+                        cols * grid.y * HIST_SIZE * sizeof(ushort));
+      code = cudaMemset(histograms, 0,
+                        cols * grid.y * HIST_SIZE * sizeof(ushort));
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
+
+      if (border_type == BORDER_REPLICATE) {
+        RUN_HISTOGRAM_C1_SMALL_KERNELS(ReplicateBorder);
+      }
+      else if (border_type == BORDER_REFLECT) {
+        RUN_HISTOGRAM_C1_SMALL_KERNELS(ReflectBorder);
+      }
+      else {
+        RUN_HISTOGRAM_C1_SMALL_KERNELS(Reflect101Border);
+      }
+
+      cudaFree(histograms);
     }
+  }
+  else {  // channels == 3 || channels == 4
+    if (ksize <= 5) {
+      block.x = kDimX0;
+      block.y = kDimY0;
+      grid.x = divideUp(cols, kDimX0, kShiftX0);
+      grid.y = divideUp(rows, kDimY0, kShiftY0);
 
-    code = cudaGetLastError();
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_RUNTIME_ERROR;
+      if (border_type == BORDER_REPLICATE) {
+        RUN_CN_SMALL_KERNELS(ReplicateBorder);
+      }
+      else if (border_type == BORDER_REFLECT) {
+        RUN_CN_SMALL_KERNELS(ReflectBorder);
+      }
+      else {
+        RUN_CN_SMALL_KERNELS(Reflect101Border);
+      }
     }
+    else {
+      block.x = BLOCK_WIDTH;
+      block.y = 1;
+      grid.x = divideUp(cols, BLOCK_WIDTH, BLOCK_SHIFT);
+      grid.y = divideUp(rows, VERTICAL_ELEMENTS, VERTICAL_SHIFT);
 
-    return RC_SUCCESS;
-  }
+      ushort* histograms;
+      code = cudaMalloc((void**)&histograms,
+                        cols * channels * grid.y * HIST_SIZE * sizeof(ushort));
+      code = cudaMemset(histograms, 0,
+                        cols * channels * grid.y * HIST_SIZE * sizeof(ushort));
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
 
-  dim3 block0, grid0;
-  block0.x = kBlockDimX0;
-  block0.y = kBlockDimY0;
-  grid0.x  = divideUp(cols, kBlockDimX0, kBlockShiftX0);
-  grid0.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
+      if (border_type == BORDER_REPLICATE) {
+        RUN_HISTOGRAM_CN_SMALL_KERNELS(ReplicateBorder);
+      }
+      else if (border_type == BORDER_REFLECT) {
+        RUN_HISTOGRAM_CN_SMALL_KERNELS(ReflectBorder);
+      }
+      else {
+        RUN_HISTOGRAM_CN_SMALL_KERNELS(Reflect101Border);
+      }
 
-  int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX0, kBlockShiftX0);
-  if (border_type == BORDER_REPLICATE) {
-    RUN_KERNELS0(grid_x, ReplicateBorder);
-  }
-  else if (border_type == BORDER_REFLECT) {
-    RUN_KERNELS0(grid_x, ReflectBorder);
-  }
-  else {
-    RUN_KERNELS0(grid_x, Reflect101Border);
+      cudaFree(histograms);
+    }
   }
 
   code = cudaGetLastError();
@@ -1792,23 +2185,23 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
 
   uint radius = ksize >> 1;
   uint median_index = ksize * ksize >> 1;
+  dim3 block, grid;
 
   cudaError_t code;
   if (ksize <= SMALL_KSIZE0 && channels == 1) {
-    dim3 block, grid;
     block.x = kDimX0;
     block.y = kDimY0;
     grid.x = divideUp(divideUp(cols, 4, 2), kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_REPLICATE) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReplicateBorder);
+      RUN_C1_SMALL_KERNELS(ReplicateBorder);
     }
     else if (border_type == BORDER_REFLECT) {
-      RUN_CHANNEL1_SMALL_KERNELS(ReflectBorder);
+      RUN_C1_SMALL_KERNELS(ReflectBorder);
     }
     else {
-      RUN_CHANNEL1_SMALL_KERNELS(Reflect101Border);
+      RUN_C1_SMALL_KERNELS(Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1821,20 +2214,19 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
   }
 
   if (ksize <= SMALL_KSIZE1 && (channels == 3 || channels == 4)) {
-    dim3 block, grid;
     block.x = kDimX0;
     block.y = kDimY0;
     grid.x = divideUp(cols, kDimX0, kShiftX0);
     grid.y = divideUp(rows, kDimY0, kShiftY0);
 
     if (border_type == BORDER_REPLICATE) {
-      RUN_CHANNELN_SMALL_KERNELS(ReplicateBorder);
+      RUN_CN_SMALL_KERNELS(ReplicateBorder);
     }
     else if (border_type == BORDER_REFLECT) {
-      RUN_CHANNELN_SMALL_KERNELS(ReflectBorder);
+      RUN_CN_SMALL_KERNELS(ReflectBorder);
     }
     else {
-      RUN_CHANNELN_SMALL_KERNELS(Reflect101Border);
+      RUN_CN_SMALL_KERNELS(Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -1846,21 +2238,20 @@ RetCode medainblur(const float* src, int rows, int cols, int channels,
     return RC_SUCCESS;
   }
 
-  dim3 block0, grid0;
-  block0.x = kBlockDimX1;
-  block0.y = kBlockDimY1;
-  grid0.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
-  grid0.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
+  block.x = kBlockDimX1;
+  block.y = kBlockDimY1;
+  grid.x  = divideUp(cols, kBlockDimX1, kBlockShiftX1);
+  grid.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
   int grid_x = divideUp(divideUp(cols, 4, 2), kBlockDimX1, kBlockShiftX1);
   if (border_type == BORDER_REPLICATE) {
-    RUN_KERNELS1(grid_x, ReplicateBorder);
+    RUN_FLOAT_KERNELS(grid_x, ReplicateBorder);
   }
   else if (border_type == BORDER_REFLECT) {
-    RUN_KERNELS1(grid_x, ReflectBorder);
+    RUN_FLOAT_KERNELS(grid_x, ReflectBorder);
   }
   else {
-    RUN_KERNELS1(grid_x, Reflect101Border);
+    RUN_FLOAT_KERNELS(grid_x, Reflect101Border);
   }
 
   code = cudaGetLastError();

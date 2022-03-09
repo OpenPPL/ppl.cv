@@ -43,8 +43,8 @@ class PplCvCudaMedianBlurTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaMedianBlurTest() {
     const Parameters& parameters = GetParam();
-    ksize       = std::get<0>(parameters);
-    size        = std::get<1>(parameters);
+    ksize = std::get<0>(parameters);
+    size  = std::get<1>(parameters);
   }
 
   ~PplCvCudaMedianBlurTest() {
@@ -89,8 +89,8 @@ bool PplCvCudaMedianBlurTest<T, channels>::apply() {
       (T*)gpu_dst.data, ksize, ppl::cv::BORDER_REPLICATE);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::MedianBlur<T, channels>(0, size.height, size.width, 
-      size.width * channels, gpu_input, size.width * channels, gpu_output, 
+  ppl::cv::cuda::MedianBlur<T, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, size.width * channels, gpu_output,
       ksize, ppl::cv::BORDER_REPLICATE);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
@@ -129,7 +129,7 @@ TEST_P(PplCvCudaMedianBlurTest ## T ## channels, Standard) {                   \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaMedianBlurTest ## T ## channels,     \
   ::testing::Combine(                                                          \
-    ::testing::Values(3, 5, 7, 15),                                            \
+    ::testing::Values(3, 5, 7, 15, 33, 43),                                    \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
