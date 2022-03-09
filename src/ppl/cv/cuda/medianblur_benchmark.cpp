@@ -37,7 +37,7 @@ void BM_MedianBlur_ppl_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
 
-  int iterations = 1000;
+  int iterations = 100;
   float elapsed_time;
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
@@ -82,7 +82,7 @@ void BM_MedianBlur_opencv_cuda(benchmark::State &state) {
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_dst(dst);
 
-  int iterations = 1000;
+  int iterations = 100;
   float elapsed_time;
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
@@ -150,14 +150,8 @@ BENCHMARK_TEMPLATE(BM_MedianBlur_ppl_cuda, type, c4, ksize)->                  \
 // RUN_BENCHMARK0(uchar, 5, 640, 480)
 // RUN_BENCHMARK0(float, 5, 640, 480)
 // RUN_BENCHMARK0(uchar, 9, 640, 480)
-// RUN_BENCHMARK0(uchar, 11, 640, 480)
-
-// RUN_BENCHMARK0(uchar, 3, 1920, 1080)
-// RUN_BENCHMARK0(float, 3, 1920, 1080)
-// RUN_BENCHMARK0(uchar, 5, 1920, 1080)
-// RUN_BENCHMARK0(float, 5, 1920, 1080)
-// RUN_BENCHMARK0(uchar, 9, 1920, 1080)
-// RUN_BENCHMARK0(uchar, 11, 1920, 1080)
+// RUN_BENCHMARK0(uchar, 15, 640, 480)
+// RUN_BENCHMARK0(uchar, 25, 640, 480)
 
 #define RUN_BENCHMARK1(type, ksize, width, height)                             \
 BENCHMARK_TEMPLATE(BM_MedianBlur_opencv_cuda, type, c1, ksize)->               \
@@ -167,9 +161,10 @@ BENCHMARK_TEMPLATE(BM_MedianBlur_ppl_cuda, type, c1, ksize)->                  \
 
 // RUN_BENCHMARK1(uchar, 3, 640, 480)
 // RUN_BENCHMARK1(uchar, 5, 640, 480)
-// RUN_BENCHMARK1(uchar, 7, 640, 480)
 // RUN_BENCHMARK1(uchar, 9, 640, 480)
-// RUN_BENCHMARK1(uchar, 11, 640, 480)
+// RUN_BENCHMARK1(uchar, 15, 640, 480)
+// RUN_BENCHMARK1(uchar, 25, 640, 480)
+// RUN_BENCHMARK1(uchar, 43, 640, 480)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, ksize)                                 \
 BENCHMARK_TEMPLATE(BM_MedianBlur_opencv_x86_cuda, type, c1, ksize)->           \
@@ -192,11 +187,13 @@ RUN_OPENCV_TYPE_FUNCTIONS(float, 3)
 RUN_OPENCV_TYPE_FUNCTIONS(uchar, 5)
 RUN_OPENCV_TYPE_FUNCTIONS(float, 5)
 RUN_OPENCV_TYPE_FUNCTIONS(uchar, 9)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, 11)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 15)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 25)
 
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 3)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, 3)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 5)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, 5)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 9)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 11)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 15)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 25)
