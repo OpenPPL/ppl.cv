@@ -989,8 +989,7 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
       return RC_DEVICE_MEMORY_ERROR;
     }
     createGaussianKernel(kernel, 0, ksize);
-    code = cudaMemcpyAsync(gpu_kernel, kernel, kernel_size,
-                           cudaMemcpyHostToDevice, stream);
+    code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
