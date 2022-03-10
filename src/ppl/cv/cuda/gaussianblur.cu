@@ -646,8 +646,7 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
   cudaError_t code;
   if (ksize == 1 && src_stride == dst_stride) {
     if (src != dst) {
-      code = cudaMemcpyAsync(dst, src, rows * src_stride,
-                             cudaMemcpyDeviceToDevice, stream);
+      code = cudaMemcpy(dst, src, rows * src_stride, cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -717,8 +716,7 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
     return RC_DEVICE_MEMORY_ERROR;
   }
   getGaussianKernel(kernel, sigma, ksize);
-  code = cudaMemcpyAsync(gpu_kernel, kernel, kernel_size,
-                         cudaMemcpyHostToDevice, stream);
+  code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_MEMORY_ERROR;
@@ -761,8 +759,7 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
   cudaError_t code;
   if (ksize == 1 && src_stride == dst_stride) {
     if (src != dst) {
-      code = cudaMemcpyAsync(dst, src, rows * src_stride,
-                             cudaMemcpyDeviceToDevice, stream);
+      code = cudaMemcpy(dst, src, rows * src_stride, cudaMemcpyDeviceToDevice);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -877,8 +874,7 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
     return RC_DEVICE_MEMORY_ERROR;
   }
   getGaussianKernel(kernel, sigma, ksize);
-  code = cudaMemcpyAsync(gpu_kernel, kernel, kernel_size,
-                         cudaMemcpyHostToDevice, stream);
+  code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_MEMORY_ERROR;
