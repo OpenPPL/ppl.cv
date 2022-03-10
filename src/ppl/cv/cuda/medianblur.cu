@@ -2091,8 +2091,9 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       ushort* histograms;
       code = cudaMalloc((void**)&histograms,
                         cols * grid.y * HIST_SIZE * sizeof(ushort));
-      code = cudaMemset(histograms, 0,
-                        cols * grid.y * HIST_SIZE * sizeof(ushort));
+      code = cudaMemsetAsync(histograms, 0,
+                             cols * grid.y * HIST_SIZE * sizeof(ushort),
+                             stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -2137,8 +2138,8 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       ushort* histograms;
       code = cudaMalloc((void**)&histograms,
                         cols * channels * grid.y * HIST_SIZE * sizeof(ushort));
-      code = cudaMemset(histograms, 0,
-                        cols * channels * grid.y * HIST_SIZE * sizeof(ushort));
+      code = cudaMemsetAsync(histograms, 0,
+                 cols * channels * grid.y * HIST_SIZE * sizeof(ushort), stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;

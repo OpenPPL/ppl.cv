@@ -64,10 +64,6 @@ void BM_DistanceTransform_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
-<<<<<<< HEAD
-=======
-
->>>>>>> 4e5b1fb ([perf][cuda]add functions of distancetransform and optimize it.)
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
 }
