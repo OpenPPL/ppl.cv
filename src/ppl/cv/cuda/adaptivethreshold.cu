@@ -844,7 +844,7 @@ else {                                                                         \
       dst_stride, interpolation);                                              \
 }
 
-#define RUN_LARAGE_KERNELS0(Interpolation)                                     \
+#define RUN_LARGE_KERNELS0(Interpolation)                                      \
 Interpolation interpolation;                                                   \
 rowBatch4Kernel0<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
     src_stride, radius, buffer, pitch, interpolation);                         \
@@ -852,7 +852,7 @@ colBatch4Kernel0<Interpolation><<<grid2, block2, 0, stream>>>(buffer, rows,    \
     cols, pitch, src, src_stride, radius, weight, threshold_type, setted_value,\
     int_delta, dst, dst_stride, interpolation);
 
-#define RUN_LARAGE_KERNELS1(Interpolation)                                     \
+#define RUN_LARGE_KERNELS1(Interpolation)                                      \
 Interpolation interpolation;                                                   \
 rowBatch4Kernel1<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
     src_stride, gpu_kernel, radius, buffer, pitch, interpolation);             \
@@ -876,7 +876,7 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
   PPL_ASSERT(threshold_type == THRESH_BINARY ||
              threshold_type == THRESH_BINARY_INV);
   PPL_ASSERT((ksize & 1) == 1 && ksize > 1);
-  PPL_ASSERT(border_type == BORDER_REPLICATE || 
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
              border_type == BORDER_REFLECT ||
              border_type == BORDER_REFLECT_101 ||
              border_type == BORDER_DEFAULT);
@@ -953,13 +953,13 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
     }
 
     if (border_type == BORDER_REPLICATE) {
-      RUN_LARAGE_KERNELS0(ReplicateBorder);
+      RUN_LARGE_KERNELS0(ReplicateBorder);
     }
     else if (border_type == BORDER_REFLECT) {
-      RUN_LARAGE_KERNELS0(ReflectBorder);
+      RUN_LARGE_KERNELS0(ReflectBorder);
     }
     else {
-      RUN_LARAGE_KERNELS0(Reflect101Border);
+      RUN_LARGE_KERNELS0(Reflect101Border);
     }
 
     code = cudaGetLastError();
@@ -997,13 +997,13 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
     }
 
     if (border_type == BORDER_REPLICATE) {
-      RUN_LARAGE_KERNELS1(ReplicateBorder);
+      RUN_LARGE_KERNELS1(ReplicateBorder);
     }
     else if (border_type == BORDER_REFLECT) {
-      RUN_LARAGE_KERNELS1(ReflectBorder);
+      RUN_LARGE_KERNELS1(ReflectBorder);
     }
     else {
-      RUN_LARAGE_KERNELS1(Reflect101Border);
+      RUN_LARGE_KERNELS1(Reflect101Border);
     }
 
     code = cudaGetLastError();

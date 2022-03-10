@@ -425,21 +425,19 @@ RetCode distanceTransform(const uchar* src, int rows, int cols, int src_stride,
 
     if (mask_size == DIST_MASK_3) {
       while (true) {
-        cudaMemsetAsync(gpu_done, 1, sizeof(int), stream);
+        cudaMemset(gpu_done, 1, sizeof(int));
         calculateDistance3x3<<<grid, block, sizeof(int), stream>>>(dst, rows,
             cols, dst_stride, a, b, gpu_done);
-        cudaMemcpyAsync(&host_done, gpu_done, sizeof(int),
-                        cudaMemcpyDeviceToHost, stream);
+        cudaMemcpy(&host_done, gpu_done, sizeof(int), cudaMemcpyDeviceToHost);
         if (host_done > 0) break;
       }
     }
     else {  // mask_size == DIST_MASK_5
       while (true) {
-        cudaMemsetAsync(gpu_done, 1, sizeof(int), stream);
+        cudaMemset(gpu_done, 1, sizeof(int));
         calculateDistance5x5<<<grid, block, sizeof(int), stream>>>(dst, rows,
             cols, dst_stride, a, b, c, gpu_done);
-        cudaMemcpyAsync(&host_done, gpu_done, sizeof(int),
-                        cudaMemcpyDeviceToHost, stream);
+        cudaMemcpy(&host_done, gpu_done, sizeof(int), cudaMemcpyDeviceToHost);
         if (host_done > 0) break;
       }
     }

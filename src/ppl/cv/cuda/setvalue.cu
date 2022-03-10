@@ -797,8 +797,8 @@ RetCode zeros(uchar* dst, int rows, int cols, int channels, int dst_stride,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
 
   cudaError_t code;
-  code = cudaMemset2DAsync(dst, dst_stride, 0, cols * channels * sizeof(uchar),
-                           rows, stream);
+  code = cudaMemset2D(dst, dst_stride, 0, cols * channels * sizeof(uchar),
+                      rows);
 
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -816,8 +816,8 @@ RetCode zeros(float* dst, int rows, int cols, int channels, int dst_stride,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
 
   cudaError_t code;
-  code = cudaMemset2DAsync(dst, dst_stride, 0, cols * channels * sizeof(float),
-                           rows, stream);
+  code = cudaMemset2D(dst, dst_stride, 0, cols * channels * sizeof(float),
+                      rows);
 
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
