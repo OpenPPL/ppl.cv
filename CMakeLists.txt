@@ -12,10 +12,9 @@ option(PPLCV_HOLD_DEPS "don't update dependencies" OFF)
 
 # --------------------------------------------------------------------------- #
 
-hpcc_get_git_tag2version(
-    VER_MAJOR PPLCV_VERSION_MAJOR
-    VER_MINOR PPLCV_VERSION_MINOR
-    VER_PATCH PPLCV_VERSION_PATCH)
+set(PPLCV_VERSION_MAJOR 0)
+set(PPLCV_VERSION_MINOR 6)
+set(PPLCV_VERSION_PATCH 3)
 
 # --------------------------------------------------------------------------- #
 
