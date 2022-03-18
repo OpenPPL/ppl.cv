@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
@@ -76,7 +76,7 @@ bool PplCvCudaAbsTest<T, channels>::apply() {
 
   cv_dst = cv::abs(src);
   ppl::cv::cuda::Abs<T, channels>(0, gpu_src.rows, gpu_src.cols,
-      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+      gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
       (T*)gpu_dst.data);
   gpu_dst.download(dst);
 

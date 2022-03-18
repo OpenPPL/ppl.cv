@@ -17,7 +17,7 @@
 #include "ppl/cv/cuda/meanstddev.h"
 #include "mean.hpp"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 

@@ -22,7 +22,7 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<ppl::cv::DistTypes,
                               ppl::cv::DistanceTransformMasks, cv::Size>;

@@ -16,7 +16,7 @@
 
 #include "ppl/cv/cuda/norm.h"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 #include "norm.hpp"
 
 using namespace ppl::common;

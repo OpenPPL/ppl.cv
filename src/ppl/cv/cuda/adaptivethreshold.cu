@@ -19,7 +19,8 @@
 
 #include <cmath>
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
+#include "utility/use_memory_pool.h"
 
 using namespace ppl::common;
 
@@ -29,8 +30,9 @@ namespace cuda {
 
 #define SMALL_SIZE 7
 #define SMALL_MAX_KSIZE 32
+#define LARGE_MAX_KSIZE 256
 
-__host__ __device__
+__DEVICE__
 void createGaussianKernel(float* coefficients, float sigma, int ksize) {
   bool fixed_kernel = false;
   if ((ksize & 1) == 1 && ksize <= SMALL_SIZE && sigma <= 0) {
@@ -497,7 +499,8 @@ void rowColC1Kernel1(const uchar* src, int rows, int cols, int src_stride,
 template <typename BorderInterpolation>
 __global__
 void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
-                      int radius, float* dst, int dst_stride,
+                      int radius, float* buffer, int buffer_offset,
+                      int buffer_stride, bool pool_used,
                       BorderInterpolation interpolation) {
   int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
@@ -543,7 +546,14 @@ void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
     }
   }
 
-  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+  float* output;
+  if (pool_used) {
+    output = (float*)((uchar*)buffer + buffer_offset +
+                      element_y * buffer_stride);
+  }
+  else {
+    output = (float*)((uchar*)buffer + element_y * buffer_stride);
+  }
   if (element_x < cols - 3) {
     output[element_x]     = sum.x;
     output[element_x + 1] = sum.y;
@@ -564,14 +574,23 @@ void rowBatch4Kernel0(const uchar* src, int rows, int cols, int src_stride,
 template <typename BorderInterpolation>
 __global__
 void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
-                      const float* kernel, int radius, float* dst,
-                      int dst_stride, BorderInterpolation interpolation) {
+                      int ksize, float* buffer, int buffer_offset,
+                      int buffer_stride, bool pool_used,
+                      BorderInterpolation interpolation) {
+  __shared__ float kernel[LARGE_MAX_KSIZE];
+
   int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
     return;
   }
 
+  if (threadIdx.y == 0 && threadIdx.x == 0) {
+    createGaussianKernel(kernel, 0, ksize);
+  }
+  __syncthreads();
+
+  int radius = ksize >> 1;
   int origin_x = element_x - radius;
   int top_x    = element_x + radius;
 
@@ -612,7 +631,14 @@ void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
     }
   }
 
-  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+  float* output;
+  if (pool_used) {
+    output = (float*)((uchar*)buffer + buffer_offset +
+                      element_y * buffer_stride);
+  }
+  else {
+    output = (float*)((uchar*)buffer + element_y * buffer_stride);
+  }
   if (element_x < cols - 3) {
     output[element_x]     = sum.x;
     output[element_x + 1] = sum.y;
@@ -632,10 +658,11 @@ void rowBatch4Kernel1(const uchar* src, int rows, int cols, int src_stride,
 
 template <typename BorderInterpolation>
 __global__
-void colBatch4Kernel0(const float* buffer, int rows, int cols,
-                      int buffer_stride, const uchar* src, int src_stride,
-                      int radius, float weight, int threshold_type,
-                      uchar setted_value, int delta, uchar* dst, int dst_stride,
+void colBatch4Kernel0(const float* buffer, int buffer_offset, int rows,
+                      int cols, int buffer_stride, bool pool_used,
+                      const uchar* src, int src_stride, int radius,
+                      float weight, int threshold_type, uchar setted_value,
+                      int delta, uchar* dst, int dst_stride,
                       BorderInterpolation interpolation) {
   __shared__ uchar data[kBlockDimY1][kBlockDimX1 << 2];
 
@@ -659,9 +686,17 @@ void colBatch4Kernel0(const float* buffer, int rows, int cols,
   data_index = (rows - radius) >> kBlockShiftY1;
   if (blockIdx.y >= data_index) isnt_border_block = false;
 
+  uchar* buffer_start;
+  if (pool_used) {
+    buffer_start = (uchar*)buffer + buffer_offset;
+  }
+  else {
+    buffer_start = (uchar*)buffer;
+  }
+
   if (isnt_border_block) {
     for (int i = origin_y; i <= top_y; i++) {
-      input0 = (float*)((uchar*)buffer + i * buffer_stride);
+      input0 = (float*)(buffer_start + i * buffer_stride);
       value = input0[element_x];
       sum += value;
     }
@@ -669,7 +704,7 @@ void colBatch4Kernel0(const float* buffer, int rows, int cols,
   else {
     for (int i = origin_y; i <= top_y; i++) {
       data_index = interpolation(rows, radius, i);
-      input0 = (float*)((uchar*)buffer + data_index * buffer_stride);
+      input0 = (float*)(buffer_start + data_index * buffer_stride);
       value = input0[element_x];
       sum += value;
     }
@@ -732,12 +767,14 @@ void colBatch4Kernel0(const float* buffer, int rows, int cols,
 
 template <typename BorderInterpolation>
 __global__
-void colBatch4Kernel1(const float* buffer, int rows, int cols,
-                      int buffer_stride, const uchar* src, int src_stride,
-                      const float* kernel, int radius, int threshold_type,
-                      uchar setted_value, int delta, uchar* dst, int dst_stride,
+void colBatch4Kernel1(const float* buffer, int buffer_offset, int rows,
+                      int cols, int buffer_stride, bool pool_used,
+                      const uchar* src, int src_stride, int ksize,
+                      int threshold_type, uchar setted_value, int delta,
+                      uchar* dst, int dst_stride,
                       BorderInterpolation interpolation) {
   __shared__ uchar data[kBlockDimY1][kBlockDimX1 << 2];
+  __shared__ float kernel[LARGE_MAX_KSIZE];
 
   int element_x = (blockIdx.x << (kBlockShiftX1 + 2)) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
@@ -745,6 +782,12 @@ void colBatch4Kernel1(const float* buffer, int rows, int cols,
     return;
   }
 
+  if (threadIdx.y == 0 && threadIdx.x == 0) {
+    createGaussianKernel(kernel, 0, ksize);
+  }
+  __syncthreads();
+
+  int radius = ksize >> 1;
   int origin_y = element_y - radius;
   int top_y    = element_y + radius;
 
@@ -759,9 +802,17 @@ void colBatch4Kernel1(const float* buffer, int rows, int cols,
   data_index = (rows - radius) >> kBlockShiftY1;
   if (blockIdx.y >= data_index) isnt_border_block = false;
 
+  uchar* buffer_start;
+  if (pool_used) {
+    buffer_start = (uchar*)buffer + buffer_offset;
+  }
+  else {
+    buffer_start = (uchar*)buffer;
+  }
+
   if (isnt_border_block) {
     for (int i = origin_y; i <= top_y; i++) {
-      input0 = (float*)((uchar*)buffer + i * buffer_stride);
+      input0 = (float*)((uchar*)buffer_start + i * buffer_stride);
       value = input0[element_x];
       sum += value * kernel[kernel_index];
       kernel_index++;
@@ -770,7 +821,7 @@ void colBatch4Kernel1(const float* buffer, int rows, int cols,
   else {
     for (int i = origin_y; i <= top_y; i++) {
       data_index = interpolation(rows, radius, i);
-      input0 = (float*)((uchar*)buffer + data_index * buffer_stride);
+      input0 = (float*)((uchar*)buffer_start + data_index * buffer_stride);
       value = input0[element_x];
       sum += value * kernel[kernel_index];
       kernel_index++;
@@ -844,21 +895,41 @@ else {                                                                         \
       dst_stride, interpolation);                                              \
 }
 
+#define RUN_LARGE_KERNELS_WITH_MEMORY_POOL0(Interpolation)                     \
+Interpolation interpolation;                                                   \
+rowBatch4Kernel0<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
+    src_stride, radius, (float*)(buffer_block.data), buffer_block.offset,      \
+    buffer_block.pitch, true, interpolation);                                  \
+colBatch4Kernel0<Interpolation><<<grid2, block2, 0, stream>>>(                 \
+    (float*)(buffer_block.data), buffer_block.offset, rows, cols,              \
+    buffer_block.pitch, true, src, src_stride, radius, weight, threshold_type, \
+    setted_value, int_delta, dst, dst_stride, interpolation);
+
 #define RUN_LARGE_KERNELS0(Interpolation)                                      \
 Interpolation interpolation;                                                   \
 rowBatch4Kernel0<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
-    src_stride, radius, buffer, pitch, interpolation);                         \
-colBatch4Kernel0<Interpolation><<<grid2, block2, 0, stream>>>(buffer, rows,    \
-    cols, pitch, src, src_stride, radius, weight, threshold_type, setted_value,\
-    int_delta, dst, dst_stride, interpolation);
+    src_stride, radius, buffer, 0, pitch, false, interpolation);               \
+colBatch4Kernel0<Interpolation><<<grid2, block2, 0, stream>>>(buffer, 0, rows, \
+    cols, pitch, false, src, src_stride, radius, weight, threshold_type,       \
+    setted_value, int_delta, dst, dst_stride, interpolation);
+
+#define RUN_LARGE_KERNELS_WITH_MEMORY_POOL1(Interpolation)                     \
+Interpolation interpolation;                                                   \
+rowBatch4Kernel1<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
+    src_stride, ksize, (float*)(buffer_block.data), buffer_block.offset,       \
+    buffer_block.pitch, true, interpolation);                                  \
+colBatch4Kernel1<Interpolation><<<grid2, block2, 0, stream>>>(                 \
+    (float*)(buffer_block.data), buffer_block.offset, rows, cols,              \
+    buffer_block.pitch, true, src, src_stride, ksize, threshold_type,          \
+    setted_value, int_delta, dst, dst_stride, interpolation);
 
 #define RUN_LARGE_KERNELS1(Interpolation)                                      \
 Interpolation interpolation;                                                   \
 rowBatch4Kernel1<Interpolation><<<grid1, block1, 0, stream>>>(src, rows, cols, \
-    src_stride, gpu_kernel, radius, buffer, pitch, interpolation);             \
-colBatch4Kernel1<Interpolation><<<grid2, block2, 0, stream>>>(buffer, rows,    \
-    cols, pitch, src, src_stride, gpu_kernel, radius, threshold_type,          \
-    setted_value, int_delta, dst, dst_stride, interpolation);
+    src_stride, ksize, buffer, 0, pitch, false, interpolation);                \
+colBatch4Kernel1<Interpolation><<<grid2, block2, 0, stream>>>(buffer, 0, rows, \
+    cols, pitch, false, src, src_stride, ksize, threshold_type, setted_value,  \
+    int_delta, dst, dst_stride, interpolation);
 
 RetCode
 AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
@@ -875,7 +946,7 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
              adaptive_method == ADAPTIVE_THRESH_GAUSSIAN_C);
   PPL_ASSERT(threshold_type == THRESH_BINARY ||
              threshold_type == THRESH_BINARY_INV);
-  PPL_ASSERT((ksize & 1) == 1 && ksize > 1);
+  PPL_ASSERT((ksize & 1) == 1 && ksize > 1 && ksize < LARGE_MAX_KSIZE);
   PPL_ASSERT(border_type == BORDER_REPLICATE ||
              border_type == BORDER_REFLECT ||
              border_type == BORDER_REFLECT_101 ||
@@ -944,6 +1015,31 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
   grid2.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
   if (adaptive_method == ADAPTIVE_THRESH_MEAN_C) {
+    if (memoryPoolUsed()) {
+      GpuMemoryBlock buffer_block;
+      pplCudaMallocPitch(cols * sizeof(float), rows, buffer_block);
+
+      if (border_type == BORDER_REPLICATE) {
+        RUN_LARGE_KERNELS_WITH_MEMORY_POOL0(ReplicateBorder);
+      }
+      else if (border_type == BORDER_REFLECT) {
+        RUN_LARGE_KERNELS_WITH_MEMORY_POOL0(ReflectBorder);
+      }
+      else {
+        RUN_LARGE_KERNELS_WITH_MEMORY_POOL0(Reflect101Border);
+      }
+      pplCudaFree(buffer_block);
+
+      code = cudaGetLastError();
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+      else {
+        return RC_SUCCESS;
+      }
+    }
+
     float* buffer;
     size_t pitch;
     code = cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows);
@@ -971,25 +1067,35 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
 
     cudaFree(buffer);
   }
-  else {
+  else {  // adaptive_method == ADAPTIVE_THRESH_GAUSSIAN_C
+    if (memoryPoolUsed()) {
+      GpuMemoryBlock buffer_block;
+      pplCudaMallocPitch(cols * sizeof(float), rows, buffer_block);
+
+      if (border_type == BORDER_REPLICATE) {
+        RUN_LARGE_KERNELS_WITH_MEMORY_POOL1(ReplicateBorder);
+      }
+      else if (border_type == BORDER_REFLECT) {
+        RUN_LARGE_KERNELS_WITH_MEMORY_POOL1(ReflectBorder);
+      }
+      else {
+        RUN_LARGE_KERNELS_WITH_MEMORY_POOL1(Reflect101Border);
+      }
+      pplCudaFree(buffer_block);
+
+      code = cudaGetLastError();
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+      else {
+        return RC_SUCCESS;
+      }
+    }
+
     float* buffer;
     size_t pitch;
     code = cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows);
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_MEMORY_ERROR;
-    }
-
-    int kernel_size = ksize * sizeof(float);
-    float* kernel = (float*)malloc(kernel_size);
-    float* gpu_kernel;
-    code = cudaMalloc((void**)&gpu_kernel, kernel_size);
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_MEMORY_ERROR;
-    }
-    createGaussianKernel(kernel, 0, ksize);
-    code = cudaMemcpy(gpu_kernel, kernel, kernel_size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
@@ -1007,16 +1113,12 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
 
     code = cudaGetLastError();
     if (code != cudaSuccess) {
-      free(kernel);
       cudaFree(buffer);
-      cudaFree(gpu_kernel);
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_RUNTIME_ERROR;
     }
 
-    free(kernel);
     cudaFree(buffer);
-    cudaFree(gpu_kernel);
   }
 
   code = cudaGetLastError();

@@ -22,7 +22,7 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
@@ -87,11 +87,11 @@ bool PplCvCudaIntegralTest<Tsrc, Tdst, channels>::apply() {
   }
 
   ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, gpu_src.rows, gpu_src.cols,
-      gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows, 
+      gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, gpu_dst.rows,
       gpu_dst.cols, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, size.height, size.width, size.width, 
+  ppl::cv::cuda::Integral<Tsrc, Tdst, 1>(0, size.height, size.width, size.width,
       gpu_input, dst.rows, dst.cols, dst.cols, gpu_output);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

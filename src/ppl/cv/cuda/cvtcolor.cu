@@ -18,7 +18,7 @@
 #include "cvtcolor_compute.hpp"
 #include "cvtcolor_memory.hpp"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 namespace ppl {
 namespace cv {

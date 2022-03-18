@@ -16,7 +16,7 @@
 
 #include "ppl/cv/cuda/sobel.h"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 

@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum MaskType {
   kUnmasked,
@@ -143,10 +143,10 @@ bool PplCvCudaNormalizeTest<T, channels>::apply() {
     cv::normalize(src, cv_dst, alpha, beta, cv_norm_type,
                   CV_MAT_DEPTH(dst.type()));
     ppl::cv::cuda::Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, 
-        gpu_dst.step / sizeof(float), (float*)gpu_dst.data, alpha, beta, 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data,
+        gpu_dst.step / sizeof(float), (float*)gpu_dst.data, alpha, beta,
         norm_type);
-    ppl::cv::cuda::Normalize<T, channels>(0, size.height, size.width, 
+    ppl::cv::cuda::Normalize<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input, size.width * channels, gpu_output,
         alpha, beta, norm_type);
   }
@@ -160,10 +160,10 @@ bool PplCvCudaNormalizeTest<T, channels>::apply() {
       cv::normalize(src, cv_dst, alpha, beta, cv_norm_type,
                     CV_MAT_DEPTH(dst.type()), mask0);
       ppl::cv::cuda::Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
-          gpu_src.step / sizeof(T), (T*)gpu_src.data, 
-          gpu_dst.step / sizeof(float), (float*)gpu_dst.data, alpha, beta, 
+          gpu_src.step / sizeof(T), (T*)gpu_src.data,
+          gpu_dst.step / sizeof(float), (float*)gpu_dst.data, alpha, beta,
           norm_type, gpu_mask0.step, (uchar*)gpu_mask0.data);
-      ppl::cv::cuda::Normalize<T, channels>(0, size.height, size.width, 
+      ppl::cv::cuda::Normalize<T, channels>(0, size.height, size.width,
           size.width * channels, gpu_input, size.width * channels,
           gpu_output, alpha, beta, norm_type, size.width, gpu_mask1);
     }

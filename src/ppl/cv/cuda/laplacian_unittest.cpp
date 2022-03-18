@@ -22,7 +22,7 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<int, ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringLaplacian(const Parameters& parameters) {

@@ -22,7 +22,7 @@
 #include "opencv2/cudawarping.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum Scaling {
   kHalfSize,

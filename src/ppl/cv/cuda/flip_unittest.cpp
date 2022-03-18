@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum FlipFunctions {
   kFlipX,
@@ -98,7 +98,7 @@ bool PplCvCudaFlipTest<T, channels>::apply() {
   if (function == kFlipX) {
     cv::flip(src, cv_dst, 0);
     ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
         (T*)gpu_dst.data, 0);
     ppl::cv::cuda::Flip<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input, size.width * channels, gpu_output, 0);
@@ -106,7 +106,7 @@ bool PplCvCudaFlipTest<T, channels>::apply() {
   else if (function == kFlipY) {
     cv::flip(src, cv_dst, 1);
     ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
         (T*)gpu_dst.data, 1);
     ppl::cv::cuda::Flip<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input, size.width * channels, gpu_output, 1);
@@ -114,10 +114,10 @@ bool PplCvCudaFlipTest<T, channels>::apply() {
   else if (function == kFlipXY) {
     cv::flip(src, cv_dst, -1);
     ppl::cv::cuda::Flip<T, channels>(0, gpu_src.rows, gpu_src.cols,
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T), 
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
         (T*)gpu_dst.data, -1);
     ppl::cv::cuda::Flip<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input, size.width * channels, gpu_output, 
+        size.width * channels, gpu_input, size.width * channels, gpu_output,
         -1);
   }
   else {

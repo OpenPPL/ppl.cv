@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/adaptivethreshold.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -22,31 +23,44 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
-using Parameters = std::tuple<int, int, int, int, int, ppl::cv::BorderType,
-                              cv::Size>;
+enum MemoryPool {
+  kActivated,
+  kUnactivated,
+};
+
+using Parameters = std::tuple<MemoryPool, int, int, int, int, int,
+                              ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringThreshold(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int ksize = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  int ksize = std::get<1>(parameters);
   formatted << "Ksize" << ksize << "_";
 
-  int adaptive_method = std::get<1>(parameters);
+  int adaptive_method = std::get<2>(parameters);
   formatted << (adaptive_method == ppl::cv::ADAPTIVE_THRESH_MEAN_C ?
                                    "METHOD_MEAN" : "METHOD_GAUSSIAN") << "_";
 
-  int threshold_type = std::get<2>(parameters);
+  int threshold_type = std::get<3>(parameters);
   formatted << (threshold_type == ppl::cv::THRESH_BINARY ? "THRESH_BINARY" :
                                   "THRESH_BINARY_INV") << "_";
 
-  int max_value = std::get<3>(parameters);
+  int max_value = std::get<4>(parameters);
   formatted << "MaxValue" << max_value << "_";
 
-  int int_delta = std::get<4>(parameters);
+  int int_delta = std::get<5>(parameters);
   formatted << "IntDelta" << int_delta << "_";
 
-  ppl::cv::BorderType border_type = std::get<5>(parameters);
+  ppl::cv::BorderType border_type = std::get<6>(parameters);
   if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
@@ -60,7 +74,7 @@ inline std::string convertToStringThreshold(const Parameters& parameters) {
     formatted << "BORDER_DEFAULT" << "_";
   }
 
-  cv::Size size = std::get<6>(parameters);
+  cv::Size size = std::get<7>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -73,13 +87,14 @@ class PplCvCudaAdaptiveThresholdTest :
  public:
   PplCvCudaAdaptiveThresholdTest() {
     const Parameters& parameters = GetParam();
-    ksize           = std::get<0>(parameters);
-    adaptive_method = std::get<1>(parameters);
-    threshold_type  = std::get<2>(parameters);
-    max_value       = std::get<3>(parameters) / 10.f;
-    delta           = std::get<4>(parameters) / 10.f;
-    border_type     = std::get<5>(parameters);
-    size            = std::get<6>(parameters);
+    memory_pool     = std::get<0>(parameters);
+    ksize           = std::get<1>(parameters);
+    adaptive_method = std::get<2>(parameters);
+    threshold_type  = std::get<3>(parameters);
+    max_value       = std::get<4>(parameters) / 10.f;
+    delta           = std::get<5>(parameters) / 10.f;
+    border_type     = std::get<6>(parameters);
+    size            = std::get<7>(parameters);
 
     max_value -= 1.f;
   }
@@ -90,6 +105,7 @@ class PplCvCudaAdaptiveThresholdTest :
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   int ksize;
   int adaptive_method;
   int threshold_type;
@@ -140,6 +156,10 @@ bool PplCvCudaAdaptiveThresholdTest<T, channels>::apply() {
   cv::adaptiveThreshold(src, cv_dst, max_value, cv_adaptive_method,
                         cv_threshold_type, ksize, delta);
 
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::ActivateGpuMemoryPool(10000000);
+  }
+
   ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
       (uchar*)gpu_src.data, gpu_dst.step, (uchar*)gpu_dst.data, max_value,
       adaptive_method, threshold_type, ksize, delta, border_type);
@@ -149,6 +169,10 @@ bool PplCvCudaAdaptiveThresholdTest<T, channels>::apply() {
       size.width * channels, gpu_input, size.width * channels, gpu_output,
       max_value, adaptive_method, threshold_type, ksize, delta, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -179,6 +203,7 @@ TEST_P(PplCvCudaAdaptiveThresholdTest ## T ## channels, Standard) {            \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaAdaptiveThresholdTest ## T ## channels,                             \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(3, 5, 13, 31, 43),                                       \
     ::testing::Values(ppl::cv::ADAPTIVE_THRESH_MEAN_C,                         \
                       ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C),                    \

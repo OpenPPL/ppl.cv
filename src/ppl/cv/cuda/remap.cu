@@ -16,7 +16,7 @@
 
 #include "ppl/cv/cuda/remap.h"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 
@@ -460,7 +460,7 @@ RetCode remap(const uchar* src, int src_rows, int src_cols, int channels,
   PPL_ASSERT(map_y != nullptr);
   PPL_ASSERT(interpolation == INTERPOLATION_LINEAR ||
              interpolation == INTERPOLATION_NEAREST_POINT);
-  PPL_ASSERT(border_type == BORDER_CONSTANT || 
+  PPL_ASSERT(border_type == BORDER_CONSTANT ||
              border_type == BORDER_REPLICATE ||
              border_type == BORDER_TRANSPARENT);
 
