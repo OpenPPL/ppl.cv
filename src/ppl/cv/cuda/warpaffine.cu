@@ -17,7 +17,7 @@
 #include "ppl/cv/cuda/warpaffine.h"
 #include "warp.hpp"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 

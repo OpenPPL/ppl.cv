@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<int, int, int, cv::Size>;
 inline std::string convertToStringCrop(const Parameters& parameters) {
@@ -97,13 +97,13 @@ bool PplCvCudaCropTest<T, channels>::apply() {
   croppedImage.copyTo(cv_dst);
   cv_dst = cv_dst * scale;
 
-  ppl::cv::cuda::Crop<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+  ppl::cv::cuda::Crop<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.rows, gpu_dst.cols,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, left, top, scale);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::Crop<T, channels>(0, src_height, src_width, 
-      src_width * channels, gpu_input, size.height, size.width, 
+  ppl::cv::cuda::Crop<T, channels>(0, src_height, src_width,
+      src_width * channels, gpu_input, size.height, size.width,
       size.width * channels, gpu_output, left, top, scale);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

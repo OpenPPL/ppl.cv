@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum MaskType {
   kUnmasked,
@@ -117,18 +117,18 @@ bool PplCvCudaNormTest<T, channels>::apply() {
   double result0, result1, result2;
   if (is_masked == kUnmasked) {
     result0 = cv::norm(src, cv_norm_type);
-    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, &result1, norm_type);
-    ppl::cv::cuda::Norm<T, channels>(0, size.height, size.width, 
+    ppl::cv::cuda::Norm<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input, &result2, norm_type);
   }
   else {
     result0 = cv::norm(src, cv_norm_type, mask0);
-    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols, 
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, &result1, norm_type, 
+    ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, &result1, norm_type,
         gpu_mask0.step, gpu_mask0.data);
-    ppl::cv::cuda::Norm<T, channels>(0, size.height, size.width, 
-        size.width * channels, gpu_input, &result2, norm_type, size.width, 
+    ppl::cv::cuda::Norm<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input, &result2, norm_type, size.width,
         gpu_mask1);
   }
 

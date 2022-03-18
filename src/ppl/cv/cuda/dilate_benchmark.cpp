@@ -22,7 +22,7 @@
 #include "benchmark/benchmark.h"
 
 #include "ppl/cv/debug.h"
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using namespace ppl::cv::debug;
 

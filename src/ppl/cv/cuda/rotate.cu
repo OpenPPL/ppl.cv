@@ -16,7 +16,7 @@
 
 #include "ppl/cv/cuda/rotate.h"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 

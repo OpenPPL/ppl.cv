@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<int, cv::Size>;
 inline std::string convertToStringRotate(const Parameters& parameters) {
@@ -102,13 +102,13 @@ bool PplCvCudaRotateTest<T, channels>::apply() {
 
   cv::rotate(src, cv_dst, cv_rotate_flag);
 
-  ppl::cv::cuda::Rotate<T, channels>(0, size.height, size.width, 
+  ppl::cv::cuda::Rotate<T, channels>(0, size.height, size.width,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, dst_height, dst_width,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, degree);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::Rotate<T, channels>(0, size.height, size.width, 
-      size.width * channels, gpu_input, dst_height, dst_width, 
+  ppl::cv::cuda::Rotate<T, channels>(0, size.height, size.width,
+      size.width * channels, gpu_input, dst_height, dst_width,
       dst_width * channels, gpu_output, degree);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 

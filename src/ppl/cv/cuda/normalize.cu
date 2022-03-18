@@ -16,7 +16,7 @@
 
 #include "ppl/cv/cuda/normalize.h"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 #include "norm.hpp"
 
 using namespace ppl::common;

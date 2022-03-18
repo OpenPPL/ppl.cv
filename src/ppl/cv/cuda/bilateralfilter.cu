@@ -18,7 +18,7 @@
 
 #include <cmath>
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 
@@ -660,7 +660,7 @@ RetCode bilateralFilter(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
-  PPL_ASSERT(border_type == BORDER_REPLICATE || 
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
              border_type == BORDER_REFLECT ||
              border_type == BORDER_REFLECT_101 ||
              border_type == BORDER_DEFAULT);
@@ -777,7 +777,7 @@ RetCode bilateralFilter(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(channels == 1 || channels == 3);
   PPL_ASSERT(src_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
-  PPL_ASSERT(border_type == BORDER_REPLICATE || 
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
              border_type == BORDER_REFLECT ||
              border_type == BORDER_REFLECT_101 ||
              border_type == BORDER_DEFAULT);

@@ -17,7 +17,7 @@
 #include "ppl/cv/cuda/warpperspective.h"
 #include "warp.hpp"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 

@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToStringPerspectiveTransform(const Parameters&
@@ -84,13 +84,13 @@ bool PplCvCudaPerspectiveTransformTest<T, srcCns, dstCns>::apply() {
 
   cv::perspectiveTransform(src, cv_dst, trans_coeffs0);
 
-  ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows, 
-      gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data, 
+  ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, gpu_src.rows,
+      gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, trans_coeff1);
   gpu_dst.download(dst);
 
-  ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, size.height, 
-      size.width, size.width * srcCns, gpu_input, size.width * dstCns, 
+  ppl::cv::cuda::PerspectiveTransform<T, srcCns, dstCns>(0, size.height,
+      size.width, size.width * srcCns, gpu_input, size.width * dstCns,
       gpu_output, trans_coeff1);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 

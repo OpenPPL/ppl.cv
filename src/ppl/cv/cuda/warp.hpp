@@ -16,7 +16,7 @@
  * The device and kernel function definitions of morphology operations.
  */
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 namespace ppl {
 namespace cv {

@@ -22,7 +22,7 @@
 #include "opencv2/cudaimgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<int, int, int, ppl::cv::BorderType, cv::Size>;
 inline

@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum MaskType {
   kUnmasked,
@@ -108,7 +108,7 @@ bool PplCvCudaBitwiseTest<T, channels>::apply() {
   if (is_masked == kUnmasked) {
     cv::bitwise_and(src0, src1, cv_dst);
     ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
         (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
 
     ppl::cv::cuda::BitwiseAnd<T, channels>(0, size.height, size.width,
@@ -118,7 +118,7 @@ bool PplCvCudaBitwiseTest<T, channels>::apply() {
   else {
     cv::bitwise_and(src0, src1, cv_dst, mask0);
     ppl::cv::cuda::BitwiseAnd<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T), 
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
         (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data,
         gpu_mask0.step / sizeof(uchar), (uchar*)gpu_mask0.data);
 

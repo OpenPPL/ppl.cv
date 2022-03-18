@@ -21,7 +21,7 @@
 
 #include "cuda_runtime.h"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 namespace ppl {
 namespace cv {

@@ -23,7 +23,7 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 struct Config {
   int radius;
@@ -90,9 +90,9 @@ bool PplCvCudaGuidedFilterTest<T, srcCns, guideCns>::apply() {
 
   cv::ximgproc::guidedFilter(guide, src, cv_dst, config.radius, config.eps, -1);
 
-  ppl::cv::cuda::GuidedFilter<T, srcCns, guideCns>(0, gpu_src.rows, 
-      gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data, 
-      gpu_guide.step / sizeof(T), (T*)gpu_guide.data, gpu_dst.step / sizeof(T), 
+  ppl::cv::cuda::GuidedFilter<T, srcCns, guideCns>(0, gpu_src.rows,
+      gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data,
+      gpu_guide.step / sizeof(T), (T*)gpu_guide.data, gpu_dst.step / sizeof(T),
       (T*)gpu_dst.data, config.radius, config.eps, ppl::cv::BORDER_REFLECT);
   gpu_dst.download(dst);
 

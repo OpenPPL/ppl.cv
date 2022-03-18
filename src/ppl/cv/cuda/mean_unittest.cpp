@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum MaskType {
   kUnmasked,
@@ -100,22 +100,22 @@ bool PplCvCudaMeanTest<T, channels>::apply() {
   cv::Scalar cv_mean;
   if (is_masked == kUnmasked) {
     cv_mean = cv::mean(src);
-    ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst, 0, nullptr);
     cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
 
-    ppl::cv::cuda::Mean<T, channels>(0, size.height, size.width, 
+    ppl::cv::cuda::Mean<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input, gpu_output, 0, nullptr);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }
   else {
     cv_mean = cv::mean(src, mask0);
-    ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols, 
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst, 
+    ppl::cv::cuda::Mean<T, channels>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst,
         gpu_mask0.step / sizeof(uchar), (uchar*)gpu_mask0.data);
     cudaMemcpy(dst, gpu_dst, dst_size, cudaMemcpyDeviceToHost);
 
-    ppl::cv::cuda::Mean<T, channels>(0, size.height, size.width, 
+    ppl::cv::cuda::Mean<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input, gpu_output, size.width, gpu_mask1);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }

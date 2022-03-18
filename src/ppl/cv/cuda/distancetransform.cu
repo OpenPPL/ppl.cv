@@ -16,7 +16,7 @@
 
 #include "ppl/cv/cuda/distancetransform.h"
 
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace ppl::common;
 

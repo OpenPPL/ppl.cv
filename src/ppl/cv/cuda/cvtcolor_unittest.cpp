@@ -24,7 +24,7 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 #include "ppl/cv/x86/cvtcolor.h"
 
 template <typename T>

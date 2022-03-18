@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum MaskType {
   kUnmasked,
@@ -98,21 +98,21 @@ bool PplCvCudaMinMaxLocTest<T>::apply() {
   int min_index_x1, min_index_y1, max_index_x1, max_index_y1;
   if (is_masked == kUnmasked) {
     cv::minMaxLoc(src, &min_value0, &max_value0, &min_loc, &max_loc);
-    ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, 
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_value1, &max_value1, 
+    ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_value1, &max_value1,
         &min_index_x0, &min_index_y0, &max_index_x0, &max_index_y0);
-    ppl::cv::cuda::MinMaxLoc<T>(0, size.height, size.width, size.width, 
+    ppl::cv::cuda::MinMaxLoc<T>(0, size.height, size.width, size.width,
         gpu_input, &min_value2, &max_value2, &min_index_x1, &min_index_y1,
         &max_index_x1, &max_index_y1);
   }
   else {
     cv::minMaxLoc(src, &min_value0, &max_value0, &min_loc, &max_loc, mask);
-    ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols, 
-        gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_value1, &max_value1, 
+    ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, &min_value1, &max_value1,
         &min_index_x0, &min_index_y0, &max_index_x0, &max_index_y0,
         gpu_mask0.step, gpu_mask0.data);
-    ppl::cv::cuda::MinMaxLoc<T>(0, size.height, size.width, size.width, 
-        gpu_input, &min_value2, &max_value2, &min_index_x1, &min_index_y1, 
+    ppl::cv::cuda::MinMaxLoc<T>(0, size.height, size.width, size.width,
+        gpu_input, &min_value2, &max_value2, &min_index_x1, &min_index_y1,
         &max_index_x1, &max_index_y1, size.width, gpu_mask1);
   }
 

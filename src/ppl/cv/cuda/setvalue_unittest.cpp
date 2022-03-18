@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum SetValueFunctions {
   kUnmaskedSetTo,
@@ -103,21 +103,21 @@ bool PplCvCudaSetValueTest<T, outChannels, maskChannels>::apply() {
   if (function == kUnmaskedSetTo) {
     cv_dst.setTo(value);
 
-    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows,
         gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value);
 
-    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, size.height, 
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, size.height,
         size.width, size.width * outChannels, gpu_output, value);
   }
   else if (function == kMaskedSetTo) {
     cv_dst.setTo(value, mask0);
 
-    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows, 
-        gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value, 
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, gpu_dst.rows,
+        gpu_dst.cols, gpu_dst.step / sizeof(T), (T*)gpu_dst.data, value,
         gpu_mask0.step, gpu_mask0.data);
 
-    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, size.height, 
-        size.width, size.width * outChannels, gpu_output, value, 
+    ppl::cv::cuda::SetTo<T, outChannels, maskChannels>(0, size.height,
+        size.width, size.width * outChannels, gpu_output, value,
         size.width * maskChannels, gpu_mask1);
   }
   else if (function == kOnes) {

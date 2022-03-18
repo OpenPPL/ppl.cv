@@ -22,7 +22,7 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "infrastructure.hpp"
+#include "utility/infrastructure.hpp"
 
 enum MaskType {
   kUnmasked,
@@ -105,23 +105,23 @@ bool PplCvCudaCalcHistTest<T, channels>::apply() {
   if (is_masked == kUnmasked) {
     cv::calcHist(&src, 1, channel, cv::Mat(), cv_dst1, 1, hist_size, ranges,
                  true, false);
-    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data);
     gpu_dst.download(dst);
 
-    ppl::cv::cuda::CalcHist<T>(0, size.height, size.width, 
+    ppl::cv::cuda::CalcHist<T>(0, size.height, size.width,
         size.width * channels, gpu_input, gpu_output);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }
   else {
     cv::calcHist(&src, 1, channel, mask0, cv_dst1, 1, hist_size, ranges, true,
                  false);
-    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols, 
+    ppl::cv::cuda::CalcHist<T>(0, gpu_src.rows, gpu_src.cols,
         gpu_src.step / sizeof(T), (T*)gpu_src.data, (int*)gpu_dst.data,
         gpu_mask0.step / sizeof(uchar), (uchar*)gpu_mask0.data);
     gpu_dst.download(dst);
 
-    ppl::cv::cuda::CalcHist<T>(0, size.height, size.width, 
+    ppl::cv::cuda::CalcHist<T>(0, size.height, size.width,
         size.width * channels, gpu_input, gpu_output, size.width, gpu_mask1);
     cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
   }
