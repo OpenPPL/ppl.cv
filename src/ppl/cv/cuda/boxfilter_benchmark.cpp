@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/boxfilter.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
@@ -46,6 +47,16 @@ void BM_BoxFilter_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  if (ksize_x > 17 || ksize_y > 17) {
+    cudaEventRecord(start, 0);
+    ppl::cv::cuda::ActivateGpuMemoryPool(40000000);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "ActivateGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::BoxFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -68,6 +79,16 @@ void BM_BoxFilter_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  if (ksize_x > 17 || ksize_y > 17) {
+    cudaEventRecord(start, 0);
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
@@ -198,6 +219,9 @@ BENCHMARK_TEMPLATE(BM_BoxFilter_ppl_cuda, type, c4, ksize_x, ksize_y,          \
 // RUN_BENCHMARK0(uchar, 31, 31, ppl::cv::BORDER_REPLICATE, 640, 480)
 // RUN_BENCHMARK0(uchar, 31, 31, ppl::cv::BORDER_REFLECT, 640, 480)
 // RUN_BENCHMARK0(uchar, 31, 31, ppl::cv::BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, 43, 43, ppl::cv::BORDER_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, 43, 43, ppl::cv::BORDER_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, 43, 43, ppl::cv::BORDER_REFLECT_101, 640, 480)
 
 // RUN_BENCHMARK0(float, 5, 5, ppl::cv::BORDER_REPLICATE, 640, 480)
 // RUN_BENCHMARK0(float, 5, 5, ppl::cv::BORDER_REFLECT, 640, 480)
@@ -211,6 +235,9 @@ BENCHMARK_TEMPLATE(BM_BoxFilter_ppl_cuda, type, c4, ksize_x, ksize_y,          \
 // RUN_BENCHMARK0(float, 31, 31, ppl::cv::BORDER_REPLICATE, 640, 480)
 // RUN_BENCHMARK0(float, 31, 31, ppl::cv::BORDER_REFLECT, 640, 480)
 // RUN_BENCHMARK0(float, 31, 31, ppl::cv::BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(float, 43, 43, ppl::cv::BORDER_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(float, 43, 43, ppl::cv::BORDER_REFLECT, 640, 480)
+// RUN_BENCHMARK0(float, 43, 43, ppl::cv::BORDER_REFLECT_101, 640, 480)
 
 #define RUN_BENCHMARK1(ksize_x, ksize_y, border_type, width, height)           \
 BENCHMARK_TEMPLATE(BM_BoxFilter_opencv_cuda, uchar, c1, ksize_x, ksize_y,      \
@@ -295,6 +322,13 @@ RUN_OPENCV_TYPE_FUNCTIONS(float, 31, 31, ppl::cv::BORDER_REPLICATE)
 RUN_OPENCV_TYPE_FUNCTIONS(float, 31, 31, ppl::cv::BORDER_REFLECT)
 RUN_OPENCV_TYPE_FUNCTIONS(float, 31, 31, ppl::cv::BORDER_REFLECT_101)
 
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 43, 43, ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 43, 43, ppl::cv::BORDER_REFLECT)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, 43, 43, ppl::cv::BORDER_REFLECT_101)
+RUN_OPENCV_TYPE_FUNCTIONS(float, 43, 43, ppl::cv::BORDER_REPLICATE)
+RUN_OPENCV_TYPE_FUNCTIONS(float, 43, 43, ppl::cv::BORDER_REFLECT)
+RUN_OPENCV_TYPE_FUNCTIONS(float, 43, 43, ppl::cv::BORDER_REFLECT_101)
+
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 5, 5, ppl::cv::BORDER_REPLICATE)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 5, 5, ppl::cv::BORDER_REFLECT)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 5, 5, ppl::cv::BORDER_REFLECT_101)
@@ -322,3 +356,10 @@ RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 31, 31, ppl::cv::BORDER_REFLECT_101)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, 31, 31, ppl::cv::BORDER_REPLICATE)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, 31, 31, ppl::cv::BORDER_REFLECT)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, 31, 31, ppl::cv::BORDER_REFLECT_101)
+
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 43, 43, ppl::cv::BORDER_REPLICATE)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 43, 43, ppl::cv::BORDER_REFLECT)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 43, 43, ppl::cv::BORDER_REFLECT_101)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, 43, 43, ppl::cv::BORDER_REPLICATE)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, 43, 43, ppl::cv::BORDER_REFLECT)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, 43, 43, ppl::cv::BORDER_REFLECT_101)

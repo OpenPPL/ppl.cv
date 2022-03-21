@@ -26,52 +26,52 @@ namespace cv {
 namespace cuda {
 
 GpuMemoryPool::GpuMemoryPool() {
-  memory_pool = nullptr;
+  memory_pool_ = nullptr;
 }
 
 GpuMemoryPool::~GpuMemoryPool() {
-  if (memory_pool != nullptr) {
-    cudaError_t code = cudaFree(memory_pool);
+  if (memory_pool_ != nullptr) {
+    cudaError_t code = cudaFree(memory_pool_);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     }
-    memory_blocks.clear();
+    memory_blocks_.clear();
   }
 }
 
 void GpuMemoryPool::mallocMemoryPool(size_t size) {
-  cudaError_t code = cudaMalloc((void**)&memory_pool, size);
+  cudaError_t code = cudaMalloc((void**)&memory_pool_, size);
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
   }
 
-  capability = size;
+  capability_ = size;
 }
 
 void GpuMemoryPool::freeMemoryPool() {
-  if (memory_pool != nullptr) {
-    cudaError_t code = cudaFree(memory_pool);
+  if (memory_pool_ != nullptr) {
+    cudaError_t code = cudaFree(memory_pool_);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     }
 
-    capability = 0;
-    memory_pool = nullptr;
+    capability_ = 0;
+    memory_pool_ = nullptr;
   }
 }
 
 void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
-  if (memory_blocks.empty()) {
-    if (size <= capability) {
-      memory_block.data   = memory_pool;
+  if (memory_blocks_.empty()) {
+    if (size <= capability_) {
+      memory_block.data   = memory_pool_;
       memory_block.offset = 0;
       memory_block.size   = size;
       memory_block.pitch  = 0;
 
-      host_mutex.lock();
-      auto current = memory_blocks.before_begin();
-      memory_blocks.insert_after(current, memory_block);
-      host_mutex.unlock();
+      host_mutex_.lock();
+      auto current = memory_blocks_.before_begin();
+      memory_blocks_.insert_after(current, memory_block);
+      host_mutex_.unlock();
     }
     else {
       LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
@@ -80,21 +80,21 @@ void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
     return;
   }
 
-  auto previous = memory_blocks.begin();
-  auto current  = memory_blocks.begin();
+  auto previous = memory_blocks_.begin();
+  auto current  = memory_blocks_.begin();
   ++current;
-  if (current == memory_blocks.end()) {
+  if (current == memory_blocks_.end()) {
     size_t hollow_begin = roundUp((previous->offset + previous->size),
                                   PITCH_GRANULARITY, PITCH_SHIFT);
-    if (hollow_begin + size <= capability) {
-      memory_block.data   = memory_pool;
+    if (hollow_begin + size <= capability_) {
+      memory_block.data   = memory_pool_;
       memory_block.offset = hollow_begin;
       memory_block.size   = size;
       memory_block.pitch  = 0;
 
-      host_mutex.lock();
-      memory_blocks.insert_after(previous, memory_block);
-      host_mutex.unlock();
+      host_mutex_.lock();
+      memory_blocks_.insert_after(previous, memory_block);
+      host_mutex_.unlock();
     }
     else {
       LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
@@ -103,24 +103,24 @@ void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
     return;
   }
 
-  while (current != memory_blocks.end()) {
+  while (current != memory_blocks_.end()) {
     size_t hollow_begin = roundUp((previous->offset + previous->size),
                                   PITCH_GRANULARITY, PITCH_SHIFT);
     if (hollow_begin + size <= current->offset) {
-      memory_block.data   = memory_pool;
+      memory_block.data   = memory_pool_;
       memory_block.offset = hollow_begin;
       memory_block.size   = size;
       memory_block.pitch  = 0;
 
-      host_mutex.lock();
-      memory_blocks.insert_after(previous, memory_block);
-      host_mutex.unlock();
+      host_mutex_.lock();
+      memory_blocks_.insert_after(previous, memory_block);
+      host_mutex_.unlock();
       break;
     }
     ++current;
   }
 
-  if (current == memory_blocks.end()) {
+  if (current == memory_blocks_.end()) {
     LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
   }
 }
@@ -130,17 +130,17 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
   size_t block_pitch = roundUp(width, PITCH_GRANULARITY, PITCH_SHIFT);
   size_t block_size  = block_pitch * height;
 
-  if (memory_blocks.empty()) {
-    if (block_size <= capability) {
-      memory_block.data   = memory_pool;
+  if (memory_blocks_.empty()) {
+    if (block_size <= capability_) {
+      memory_block.data   = memory_pool_;
       memory_block.offset = 0;
       memory_block.size   = block_size;
       memory_block.pitch  = block_pitch;
 
-      host_mutex.lock();
-      auto current = memory_blocks.before_begin();
-      memory_blocks.insert_after(current, memory_block);
-      host_mutex.unlock();
+      host_mutex_.lock();
+      auto current = memory_blocks_.before_begin();
+      memory_blocks_.insert_after(current, memory_block);
+      host_mutex_.unlock();
     }
     else {
       LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
@@ -149,21 +149,21 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
     return;
   }
 
-  auto previous = memory_blocks.begin();
-  auto current  = memory_blocks.begin();
+  auto previous = memory_blocks_.begin();
+  auto current  = memory_blocks_.begin();
   ++current;
-  if (current == memory_blocks.end()) {
+  if (current == memory_blocks_.end()) {
     size_t hollow_begin = roundUp((previous->offset + previous->size),
                                   PITCH_GRANULARITY, PITCH_SHIFT);
-    if (hollow_begin + block_size <= capability) {
-      memory_block.data   = memory_pool;
+    if (hollow_begin + block_size <= capability_) {
+      memory_block.data   = memory_pool_;
       memory_block.offset = hollow_begin;
       memory_block.size   = block_size;
       memory_block.pitch  = block_pitch;
 
-      host_mutex.lock();
-      memory_blocks.insert_after(previous, memory_block);
-      host_mutex.unlock();
+      host_mutex_.lock();
+      memory_blocks_.insert_after(previous, memory_block);
+      host_mutex_.unlock();
     }
     else {
       LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
@@ -172,41 +172,41 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
     return;
   }
 
-  while (current != memory_blocks.end()) {
+  while (current != memory_blocks_.end()) {
     size_t hollow_begin = roundUp((previous->offset + previous->size),
                                   PITCH_GRANULARITY, PITCH_SHIFT);
     if (hollow_begin + block_size <= current->offset) {
-      memory_block.data   = memory_pool;
+      memory_block.data   = memory_pool_;
       memory_block.offset = hollow_begin;
       memory_block.size   = block_size;
       memory_block.pitch  = block_pitch;
 
-      host_mutex.lock();
-      memory_blocks.insert_after(previous, memory_block);
-      host_mutex.unlock();
+      host_mutex_.lock();
+      memory_blocks_.insert_after(previous, memory_block);
+      host_mutex_.unlock();
     }
     ++current;
   }
 
-  if (current == memory_blocks.end()) {
+  if (current == memory_blocks_.end()) {
     LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
   }
 }
 
 void GpuMemoryPool::freeMemoryBlock(GpuMemoryBlock &memory_block) {
-  if (memory_blocks.empty()) {
+  if (memory_blocks_.empty()) {
     LOG(ERROR) << "Cuda Memory Pool error: empty pool can't contain a block.";
 
     return;
   }
 
-  auto previous = memory_blocks.before_begin();
-  auto current  = memory_blocks.begin();
-  while (current != memory_blocks.end()) {
+  auto previous = memory_blocks_.before_begin();
+  auto current  = memory_blocks_.begin();
+  while (current != memory_blocks_.end()) {
     if (current->offset == memory_block.offset) {
-      host_mutex.lock();
-      memory_blocks.erase_after(previous);
-      host_mutex.unlock();
+      host_mutex_.lock();
+      memory_blocks_.erase_after(previous);
+      host_mutex_.unlock();
       break;
     }
 
@@ -214,7 +214,7 @@ void GpuMemoryPool::freeMemoryBlock(GpuMemoryBlock &memory_block) {
     ++current;
   }
 
-  if (current == memory_blocks.end()) {
+  if (current == memory_blocks_.end()) {
     LOG(ERROR) << "Cuda Memory Pool error: can't not find the memory block.";
   }
 }

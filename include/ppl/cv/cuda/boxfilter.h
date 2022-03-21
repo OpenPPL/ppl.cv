@@ -46,12 +46,18 @@ namespace cuda {
  *                       inWidthStride.
  * @param outData        output image data.
  * @param border_type    ways to deal with border. BORDER_REPLICATE,
- *                       BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT 
+ *                       BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT
  *                       are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
  *       2 The anchor is at the kernel center.
+ *       3 When ksize_x or ksize_y is bigger than 17, this function needs a
+ *         memory buffer to store the intermediate result, which is not less than
+ *         (((width * channels * sizeof(float) + grain - 1) >> shift) << shift) * height,
+ *         where grain is 512 and shift is 9 now. When the cuda memory pool is
+ *         used, capability of the cuda memory pool must be not less than the
+ *         size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>

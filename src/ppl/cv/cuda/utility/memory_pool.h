@@ -44,7 +44,7 @@ class GpuMemoryPool {
   ~GpuMemoryPool();
 
   bool isActivated() const {
-    return (memory_pool != nullptr);
+    return (memory_pool_ != nullptr);
   }
   void mallocMemoryPool(size_t size);
   void freeMemoryPool();
@@ -54,10 +54,10 @@ class GpuMemoryPool {
   void freeMemoryBlock(GpuMemoryBlock &memory_block);
 
  private:
-  unsigned char* memory_pool;
-  size_t capability;
-  std::forward_list<GpuMemoryBlock> memory_blocks;
-  std::mutex host_mutex;
+  unsigned char* memory_pool_;
+  size_t capability_;
+  std::forward_list<GpuMemoryBlock> memory_blocks_;
+  std::mutex host_mutex_;
 };
 
 }  // namespace cuda
