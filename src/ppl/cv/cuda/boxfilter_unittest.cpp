@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/boxfilter.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -24,21 +25,34 @@
 
 #include "utility/infrastructure.hpp"
 
-using Parameters = std::tuple<int, int, bool, ppl::cv::BorderType,
+enum MemoryPool {
+  kActivated,
+  kUnactivated,
+};
+
+using Parameters = std::tuple<MemoryPool, int, int, bool, ppl::cv::BorderType,
                               cv::Size>;
 inline std::string convertToStringBoxFilter(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int ksize_x = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  int ksize_x = std::get<1>(parameters);
   formatted << "Ksize_x" << ksize_x << "_";
 
-  int ksize_y = std::get<1>(parameters);
+  int ksize_y = std::get<2>(parameters);
   formatted << "Ksize_y" << ksize_y << "_";
 
-  bool normalize = std::get<2>(parameters);
+  bool normalize = std::get<3>(parameters);
   formatted << "Normalize" << normalize << "_";
 
-  ppl::cv::BorderType border_type = std::get<3>(parameters);
+  ppl::cv::BorderType border_type = std::get<4>(parameters);
   if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
@@ -52,7 +66,7 @@ inline std::string convertToStringBoxFilter(const Parameters& parameters) {
     formatted << "BORDER_DEFAULT" << "_";
   }
 
-  cv::Size size = std::get<4>(parameters);
+  cv::Size size = std::get<5>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -64,11 +78,12 @@ class PplCvCudaBoxFilterTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaBoxFilterTest() {
     const Parameters& parameters = GetParam();
-    ksize_x     = std::get<0>(parameters);
-    ksize_y     = std::get<1>(parameters);
-    normalize   = std::get<2>(parameters);
-    border_type = std::get<3>(parameters);
-    size        = std::get<4>(parameters);
+    memory_pool = std::get<0>(parameters);
+    ksize_x     = std::get<1>(parameters);
+    ksize_y     = std::get<2>(parameters);
+    normalize   = std::get<3>(parameters);
+    border_type = std::get<4>(parameters);
+    size        = std::get<5>(parameters);
   }
 
   ~PplCvCudaBoxFilterTest() {
@@ -77,6 +92,7 @@ class PplCvCudaBoxFilterTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   int ksize_x;
   int ksize_y;
   bool normalize;
@@ -121,6 +137,10 @@ bool PplCvCudaBoxFilterTest<T, channels>::apply() {
   cv::boxFilter(src, cv_dst, cv_dst.depth(), cv::Size(ksize_x, ksize_y),
                 cv::Point(-1, -1), normalize, cv_border);
 
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::ActivateGpuMemoryPool(40000000);
+  }
+
   ppl::cv::cuda::BoxFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize_x, ksize_y, normalize,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
@@ -130,6 +150,10 @@ bool PplCvCudaBoxFilterTest<T, channels>::apply() {
       size.width * channels, gpu_input, ksize_x, ksize_y, normalize,
       size.width * channels, gpu_output, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -159,6 +183,7 @@ TEST_P(PplCvCudaBoxFilterTest ## T ## channels, Standard) {                    \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaBoxFilterTest ## T ## channels,      \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(1, 5, 17, 24, 43),                                       \
     ::testing::Values(1, 4, 17, 31, 44),                                       \
     ::testing::Values(true, false),                                            \
