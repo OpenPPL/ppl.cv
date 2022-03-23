@@ -32,7 +32,7 @@ namespace cuda {
 std::unique_ptr<GpuMemoryPool> memory_pool_ptr(new GpuMemoryPool);
 
 // user API
-void ActivateGpuMemoryPool(size_t size) {
+void activateGpuMemoryPool(size_t size) {
   if (memory_pool_ptr->isActivated()) {
     LOG(ERROR) << "CUDA Memory Pool error: It has already been activated.";
     return;

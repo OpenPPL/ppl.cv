@@ -50,11 +50,11 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
 
   if (ksize > 32) {
     cudaEventRecord(start, 0);
-    ppl::cv::cuda::ActivateGpuMemoryPool(10000000);
+    ppl::cv::cuda::activateGpuMemoryPool(10000000);
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsed_time, start, stop);
-    std::cout << "ActivateGpuMemoryPool() time: " << elapsed_time * 1000000
+    std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
               << " ns" << std::endl;
   }
 
