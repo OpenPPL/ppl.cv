@@ -23,7 +23,7 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-void ActivateGpuMemoryPool(size_t size);
+void activateGpuMemoryPool(size_t size);
 
 void shutDownGpuMemoryPool();
 

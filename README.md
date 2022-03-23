@@ -23,7 +23,7 @@ Using vs2015 for example:
 build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_X86_64=ON
 ```
 
-### Documents
+### Documentation
 
 `ppl.cv` uses `doxygen` to generate API docs and examples in html format:
 
@@ -32,6 +32,10 @@ doxygen docs/Doxyfile
 ```
 
 then open `html/index.html` in your web browser.
+
+### Documents
+* [CUDA Platform Guide](docs/cuda_usage.md)
+* [CUDA Memory Pool](docs/cuda_memory_pool.md)
 
 ### Contact Us
 

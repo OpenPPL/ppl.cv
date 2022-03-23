@@ -138,7 +138,7 @@ bool PplCvCudaBoxFilterTest<T, channels>::apply() {
                 cv::Point(-1, -1), normalize, cv_border);
 
   if (memory_pool == kActivated) {
-    ppl::cv::cuda::ActivateGpuMemoryPool(40000000);
+    ppl::cv::cuda::activateGpuMemoryPool(40000000);
   }
 
   ppl::cv::cuda::BoxFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,

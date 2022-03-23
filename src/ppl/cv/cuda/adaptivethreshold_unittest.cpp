@@ -157,7 +157,7 @@ bool PplCvCudaAdaptiveThresholdTest<T, channels>::apply() {
                         cv_threshold_type, ksize, delta);
 
   if (memory_pool == kActivated) {
-    ppl::cv::cuda::ActivateGpuMemoryPool(10000000);
+    ppl::cv::cuda::activateGpuMemoryPool(10000000);
   }
 
   ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
