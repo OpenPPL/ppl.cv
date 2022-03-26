@@ -32,6 +32,9 @@ if(HPCC_USE_X86_64)
 endif()
 
 if(HPCC_USE_CUDA)
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18.0")
+        cmake_policy(SET CMP0104 OLD)
+    endif()
     include(cmake/cuda.cmake)
 endif()
 

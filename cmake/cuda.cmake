@@ -13,6 +13,12 @@ if(CUDA_VERSION_MAJOR VERSION_GREATER_EQUAL "10")
     set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_72,code=sm_72")
     set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_75,code=sm_75")
 endif()
+if (CUDA_VERSION_MAJOR VERSION_GREATER_EQUAL "11")
+    set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_80,code=sm_80")
+    if (CUDA_VERSION_MINOR VERSION_GREATER_EQUAL "1")
+        set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_86,code=sm_86")
+    endif ()
+endif ()
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${_NVCC_FLAGS}")
 
 # --------------------------------------------------------------------------- #
