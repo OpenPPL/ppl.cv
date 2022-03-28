@@ -16,6 +16,7 @@
 
 #include "ppl/cv/cuda/dilate.h"
 #include "ppl/cv/cuda/erode.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -32,11 +33,20 @@ enum Functions {
   kPartiallyMaskedErode,
 };
 
-using Parameters = std::tuple<Functions, ppl::cv::BorderType, int, cv::Size>;
+using Parameters = std::tuple<MemoryPool, Functions, ppl::cv::BorderType, int,
+                              cv::Size>;
 inline std::string convertToStringDilate(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  Functions function = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  Functions function = std::get<1>(parameters);
   if (function == kFullyMaskedDilate) {
     formatted << "FullyMaskedDilate" << "_";
   }
@@ -52,7 +62,7 @@ inline std::string convertToStringDilate(const Parameters& parameters) {
   else {
   }
 
-  ppl::cv::BorderType border_type = std::get<1>(parameters);
+  ppl::cv::BorderType border_type = std::get<2>(parameters);
   if (border_type == ppl::cv::BORDER_DEFAULT) {
     formatted << "BORDER_DEFAULT" << "_";
   }
@@ -62,10 +72,10 @@ inline std::string convertToStringDilate(const Parameters& parameters) {
   else {
   }
 
-  int ksize = std::get<2>(parameters);
+  int ksize = std::get<3>(parameters);
   formatted << "Ksize" << ksize << "_";
 
-  cv::Size size = std::get<3>(parameters);
+  cv::Size size = std::get<4>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -77,10 +87,11 @@ class PplCvCudaDilateTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaDilateTest() {
     const Parameters& parameters = GetParam();
-    function    = std::get<0>(parameters);
-    border_type = std::get<1>(parameters);
-    ksize       = std::get<2>(parameters);
-    size        = std::get<3>(parameters);
+    memory_pool = std::get<0>(parameters);
+    function    = std::get<1>(parameters);
+    border_type = std::get<2>(parameters);
+    ksize       = std::get<3>(parameters);
+    size        = std::get<4>(parameters);
   }
 
   ~PplCvCudaDilateTest() {
@@ -89,6 +100,7 @@ class PplCvCudaDilateTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   Functions function;
   ppl::cv::BorderType border_type;
   int ksize;
@@ -127,6 +139,10 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
     cv_border = cv::BORDER_CONSTANT;
   }
   else {
+  }
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::activateGpuMemoryPool(40000000);
   }
 
   int constant_border;
@@ -168,6 +184,10 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
   }
   gpu_dst.download(dst);
 
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
+
   float epsilon;
   if (sizeof(T) == 1) {
     epsilon = EPSILON_1F;
@@ -191,6 +211,7 @@ TEST_P(PplCvCudaDilateTest ## T ## channels, Standard) {                       \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaDilateTest ## T ## channels,         \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(kFullyMaskedDilate, kPartiallyMaskedDilate,              \
                       kFullyMaskedErode, kPartiallyMaskedErode),               \
     ::testing::Values(ppl::cv::BORDER_DEFAULT, ppl::cv::BORDER_CONSTANT),      \

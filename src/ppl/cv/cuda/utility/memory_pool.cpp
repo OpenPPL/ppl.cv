@@ -26,12 +26,13 @@ namespace cv {
 namespace cuda {
 
 GpuMemoryPool::GpuMemoryPool() {
-  memory_pool_ = nullptr;
+  begin_ = nullptr;
+  end_   = nullptr;
 }
 
 GpuMemoryPool::~GpuMemoryPool() {
-  if (memory_pool_ != nullptr) {
-    cudaError_t code = cudaFree(memory_pool_);
+  if (begin_ != nullptr) {
+    cudaError_t code = cudaFree(begin_);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     }
@@ -40,33 +41,33 @@ GpuMemoryPool::~GpuMemoryPool() {
 }
 
 void GpuMemoryPool::mallocMemoryPool(size_t size) {
-  cudaError_t code = cudaMalloc((void**)&memory_pool_, size);
+  cudaError_t code = cudaMalloc((void**)&begin_, size);
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
   }
 
-  capability_ = size;
+  end_ = begin_ + size;
 }
 
 void GpuMemoryPool::freeMemoryPool() {
-  if (memory_pool_ != nullptr) {
-    cudaError_t code = cudaFree(memory_pool_);
+  if (begin_ != nullptr) {
+    cudaError_t code = cudaFree(begin_);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     }
 
-    capability_ = 0;
-    memory_pool_ = nullptr;
+    begin_ = nullptr;
+    end_   = nullptr;
   }
 }
 
 void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
+  size_t allocated_size = roundUp(size, PITCH_GRANULARITY, PITCH_SHIFT);
   if (memory_blocks_.empty()) {
-    if (size <= capability_) {
-      memory_block.data   = memory_pool_;
-      memory_block.offset = 0;
-      memory_block.size   = size;
-      memory_block.pitch  = 0;
+    if (begin_ + allocated_size <= end_) {
+      memory_block.data  = begin_;
+      memory_block.pitch = 0;
+      memory_block.size  = allocated_size;
 
       host_mutex_.lock();
       auto current = memory_blocks_.before_begin();
@@ -83,14 +84,13 @@ void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
   auto previous = memory_blocks_.begin();
   auto current  = memory_blocks_.begin();
   ++current;
+  uchar* hollow_begin;
   if (current == memory_blocks_.end()) {
-    size_t hollow_begin = roundUp((previous->offset + previous->size),
-                                  PITCH_GRANULARITY, PITCH_SHIFT);
-    if (hollow_begin + size <= capability_) {
-      memory_block.data   = memory_pool_;
-      memory_block.offset = hollow_begin;
-      memory_block.size   = size;
-      memory_block.pitch  = 0;
+    hollow_begin = previous->data + previous->size;
+    if (hollow_begin + allocated_size <= end_) {
+      memory_block.data  = hollow_begin;
+      memory_block.pitch = 0;
+      memory_block.size  = allocated_size;
 
       host_mutex_.lock();
       memory_blocks_.insert_after(previous, memory_block);
@@ -104,19 +104,19 @@ void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
   }
 
   while (current != memory_blocks_.end()) {
-    size_t hollow_begin = roundUp((previous->offset + previous->size),
-                                  PITCH_GRANULARITY, PITCH_SHIFT);
-    if (hollow_begin + size <= current->offset) {
-      memory_block.data   = memory_pool_;
-      memory_block.offset = hollow_begin;
-      memory_block.size   = size;
-      memory_block.pitch  = 0;
+    hollow_begin = previous->data + previous->size;
+    if (hollow_begin + allocated_size <= current->data) {
+      memory_block.data  = hollow_begin;
+      memory_block.pitch = 0;
+      memory_block.size  = allocated_size;
 
       host_mutex_.lock();
       memory_blocks_.insert_after(previous, memory_block);
       host_mutex_.unlock();
       break;
     }
+
+    ++previous;
     ++current;
   }
 
@@ -131,11 +131,10 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
   size_t block_size  = block_pitch * height;
 
   if (memory_blocks_.empty()) {
-    if (block_size <= capability_) {
-      memory_block.data   = memory_pool_;
-      memory_block.offset = 0;
-      memory_block.size   = block_size;
-      memory_block.pitch  = block_pitch;
+    if (begin_ + block_size <= end_) {
+      memory_block.data  = begin_;
+      memory_block.pitch = block_pitch;
+      memory_block.size  = block_size;
 
       host_mutex_.lock();
       auto current = memory_blocks_.before_begin();
@@ -152,14 +151,13 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
   auto previous = memory_blocks_.begin();
   auto current  = memory_blocks_.begin();
   ++current;
+  uchar* hollow_begin;
   if (current == memory_blocks_.end()) {
-    size_t hollow_begin = roundUp((previous->offset + previous->size),
-                                  PITCH_GRANULARITY, PITCH_SHIFT);
-    if (hollow_begin + block_size <= capability_) {
-      memory_block.data   = memory_pool_;
-      memory_block.offset = hollow_begin;
-      memory_block.size   = block_size;
-      memory_block.pitch  = block_pitch;
+    hollow_begin = previous->data + previous->size;
+    if (hollow_begin + block_size <= end_) {
+      memory_block.data  = hollow_begin;
+      memory_block.pitch = block_pitch;
+      memory_block.size  = block_size;
 
       host_mutex_.lock();
       memory_blocks_.insert_after(previous, memory_block);
@@ -173,18 +171,18 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
   }
 
   while (current != memory_blocks_.end()) {
-    size_t hollow_begin = roundUp((previous->offset + previous->size),
-                                  PITCH_GRANULARITY, PITCH_SHIFT);
-    if (hollow_begin + block_size <= current->offset) {
-      memory_block.data   = memory_pool_;
-      memory_block.offset = hollow_begin;
-      memory_block.size   = block_size;
-      memory_block.pitch  = block_pitch;
+    hollow_begin = previous->data + previous->size;
+    if (hollow_begin + block_size <= current->data) {
+      memory_block.data  = hollow_begin;
+      memory_block.pitch = block_pitch;
+      memory_block.size  = block_size;
 
       host_mutex_.lock();
       memory_blocks_.insert_after(previous, memory_block);
       host_mutex_.unlock();
     }
+
+    ++previous;
     ++current;
   }
 
@@ -203,14 +201,15 @@ void GpuMemoryPool::freeMemoryBlock(GpuMemoryBlock &memory_block) {
   auto previous = memory_blocks_.before_begin();
   auto current  = memory_blocks_.begin();
   while (current != memory_blocks_.end()) {
-    if (current->offset == memory_block.offset) {
+    if (current->data == memory_block.data &&
+        current->size == memory_block.size) {
       host_mutex_.lock();
       memory_blocks_.erase_after(previous);
       host_mutex_.unlock();
       break;
     }
 
-    previous = current;
+    ++previous;
     ++current;
   }
 

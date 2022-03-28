@@ -90,9 +90,9 @@ A code snippet demonstrating use of CUDA Memory Pool in function implementation 
 #include "utility/use_memory_pool.h"
 
 __global__
-void kernel(const float* buffer, int offset, int pitch) {
+void kernel(const float* buffer, int pitch) {
   ...
-  float* data = (float*)((uchar*)buffer + offset + row_index * pitch);
+  float* data = (float*)((uchar*)buffer + row_index * pitch);
   ...
 }
 
@@ -102,7 +102,7 @@ Function() {
     GpuMemoryBlock buffer_block;
     pplCudaMallocPitch(640 * sizeof(float), 480, buffer_block);
 
-    kernel<<<>>>((float*)(buffer_block.data), buffer_block.offset, buffer_block.pitch);
+    kernel<<<>>>((float*)(buffer_block.data), buffer_block.pitch);
     ...
 
     pplCudaFree(buffer_block);

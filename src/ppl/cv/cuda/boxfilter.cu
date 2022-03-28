@@ -315,9 +315,8 @@ void rowColCnKernel(const Tsrc* src, int rows, int cols, int src_stride,
 template <typename Tsrc, typename Tsrc4, typename BorderInterpolation>
 __global__
 void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
-                     int radius_x, bool is_x_symmetric, float* buffer,
-                     int buffer_offset, int buffer_stride,  bool pool_used,
-                     BorderInterpolation interpolation) {
+                     int radius_x, bool is_x_symmetric, float* dst,
+                     int dst_stride, BorderInterpolation interpolation) {
   int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -365,14 +364,7 @@ void rowBatch4Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
   }
 
-  float* output;
-  if (pool_used) {
-    output = (float*)((uchar*)buffer + buffer_offset +
-                      element_y * buffer_stride);
-  }
-  else {
-    output = (float*)((uchar*)buffer + element_y * buffer_stride);
-  }
+  float* output = (float*)((uchar*)dst + element_y * dst_stride);
   if (element_x < cols - 3) {
     output[element_x]     = sum.x;
     output[element_x + 1] = sum.y;
@@ -394,9 +386,8 @@ template <typename Tsrc, typename Tsrc4, typename Tdst4,
           typename BorderInterpolation>
 __global__
 void rowBatch2Kernel(const Tsrc* src, int rows, int cols, int src_stride,
-                     int radius_x, bool is_x_symmetric, float* buffer,
-                     int buffer_offset, int buffer_stride, bool pool_used,
-                     BorderInterpolation interpolation) {
+                     int radius_x, bool is_x_symmetric, float* dst,
+                     int dst_stride, BorderInterpolation interpolation) {
   int element_x = ((blockIdx.x << kBlockShiftX1) + threadIdx.x) << 1;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -442,14 +433,7 @@ void rowBatch2Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
   }
 
-  Tdst4* output;
-  if (pool_used) {
-    output = (Tdst4*)((uchar*)buffer + buffer_offset +
-                      element_y * buffer_stride);
-  }
-  else {
-    output = (Tdst4*)((uchar*)buffer + element_y * buffer_stride);
-  }
+  Tdst4* output = (Tdst4*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = saturateCastVector<Tdst4, float4>(sum0);
   if (element_x < cols - 1) {
     output[element_x + 1] = saturateCastVector<Tdst4, float4>(sum1);
@@ -460,9 +444,8 @@ template <typename Tsrc, typename Tsrcn, typename Tdstn,
           typename BorderInterpolation>
 __global__
 void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
-                     int radius_x, bool is_x_symmetric, float* buffer,
-                     int buffer_offset, int buffer_stride, bool pool_used,
-                     BorderInterpolation interpolation) {
+                     int radius_x, bool is_x_symmetric, float* dst,
+                     int dst_stride, BorderInterpolation interpolation) {
   __shared__ Tsrcn data[kBlockDimY1][(kBlockDimX1 << 1)];
 
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
@@ -527,14 +510,7 @@ void rowSharedKernel(const Tsrc* src, int rows, int cols, int src_stride,
     sum += data[threadIdx.y][threadIdx.x + index];
   }
 
-  Tdstn* output;
-  if (pool_used) {
-    output = (Tdstn*)((uchar*)buffer + buffer_offset +
-                      element_y * buffer_stride);
-  }
-  else {
-    output = (Tdstn*)((uchar*)buffer + element_y * buffer_stride);
-  }
+  Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = saturateCastVector<Tdstn, float4>(sum);
 }
 
@@ -542,9 +518,8 @@ template <typename Tsrc, typename Tsrcn, typename Tdstn,
           typename BorderInterpolation>
 __global__
 void rowFilterKernel(const Tsrc* src, int rows, int cols, int src_stride,
-                     int radius_x, bool is_x_symmetric, float* buffer,
-                     int buffer_offset, int buffer_stride, bool pool_used,
-                     BorderInterpolation interpolation) {
+                     int radius_x, bool is_x_symmetric, float* dst,
+                     int dst_stride, BorderInterpolation interpolation) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= cols || element_y >= rows) {
@@ -583,22 +558,14 @@ void rowFilterKernel(const Tsrc* src, int rows, int cols, int src_stride,
     }
   }
 
-  Tdstn* output;
-  if (pool_used) {
-    output = (Tdstn*)((uchar*)buffer + buffer_offset +
-                      element_y * buffer_stride);
-  }
-  else {
-    output = (Tdstn*)((uchar*)buffer + element_y * buffer_stride);
-  }
+  Tdstn* output = (Tdstn*)((uchar*)dst + element_y * dst_stride);
   output[element_x] = saturateCastVector<Tdstn, float4>(sum);
 }
 
 template <typename Tdst, typename BorderInterpolation>
 __global__
-void colSharedKernel(const float* buffer, int buffer_offset, int rows,
-                     int cols4, int cols, int buffer_stride, bool pool_used,
-                     int radius_y, bool is_y_symmetric,
+void colSharedKernel(const float* src, int rows, int cols4, int cols,
+                     int src_stride, int radius_y, bool is_y_symmetric,
                      bool normalize, float weight, Tdst* dst, int dst_stride,
                      BorderInterpolation interpolation) {
   __shared__ float4 data[kDimY0 * 3][kDimX0];
@@ -617,14 +584,6 @@ void colSharedKernel(const float* buffer, int buffer_offset, int rows,
     ksize_y -= 1;
   }
 
-  uchar* src;
-  if (pool_used) {
-    src = (uchar*)buffer + buffer_offset;
-  }
-  else {
-    src = (uchar*)buffer;
-  }
-
   if (threadIdx.y < radius_y) {
     if (blockIdx.y == 0) {
       index = interpolation(rows, radius_y, element_y - radius_y);
@@ -632,13 +591,13 @@ void colSharedKernel(const float* buffer, int buffer_offset, int rows,
     else {
       index = element_y - radius_y;
     }
-    input = (float4*)((uchar*)src + index * buffer_stride);
+    input = (float4*)((uchar*)src + index * src_stride);
     value = input[element_x];
     data[threadIdx.y][threadIdx.x] = value;
   }
 
   if (element_y < rows) {
-    input = (float4*)((uchar*)src + element_y * buffer_stride);
+    input = (float4*)((uchar*)src + element_y * src_stride);
     value = input[element_x];
     data[radius_y + threadIdx.y][threadIdx.x] = value;
   }
@@ -648,13 +607,13 @@ void colSharedKernel(const float* buffer, int buffer_offset, int rows,
     if (blockIdx.y >= index) {
       if (blockIdx.y != gridDim.y - 1) {
         index = interpolation(rows, radius_y, element_y + kDimY0);
-        input = (float4*)((uchar*)src + index * buffer_stride);
+        input = (float4*)((uchar*)src + index * src_stride);
         value = input[element_x];
         data[radius_y + kDimY0 + threadIdx.y][threadIdx.x] = value;
       }
       else {
         index = interpolation(rows, radius_y, rows + threadIdx.y);
-        input = (float4*)((uchar*)src + index * buffer_stride);
+        input = (float4*)((uchar*)src + index * src_stride);
         value = input[element_x];
         index = rows - (blockIdx.y << kShiftY0);
         data[radius_y + index + threadIdx.y][threadIdx.x] = value;
@@ -662,7 +621,7 @@ void colSharedKernel(const float* buffer, int buffer_offset, int rows,
     }
     else {
       index = element_y + kDimY0;
-      input = (float4*)((uchar*)src + index * buffer_stride);
+      input = (float4*)((uchar*)src + index * src_stride);
       value = input[element_x];
       data[radius_y + kDimY0 + threadIdx.y][threadIdx.x] = value;
     }
@@ -731,10 +690,9 @@ void colSharedKernel(const float* buffer, int buffer_offset, int rows,
 
 template <typename Tdst, typename BorderInterpolation>
 __global__
-void colBatch4Kernel(const float* buffer, int buffer_offset, int rows, int cols,
-                     int buffer_stride,  bool pool_used, int radius_y,
-                     bool is_y_symmetric, bool normalize, float weight,
-                     Tdst* dst, int dst_stride,
+void colBatch4Kernel(const float* src, int rows, int cols, int src_stride,
+                     int radius_y, bool is_y_symmetric, bool normalize,
+                     float weight, Tdst* dst, int dst_stride,
                      BorderInterpolation interpolation) {
   __shared__ Tdst data[kBlockDimY1][kBlockDimX1 << 2];
 
@@ -750,14 +708,6 @@ void colBatch4Kernel(const float* buffer, int buffer_offset, int rows, int cols,
     top_y -= 1;
   }
 
-  uchar* src;
-  if (pool_used) {
-    src = (uchar*)buffer + buffer_offset;
-  }
-  else {
-    src = (uchar*)buffer;
-  }
-
   int data_index;
   float* input;
   float value;
@@ -771,7 +721,7 @@ void colBatch4Kernel(const float* buffer, int buffer_offset, int rows, int cols,
 
   if (isnt_border_block) {
     for (int i = origin_y; i <= top_y; i++) {
-      input = (float*)((uchar*)src + i * buffer_stride);
+      input = (float*)((uchar*)src + i * src_stride);
       value = input[element_x];
       sum += value;
     }
@@ -779,7 +729,7 @@ void colBatch4Kernel(const float* buffer, int buffer_offset, int rows, int cols,
   else {
     for (int i = origin_y; i <= top_y; i++) {
       data_index = interpolation(rows, radius_y, i);
-      input = (float*)((uchar*)src + data_index * buffer_stride);
+      input = (float*)((uchar*)src + data_index * src_stride);
       value = input[element_x];
       sum += value;
     }
@@ -826,10 +776,9 @@ void colBatch4Kernel(const float* buffer, int buffer_offset, int rows, int cols,
 template <typename Tsrcn, typename Tdst, typename Tdstn,
           typename BorderInterpolation>
 __global__
-void colFilterKernel(const float* buffer, int buffer_offset, int rows, int cols,
-                     int buffer_stride, bool pool_used, int radius_y,
-                     bool is_y_symmetric, bool normalize, float weight,
-                     Tdst* dst, int dst_stride,
+void colFilterKernel(const float* src, int rows, int cols, int src_stride,
+                     int radius_y, bool is_y_symmetric, bool normalize,
+                     float weight, Tdst* dst, int dst_stride,
                      BorderInterpolation interpolation) {
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
@@ -843,14 +792,6 @@ void colFilterKernel(const float* buffer, int buffer_offset, int rows, int cols,
     top_y -= 1;
   }
 
-  uchar* src;
-  if (pool_used) {
-    src = (uchar*)buffer + buffer_offset;
-  }
-  else {
-    src = (uchar*)buffer;
-  }
-
   int data_index;
   Tsrcn* input;
   Tsrcn value;
@@ -858,7 +799,7 @@ void colFilterKernel(const float* buffer, int buffer_offset, int rows, int cols,
 
   for (int i = origin_y; i <= top_y; i++) {
     data_index = interpolation(rows, radius_y, i);
-    input = (Tsrcn*)((uchar*)src + data_index * buffer_stride);
+    input = (Tsrcn*)((uchar*)src + data_index * src_stride);
     value = input[element_x];
     sum += value;
   }
@@ -895,122 +836,57 @@ else {                                                                         \
       dst_stride, interpolation);                                              \
 }
 
-#define RUN_KERNELS_WITH_MEMORY_POOL(Tsrc, Tdst, Interpolation)                \
-Interpolation interpolation;                                                   \
-if (channels == 1) {                                                           \
-  rowBatch4Kernel<Tsrc, Tsrc ## 4, Interpolation><<<grid1, block, 0, stream    \
-      >>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,               \
-      (float*)(buffer_block.data), buffer_block.offset, buffer_block.pitch,    \
-      true, interpolation);                                                    \
-  if (ksize_x <= 33 && ksize_y <= 33) {                                        \
-    colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(        \
-        (float*)(buffer_block.data), buffer_block.offset, rows, columns4,      \
-        columns, buffer_block.pitch, true, radius_y, is_y_symmetric, normalize,\
-        weight, dst, dst_stride, interpolation);                               \
-  }                                                                            \
-  else {                                                                       \
-    colBatch4Kernel<Tdst, Interpolation><<<grid4, block4, 0, stream>>>(        \
-        (float*)(buffer_block.data), buffer_block.offset, rows, columns,       \
-        buffer_block.pitch, true, radius_y, is_y_symmetric, normalize, weight, \
-        dst, dst_stride, interpolation);                                       \
-  }                                                                            \
-}                                                                              \
-else if (channels == 3) {                                                      \
-  if (ksize_x <= 33 && ksize_y <= 33) {                                        \
-    rowSharedKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block, \
-        0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        (float*)(buffer_block.data), buffer_block.offset, buffer_block.pitch,  \
-        true, interpolation);                                                  \
-    colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(        \
-        (float*)(buffer_block.data), buffer_block.offset, rows, columns4,      \
-        columns, buffer_block.pitch, true, radius_y, is_y_symmetric, normalize,\
-        weight, dst, dst_stride, interpolation);                               \
-  }                                                                            \
-  else {                                                                       \
-    rowFilterKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block, \
-        0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        (float*)(buffer_block.data), buffer_block.offset, buffer_block.pitch,  \
-        true, interpolation);                                                  \
-    colBatch4Kernel<Tdst, Interpolation><<<grid4, block4, 0, stream>>>(        \
-        (float*)(buffer_block.data), buffer_block.offset, rows, columns,       \
-        buffer_block.pitch, true, radius_y, is_y_symmetric, normalize, weight, \
-        dst, dst_stride, interpolation);                                       \
-  }                                                                            \
-}                                                                              \
-else {                                                                         \
-  if (ksize_x <= 33 && ksize_y <= 33) {                                        \
-    rowSharedKernel<Tsrc, Tsrc ## 4, float ## 4, Interpolation><<<grid, block, \
-        0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        (float*)(buffer_block.data), buffer_block.offset, buffer_block.pitch,  \
-        true, interpolation);                                                  \
-    colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(        \
-        (float*)(buffer_block.data), buffer_block.offset, rows, columns4,      \
-        columns, buffer_block.pitch, true, radius_y, is_y_symmetric, normalize,\
-        weight, dst, dst_stride, interpolation);                               \
-  }                                                                            \
-  else {                                                                       \
-    rowBatch2Kernel<Tsrc, Tsrc ## 4, float ## 4, Interpolation><<<grid2, block,\
-        0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        (float*)(buffer_block.data), buffer_block.offset, buffer_block.pitch,  \
-        true, interpolation);                                                  \
-    colFilterKernel<float ## 4, Tdst, Tdst ## 4, Interpolation><<<grid, block, \
-        0, stream>>>((float*)(buffer_block.data), buffer_block.offset, rows,   \
-        cols, buffer_block.pitch, true, radius_y, is_y_symmetric, normalize,   \
-        weight, dst, dst_stride, interpolation);                               \
-  }                                                                            \
-}
-
 #define RUN_KERNELS(Tsrc, Tdst, Interpolation)                                 \
 Interpolation interpolation;                                                   \
 if (channels == 1) {                                                           \
   rowBatch4Kernel<Tsrc, Tsrc ## 4, Interpolation><<<grid1, block, 0, stream    \
-      >>>(src, rows, cols, src_stride, radius_x, is_x_symmetric, buffer, 0,    \
-      pitch, false, interpolation);                                            \
+      >>>(src, rows, cols, src_stride, radius_x, is_x_symmetric, buffer, pitch,\
+      interpolation);                                                          \
   if (ksize_x <= 33 && ksize_y <= 33) {                                        \
     colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(buffer, \
-        0, rows, columns4, columns, pitch, false, radius_y, is_y_symmetric,    \
-        normalize, weight, dst, dst_stride, interpolation);                    \
+        rows, columns4, columns, pitch, radius_y, is_y_symmetric, normalize,   \
+        weight, dst, dst_stride, interpolation);                               \
   }                                                                            \
   else {                                                                       \
     colBatch4Kernel<Tdst, Interpolation><<<grid4, block4, 0, stream>>>(buffer, \
-        0, rows, columns, pitch, false, radius_y, is_y_symmetric, normalize,   \
-        weight, dst, dst_stride, interpolation);                               \
+        rows, columns, pitch, radius_y, is_y_symmetric, normalize, weight, dst,\
+        dst_stride, interpolation);                                            \
   }                                                                            \
 }                                                                              \
 else if (channels == 3) {                                                      \
   if (ksize_x <= 33 && ksize_y <= 33) {                                        \
     rowSharedKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block, \
         0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        buffer, 0, pitch, false, interpolation);                               \
+        buffer, pitch, interpolation);                                         \
     colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(buffer, \
-        0, rows, columns4, columns, pitch, false, radius_y, is_y_symmetric,    \
-        normalize, weight, dst, dst_stride, interpolation);                    \
+        rows, columns4, columns, pitch, radius_y, is_y_symmetric, normalize,   \
+        weight, dst, dst_stride, interpolation);                               \
   }                                                                            \
   else {                                                                       \
     rowFilterKernel<Tsrc, Tsrc ## 3, float ## 3, Interpolation><<<grid, block, \
         0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        buffer, 0, pitch, false, interpolation);                               \
+        buffer, pitch, interpolation);                                         \
     colBatch4Kernel<Tdst, Interpolation><<<grid4, block4, 0, stream>>>(buffer, \
-        0, rows, columns, pitch, false, radius_y, is_y_symmetric, normalize,   \
-        weight, dst, dst_stride, interpolation);                               \
+        rows, columns, pitch, radius_y, is_y_symmetric, normalize, weight, dst,\
+        dst_stride, interpolation);                                            \
   }                                                                            \
 }                                                                              \
 else {                                                                         \
   if (ksize_x <= 33 && ksize_y <= 33) {                                        \
     rowSharedKernel<Tsrc, Tsrc ## 4, float ## 4, Interpolation><<<grid, block, \
         0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        buffer, 0, pitch, false, interpolation);                               \
+        buffer, pitch, interpolation);                                         \
     colSharedKernel<Tdst, Interpolation><<<grid3, block3, 0, stream>>>(buffer, \
-        0, rows, columns4, columns, pitch, false, radius_y, is_y_symmetric,    \
-        normalize, weight, dst, dst_stride, interpolation);                    \
+        rows, columns4, columns, pitch, radius_y, is_y_symmetric, normalize,   \
+        weight, dst, dst_stride, interpolation);                               \
   }                                                                            \
   else {                                                                       \
     rowBatch2Kernel<Tsrc, Tsrc ## 4, float ## 4, Interpolation><<<grid2, block,\
         0, stream>>>(src, rows, cols, src_stride, radius_x, is_x_symmetric,    \
-        buffer, 0, pitch, false, interpolation);                               \
+        buffer, pitch, interpolation);                                         \
     colFilterKernel<float ## 4, Tdst, Tdst ## 4, Interpolation><<<grid, block, \
-        0, stream>>>(buffer, 0, rows, cols, pitch, false, radius_y,            \
-        is_y_symmetric, normalize, weight, dst, dst_stride, interpolation);    \
+        0, stream>>>(buffer, rows, cols, pitch, radius_y, is_y_symmetric,      \
+        normalize, weight, dst, dst_stride, interpolation);                    \
   }                                                                            \
 }
 
@@ -1130,38 +1006,22 @@ RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
   grid4.x  = divideUp(columns, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
   grid4.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  if (memoryPoolUsed()) {
-    GpuMemoryBlock buffer_block;
-    pplCudaMallocPitch(cols * channels * sizeof(float), rows, buffer_block);
-
-    if (border_type == BORDER_REPLICATE) {
-      RUN_KERNELS_WITH_MEMORY_POOL(uchar, uchar, ReplicateBorder);
-    }
-    else if (border_type == BORDER_REFLECT) {
-      RUN_KERNELS_WITH_MEMORY_POOL(uchar, uchar, ReflectBorder);
-    }
-    else {
-      RUN_KERNELS_WITH_MEMORY_POOL(uchar, uchar, Reflect101Border);
-    }
-    pplCudaFree(buffer_block);
-
-    code = cudaGetLastError();
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_RUNTIME_ERROR;
-    }
-    else {
-      return RC_SUCCESS;
-    }
-  }
-
   float* buffer;
   size_t pitch;
-  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                         rows);
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
+
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMallocPitch(cols * channels * sizeof(float), rows, buffer_block);
+    buffer = (float*)(buffer_block.data);
+    pitch  = buffer_block.pitch;
+  }
+  else {
+    code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                           rows);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
   }
 
   if (border_type == BORDER_REPLICATE) {
@@ -1174,12 +1034,20 @@ RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
     RUN_KERNELS(uchar, uchar, Reflect101Border);
   }
 
-  cudaFree(buffer);
-
   code = cudaGetLastError();
   if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
   }
 
   return RC_SUCCESS;
@@ -1301,38 +1169,22 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
   grid4.x  = divideUp(columns, (kBlockDimX1 << 2), (kBlockShiftX1 + 2));
   grid4.y  = divideUp(rows, kBlockDimY1, kBlockShiftY1);
 
-  if (memoryPoolUsed()) {
-    GpuMemoryBlock buffer_block;
-    pplCudaMallocPitch(cols * channels * sizeof(float), rows, buffer_block);
-
-    if (border_type == BORDER_REPLICATE) {
-      RUN_KERNELS_WITH_MEMORY_POOL(float, float, ReplicateBorder);
-    }
-    else if (border_type == BORDER_REFLECT) {
-      RUN_KERNELS_WITH_MEMORY_POOL(float, float, ReflectBorder);
-    }
-    else {
-      RUN_KERNELS_WITH_MEMORY_POOL(float, float, Reflect101Border);
-    }
-    pplCudaFree(buffer_block);
-
-    code = cudaGetLastError();
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_RUNTIME_ERROR;
-    }
-    else {
-      return RC_SUCCESS;
-    }
-  }
-
   float* buffer;
   size_t pitch;
-  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                         rows);
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
+
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMallocPitch(cols * channels * sizeof(float), rows, buffer_block);
+    buffer = (float*)(buffer_block.data);
+    pitch  = buffer_block.pitch;
+  }
+  else {
+    code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                           rows);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
   }
 
   if (border_type == BORDER_REPLICATE) {
@@ -1345,12 +1197,20 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
     RUN_KERNELS(float, float, Reflect101Border);
   }
 
-  cudaFree(buffer);
-
   code = cudaGetLastError();
   if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
   }
 
   return RC_SUCCESS;

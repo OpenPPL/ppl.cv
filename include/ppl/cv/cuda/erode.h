@@ -48,7 +48,7 @@ namespace cuda {
  *                       inWidthStride.
  * @param outData        output image data.
  * @param border_type    ways to deal with border. BORDER_CONSTANT,
- *                       BORDER_REPLICATE, BORDER_REFLECT, BORDER_WRAP and 
+ *                       BORDER_REPLICATE, BORDER_REFLECT, BORDER_WRAP and
  *                       BORDER_REFLECT_101 are supported now.
  * @param border_value   value for BORDER_CONSTANT.
  * @return The execution status, succeeds or fails with an error code.
@@ -59,6 +59,12 @@ namespace cuda {
  *       3 kernel must be a single channel matrix and stored in host memory as
  *         an uchar 1D array.
  *       4 The anchor is at the kernel center.
+ *       5 When kernelx_len and kernely_len is bigger than 7, this function needs a
+ *         memory buffer to store the intermediate result, which is not less than
+ *         (((width * channels * sizeof(float) + grain - 1) >> shift) << shift) * height,
+ *         where grain is 512 and shift is 9 now. When the cuda memory pool is
+ *         used, capability of the cuda memory pool must be not less than the
+ *         size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
