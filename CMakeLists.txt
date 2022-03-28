@@ -27,6 +27,11 @@ set(PPLCV_COMPILE_DEFINITIONS )
 
 # --------------------------------------------------------------------------- #
 
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18.0")
+    # suppress 'CMAKE_CUDA_ARCHITECTURES' warning
+    cmake_policy(SET CMP0104 OLD)
+endif()
+
 if(HPCC_USE_X86_64)
     include(cmake/x86.cmake)
 endif()
