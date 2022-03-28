@@ -15,7 +15,7 @@
  */
 
 #include "ppl/cv/cuda/equalizehist.h"
-#include "opencv2/imgproc.hpp"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -25,11 +25,19 @@
 
 #include "utility/infrastructure.hpp"
 
-using Parameters = std::tuple<cv::Size>;
+using Parameters = std::tuple<MemoryPool, cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  cv::Size size = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  cv::Size size = std::get<1>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -41,7 +49,8 @@ class PplCvCudaEqualizeHistTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaEqualizeHistTest() {
     const Parameters& parameters = GetParam();
-    size = std::get<0>(parameters);
+    memory_pool = std::get<0>(parameters);
+    size        = std::get<1>(parameters);
   }
 
   ~PplCvCudaEqualizeHistTest() {
@@ -50,6 +59,7 @@ class PplCvCudaEqualizeHistTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   cv::Size size;
 };
 
@@ -75,6 +85,10 @@ bool PplCvCudaEqualizeHistTest<T, channels>::apply() {
   copyMatToArray(src, input);
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
 
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::activateGpuMemoryPool(1024);
+  }
+
   cv::equalizeHist(src, cv_dst);
   ppl::cv::cuda::EqualizeHist(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
@@ -84,6 +98,10 @@ bool PplCvCudaEqualizeHistTest<T, channels>::apply() {
   ppl::cv::cuda::EqualizeHist(0, size.height, size.width, size.width * channels,
       gpu_input, size.width * channels, gpu_output);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon = EPSILON_1F;
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
@@ -106,10 +124,12 @@ TEST_P(PplCvCudaEqualizeHistTest ## T ## channels, Standard) {                 \
 }                                                                              \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaEqualizeHistTest ## T ## channels,   \
-  ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                    \
-                    cv::Size{1283, 720}, cv::Size{1976, 1080},                 \
-                    cv::Size{320, 240}, cv::Size{640, 480},                    \
-                    cv::Size{1280, 720}, cv::Size{1920, 1080}),                \
+  ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
+    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
+                      cv::Size{1283, 720}, cv::Size{1934, 1080},               \
+                      cv::Size{320, 240}, cv::Size{640, 480},                  \
+                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvCudaEqualizeHistTest ## T ## channels::ParamType>& info) {          \
     return convertToString(info.param);                                        \
