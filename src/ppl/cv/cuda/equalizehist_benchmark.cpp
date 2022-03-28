@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/equalizehist.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudaimgproc.hpp"
@@ -42,6 +43,14 @@ void BM_EqualizeHist_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  cudaEventRecord(start, 0);
+  ppl::cv::cuda::activateGpuMemoryPool(1024);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::EqualizeHist(0, gpu_src.rows, gpu_src.cols,
@@ -64,6 +73,14 @@ void BM_EqualizeHist_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventRecord(start, 0);
+  ppl::cv::cuda::shutDownGpuMemoryPool();
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);

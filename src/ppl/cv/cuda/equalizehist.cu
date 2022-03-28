@@ -17,6 +17,7 @@
 #include "ppl/cv/cuda/equalizehist.h"
 
 #include "utility/utility.hpp"
+#include "utility/use_memory_pool.h"
 
 using namespace ppl::common;
 
@@ -241,12 +242,24 @@ RetCode EqualizeHist(cudaStream_t stream, int rows, int cols, int src_stride,
   uint grid_y = MAX_BLOCKS / grid.x;
   grid.y = (grid_y < grid.y) ? grid_y : grid.y;
 
-  uint blocks = grid.y * grid.x;
   int hist_size = 256;
   int* histogram;
-  cudaMalloc(&histogram, hist_size * sizeof(int));
+  GpuMemoryBlock buffer_block;
+  cudaError_t code;
+  if (memoryPoolUsed()) {
+    pplCudaMalloc(hist_size * sizeof(int), buffer_block);
+    histogram = (int*)(buffer_block.data);
+  }
+  else {
+    code = cudaMalloc(&histogram, hist_size * sizeof(int));
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+  }
   cudaMemset(histogram, 0, hist_size * sizeof(int));
 
+  uint blocks = grid.y * grid.x;
   if ((src_stride & 3) == 0) {
     calcHistKernel0<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
         blocks, rows * cols, hist_size, histogram);
@@ -261,12 +274,20 @@ RetCode EqualizeHist(cudaStream_t stream, int rows, int cols, int src_stride,
   equalizehistKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
       histogram, dst, dst_stride);
 
-  cudaFree(histogram);
-
-  cudaError_t code = cudaGetLastError();
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(histogram);
+    }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(histogram);
   }
 
   return RC_SUCCESS;
