@@ -20,6 +20,7 @@
 #include <cfloat>
 
 #include "utility/utility.hpp"
+#include "utility/use_memory_pool.h"
 
 using namespace ppl::common;
 
@@ -248,19 +249,35 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
         grid0.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
 
         if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-          code = cudaMallocPitch(&buffer, &pitch,
-                                 cols * channels * sizeof(uchar), rows);
-          if (code != cudaSuccess) {
-            LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-            return RC_DEVICE_MEMORY_ERROR;
+          GpuMemoryBlock buffer_block;
+          if (memoryPoolUsed()) {
+            pplCudaMallocPitch(cols * channels * sizeof(uchar), rows,
+                               buffer_block);
+            buffer = (uchar*)(buffer_block.data);
+            pitch  = buffer_block.pitch;
           }
+          else {
+            code = cudaMallocPitch(&buffer, &pitch,
+                                   cols * channels * sizeof(uchar), rows);
+            if (code != cudaSuccess) {
+              LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+              return RC_DEVICE_MEMORY_ERROR;
+            }
+          }
+
           morphRowU8C1Kernel0<MinSwap><<<grid0, block0, 0, stream>>>(src, rows,
               cols, columns, src_stride, left_threads, aligned_columns,
               diameter_x, buffer, pitch, morphology_swap);
           morphColKernel0<uchar, uchar, MinSwap><<<grid, block, 0, stream>>>(
-              buffer, rows, cols, pitch, diameter_y, diameter_x, dst,
+              buffer, rows, cols, pitch, diameter_x, diameter_y, dst,
               dst_stride, border_type, border_value, morphology_swap);
-          cudaFree(buffer);
+
+          if (memoryPoolUsed()) {
+            pplCudaFree(buffer_block);
+          }
+          else {
+            cudaFree(buffer);
+          }
         }
         else {
           morph2DU8C1Kernel0<MinSwap><<<grid0, block0, 0, stream>>>(src, rows,
@@ -277,18 +294,34 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
     }
     else if (channels == 3) {
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar),
-                               rows);
-        if (code != cudaSuccess) {
-          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-          return RC_DEVICE_MEMORY_ERROR;
+        GpuMemoryBlock buffer_block;
+        if (memoryPoolUsed()) {
+          pplCudaMallocPitch(cols * channels * sizeof(uchar), rows,
+                             buffer_block);
+          buffer = (uchar*)(buffer_block.data);
+          pitch  = buffer_block.pitch;
         }
+        else {
+          code = cudaMallocPitch(&buffer, &pitch,
+                                 cols * channels * sizeof(uchar), rows);
+          if (code != cudaSuccess) {
+            LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+            return RC_DEVICE_MEMORY_ERROR;
+          }
+        }
+
         morphRowKernel0<uchar3, uchar, MinSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<uchar3, uchar, MinSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_y, diameter_x, dst, dst_stride,
+            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
-        cudaFree(buffer);
+
+        if (memoryPoolUsed()) {
+          pplCudaFree(buffer_block);
+        }
+        else {
+          cudaFree(buffer);
+        }
       }
       else {
         morph2DKernel0<uchar3, uchar, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -298,18 +331,34 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
     }
     else {  // channels == 4
       if (rows >= 780 && cols >= 1024 && kernel_y >= 7 && kernel_x >= 7) {
-        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(uchar),
-                               rows);
-        if (code != cudaSuccess) {
-          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-          return RC_DEVICE_MEMORY_ERROR;
+        GpuMemoryBlock buffer_block;
+        if (memoryPoolUsed()) {
+          pplCudaMallocPitch(cols * channels * sizeof(uchar), rows,
+                             buffer_block);
+          buffer = (uchar*)(buffer_block.data);
+          pitch  = buffer_block.pitch;
         }
+        else {
+          code = cudaMallocPitch(&buffer, &pitch,
+                                 cols * channels * sizeof(uchar), rows);
+          if (code != cudaSuccess) {
+            LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+            return RC_DEVICE_MEMORY_ERROR;
+          }
+        }
+
         morphRowKernel0<uchar4, uchar, MinSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<uchar4, uchar, MinSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_y, diameter_x, dst, dst_stride,
+            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
-        cudaFree(buffer);
+
+        if (memoryPoolUsed()) {
+          pplCudaFree(buffer_block);
+        }
+        else {
+          cudaFree(buffer);
+        }
       }
       else {
         morph2DKernel0<uchar4, uchar, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -320,15 +369,26 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
   }
   else {
     uchar* mask;
-    int size = kernel_y * kernel_x * sizeof(uchar);
-    code = cudaMalloc(&mask, size);
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_MEMORY_ERROR;
+    size_t size = kernel_y * kernel_x * sizeof(uchar);
+
+    GpuMemoryBlock buffer_block;
+    if (memoryPoolUsed()) {
+      pplCudaMalloc(size, buffer_block);
+      mask = buffer_block.data;
     }
+    else {
+      code = cudaMalloc(&mask, size);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
+    }
+
     code = cudaMemcpy(mask, kernel, size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
-      cudaFree(mask);
+      if (!memoryPoolUsed()) {
+        cudaFree(mask);
+      }
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
@@ -372,7 +432,19 @@ RetCode erode(const uchar* src, int rows, int cols, int channels,
           kernel_y, dst, dst_stride, border_type, border_value,
           morphology_swap);
     }
-    cudaFree(mask);
+
+    if (memoryPoolUsed()) {
+      pplCudaFree(buffer_block);
+    }
+    else {
+      cudaFree(mask);
+    }
+  }
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;
@@ -436,18 +508,34 @@ RetCode erode(const float* src, int rows, int cols, int channels,
 
     if (channels == 1) {
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                               rows);
-        if (code != cudaSuccess) {
-          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-          return RC_DEVICE_MEMORY_ERROR;
+        GpuMemoryBlock buffer_block;
+        if (memoryPoolUsed()) {
+          pplCudaMallocPitch(cols * channels * sizeof(float), rows,
+                             buffer_block);
+          buffer = (float*)(buffer_block.data);
+          pitch  = buffer_block.pitch;
         }
+        else {
+          code = cudaMallocPitch(&buffer, &pitch,
+                                 cols * channels * sizeof(float), rows);
+          if (code != cudaSuccess) {
+            LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+            return RC_DEVICE_MEMORY_ERROR;
+          }
+        }
+
         morphRowKernel0<float, float, MinSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<float, float, MinSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_y, diameter_x, dst, dst_stride,
+            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
-        cudaFree(buffer);
+
+        if (memoryPoolUsed()) {
+          pplCudaFree(buffer_block);
+        }
+        else {
+          cudaFree(buffer);
+        }
       }
       else {
         morph2DKernel0<float, float, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -457,18 +545,34 @@ RetCode erode(const float* src, int rows, int cols, int channels,
     }
     else if (channels == 3) {
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                               rows);
-        if (code != cudaSuccess) {
-          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-          return RC_DEVICE_MEMORY_ERROR;
+        GpuMemoryBlock buffer_block;
+        if (memoryPoolUsed()) {
+          pplCudaMallocPitch(cols * channels * sizeof(float), rows,
+                             buffer_block);
+          buffer = (float*)(buffer_block.data);
+          pitch  = buffer_block.pitch;
         }
+        else {
+          code = cudaMallocPitch(&buffer, &pitch,
+                                 cols * channels * sizeof(float), rows);
+          if (code != cudaSuccess) {
+            LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+            return RC_DEVICE_MEMORY_ERROR;
+          }
+        }
+
         morphRowKernel0<float3, float, MinSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<float3, float, MinSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_y, diameter_x, dst, dst_stride,
+            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
-        cudaFree(buffer);
+
+        if (memoryPoolUsed()) {
+          pplCudaFree(buffer_block);
+        }
+        else {
+          cudaFree(buffer);
+        }
       }
       else {
         morph2DKernel0<float3, float, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -478,18 +582,34 @@ RetCode erode(const float* src, int rows, int cols, int channels,
     }
     else {  // channels == 4
       if (rows >= 480 && cols >= 640 && kernel_y >= 7 && kernel_x >= 7) {
-        code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                               rows);
-        if (code != cudaSuccess) {
-          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-          return RC_DEVICE_MEMORY_ERROR;
+        GpuMemoryBlock buffer_block;
+        if (memoryPoolUsed()) {
+          pplCudaMallocPitch(cols * channels * sizeof(float), rows,
+                             buffer_block);
+          buffer = (float*)(buffer_block.data);
+          pitch  = buffer_block.pitch;
         }
+        else {
+          code = cudaMallocPitch(&buffer, &pitch,
+                                 cols * channels * sizeof(float), rows);
+          if (code != cudaSuccess) {
+            LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+            return RC_DEVICE_MEMORY_ERROR;
+          }
+        }
+
         morphRowKernel0<float4, float, MinSwap><<<grid, block, 0, stream>>>(src,
             rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
         morphColKernel0<float4, float, MinSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_y, diameter_x, dst, dst_stride,
+            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
-        cudaFree(buffer);
+
+        if (memoryPoolUsed()) {
+          pplCudaFree(buffer_block);
+        }
+        else {
+          cudaFree(buffer);
+        }
       }
       else {
         morph2DKernel0<float4, float, MinSwap><<<grid, block, 0, stream>>>(src,
@@ -500,18 +620,30 @@ RetCode erode(const float* src, int rows, int cols, int channels,
   }
   else {
     uchar* mask;
-    int size = kernel_y * kernel_x * sizeof(uchar);
-    code = cudaMalloc(&mask, size);
-    if (code != cudaSuccess) {
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_MEMORY_ERROR;
+    size_t size = kernel_y * kernel_x * sizeof(uchar);
+
+    GpuMemoryBlock buffer_block;
+    if (memoryPoolUsed()) {
+      pplCudaMalloc(size, buffer_block);
+      mask = buffer_block.data;
     }
+    else {
+      code = cudaMalloc(&mask, size);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_MEMORY_ERROR;
+      }
+    }
+
     code = cudaMemcpy(mask, kernel, size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
-      cudaFree(mask);
+      if (!memoryPoolUsed()) {
+        cudaFree(mask);
+      }
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
     }
+
     if (channels == 1) {
       morph2DKernel1<float, float, MinSwap><<<grid, block, 0, stream>>>(src,
           rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,
@@ -530,7 +662,19 @@ RetCode erode(const float* src, int rows, int cols, int channels,
           kernel_y, dst, dst_stride, border_type, border_value,
           morphology_swap);
     }
-    cudaFree(mask);
+
+    if (memoryPoolUsed()) {
+      pplCudaFree(buffer_block);
+    }
+    else {
+      cudaFree(mask);
+    }
+  }
+
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
   }
 
   return RC_SUCCESS;

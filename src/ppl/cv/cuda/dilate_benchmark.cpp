@@ -16,6 +16,7 @@
 
 #include "ppl/cv/cuda/dilate.h"
 #include "ppl/cv/cuda/erode.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
@@ -70,6 +71,17 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  if ((mask_type == kFullyMasked && height >= 480 && width >= 640) ||
+      mask_type == kPartiallyMasked) {
+    cudaEventRecord(start, 0);
+    ppl::cv::cuda::activateGpuMemoryPool(40000000);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::Dilate<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -103,6 +115,17 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  if ((mask_type == kFullyMasked && height >= 480 && width >= 640) ||
+      mask_type == kPartiallyMasked) {
+    cudaEventRecord(start, 0);
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
 
   free(mask);
   cudaEventDestroy(start);

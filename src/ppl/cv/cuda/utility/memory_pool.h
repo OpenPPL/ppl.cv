@@ -31,9 +31,8 @@ namespace cuda {
 
 struct GpuMemoryBlock {
   unsigned char* data;
-  size_t offset;
-  size_t size;
   size_t pitch;
+  size_t size;
 };
 
 class GpuMemoryPool {
@@ -44,7 +43,7 @@ class GpuMemoryPool {
   ~GpuMemoryPool();
 
   bool isActivated() const {
-    return (memory_pool_ != nullptr);
+    return (begin_ != nullptr);
   }
   void mallocMemoryPool(size_t size);
   void freeMemoryPool();
@@ -54,8 +53,8 @@ class GpuMemoryPool {
   void freeMemoryBlock(GpuMemoryBlock &memory_block);
 
  private:
-  unsigned char* memory_pool_;
-  size_t capability_;
+  unsigned char* begin_;
+  unsigned char* end_;
   std::forward_list<GpuMemoryBlock> memory_blocks_;
   std::mutex host_mutex_;
 };

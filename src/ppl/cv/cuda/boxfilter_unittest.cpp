@@ -25,11 +25,6 @@
 
 #include "utility/infrastructure.hpp"
 
-enum MemoryPool {
-  kActivated,
-  kUnactivated,
-};
-
 using Parameters = std::tuple<MemoryPool, int, int, bool, ppl::cv::BorderType,
                               cv::Size>;
 inline std::string convertToStringBoxFilter(const Parameters& parameters) {

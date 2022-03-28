@@ -44,6 +44,11 @@ if (!(expression)) {                                                           \
   exit(-1);                                                                    \
 }
 
+enum MemoryPool {
+  kActivated,
+  kUnactivated,
+};
+
 inline
 schar randomChar() {
   int flag   = rand() % 2;

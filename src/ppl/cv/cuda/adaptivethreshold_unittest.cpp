@@ -25,11 +25,6 @@
 
 #include "utility/infrastructure.hpp"
 
-enum MemoryPool {
-  kActivated,
-  kUnactivated,
-};
-
 using Parameters = std::tuple<MemoryPool, int, int, int, int, int,
                               ppl::cv::BorderType, cv::Size>;
 inline std::string convertToStringThreshold(const Parameters& parameters) {
