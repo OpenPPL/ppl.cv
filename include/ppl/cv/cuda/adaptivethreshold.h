@@ -57,12 +57,11 @@ namespace cuda {
  *         recommended.
  *       2 The output image has the same size and channels as the input image.
  *       3 Only the uchar and single-channels data is supported.
- *       4 When blockSize is bigger than 32, this function needs a memory buffer
- *         to store the intermediate result, which is not less than
- *         (((width * sizeof(float) + grain - 1) >> shift) << shift) * height,
- *         where grain is 512 and shift is 9 now. When the cuda memory pool is
- *         used, capability of the cuda memory pool must be not less than the
- *         size of the memory buffer.
+ *       4 When blockSize is bigger than 32, some implementations of this
+ *         function need a memory buffer to store the intermediate result, which
+ *         is not less than ppl::cv::cuda::ceil2DVolume(width * sizeof(float),
+ *         height). When CUDA Memory Pool is used, the capacity of CUDA Memory
+ *         Pool must be not less than the size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>

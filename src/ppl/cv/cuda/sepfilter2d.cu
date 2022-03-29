@@ -17,6 +17,7 @@
 #include "ppl/cv/cuda/sepfilter2d.h"
 
 #include "utility/utility.hpp"
+#include "utility/use_memory_pool.h"
 
 using namespace ppl::common;
 
@@ -1047,11 +1048,20 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
 
   float* buffer;
   size_t pitch;
-  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                         rows);
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
+
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMallocPitch(cols * channels * sizeof(float), rows, buffer_block);
+    buffer = (float*)(buffer_block.data);
+    pitch  = buffer_block.pitch;
+  }
+  else {
+    code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                           rows);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
   }
 
   if (border_type == BORDER_REPLICATE) {
@@ -1064,12 +1074,20 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
     RUN_KERNELS(uchar, uchar, Reflect101Border);
   }
 
-  cudaFree(buffer);
-
   code = cudaGetLastError();
   if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
   }
 
   return RC_SUCCESS;
@@ -1180,11 +1198,20 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
 
   float* buffer;
   size_t pitch;
-  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                         rows);
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
+
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMallocPitch(cols * channels * sizeof(float), rows, buffer_block);
+    buffer = (float*)(buffer_block.data);
+    pitch  = buffer_block.pitch;
+  }
+  else {
+    code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                           rows);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
   }
 
   if (border_type == BORDER_REPLICATE) {
@@ -1197,12 +1224,20 @@ RetCode sepfilter2D(const uchar* src, int rows, int cols, int channels,
     RUN_KERNELS(uchar, short, Reflect101Border);
   }
 
-  cudaFree(buffer);
-
   code = cudaGetLastError();
   if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
   }
 
   return RC_SUCCESS;
@@ -1313,11 +1348,20 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
 
   float* buffer;
   size_t pitch;
-  code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
-                         rows);
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
+
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMallocPitch(cols * channels * sizeof(float), rows, buffer_block);
+    buffer = (float*)(buffer_block.data);
+    pitch  = buffer_block.pitch;
+  }
+  else {
+    code = cudaMallocPitch(&buffer, &pitch, cols * channels * sizeof(float),
+                           rows);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
   }
 
   if (border_type == BORDER_REPLICATE) {
@@ -1330,12 +1374,20 @@ RetCode sepfilter2D(const float* src, int rows, int cols, int channels,
     RUN_KERNELS(float, float, Reflect101Border);
   }
 
-  cudaFree(buffer);
-
   code = cudaGetLastError();
   if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
   }
 
   return RC_SUCCESS;

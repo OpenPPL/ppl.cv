@@ -43,9 +43,9 @@ namespace cuda {
  *         recommended.
  *       2 The size of the output histogram is 256.
  *       3 This function needs a memory buffer to store the intermediate
- *         histogram, which is not less than 1024 bytes. When the cuda memory
- *         pool is used, capability of the cuda memory pool must be not less
- *         than the size of the memory buffer.
+ *         histogram, which is not less than 1024 bytes. When CUDA Memory Pool
+ *         is used, the capacity of CUDA Memory Pool must be not less than
+ *         the size of the memory buffer.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>

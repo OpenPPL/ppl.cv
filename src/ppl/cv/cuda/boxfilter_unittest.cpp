@@ -133,7 +133,9 @@ bool PplCvCudaBoxFilterTest<T, channels>::apply() {
                 cv::Point(-1, -1), normalize, cv_border);
 
   if (memory_pool == kActivated) {
-    ppl::cv::cuda::activateGpuMemoryPool(40000000);
+    size_t width = size.width * channels * sizeof(float);
+    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(width, size.height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
   }
 
   ppl::cv::cuda::BoxFilter<T, channels>(0, gpu_src.rows, gpu_src.cols,

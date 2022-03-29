@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/sepfilter2d.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -24,17 +25,26 @@
 
 #include "utility/infrastructure.hpp"
 
-using Parameters = std::tuple<int, int, ppl::cv::BorderType, cv::Size>;
+using Parameters = std::tuple<MemoryPool, int, int, ppl::cv::BorderType,
+                              cv::Size>;
 inline std::string convertToStringFilter2D(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int ksize = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  int ksize = std::get<1>(parameters);
   formatted << "Ksize" << ksize << "_";
 
-  int int_delta = std::get<1>(parameters);
+  int int_delta = std::get<2>(parameters);
   formatted << "Delta" << int_delta << "_";
 
-  ppl::cv::BorderType border_type = std::get<2>(parameters);
+  ppl::cv::BorderType border_type = std::get<3>(parameters);
   if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
@@ -48,7 +58,7 @@ inline std::string convertToStringFilter2D(const Parameters& parameters) {
     formatted << "BORDER_DEFAULT" << "_";
   }
 
-  cv::Size size = std::get<3>(parameters);
+  cv::Size size = std::get<4>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -60,10 +70,11 @@ class PplCvCudaSepFilter2DTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaSepFilter2DTest() {
     const Parameters& parameters = GetParam();
-    ksize       = std::get<0>(parameters);
-    delta       = std::get<1>(parameters) / 10.f;
-    border_type = std::get<2>(parameters);
-    size        = std::get<3>(parameters);
+    memory_pool = std::get<0>(parameters);
+    ksize       = std::get<1>(parameters);
+    delta       = std::get<2>(parameters) / 10.f;
+    border_type = std::get<3>(parameters);
+    size        = std::get<4>(parameters);
   }
 
   ~PplCvCudaSepFilter2DTest() {
@@ -72,6 +83,7 @@ class PplCvCudaSepFilter2DTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   int ksize;
   float delta;
   ppl::cv::BorderType border_type;
@@ -124,6 +136,12 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
   cv::sepFilter2D(src, cv_dst, cv_dst.depth(), kernel0, kernel0,
                   cv::Point(-1, -1), delta, cv_border);
 
+  if (memory_pool == kActivated) {
+    size_t width = size.width * channels * sizeof(float);
+    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(width, size.height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+  }
+
   ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows,
       gpu_src.cols, gpu_src.step / sizeof(Tsrc), (Tsrc*)gpu_src.data, ksize,
       gpu_kernel, gpu_kernel, gpu_dst.step / sizeof(Tdst), (Tdst*)gpu_dst.data,
@@ -134,6 +152,10 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
       size.width * channels, gpu_input, ksize, gpu_kernel, gpu_kernel,
       size.width * channels, gpu_output, delta, border_type);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon;
   if (sizeof(Tdst) <= 2) {
@@ -166,6 +188,7 @@ TEST_P(PplCvCudaSepFilter2DTest ## Tdst ## channels, Standard) {               \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaSepFilter2DTest ## Tdst ## channels,                                \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(1, 4, 5, 13, 28, 43),                                    \
     ::testing::Values(0, 10, 43),                                              \
     ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT,      \

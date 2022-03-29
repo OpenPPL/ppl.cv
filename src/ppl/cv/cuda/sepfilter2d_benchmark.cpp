@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/sepfilter2d.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
@@ -49,6 +50,18 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  if (ksize > 17) {
+    cudaEventRecord(start, 0);
+    size_t size_width = width * channels * sizeof(float);
+    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(size_width, height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    // std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+    //           << " ns" << std::endl;
+  }
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows,
@@ -73,6 +86,16 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  if (ksize > 17) {
+    cudaEventRecord(start, 0);
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    // std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+    //           << " ns" << std::endl;
+  }
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
@@ -274,11 +297,14 @@ BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c4, ksize,     \
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(src_type, dst_type, ksize, border_type)      \
 BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c1, ksize,  \
-                   border_type)->Args({640, 480});                             \
+                   border_type)->Args({640, 480})->UseManualTime()->           \
+                   Iterations(10);                                             \
 BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c3, ksize,  \
-                   border_type)->Args({640, 480});                             \
+                   border_type)->Args({640, 480})->UseManualTime()->           \
+                   Iterations(10);                                             \
 BENCHMARK_TEMPLATE(BM_SepFilter2D_opencv_cuda, src_type, dst_type, c4, ksize,  \
-                   border_type)->Args({640, 480});
+                   border_type)->Args({640, 480})->UseManualTime()->           \
+                   Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(src_type, dst_type, ksize, border_type)      \
 BENCHMARK_TEMPLATE(BM_SepFilter2D_ppl_cuda, src_type, dst_type, c1, ksize,     \
