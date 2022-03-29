@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/gaussianblur.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -24,17 +25,26 @@
 
 #include "utility/infrastructure.hpp"
 
-using Parameters = std::tuple<int, int, ppl::cv::BorderType, cv::Size>;
+using Parameters = std::tuple<MemoryPool, int, int, ppl::cv::BorderType,
+                              cv::Size>;
 inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int ksize = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  int ksize = std::get<1>(parameters);
   formatted << "Ksize" << ksize << "_";
 
-  int int_sigma = std::get<1>(parameters);
+  int int_sigma = std::get<2>(parameters);
   formatted << "Sigma" << int_sigma << "_";
 
-  ppl::cv::BorderType border_type = std::get<2>(parameters);
+  ppl::cv::BorderType border_type = std::get<3>(parameters);
   if (border_type == ppl::cv::BORDER_REPLICATE) {
     formatted << "BORDER_REPLICATE" << "_";
   }
@@ -48,7 +58,7 @@ inline std::string convertToStringGaussianBlur(const Parameters& parameters) {
     formatted << "BORDER_DEFAULT" << "_";
   }
 
-  cv::Size size = std::get<3>(parameters);
+  cv::Size size = std::get<4>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -60,10 +70,11 @@ class PplCvCudaGaussianBlurTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaGaussianBlurTest() {
     const Parameters& parameters = GetParam();
-    ksize       = std::get<0>(parameters);
-    sigma       = std::get<1>(parameters) / 10.f;
-    border_type = std::get<2>(parameters);
-    size        = std::get<3>(parameters);
+    memory_pool = std::get<0>(parameters);
+    ksize       = std::get<1>(parameters);
+    sigma       = std::get<2>(parameters) / 10.f;
+    border_type = std::get<3>(parameters);
+    size        = std::get<4>(parameters);
   }
 
   ~PplCvCudaGaussianBlurTest() {
@@ -72,6 +83,7 @@ class PplCvCudaGaussianBlurTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   int ksize;
   float sigma;
   ppl::cv::BorderType border_type;
@@ -115,6 +127,15 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
   cv::GaussianBlur(src, cv_dst, cv::Size(ksize, ksize), sigma, sigma,
                    cv_border);
 
+  if (memory_pool == kActivated) {
+    size_t volume = ksize * sizeof(float);
+    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(volume);
+    volume = ppl::cv::cuda::ceil2DVolume(size.width * channels * sizeof(float),
+                                         size.height) * 2;
+    ceiled_size += volume;
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+  }
+
   ppl::cv::cuda::GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, ksize, sigma,
       gpu_dst.step / sizeof(T), (T*)gpu_dst.data, border_type);
@@ -124,6 +145,10 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
       size.width * channels, gpu_input, ksize, sigma, size.width * channels,
       gpu_output, border_type);
   cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -154,6 +179,7 @@ TEST_P(PplCvCudaGaussianBlurTest ## T ## channels, Standard) {                 \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaGaussianBlurTest ## T ## channels,                                  \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(1, 5, 13, 31, 43),                                       \
     ::testing::Values(0, 1, 7, 10, 43),                                        \
     ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT,      \

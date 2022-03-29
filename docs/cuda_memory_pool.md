@@ -11,7 +11,11 @@ If you just use ppl.cv.cuda functions in your projects, the following procedure 
 
 #### (1). Determination of CUDA Memory Pool use and memory requirement
 
-In document of each function, whether CUDA Memory Pool is needed and how to calculate the memory volumn are marked. This can be checked. Every time a function exits, it returns memory to CUDA Memory Pool, so the total memory requirement of several functions is the max volumn in all functions when multiple functions using CUDA Memory Pool are invoked.
+In document of each function, whether CUDA Memory Pool is needed and how to calculate the memory volumn are marked. This can be checked. Every time a function exits, it returns memory to CUDA Memory Pool, so the total memory requirement of several functions is the max volumn in all functions when multiple functions using CUDA Memory Pool are invoked. There are 2 APIs in use_memory_pool.h which can be used to align minimum memory volume of CUDA Memory Pool as following:
+
+`size_t ceil1DVolume(size_t volume);`
+
+`size_t ceil2DVolume(size_t width, size_t height);`
 
 #### (2). Activating CUDA Memory Pool
 
@@ -37,7 +41,8 @@ A code snippet demonstrating use of AdaptiveThreshold() and BoxFilter() with CUD
 #include "ppl/cv/cuda/use_memory_pool.h"
 
   ...
-  ppl::cv::cuda::activateGpuMemoryPool(40000000);
+  size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(1920 * sizeof(float), 1080);
+  ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
 
   for (int i = 0; i < 1000; i++) {
     ppl::cv::cuda::AdaptiveThreshold();

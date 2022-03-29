@@ -17,6 +17,7 @@
 #include "ppl/cv/cuda/use_memory_pool.h"
 #include "use_memory_pool.h"
 #include "memory_pool.h"
+#include "utility.hpp"
 
 #include <memory>
 
@@ -28,7 +29,7 @@ namespace ppl {
 namespace cv {
 namespace cuda {
 
-// global handle of the cuda memory pool.
+// global handle of CUDA Memory Pool.
 std::unique_ptr<GpuMemoryPool> memory_pool_ptr(new GpuMemoryPool);
 
 // user API
@@ -49,6 +50,16 @@ void shutDownGpuMemoryPool() {
   }
 
   memory_pool_ptr->freeMemoryPool();
+}
+
+size_t ceil1DVolume(size_t volume) {
+  return roundUp(volume, PITCH_GRANULARITY, PITCH_SHIFT);
+}
+
+size_t ceil2DVolume(size_t width, size_t height) {
+  size_t ceiled_size = roundUp(width, PITCH_GRANULARITY, PITCH_SHIFT) * height;
+
+  return ceiled_size;
 }
 
 bool memoryPoolUsed() {

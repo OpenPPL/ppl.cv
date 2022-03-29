@@ -27,6 +27,10 @@ void activateGpuMemoryPool(size_t size);
 
 void shutDownGpuMemoryPool();
 
+size_t ceil1DVolume(size_t volume);
+
+size_t ceil2DVolume(size_t width, size_t height);
+
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl

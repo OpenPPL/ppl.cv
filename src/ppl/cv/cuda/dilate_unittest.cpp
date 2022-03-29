@@ -142,7 +142,9 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
   }
 
   if (memory_pool == kActivated) {
-    ppl::cv::cuda::activateGpuMemoryPool(40000000);
+    size_t width = size.width * channels * sizeof(T);
+    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(width, size.height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
   }
 
   int constant_border;

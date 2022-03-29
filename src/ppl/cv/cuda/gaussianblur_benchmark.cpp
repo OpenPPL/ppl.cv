@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/gaussianblur.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
@@ -45,6 +46,21 @@ void BM_GaussianBlur_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  if (ksize > 17) {
+    cudaEventRecord(start, 0);
+    size_t volume = ksize * sizeof(float);
+    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(volume);
+    volume = ppl::cv::cuda::ceil2DVolume(width * channels * sizeof(float),
+                                         height) * 2;
+    ceiled_size += volume;
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -67,6 +83,16 @@ void BM_GaussianBlur_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  if (ksize > 17) {
+    cudaEventRecord(start, 0);
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
@@ -190,6 +216,9 @@ BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_cuda, type, c4, ksize, border_type)->   \
 // RUN_BENCHMARK0(uchar, 31, ppl::cv::BORDER_REPLICATE, 640, 480)
 // RUN_BENCHMARK0(uchar, 31, ppl::cv::BORDER_REFLECT, 640, 480)
 // RUN_BENCHMARK0(uchar, 31, ppl::cv::BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(uchar, 43, ppl::cv::BORDER_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(uchar, 43, ppl::cv::BORDER_REFLECT, 640, 480)
+// RUN_BENCHMARK0(uchar, 43, ppl::cv::BORDER_REFLECT_101, 640, 480)
 
 // RUN_BENCHMARK0(float, 5, ppl::cv::BORDER_REPLICATE, 640, 480)
 // RUN_BENCHMARK0(float, 5, ppl::cv::BORDER_REFLECT, 640, 480)
@@ -200,6 +229,9 @@ BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_cuda, type, c4, ksize, border_type)->   \
 // RUN_BENCHMARK0(float, 31, ppl::cv::BORDER_REPLICATE, 640, 480)
 // RUN_BENCHMARK0(float, 31, ppl::cv::BORDER_REFLECT, 640, 480)
 // RUN_BENCHMARK0(float, 31, ppl::cv::BORDER_REFLECT_101, 640, 480)
+// RUN_BENCHMARK0(float, 43, ppl::cv::BORDER_REPLICATE, 640, 480)
+// RUN_BENCHMARK0(float, 43, ppl::cv::BORDER_REFLECT, 640, 480)
+// RUN_BENCHMARK0(float, 43, ppl::cv::BORDER_REFLECT_101, 640, 480)
 
 #define RUN_BENCHMARK1(type, ksize, border_type, width, height)                \
 BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_cuda, type, c1, ksize, border_type)->\
@@ -236,12 +268,12 @@ BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_cuda, type, c4, ksize, border_type)->   \
 // RUN_BENCHMARK1(float, 31, ppl::cv::BORDER_REFLECT_101, 640, 480)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, ksize, border_type)                    \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_cuda, type, c1, ksize,               \
-                   border_type)->Args({640, 480});                             \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_cuda, type, c3, ksize,               \
-                   border_type)->Args({640, 480});                             \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_cuda, type, c4, ksize,               \
-                   border_type)->Args({640, 480});
+BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_cuda, type, c1, ksize, border_type)->\
+                   Args({640, 480})->UseManualTime()->Iterations(10);          \
+BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_cuda, type, c3, ksize, border_type)->\
+                   Args({640, 480})->UseManualTime()->Iterations(10);          \
+BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_cuda, type, c4, ksize, border_type)->\
+                   Args({640, 480})->UseManualTime()->Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(type, ksize, border_type)                    \
 BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_cuda, type, c1, ksize, border_type)->   \

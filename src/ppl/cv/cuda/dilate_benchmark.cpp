@@ -74,7 +74,9 @@ void BM_Dilate_ppl_cuda(benchmark::State &state) {
   if ((mask_type == kFullyMasked && height >= 480 && width >= 640) ||
       mask_type == kPartiallyMasked) {
     cudaEventRecord(start, 0);
-    ppl::cv::cuda::activateGpuMemoryPool(40000000);
+    size_t size_width = width * channels * sizeof(T);
+    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(size_width, height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsed_time, start, stop);
