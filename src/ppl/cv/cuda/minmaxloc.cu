@@ -19,6 +19,7 @@
 #include <cfloat>
 
 #include "utility/utility.hpp"
+#include "utility/use_memory_pool.h"
 
 using namespace ppl::common;
 
@@ -654,15 +655,43 @@ RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
   grid.y = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  int buffer_size = blocks * sizeof(int) * 6;
+  size_t buffer_size = blocks * sizeof(int) * 6;
   int* buffer;
-  cudaMalloc(&buffer, buffer_size);
+  GpuMemoryBlock buffer_block;
+  cudaError_t code;
+  if (memoryPoolUsed()) {
+    pplCudaMalloc(buffer_size, buffer_block);
+    buffer = (int*)(buffer_block.data);
+  }
+  else {
+    code = cudaMalloc(&buffer, buffer_size);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+  }
 
   minMaxLocKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
       mask, mask_stride, blocks, buffer);
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   int results[7];
   cudaMemcpy(results, buffer, 7 * sizeof(int), cudaMemcpyDeviceToHost);
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
   *min_val = (uchar)results[1];
   *max_val = (uchar)results[2];
   *min_loc_x = results[3];
@@ -670,12 +699,11 @@ RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
   *max_loc_x = results[5];
   *max_loc_y = results[6];
 
-  cudaFree(buffer);
-
-  cudaError_t code = cudaGetLastError();
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
   }
 
   return RC_SUCCESS;
@@ -706,15 +734,43 @@ RetCode minMaxLoc(const float* src, int rows, int cols, int src_stride,
   grid.y = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  int buffer_size = blocks * sizeof(float) * 6;
+  size_t buffer_size = blocks * sizeof(float) * 6;
   float* buffer;
-  cudaMalloc(&buffer, buffer_size);
+  GpuMemoryBlock buffer_block;
+  cudaError_t code;
+  if (memoryPoolUsed()) {
+    pplCudaMalloc(buffer_size, buffer_block);
+    buffer = (float*)(buffer_block.data);
+  }
+  else {
+    code = cudaMalloc(&buffer, buffer_size);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
+  }
 
   minMaxLocKernel<<<grid, block, 0, stream>>>(src, rows, cols, src_stride,
       mask, mask_stride, blocks, buffer);
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   float results[7];
   cudaMemcpy(results, buffer, 7 * sizeof(float), cudaMemcpyDeviceToHost);
+  code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    if (!memoryPoolUsed()) {
+      cudaFree(buffer);
+    }
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_MEMORY_ERROR;
+  }
   *min_val = results[1];
   *max_val = results[2];
   *min_loc_x = (int)results[3];
@@ -722,12 +778,11 @@ RetCode minMaxLoc(const float* src, int rows, int cols, int src_stride,
   *max_loc_x = (int)results[5];
   *max_loc_y = (int)results[6];
 
-  cudaFree(buffer);
-
-  cudaError_t code = cudaGetLastError();
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
   }
 
   return RC_SUCCESS;

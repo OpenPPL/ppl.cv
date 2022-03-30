@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/minmaxloc.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -29,11 +30,19 @@ enum MaskType {
   kMasked,
 };
 
-using Parameters = std::tuple<MaskType, cv::Size>;
+using Parameters = std::tuple<MemoryPool, MaskType, cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  MaskType is_masked = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  MaskType is_masked = std::get<1>(parameters);
   if (is_masked == kUnmasked) {
     formatted << "Unmasked" << "_";
   }
@@ -41,7 +50,7 @@ inline std::string convertToString(const Parameters& parameters) {
     formatted << "Masked" << "_";
   }
 
-  cv::Size size = std::get<1>(parameters);
+  cv::Size size = std::get<2>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -53,8 +62,9 @@ class PplCvCudaMinMaxLocTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaMinMaxLocTest() {
     const Parameters& parameters = GetParam();
-    is_masked = std::get<0>(parameters);
-    size      = std::get<1>(parameters);
+    memory_pool = std::get<0>(parameters);
+    is_masked   = std::get<1>(parameters);
+    size        = std::get<2>(parameters);
   }
 
   ~PplCvCudaMinMaxLocTest() {
@@ -63,6 +73,7 @@ class PplCvCudaMinMaxLocTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   MaskType is_masked;
   cv::Size size;
 };
@@ -90,6 +101,12 @@ bool PplCvCudaMinMaxLocTest<T>::apply() {
   cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
+  if (memory_pool == kActivated) {
+    size_t size = 256 * 6 * sizeof(float);
+    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(size);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+  }
+
   double min_value0, max_value0;
   cv::Point min_loc, max_loc;
   T min_value1, min_value2;
@@ -114,6 +131,10 @@ bool PplCvCudaMinMaxLocTest<T>::apply() {
     ppl::cv::cuda::MinMaxLoc<T>(0, size.height, size.width, size.width,
         gpu_input, &min_value2, &max_value2, &min_index_x1, &min_index_y1,
         &max_index_x1, &max_index_y1, size.width, gpu_mask1);
+  }
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
   }
 
   bool identity0 = false;
@@ -149,6 +170,7 @@ TEST_P(PplCvCudaMinMaxLocTest ## T, Standard) {                                \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaMinMaxLocTest ## T,                  \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(kUnmasked, kMasked),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
