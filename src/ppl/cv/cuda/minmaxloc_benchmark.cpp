@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/minmaxloc.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/core.hpp"
 #include "opencv2/cudaarithm.hpp"
@@ -55,6 +56,14 @@ void BM_MinMaxLoc_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  cudaEventRecord(start, 0);
+  ppl::cv::cuda::activateGpuMemoryPool(6144);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::MinMaxLoc<T>(0, gpu_src.rows, gpu_src.cols,
@@ -85,6 +94,14 @@ void BM_MinMaxLoc_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventRecord(start, 0);
+  ppl::cv::cuda::shutDownGpuMemoryPool();
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
@@ -211,14 +228,14 @@ BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, float, kMasked)->                    \
 // RUN_BENCHMARK1(1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, mask_type)                             \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
-                   Args({320, 240})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
-                   Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
-                   Args({1280, 720})->UseManualTime()->Iterations(10);         \
-BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_cuda, type, mask_type)->                \
-                   Args({1920, 1080})->UseManualTime()->Iterations(10);        \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, type, mask_type)->            \
+                   Args({320, 240});                                           \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, type, mask_type)->            \
+                   Args({640, 480});                                           \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, type, mask_type)->            \
+                   Args({1280, 720});                                          \
+BENCHMARK_TEMPLATE(BM_MinMaxLoc_opencv_x86_cuda, type, mask_type)->            \
+                   Args({1920, 1080});
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(type, mask_type)                                             \
 BENCHMARK_TEMPLATE(BM_MinMaxLoc_ppl_cuda, type, mask_type)->                   \

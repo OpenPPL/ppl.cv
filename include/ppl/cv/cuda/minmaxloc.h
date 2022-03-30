@@ -51,6 +51,10 @@ namespace cuda {
  *         recommended.
  *       2 inData and mask have the same height, width and channels.
  *       3 The function only works with single-channel arrays.
+ *       4 This function needs a memory buffer to store the intermediate
+ *         result, which is not less than 6144 bytes. When CUDA Memory Pool
+ *         is used, the capacity of CUDA Memory Pool must be not less than
+ *         the size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
