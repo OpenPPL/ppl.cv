@@ -657,8 +657,8 @@ RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
   int blocks = grid.x * grid.y;
   size_t buffer_size = blocks * sizeof(int) * 6;
   int* buffer;
-  GpuMemoryBlock buffer_block;
   cudaError_t code;
+  GpuMemoryBlock buffer_block;
   if (memoryPoolUsed()) {
     pplCudaMalloc(buffer_size, buffer_block);
     buffer = (int*)(buffer_block.data);
@@ -675,7 +675,10 @@ RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
       mask, mask_stride, blocks, buffer);
   code = cudaGetLastError();
   if (code != cudaSuccess) {
-    if (!memoryPoolUsed()) {
+    if (memoryPoolUsed()) {
+      pplCudaFree(buffer_block);
+    }
+    else {
       cudaFree(buffer);
     }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -683,10 +686,12 @@ RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
   }
 
   int results[7];
-  cudaMemcpy(results, buffer, 7 * sizeof(int), cudaMemcpyDeviceToHost);
-  code = cudaGetLastError();
+  code = cudaMemcpy(results, buffer, 7 * sizeof(int), cudaMemcpyDeviceToHost);
   if (code != cudaSuccess) {
-    if (!memoryPoolUsed()) {
+    if (memoryPoolUsed()) {
+      pplCudaFree(buffer_block);
+    }
+    else {
       cudaFree(buffer);
     }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -754,7 +759,10 @@ RetCode minMaxLoc(const float* src, int rows, int cols, int src_stride,
       mask, mask_stride, blocks, buffer);
   code = cudaGetLastError();
   if (code != cudaSuccess) {
-    if (!memoryPoolUsed()) {
+    if (memoryPoolUsed()) {
+      pplCudaFree(buffer_block);
+    }
+    else {
       cudaFree(buffer);
     }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -762,10 +770,12 @@ RetCode minMaxLoc(const float* src, int rows, int cols, int src_stride,
   }
 
   float results[7];
-  cudaMemcpy(results, buffer, 7 * sizeof(float), cudaMemcpyDeviceToHost);
-  code = cudaGetLastError();
+  code = cudaMemcpy(results, buffer, 7 * sizeof(float), cudaMemcpyDeviceToHost);
   if (code != cudaSuccess) {
-    if (!memoryPoolUsed()) {
+    if (memoryPoolUsed()) {
+      pplCudaFree(buffer_block);
+    }
+    else {
       cudaFree(buffer);
     }
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);

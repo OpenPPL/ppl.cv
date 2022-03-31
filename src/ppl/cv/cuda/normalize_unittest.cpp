@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/normalize.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -29,11 +30,20 @@ enum MaskType {
   kMasked,
 };
 
-using Parameters = std::tuple<ppl::cv::NormTypes, MaskType, int, int, cv::Size>;
+using Parameters = std::tuple<MemoryPool, ppl::cv::NormTypes, MaskType, int,
+                              int, cv::Size>;
 inline std::string convertToStringNormalize(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  ppl::cv::NormTypes norm_type = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  ppl::cv::NormTypes norm_type = std::get<1>(parameters);
   if (norm_type == ppl::cv::NORM_L1) {
     formatted << "NORM_L1" << "_";
   }
@@ -47,7 +57,7 @@ inline std::string convertToStringNormalize(const Parameters& parameters) {
     formatted << "NORM_MINMAX" << "_";
   }
 
-  MaskType is_masked = std::get<1>(parameters);
+  MaskType is_masked = std::get<2>(parameters);
   if (is_masked == kUnmasked) {
     formatted << "Unmasked" << "_";
   }
@@ -55,13 +65,13 @@ inline std::string convertToStringNormalize(const Parameters& parameters) {
     formatted << "Masked" << "_";
   }
 
-  int int_alpha = std::get<2>(parameters);
+  int int_alpha = std::get<3>(parameters);
   formatted << "IntAlpha" << int_alpha << "_";
 
-  int int_beta = std::get<3>(parameters);
+  int int_beta = std::get<4>(parameters);
   formatted << "IntBeta" << int_beta << "_";
 
-  cv::Size size = std::get<4>(parameters);
+  cv::Size size = std::get<5>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -73,11 +83,12 @@ class PplCvCudaNormalizeTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaNormalizeTest() {
     const Parameters& parameters = GetParam();
-    norm_type = std::get<0>(parameters);
-    is_masked = std::get<1>(parameters);
-    alpha     = std::get<2>(parameters) / 10.f;
-    beta      = std::get<3>(parameters) / 10.f;
-    size      = std::get<4>(parameters);
+    memory_pool = std::get<0>(parameters);
+    norm_type   = std::get<1>(parameters);
+    is_masked   = std::get<2>(parameters);
+    alpha       = std::get<3>(parameters) / 10.f;
+    beta        = std::get<4>(parameters) / 10.f;
+    size        = std::get<5>(parameters);
   }
 
   ~PplCvCudaNormalizeTest() {
@@ -86,6 +97,7 @@ class PplCvCudaNormalizeTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   ppl::cv::NormTypes norm_type;
   MaskType is_masked;
   float alpha;
@@ -139,6 +151,12 @@ bool PplCvCudaNormalizeTest<T, channels>::apply() {
     cv_norm_type = cv::NORM_MINMAX;
   }
 
+  if (memory_pool == kActivated) {
+    size_t size = 256 * 2 * sizeof(double);
+    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(size);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+  }
+
   if (is_masked == kUnmasked) {
     cv::normalize(src, cv_dst, alpha, beta, cv_norm_type,
                   CV_MAT_DEPTH(dst.type()));
@@ -170,6 +188,10 @@ bool PplCvCudaNormalizeTest<T, channels>::apply() {
   }
   gpu_dst.download(dst);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -206,6 +228,7 @@ TEST_P(PplCvCudaNormalizeTest ## T ## channels, Standard) {                    \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaNormalizeTest ## T ## channels,      \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(ppl::cv::NORM_INF, ppl::cv::NORM_L1, ppl::cv::NORM_L2,   \
                       ppl::cv::NORM_MINMAX),                                   \
     ::testing::Values(kUnmasked, kMasked),                                     \

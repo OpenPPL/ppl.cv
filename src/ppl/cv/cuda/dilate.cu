@@ -376,7 +376,10 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
 
     code = cudaMemcpy(mask, kernel, size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
-      if (!memoryPoolUsed()) {
+      if (memoryPoolUsed()) {
+        pplCudaFree(buffer_block);
+      }
+      else {
         cudaFree(mask);
       }
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -436,8 +439,9 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
   }
-
-  return RC_SUCCESS;
+  else {
+    return RC_SUCCESS;
+  }
 }
 
 RetCode dilate(const float* src, int rows, int cols, int channels,
@@ -627,7 +631,10 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
 
     code = cudaMemcpy(mask, kernel, size, cudaMemcpyHostToDevice);
     if (code != cudaSuccess) {
-      if (!memoryPoolUsed()) {
+      if (memoryPoolUsed()) {
+        pplCudaFree(buffer_block);
+      }
+      else {
         cudaFree(mask);
       }
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
@@ -666,8 +673,9 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
   }
-
-  return RC_SUCCESS;
+  else {
+    return RC_SUCCESS;
+  }
 }
 
 template <>
