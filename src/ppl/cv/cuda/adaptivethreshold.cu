@@ -1001,14 +1001,6 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
   }
 
   code = cudaGetLastError();
-  if (code != cudaSuccess) {
-    if (!memoryPoolUsed()) {
-      cudaFree(buffer);
-    }
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
-  }
-
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
   }
@@ -1016,7 +1008,13 @@ AdaptiveThreshold(cudaStream_t stream, int rows, int cols, int src_stride,
     cudaFree(buffer);
   }
 
-  return RC_SUCCESS;
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+  else {
+    return RC_SUCCESS;
+  }
 }
 
 }  // cuda

@@ -869,14 +869,6 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
     }
 
     code = cudaGetLastError();
-    if (code != cudaSuccess) {
-      if (!memoryPoolUsed()) {
-        cudaFree(buffer);
-      }
-      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_RUNTIME_ERROR;
-    }
-
     if (memoryPoolUsed()) {
       pplCudaFree(buffer_block);
     }
@@ -884,7 +876,13 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
       cudaFree(buffer);
     }
 
-    return RC_SUCCESS;
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+    else {
+      return RC_SUCCESS;
+    }
   }
 
   size_t kernel_size = ksize * sizeof(float);

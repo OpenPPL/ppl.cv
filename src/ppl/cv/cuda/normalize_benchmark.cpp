@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/normalize.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/core.hpp"
 #include "opencv2/cudaarithm.hpp"
@@ -55,6 +56,14 @@ void BM_Normalize_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  cudaEventRecord(start, 0);
+  ppl::cv::cuda::activateGpuMemoryPool(4096);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::Normalize<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -87,6 +96,14 @@ void BM_Normalize_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventRecord(start, 0);
+  ppl::cv::cuda::shutDownGpuMemoryPool();
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
@@ -311,31 +328,23 @@ BENCHMARK_TEMPLATE(BM_Normalize_ppl_cuda, float, channels, norm_type,          \
 
 #define RUN_OPENCV_TYPE_FUNCTIONS0(type, norm_type, mask_type)                 \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c1, norm_type,          \
-                   mask_type)->Args({640, 480})->UseManualTime()->             \
-                   Iterations(10);                                             \
+                   mask_type)->Args({640, 480});                               \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c3, norm_type,          \
-                   mask_type)->Args({640, 480})->UseManualTime()->             \
-                   Iterations(10);                                             \
+                   mask_type)->Args({640, 480});                               \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c4, norm_type,          \
-                   mask_type)->Args({640, 480})->UseManualTime()->             \
-                   Iterations(10);                                             \
+                   mask_type)->Args({640, 480});                               \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c1, norm_type,          \
-                   mask_type)->Args({1920, 1080})->UseManualTime()->           \
-                   Iterations(10);                                             \
+                   mask_type)->Args({1920, 1080});                             \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c3, norm_type,          \
-                   mask_type)->Args({1920, 1080})->UseManualTime()->           \
-                   Iterations(10);                                             \
+                   mask_type)->Args({1920, 1080});                             \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c4, norm_type,          \
-                   mask_type)->Args({1920, 1080})->UseManualTime()->           \
-                   Iterations(10);
+                   mask_type)->Args({1920, 1080});
 
 #define RUN_OPENCV_TYPE_FUNCTIONS1(type, norm_type, mask_type)                 \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c1, norm_type,          \
-                   mask_type)->Args({640, 480})->UseManualTime()->             \
-                   Iterations(10);                                             \
+                   mask_type)->Args({640, 480});                               \
 BENCHMARK_TEMPLATE(BM_Normalize_opencv_x86_cuda, type, c1, norm_type,          \
-                   mask_type)->Args({1920, 1080})->UseManualTime()->           \
-                   Iterations(10);
+                   mask_type)->Args({1920, 1080});
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS0(type, norm_type, mask_type)                 \
 BENCHMARK_TEMPLATE(BM_Normalize_ppl_cuda, type, c1, norm_type, mask_type)->    \

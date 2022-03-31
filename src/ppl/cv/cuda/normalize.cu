@@ -18,6 +18,7 @@
 
 #include "utility/utility.hpp"
 #include "norm.hpp"
+#include "utility/use_memory_pool.h"
 
 using namespace ppl::common;
 
@@ -165,15 +166,25 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
   int blocks = grid.x * grid.y;
   long* norms_values;
   cudaError_t code;
+
+  size_t norms_size;;
   if (norm_type == NORM_MINMAX) {
-    code = cudaMalloc(&norms_values, blocks * 2 * sizeof(long));
+    norms_size = blocks * 2 * sizeof(long);
   }
   else {
-    code = cudaMalloc(&norms_values, blocks * sizeof(long));
+    norms_size = blocks * sizeof(long);
   }
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMalloc(norms_size, buffer_block);
+    norms_values = (long*)(buffer_block.data);
+  }
+  else {
+    code = cudaMalloc(&norms_values, norms_size);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
   }
 
   if (norm_type == NORM_INF) {
@@ -200,13 +211,20 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
       alpha, beta, norm_type);
 
   code = cudaGetLastError();
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(norms_values);
+  }
+
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
   }
-  cudaFree(norms_values);
-
-  return RC_SUCCESS;
+  else {
+    return RC_SUCCESS;
+  }
 }
 
 RetCode normalize(const float* src, int rows, int cols, int channels,
@@ -238,15 +256,25 @@ RetCode normalize(const float* src, int rows, int cols, int channels,
   int blocks = grid.x * grid.y;
   double* norms_values;
   cudaError_t code;
+
+  size_t norms_size;;
   if (norm_type == NORM_MINMAX) {
-    code = cudaMalloc(&norms_values, blocks * 2 * sizeof(double));
+    norms_size = blocks * 2 * sizeof(double);
   }
   else {
-    code = cudaMalloc(&norms_values, blocks * sizeof(double));
+    norms_size = blocks * sizeof(double);
   }
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_MEMORY_ERROR;
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMalloc(norms_size, buffer_block);
+    norms_values = (double*)(buffer_block.data);
+  }
+  else {
+    code = cudaMalloc(&norms_values, norms_size);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
   }
 
   if (norm_type == NORM_INF) {
@@ -273,13 +301,20 @@ RetCode normalize(const float* src, int rows, int cols, int channels,
       alpha, beta, norm_type);
 
   code = cudaGetLastError();
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(norms_values);
+  }
+
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
   }
-  cudaFree(norms_values);
-
-  return RC_SUCCESS;
+  else {
+    return RC_SUCCESS;
+  }
 }
 
 template <>
