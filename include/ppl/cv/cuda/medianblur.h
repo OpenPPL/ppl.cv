@@ -45,11 +45,17 @@ namespace cuda {
  * @param ksize          aperture linear size; it must be odd and greater than
  *                       1, for example: 3, 5, 7 ...
  * @param border_type    ways to deal with border. BORDER_REPLICATE,
- *                       BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT 
+ *                       BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT
  *                       are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
+ *       2 When T is uchar and ksize is bigger than 7, some implementations of
+ *         this function need a memory buffer to store the intermediate
+ *         histograms, which is not less than ppl::cv::cuda::ceil1DVolume(
+ *         width * channels * (height + 255) / 256 * 272 * sizeof(ushort)).
+ *         When CUDA Memory Pool is used, the capacity of CUDA Memory Pool must
+ *         be not less than the size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>

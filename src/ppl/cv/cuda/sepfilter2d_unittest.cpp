@@ -138,8 +138,8 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
 
   if (memory_pool == kActivated) {
     size_t width = size.width * channels * sizeof(float);
-    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(width, size.height);
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(width, size.height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
   }
 
   ppl::cv::cuda::SepFilter2D<Tsrc, Tdst, channels>(0, gpu_src.rows,

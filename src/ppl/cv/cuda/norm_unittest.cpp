@@ -127,9 +127,9 @@ bool PplCvCudaNormTest<T, channels>::apply() {
   }
 
   if (memory_pool == kActivated) {
-    size_t size = 256 * sizeof(double);
-    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(size);
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    size_t volume = 256 * sizeof(double);
+    size_t ceiled_volume = ppl::cv::cuda::ceil1DVolume(volume);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
   }
 
   double result0, result1, result2;

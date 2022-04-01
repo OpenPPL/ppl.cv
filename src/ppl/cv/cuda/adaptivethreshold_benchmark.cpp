@@ -51,8 +51,8 @@ void BM_AdaptiveThreshold_ppl_cuda(benchmark::State &state) {
   if (ksize > 32) {
     cudaEventRecord(start, 0);
     size_t size_width = width * sizeof(float);
-    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(size_width, height);
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(size_width, height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsed_time, start, stop);

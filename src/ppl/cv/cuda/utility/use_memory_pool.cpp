@@ -57,9 +57,9 @@ size_t ceil1DVolume(size_t volume) {
 }
 
 size_t ceil2DVolume(size_t width, size_t height) {
-  size_t ceiled_size = roundUp(width, PITCH_GRANULARITY, PITCH_SHIFT) * height;
+  size_t ceiled_volume = roundUp(width, PITCH_GRANULARITY, PITCH_SHIFT) * height;
 
-  return ceiled_size;
+  return ceiled_volume;
 }
 
 bool memoryPoolUsed() {

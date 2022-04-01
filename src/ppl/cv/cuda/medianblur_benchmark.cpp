@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/medianblur.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudafilters.hpp"
@@ -43,6 +44,19 @@ void BM_MedianBlur_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  if (sizeof(T) == 1 && ksize > 7) {
+    cudaEventRecord(start, 0);
+    size_t volume = width * channels * (height + 255) / 256 * 272 *
+                    sizeof(ushort);
+    size_t ceiled_volume = ppl::cv::cuda::ceil1DVolume(volume);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
@@ -65,6 +79,16 @@ void BM_MedianBlur_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  if (sizeof(T) == 1 && ksize > 7) {
+    cudaEventRecord(start, 0);
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
+  }
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);

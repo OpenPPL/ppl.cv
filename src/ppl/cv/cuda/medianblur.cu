@@ -19,6 +19,7 @@
 #include <cfloat>
 
 #include "utility/utility.hpp"
+#include "utility/use_memory_pool.h"
 
 using namespace ppl::common;
 
@@ -2089,11 +2090,21 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       grid.y = divideUp(rows, VERTICAL_ELEMENTS, VERTICAL_SHIFT);
 
       ushort* histograms;
-      code = cudaMalloc((void**)&histograms,
-                        cols * grid.y * HIST_SIZE * sizeof(ushort));
-      code = cudaMemsetAsync(histograms, 0,
-                             cols * grid.y * HIST_SIZE * sizeof(ushort),
-                             stream);
+      size_t hist_size = cols * grid.y * HIST_SIZE * sizeof(ushort);
+      GpuMemoryBlock buffer_block;
+      if (memoryPoolUsed()) {
+        pplCudaMalloc(hist_size, buffer_block);
+        histograms = (ushort*)(buffer_block.data);
+      }
+      else {
+        code = cudaMalloc(&histograms, hist_size);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return RC_DEVICE_MEMORY_ERROR;
+        }
+      }
+
+      code = cudaMemsetAsync(histograms, 0, hist_size, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -2109,7 +2120,21 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
         RUN_HISTOGRAM_C1_SMALL_KERNELS(Reflect101Border);
       }
 
-      cudaFree(histograms);
+      code = cudaGetLastError();
+      if (memoryPoolUsed()) {
+        pplCudaFree(buffer_block);
+      }
+      else {
+        cudaFree(histograms);
+      }
+
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+      else {
+        return RC_SUCCESS;
+      }
     }
   }
   else {  // channels == 3 || channels == 4
@@ -2136,10 +2161,21 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       grid.y = divideUp(rows, VERTICAL_ELEMENTS, VERTICAL_SHIFT);
 
       ushort* histograms;
-      code = cudaMalloc((void**)&histograms,
-                        cols * channels * grid.y * HIST_SIZE * sizeof(ushort));
-      code = cudaMemsetAsync(histograms, 0,
-                 cols * channels * grid.y * HIST_SIZE * sizeof(ushort), stream);
+      size_t hist_size = cols * channels * grid.y * HIST_SIZE * sizeof(ushort);
+      GpuMemoryBlock buffer_block;
+      if (memoryPoolUsed()) {
+        pplCudaMalloc(hist_size, buffer_block);
+        histograms = (ushort*)(buffer_block.data);
+      }
+      else {
+        code = cudaMalloc(&histograms, hist_size);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return RC_DEVICE_MEMORY_ERROR;
+        }
+      }
+
+      code = cudaMemsetAsync(histograms, 0, hist_size, stream);
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
         return RC_DEVICE_MEMORY_ERROR;
@@ -2155,7 +2191,21 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
         RUN_HISTOGRAM_CN_SMALL_KERNELS(Reflect101Border);
       }
 
-      cudaFree(histograms);
+      code = cudaGetLastError();
+      if (memoryPoolUsed()) {
+        pplCudaFree(buffer_block);
+      }
+      else {
+        cudaFree(histograms);
+      }
+
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+      else {
+        return RC_SUCCESS;
+      }
     }
   }
 

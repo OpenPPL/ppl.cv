@@ -49,11 +49,11 @@ void BM_GaussianBlur_ppl_cuda(benchmark::State &state) {
   if (ksize > 17) {
     cudaEventRecord(start, 0);
     size_t volume = ksize * sizeof(float);
-    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(volume);
+    size_t ceiled_volume = ppl::cv::cuda::ceil1DVolume(volume);
     volume = ppl::cv::cuda::ceil2DVolume(width * channels * sizeof(float),
                                          height) * 2;
-    ceiled_size += volume;
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    ceiled_volume += volume;
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsed_time, start, stop);

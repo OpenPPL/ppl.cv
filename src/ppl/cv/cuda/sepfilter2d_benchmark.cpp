@@ -53,13 +53,13 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
   if (ksize > 17) {
     cudaEventRecord(start, 0);
     size_t size_width = width * channels * sizeof(float);
-    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(size_width, height);
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(size_width, height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsed_time, start, stop);
-    // std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
-    //           << " ns" << std::endl;
+    std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
   }
 
   // Warm up the GPU.
@@ -93,8 +93,8 @@ void BM_SepFilter2D_ppl_cuda(benchmark::State &state) {
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsed_time, start, stop);
-    // std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
-    //           << " ns" << std::endl;
+    std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+              << " ns" << std::endl;
   }
 
   cudaEventDestroy(start);
