@@ -129,11 +129,11 @@ bool PplCvCudaGaussianBlurTest<T, channels>::apply() {
 
   if (memory_pool == kActivated) {
     size_t volume = ksize * sizeof(float);
-    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(volume);
+    size_t ceiled_volume = ppl::cv::cuda::ceil1DVolume(volume);
     volume = ppl::cv::cuda::ceil2DVolume(size.width * channels * sizeof(float),
                                          size.height) * 2;
-    ceiled_size += volume;
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    ceiled_volume += volume;
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
   }
 
   ppl::cv::cuda::GaussianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,

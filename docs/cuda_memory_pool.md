@@ -41,8 +41,8 @@ A code snippet demonstrating use of AdaptiveThreshold() and BoxFilter() with CUD
 #include "ppl/cv/cuda/use_memory_pool.h"
 
   ...
-  size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(1920 * sizeof(float), 1080);
-  ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+  size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(1920 * sizeof(float), 1080);
+  ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
 
   for (int i = 0; i < 1000; i++) {
     ppl::cv::cuda::AdaptiveThreshold();

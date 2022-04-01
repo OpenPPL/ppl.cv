@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/medianblur.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -24,14 +25,22 @@
 
 #include "utility/infrastructure.hpp"
 
-using Parameters = std::tuple<int, cv::Size>;
+using Parameters = std::tuple<MemoryPool, int, cv::Size>;
 inline std::string convertToStringMedianblur(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  int ksize = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  int ksize = std::get<1>(parameters);
   formatted << "Ksize" << ksize << "_";
 
-  cv::Size size = std::get<1>(parameters);
+  cv::Size size = std::get<2>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -43,8 +52,9 @@ class PplCvCudaMedianBlurTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaMedianBlurTest() {
     const Parameters& parameters = GetParam();
-    ksize = std::get<0>(parameters);
-    size  = std::get<1>(parameters);
+    memory_pool = std::get<0>(parameters);
+    ksize       = std::get<1>(parameters);
+    size        = std::get<2>(parameters);
   }
 
   ~PplCvCudaMedianBlurTest() {
@@ -53,6 +63,7 @@ class PplCvCudaMedianBlurTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   int ksize;
   cv::Size size;
 };
@@ -84,6 +95,13 @@ bool PplCvCudaMedianBlurTest<T, channels>::apply() {
     cv::medianBlur(src, cv_dst, ksize);
   }
 
+  if (memory_pool == kActivated && sizeof(T) == 1 && ksize > 7) {
+    size_t volume = size.width * channels * (size.height + 255) / 256 * 272 *
+                    sizeof(ushort);
+    size_t ceiled_volume = ppl::cv::cuda::ceil1DVolume(volume);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
+  }
+
   ppl::cv::cuda::MedianBlur<T, channels>(0, gpu_src.rows, gpu_src.cols,
       gpu_src.step / sizeof(T), (T*)gpu_src.data, gpu_dst.step / sizeof(T),
       (T*)gpu_dst.data, ksize, ppl::cv::BORDER_REPLICATE);
@@ -93,6 +111,10 @@ bool PplCvCudaMedianBlurTest<T, channels>::apply() {
       size.width * channels, gpu_input, size.width * channels, gpu_output,
       ksize, ppl::cv::BORDER_REPLICATE);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
+
+  if (memory_pool == kActivated && sizeof(T) == 1 && ksize > 7) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -129,6 +151,7 @@ TEST_P(PplCvCudaMedianBlurTest ## T ## channels, Standard) {                   \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaMedianBlurTest ## T ## channels,     \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(3, 5, 7, 15, 33, 43),                                    \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \

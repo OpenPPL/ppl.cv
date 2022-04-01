@@ -102,9 +102,9 @@ bool PplCvCudaMinMaxLocTest<T>::apply() {
   cudaMemcpy(gpu_mask1, mask1, mask_size, cudaMemcpyHostToDevice);
 
   if (memory_pool == kActivated) {
-    size_t size = 256 * 6 * sizeof(float);
-    size_t ceiled_size = ppl::cv::cuda::ceil1DVolume(size);
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    size_t volume = 256 * 6 * sizeof(float);
+    size_t ceiled_volume = ppl::cv::cuda::ceil1DVolume(volume);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
   }
 
   double min_value0, max_value0;

@@ -153,8 +153,8 @@ bool PplCvCudaAdaptiveThresholdTest<T, channels>::apply() {
 
   if (memory_pool == kActivated) {
     size_t width = size.width * sizeof(float);
-    size_t ceiled_size = ppl::cv::cuda::ceil2DVolume(width, size.height);
-    ppl::cv::cuda::activateGpuMemoryPool(ceiled_size);
+    size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(width, size.height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
   }
 
   ppl::cv::cuda::AdaptiveThreshold(0, gpu_src.rows, gpu_src.cols, gpu_src.step,
