@@ -113,14 +113,25 @@ void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
       host_mutex_.lock();
       memory_blocks_.insert_after(previous, memory_block);
       host_mutex_.unlock();
-      break;
+
+      return;
     }
 
     ++previous;
     ++current;
   }
 
-  if (current == memory_blocks_.end()) {
+  hollow_begin = previous->data + previous->size;
+  if (hollow_begin + allocated_size <= end_) {
+    memory_block.data  = hollow_begin;
+    memory_block.pitch = 0;
+    memory_block.size  = allocated_size;
+
+    host_mutex_.lock();
+    memory_blocks_.insert_after(previous, memory_block);
+    host_mutex_.unlock();
+  }
+  else {
     LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
   }
 }
@@ -180,13 +191,25 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
       host_mutex_.lock();
       memory_blocks_.insert_after(previous, memory_block);
       host_mutex_.unlock();
+
+      return;
     }
 
     ++previous;
     ++current;
   }
 
-  if (current == memory_blocks_.end()) {
+  hollow_begin = previous->data + previous->size;
+  if (hollow_begin + block_size <= end_) {
+    memory_block.data  = hollow_begin;
+    memory_block.pitch = block_pitch;
+    memory_block.size  = block_size;
+
+    host_mutex_.lock();
+    memory_blocks_.insert_after(previous, memory_block);
+    host_mutex_.unlock();
+  }
+  else {
     LOG(ERROR) << "Cuda Memory Pool error: insufficient space.";
   }
 }

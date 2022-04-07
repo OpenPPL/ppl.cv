@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/guidedfilter.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include <tuple>
 #include <sstream>
@@ -30,15 +31,23 @@ struct Config {
   float eps;
 };
 
-using Parameters = std::tuple<Config, cv::Size>;
+using Parameters = std::tuple<MemoryPool, Config, cv::Size>;
 inline std::string convertToStringGuidedFilter(const Parameters& parameters) {
   std::ostringstream formatted;
 
-  Config config = std::get<0>(parameters);
+  MemoryPool memory_pool = std::get<0>(parameters);
+  if (memory_pool == kActivated) {
+    formatted << "MemoryPoolUsed" << "_";
+  }
+  else {
+    formatted << "MemoryPoolUnused" << "_";
+  }
+
+  Config config = std::get<1>(parameters);
   formatted << "Radius" << config.radius << "_";
   formatted << "Eps" << config.eps << "_";
 
-  cv::Size size = std::get<1>(parameters);
+  cv::Size size = std::get<2>(parameters);
   formatted << size.width << "x";
   formatted << size.height;
 
@@ -50,8 +59,9 @@ class PplCvCudaGuidedFilterTest : public ::testing::TestWithParam<Parameters> {
  public:
   PplCvCudaGuidedFilterTest() {
     const Parameters& parameters = GetParam();
-    config = std::get<0>(parameters);
-    size   = std::get<1>(parameters);
+    memory_pool = std::get<0>(parameters);
+    config      = std::get<1>(parameters);
+    size        = std::get<2>(parameters);
   }
 
   ~PplCvCudaGuidedFilterTest() {
@@ -60,6 +70,7 @@ class PplCvCudaGuidedFilterTest : public ::testing::TestWithParam<Parameters> {
   bool apply();
 
  private:
+  MemoryPool memory_pool;
   Config config;
   cv::Size size;
 };
@@ -90,11 +101,22 @@ bool PplCvCudaGuidedFilterTest<T, srcCns, guideCns>::apply() {
 
   cv::ximgproc::guidedFilter(guide, src, cv_dst, config.radius, config.eps, -1);
 
+  if (memory_pool == kActivated) {
+    size_t size_width = size.width * sizeof(float);
+    size_t size_height = size.height * (srcCns * 4 + guideCns + 9);
+    size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(size_width, size_height);
+    ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
+  }
+
   ppl::cv::cuda::GuidedFilter<T, srcCns, guideCns>(0, gpu_src.rows,
       gpu_src.cols, gpu_src.step / sizeof(T), (T*)gpu_src.data,
       gpu_guide.step / sizeof(T), (T*)gpu_guide.data, gpu_dst.step / sizeof(T),
       (T*)gpu_dst.data, config.radius, config.eps, ppl::cv::BORDER_REFLECT);
   gpu_dst.download(dst);
+
+  if (memory_pool == kActivated) {
+    ppl::cv::cuda::shutDownGpuMemoryPool();
+  }
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -119,6 +141,7 @@ TEST_P(PplCvCudaGuidedFilterTest ## T ## srcCns ## guideCns, Standard) {       \
 INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
   PplCvCudaGuidedFilterTest ## T ## srcCns ## guideCns,                        \
   ::testing::Combine(                                                          \
+    ::testing::Values(kActivated, kUnactivated),                               \
     ::testing::Values(Config{3, 26.f}, Config{7, 59.f}, Config{8, 11.f},       \
                       Config{15, 9.f}, Config{22, 64.f}),                      \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \

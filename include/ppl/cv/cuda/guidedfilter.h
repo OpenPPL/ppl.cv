@@ -47,14 +47,19 @@ namespace cuda {
  * @param outWidthStride   the width stride of output image, similar to
  *                         inWidthStride.
  * @param outData          output image data.
- * @param radius	       radius of the guided filter.
- * @param eps	           regularization term of the guided filter.
+ * @param radius	         radius of the guided filter.
+ * @param eps	             regularization term of the guided filter.
  * @param border_type      ways to deal with border. BORDER_REPLICATE,
- *                         BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT 
+ *                         BORDER_REFLECT, BORDER_REFLECT_101 and BORDER_DEFAULT
  *                         are supported now.
  * @return The execution status, succeeds or fails with an error code.
  * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
  *         recommended.
+ *       2 This function needs a memory buffer to store the intermediate
+ *         result, which is not less than ppl::cv::cuda::ceil2DVolume(
+ *         width * sizeof(float), height * (srcCns * 4 + guideCns + 9)). When
+ *         CUDA Memory Pool is used, the capacity of CUDA Memory Pool must be
+ *         not less than the size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
