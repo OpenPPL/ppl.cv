@@ -15,6 +15,7 @@
  */
 
 #include "ppl/cv/cuda/guidedfilter.h"
+#include "ppl/cv/cuda/use_memory_pool.h"
 
 #include "opencv2/ximgproc/edge_filter.hpp"
 #include "benchmark/benchmark.h"
@@ -52,6 +53,17 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
+  cudaEventRecord(start, 0);
+  size_t size_width = width * sizeof(float);
+  size_t size_height = height * (channels * 4 + 10);
+  size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(size_width, size_height);
+  ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
+
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     ppl::cv::cuda::GuidedFilter<T, channels, 1>(0, gpu_src.rows, gpu_src.cols,
@@ -77,6 +89,14 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
     state.SetIterationTime(time * 1e-6);
   }
   state.SetItemsProcessed(state.iterations() * 1);
+
+  cudaEventRecord(start, 0);
+  ppl::cv::cuda::shutDownGpuMemoryPool();
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&elapsed_time, start, stop);
+  std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+            << " ns" << std::endl;
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
