@@ -13,7 +13,7 @@ endif()
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG fe210f0d20cc50da9ad51b29edc02bfeb7cda24a
+    GIT_TAG 888a2960c20ed7c5a8cff5a1dc0c18244feec38e
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
     SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
