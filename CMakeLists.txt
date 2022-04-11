@@ -59,6 +59,10 @@ if(PPLCV_USE_AARCH64)
     include(cmake/arm.cmake)
 endif()
 
+if(PPLCV_USE_RISCV64)
+    include(cmake/riscv.cmake)
+endif()
+
 hpcc_populate_dep(pplcommon)
 
 list(FILTER PPLCV_SRC EXCLUDE REGEX "(.*)_unittest\\.cpp$")

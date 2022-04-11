@@ -4,6 +4,7 @@ workdir=`pwd`
 x86_64_build_dir="${workdir}/x86-64-build"
 cuda_build_dir="${workdir}/cuda-build"
 aarch64_build_dir="${workdir}/aarch64-build"
+riscv_build_dir="${workdir}/riscv-build"
 
 if [[ `uname` == "Linux" ]]; then
     processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
@@ -54,10 +55,30 @@ function BuildAarch64() {
     eval "$cmd"
 }
 
+function BuildRiscv() {
+    arch=$(uname -m)
+    case "$arch" in
+        "x86_64")
+            extra_options="-DCMAKE_TOOLCHAIN_FILE=${workdir}/cmake/toolchains/riscv64-rvv071-c906-linux-gnu.cmake"
+            ;;
+        *)
+            echo "unsupported arch -> $arch"
+            exit 1
+            ;;
+    esac
+
+    mkdir ${riscv_build_dir}
+    cd ${riscv_build_dir}
+    cmd="cmake $options ${extra_options} -DPPLCV_USE_RISCV64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF .. && make -j${processor_num}"
+    echo "cmd -> $cmd"
+    eval "$cmd"      
+}
+
 declare -A engine2func=(
     ["cuda"]=BuildCuda
     ["x86_64"]=BuildX86_64
     ["aarch64"]=BuildAarch64
+    ["riscv"]=BuildRiscv
 )
 
 # --------------------------------------------------------------------------- #

@@ -14,6 +14,9 @@ endif()
 if(PPLCV_USE_AARCH64)
     target_compile_definitions(pplcv_benchmark PRIVATE PPLCV_BENCHMARK_OPENCV)
 endif()
+if(PPLCV_USE_RISCV)
+    target_compile_definitions(pplcv_benchmark PRIVATE PPLCV_BENCHMARK_OPENCV)
+endif()
 
 target_include_directories(pplcv_benchmark PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
