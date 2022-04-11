@@ -13,6 +13,7 @@ $ cd ${path_to_ppl.cv}
 $ ./build.sh x86_64                         # for linux-x86_64
 $ ./build.sh aarch64                        # for linux-aarch64
 $ ./build.sh cuda                           # for linux-x86_64_cuda
+$ ./build.sh riscv                          # for linux-riscv
 ```
 
 #### Windows
@@ -35,6 +36,7 @@ then open `html/index.html` in your web browser.
 
 ### Documents
 * [CUDA Platform Guide](docs/cuda_usage.md)
+* [RISCV Platform Guide](docs/riscv_usage.md)
 * [CUDA Memory Pool](docs/cuda_memory_pool.md)
 
 ### Contact Us
