@@ -28,6 +28,7 @@ namespace cuda {
 
 #define PITCH_GRANULARITY 512
 #define PITCH_SHIFT 9
+#define ROUNDUP(total, grain, shift) (((total + grain - 1) >> shift) << shift)
 
 struct GpuMemoryBlock {
   unsigned char* data;

@@ -57,7 +57,7 @@ namespace cuda {
  *         recommended.
  *       2 This function needs a memory buffer to store the intermediate
  *         result, which is not less than ppl::cv::cuda::ceil2DVolume(
- *         width * sizeof(float), height * (srcCns * 4 + guideCns + 9)). When
+ *         width * sizeof(float), height * (srcCns * 4 + guideCns + 7)). When
  *         CUDA Memory Pool is used, the capacity of CUDA Memory Pool must be
  *         not less than the size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
