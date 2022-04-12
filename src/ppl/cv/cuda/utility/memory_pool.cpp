@@ -15,7 +15,6 @@
  */
 
 #include "memory_pool.h"
-#include "utility.hpp"
 
 #include "ppl/common/log.h"
 
@@ -62,7 +61,7 @@ void GpuMemoryPool::freeMemoryPool() {
 }
 
 void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
-  size_t allocated_size = roundUp(size, PITCH_GRANULARITY, PITCH_SHIFT);
+  size_t allocated_size = ROUNDUP(size, PITCH_GRANULARITY, PITCH_SHIFT);
   if (memory_blocks_.empty()) {
     if (begin_ + allocated_size <= end_) {
       memory_block.data  = begin_;
@@ -84,7 +83,7 @@ void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
   auto previous = memory_blocks_.begin();
   auto current  = memory_blocks_.begin();
   ++current;
-  uchar* hollow_begin;
+  unsigned char* hollow_begin;
   if (current == memory_blocks_.end()) {
     hollow_begin = previous->data + previous->size;
     if (hollow_begin + allocated_size <= end_) {
@@ -138,7 +137,7 @@ void GpuMemoryPool::malloc1DBlock(size_t size, GpuMemoryBlock &memory_block) {
 
 void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
                                   GpuMemoryBlock &memory_block) {
-  size_t block_pitch = roundUp(width, PITCH_GRANULARITY, PITCH_SHIFT);
+  size_t block_pitch = ROUNDUP(width, PITCH_GRANULARITY, PITCH_SHIFT);
   size_t block_size  = block_pitch * height;
 
   if (memory_blocks_.empty()) {
@@ -162,7 +161,7 @@ void GpuMemoryPool::malloc2DBlock(size_t width, size_t height,
   auto previous = memory_blocks_.begin();
   auto current  = memory_blocks_.begin();
   ++current;
-  uchar* hollow_begin;
+  unsigned char* hollow_begin;
   if (current == memory_blocks_.end()) {
     hollow_begin = previous->data + previous->size;
     if (hollow_begin + block_size <= end_) {

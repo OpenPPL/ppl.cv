@@ -17,7 +17,6 @@
 #include "ppl/cv/cuda/use_memory_pool.h"
 #include "use_memory_pool.h"
 #include "memory_pool.h"
-#include "utility.hpp"
 
 #include <memory>
 
@@ -53,11 +52,12 @@ void shutDownGpuMemoryPool() {
 }
 
 size_t ceil1DVolume(size_t volume) {
-  return roundUp(volume, PITCH_GRANULARITY, PITCH_SHIFT);
+  return ROUNDUP(volume, PITCH_GRANULARITY, PITCH_SHIFT);
 }
 
 size_t ceil2DVolume(size_t width, size_t height) {
-  size_t ceiled_volume = roundUp(width, PITCH_GRANULARITY, PITCH_SHIFT) * height;
+  size_t ceiled_volume = ROUNDUP(width, PITCH_GRANULARITY, PITCH_SHIFT) *
+                         height;
 
   return ceiled_volume;
 }
