@@ -61,8 +61,8 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&elapsed_time, start, stop);
-  std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
-            << " ns" << std::endl;
+  // std::cout << "activateGpuMemoryPool() time: " << elapsed_time * 1000000
+  //           << " ns" << std::endl;
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
@@ -95,8 +95,8 @@ void BM_GuidedFilter_ppl_cuda(benchmark::State &state) {
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&elapsed_time, start, stop);
-  std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
-            << " ns" << std::endl;
+  // std::cout << "shutDownGpuMemoryPool() time: " << elapsed_time * 1000000
+  //           << " ns" << std::endl;
 
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
@@ -154,25 +154,25 @@ BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, float, c4, radius,         \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, float, c4, radius, eps)->         \
                    Args({width, height})->UseManualTime()->Iterations(5);
 
-// RUN_BENCHMARK(3, 50, 320, 240)
-// RUN_BENCHMARK(3, 50, 640, 480)
-// RUN_BENCHMARK(3, 50, 1280, 720)
-// RUN_BENCHMARK(3, 50, 1920, 1080)
+RUN_BENCHMARK(3, 50, 320, 240)
+RUN_BENCHMARK(3, 50, 640, 480)
+RUN_BENCHMARK(3, 50, 1280, 720)
+RUN_BENCHMARK(3, 50, 1920, 1080)
 
-// RUN_BENCHMARK(7, 50, 320, 240)
-// RUN_BENCHMARK(7, 50, 640, 480)
-// RUN_BENCHMARK(7, 50, 1280, 720)
-// RUN_BENCHMARK(7, 50, 1920, 1080)
+RUN_BENCHMARK(7, 50, 320, 240)
+RUN_BENCHMARK(7, 50, 640, 480)
+RUN_BENCHMARK(7, 50, 1280, 720)
+RUN_BENCHMARK(7, 50, 1920, 1080)
 
-// RUN_BENCHMARK(15, 50, 320, 240)
-// RUN_BENCHMARK(15, 50, 640, 480)
-// RUN_BENCHMARK(15, 50, 1280, 720)
-// RUN_BENCHMARK(15, 50, 1920, 1080)
+RUN_BENCHMARK(15, 50, 320, 240)
+RUN_BENCHMARK(15, 50, 640, 480)
+RUN_BENCHMARK(15, 50, 1280, 720)
+RUN_BENCHMARK(15, 50, 1920, 1080)
 
-// RUN_BENCHMARK(22, 50, 320, 240)
-// RUN_BENCHMARK(22, 50, 640, 480)
-// RUN_BENCHMARK(22, 50, 1280, 720)
-// RUN_BENCHMARK(22, 50, 1920, 1080)
+RUN_BENCHMARK(22, 50, 320, 240)
+RUN_BENCHMARK(22, 50, 640, 480)
+RUN_BENCHMARK(22, 50, 1280, 720)
+RUN_BENCHMARK(22, 50, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, radius, eps)                           \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_opencv_x86_cuda, type, c1, radius, eps)->   \
@@ -226,20 +226,20 @@ BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c4, radius, eps)->          \
 BENCHMARK_TEMPLATE(BM_GuidedFilter_ppl_cuda, type, c4, radius, eps)->          \
                    Args({1920, 1080})->UseManualTime()->Iterations(5);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, 3, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(float, 3, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, 7, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(float, 7, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, 15, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(float, 15, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, 22, 50)
-RUN_OPENCV_TYPE_FUNCTIONS(float, 22, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, 3, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, 3, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, 7, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, 7, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, 15, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, 15, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, 22, 50)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, 22, 50)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 3, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, 3, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 7, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, 7, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 15, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, 15, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 22, 50)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, 22, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 3, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, 3, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 7, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, 7, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 15, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, 15, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 22, 50)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, 22, 50)
