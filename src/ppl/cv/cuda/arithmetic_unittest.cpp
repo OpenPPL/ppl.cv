@@ -30,6 +30,8 @@ enum ArithFunctions {
   kSUBTRACT,
   kMUL,
   kDIV,
+  kMLA,
+  kMLS,
 };
 
 using Parameters = std::tuple<ArithFunctions, cv::Size>;
@@ -51,6 +53,12 @@ inline std::string convertToStringArith(const Parameters& parameters) {
   }
   else if (function == kDIV) {
     formatted << "Div" << "_";
+  }
+  else if (function == kMLA) {
+    formatted << "Mla" << "_";
+  }
+  else if (function == kMLS) {
+    formatted << "Mls" << "_";
   }
   else {
   }
@@ -107,15 +115,17 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
   cudaMalloc((void**)&gpu_output, src_size);
   copyMatToArray(src0, input0);
   copyMatToArray(src1, input1);
+  copyMatToArray(dst, output);
   cudaMemcpy(gpu_input0, input0, src_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_input1, input1, src_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(gpu_output, output, src_size, cudaMemcpyHostToDevice);
 
   if (function == kADD) {
     cv::add(src0, src1, cv_dst);
+
     ppl::cv::cuda::Add<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
         gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
         (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-
     ppl::cv::cuda::Add<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input0, size.width * channels, gpu_input1,
         size.width * channels, gpu_output);
@@ -125,11 +135,11 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
     float beta  = 0.2f;
     float gamma = 0.3f;
     cv::addWeighted(src0, alpha, src1, beta, gamma, cv_dst);
+
     ppl::cv::cuda::AddWeighted<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
         gpu_src0.step / sizeof(T), (T*)gpu_src0.data, alpha,
         gpu_src1.step / sizeof(T), (T*)gpu_src1.data, beta, gamma,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-
     ppl::cv::cuda::AddWeighted<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input0, alpha, size.width * channels,
         gpu_input1, beta, gamma, size.width * channels, gpu_output);
@@ -146,28 +156,59 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
     ppl::cv::cuda::Subtract<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
         gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)scalars,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-
     ppl::cv::cuda::Subtract<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input0, (T*)scalars, size.width * channels,
         gpu_output);
   }
   else if (function == kMUL) {
     cv::multiply(src0, src1, cv_dst);
+
     ppl::cv::cuda::Mul<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
         gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
         (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-
     ppl::cv::cuda::Mul<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input0, size.width * channels, gpu_input1,
         size.width * channels, gpu_output);
   }
   else if (function == kDIV) {
     cv::divide(src0, src1, cv_dst);
+
     ppl::cv::cuda::Div<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
         gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
         (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
-
     ppl::cv::cuda::Div<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output);
+  }
+  else if (function == kMLA && sizeof(T) == 4) {
+    cv::Mat temp0(size.height, size.width,
+                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat temp1(size.height, size.width,
+                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    dst.copyTo(temp1);
+    cv::multiply(src0, src1, temp0);
+    cv::add(temp0, temp1, cv_dst);
+
+    ppl::cv::cuda::Mla<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Mla<T, channels>(0, size.height, size.width,
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output);
+  }
+  else if (function == kMLS && sizeof(T) == 4) {
+    cv::Mat temp0(size.height, size.width,
+                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat temp1(size.height, size.width,
+                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    dst.copyTo(temp1);
+    cv::multiply(src0, src1, temp0);
+    cv::subtract(temp1, temp0, cv_dst);
+
+    ppl::cv::cuda::Mls<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
+        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
+        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Mls<T, channels>(0, size.height, size.width,
         size.width * channels, gpu_input0, size.width * channels, gpu_input1,
         size.width * channels, gpu_output);
   }
@@ -183,8 +224,16 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
   else {
     epsilon = EPSILON_E6;
   }
-  bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
-  bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
+  bool identity0;
+  bool identity1;
+  if ((function == kMLA || function == kMLS) && sizeof(T) == 1) {
+    identity0 = true;
+    identity1 = true;
+  }
+  else {
+    identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
+    identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
+  }
 
   free(input0);
   free(input1);
@@ -206,7 +255,7 @@ TEST_P(PplCvCudaArithmeticTest ## T ## channels, Standard) {                   \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvCudaArithmeticTest ## T ## channels,     \
   ::testing::Combine(                                                          \
-    ::testing::Values(kADD, kADDWEITHTED, kSUBTRACT, kMUL, kDIV),              \
+    ::testing::Values(kADD, kADDWEITHTED, kSUBTRACT, kMUL, kDIV, kMLA, kMLS),  \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \

@@ -1804,7 +1804,7 @@ void divideKernel11(const T* src0, int rows, int cols, int src0_stride,
 
   const T* input0 = (T*)((uchar*)src0 + element_y * src0_stride);
   const T* input1 = (T*)((uchar*)src1 + element_y * src1_stride);
-  T* output  = (T*)((uchar*)dst + element_y * dst_stride);
+  T* output = (T*)((uchar*)dst + element_y * dst_stride);
 
   T input_value00, input_value01;
   T input_value10, input_value11;
@@ -2106,6 +2106,370 @@ RetCode Div<float, 4>(cudaStream_t stream,
   outWidthStride *= sizeof(float);
   RetCode code = divide(inData0, height, width, 4, inWidthStride0, inData1,
                         inWidthStride1, outData, outWidthStride, scale, stream);
+
+  return code;
+}
+
+/******************** multiplication-addition operation ********************/
+
+__global__
+void mlaKernel0(const float* src0, int rows, int cols, int src0_stride,
+                const float* src1, int src1_stride, float* dst,
+                int dst_stride) {
+  int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  const float2* input0 = (float2*)((uchar*)src0 + element_y * src0_stride);
+  const float2* input1 = (float2*)((uchar*)src1 + element_y * src1_stride);
+  float2 input_value0 = input0[element_x];
+  float2 input_value1 = input1[element_x];
+
+  float2* output = (float2*)((uchar*)dst + element_y * dst_stride);
+  float2 output_value = output[element_x];
+
+  output_value.x += input_value0.x * input_value1.x;
+  output_value.y += input_value0.y * input_value1.y;
+
+  output[element_x] = output_value;
+}
+
+__global__
+void mlaKernel1(const float* src0, int rows, int cols, int src0_stride,
+                const float* src1, int src1_stride, float* dst,
+                int dst_stride) {
+  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
+  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  const float* input0 = (float*)((uchar*)src0 + element_y * src0_stride);
+  const float* input1 = (float*)((uchar*)src1 + element_y * src1_stride);
+  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+
+  float input_value00, input_value01;
+  float input_value10, input_value11;
+  float output_value0, output_value1;
+
+  if (blockIdx.x < gridDim.x - 1) {
+    input_value00 = input0[element_x];
+    input_value01 = input0[element_x + 1];
+
+    input_value10 = input1[element_x];
+    input_value11 = input1[element_x + 1];
+
+    output_value0 = output[element_x];
+    output_value1 = output[element_x + 1];
+
+    output_value0 += input_value00 * input_value10;
+    output_value1 += input_value01 * input_value11;
+
+    output[element_x]     = output_value0;
+    output[element_x + 1] = output_value1;
+  }
+  else {
+    input_value00 = input0[element_x];
+    if (element_x != cols - 1) {
+      input_value01 = input0[element_x + 1];
+    }
+
+    input_value10 = input1[element_x];
+    if (element_x != cols - 1) {
+      input_value11 = input1[element_x + 1];
+    }
+
+    output_value0 = output[element_x];
+    if (element_x != cols - 1) {
+      output_value1 = output[element_x + 1];
+    }
+
+    output_value0 += input_value00 * input_value10;
+    output_value1 += input_value01 * input_value11;
+
+    output[element_x] = output_value0;
+    if (element_x != cols - 1) {
+      output[element_x + 1] = output_value1;
+    }
+  }
+}
+
+RetCode mla(const float* src0, int rows, int cols, int channels,
+            int src0_stride, const float* src1, int src1_stride, float* dst,
+            int dst_stride, cudaStream_t stream) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
+
+  int columns = cols * channels;
+  dim3 block, grid;
+  block.x = kBlockDimX0;
+  block.y = kBlockDimY0;
+  grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
+  grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
+
+  if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
+      (dst_stride & 7) == 0) {
+    cols = divideUp(columns, 2, 1);
+    mlaKernel0<<<grid, block, 0, stream>>>(src0, rows, cols, src0_stride,
+        src1, src1_stride, dst, dst_stride);
+  }
+  else {
+    mlaKernel1<<<grid, block, 0, stream>>>(src0, rows, columns, src0_stride,
+        src1, src1_stride, dst, dst_stride);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
+}
+
+template <>
+RetCode Mla<float, 1>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = mla(inData0, height, width, 1, inWidthStride0, inData1,
+                     inWidthStride1, outData, outWidthStride, stream);
+
+  return code;
+}
+
+template <>
+RetCode Mla<float, 3>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = mla(inData0, height, width, 3, inWidthStride0, inData1,
+                     inWidthStride1, outData, outWidthStride, stream);
+
+  return code;
+}
+
+template <>
+RetCode Mla<float, 4>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = mla(inData0, height, width, 4, inWidthStride0, inData1,
+                     inWidthStride1, outData, outWidthStride, stream);
+
+  return code;
+}
+
+/******************** multiplication-subtraction operation ********************/
+
+__global__
+void mlsKernel0(const float* src0, int rows, int cols, int src0_stride,
+                const float* src1, int src1_stride, float* dst,
+                int dst_stride) {
+  int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
+  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  const float2* input0 = (float2*)((uchar*)src0 + element_y * src0_stride);
+  const float2* input1 = (float2*)((uchar*)src1 + element_y * src1_stride);
+  float2 input_value0 = input0[element_x];
+  float2 input_value1 = input1[element_x];
+
+  float2* output = (float2*)((uchar*)dst + element_y * dst_stride);
+  float2 output_value = output[element_x];
+
+  output_value.x -= input_value0.x * input_value1.x;
+  output_value.y -= input_value0.y * input_value1.y;
+
+  output[element_x] = output_value;
+}
+
+__global__
+void mlsKernel1(const float* src0, int rows, int cols, int src0_stride,
+                const float* src1, int src1_stride, float* dst,
+                int dst_stride) {
+  int element_x = ((blockIdx.x << kBlockShiftX0) + threadIdx.x) << 1;
+  int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  const float* input0 = (float*)((uchar*)src0 + element_y * src0_stride);
+  const float* input1 = (float*)((uchar*)src1 + element_y * src1_stride);
+  float* output = (float*)((uchar*)dst + element_y * dst_stride);
+
+  float input_value00, input_value01;
+  float input_value10, input_value11;
+  float output_value0, output_value1;
+
+  if (blockIdx.x < gridDim.x - 1) {
+    input_value00 = input0[element_x];
+    input_value01 = input0[element_x + 1];
+
+    input_value10 = input1[element_x];
+    input_value11 = input1[element_x + 1];
+
+    output_value0 = output[element_x];
+    output_value1 = output[element_x + 1];
+
+    output_value0 -= input_value00 * input_value10;
+    output_value1 -= input_value01 * input_value11;
+
+    output[element_x]     = output_value0;
+    output[element_x + 1] = output_value1;
+  }
+  else {
+    input_value00 = input0[element_x];
+    if (element_x != cols - 1) {
+      input_value01 = input0[element_x + 1];
+    }
+
+    input_value10 = input1[element_x];
+    if (element_x != cols - 1) {
+      input_value11 = input1[element_x + 1];
+    }
+
+    output_value0 = output[element_x];
+    if (element_x != cols - 1) {
+      output_value1 = output[element_x + 1];
+    }
+
+    output_value0 -= input_value00 * input_value10;
+    output_value1 -= input_value01 * input_value11;
+
+    output[element_x] = output_value0;
+    if (element_x != cols - 1) {
+      output[element_x + 1] = output_value1;
+    }
+  }
+}
+
+RetCode mls(const float* src0, int rows, int cols, int channels,
+            int src0_stride, const float* src1, int src1_stride, float* dst,
+            int dst_stride, cudaStream_t stream) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride  >= cols * channels * (int)sizeof(float));
+
+  int columns = cols * channels;
+  dim3 block, grid;
+  block.x = kBlockDimX0;
+  block.y = kBlockDimY0;
+  grid.x  = divideUp(divideUp(columns, 2, 1), kBlockDimX0, kBlockShiftX0);
+  grid.y  = divideUp(rows, kBlockDimY0, kBlockShiftY0);
+
+  if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
+      (dst_stride & 7) == 0) {
+    cols = divideUp(columns, 2, 1);
+    mlsKernel0<<<grid, block, 0, stream>>>(src0, rows, cols, src0_stride,
+        src1, src1_stride, dst, dst_stride);
+  }
+  else {
+    mlsKernel1<<<grid, block, 0, stream>>>(src0, rows, columns, src0_stride,
+        src1, src1_stride, dst, dst_stride);
+  }
+
+  cudaError_t code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
+  return RC_SUCCESS;
+}
+
+template <>
+RetCode Mls<float, 1>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = mls(inData0, height, width, 1, inWidthStride0, inData1,
+                     inWidthStride1, outData, outWidthStride, stream);
+
+  return code;
+}
+
+template <>
+RetCode Mls<float, 3>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = mls(inData0, height, width, 3, inWidthStride0, inData1,
+                     inWidthStride1, outData, outWidthStride, stream);
+
+  return code;
+}
+
+template <>
+RetCode Mls<float, 4>(cudaStream_t stream,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const float* inData0,
+                      int inWidthStride1,
+                      const float* inData1,
+                      int outWidthStride,
+                      float* outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = mls(inData0, height, width, 4, inWidthStride0, inData1,
+                     inWidthStride1, outData, outWidthStride, stream);
 
   return code;
 }
