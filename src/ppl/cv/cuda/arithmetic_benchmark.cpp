@@ -35,6 +35,8 @@ enum ArithFunctions {
   kSUBTRACT,
   kMUL,
   kDIV,
+  kMLA,
+  kMLS,
 };
 
 template <typename T, int channels, ArithFunctions function>
@@ -93,6 +95,18 @@ void BM_Arith_ppl_cuda(benchmark::State &state) {
       }
       else if (function == kDIV) {
         ppl::cv::cuda::Div<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+      }
+      else if (function == kMLA && sizeof(T) == 4) {
+        ppl::cv::cuda::Mla<T, channels>(0, gpu_src.rows, gpu_src.cols,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_src.step / sizeof(T), (T*)gpu_src.data,
+            gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+      }
+      else if (function == kMLS && sizeof(T) == 4) {
+        ppl::cv::cuda::Mls<T, channels>(0, gpu_src.rows, gpu_src.cols,
             gpu_src.step / sizeof(T), (T*)gpu_src.data,
             gpu_src.step / sizeof(T), (T*)gpu_src.data,
             gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
@@ -309,3 +323,6 @@ RUN_OPENCV_TYPE_FUNCTIONS(uchar, kDIV)
 RUN_OPENCV_TYPE_FUNCTIONS(float, kDIV)
 RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kDIV)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, kDIV)
+
+RUN_PPL_CV_TYPE_FUNCTIONS(float, kMLA)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, kMLS)
