@@ -77,33 +77,40 @@ class PplCvCudaGuidedFilterTest : public ::testing::TestWithParam<Parameters> {
 
 template <typename T, int srcCns, int guideCns>
 bool PplCvCudaGuidedFilterTest<T, srcCns, guideCns>::apply() {
-  cv::Mat src;
+  cv::Mat src, guide;
   src = createSourceImage(size.height, size.width,
                           CV_MAKETYPE(cv::DataType<T>::depth, srcCns));
-  cv::Mat guide(size.height, size.width,
-                CV_MAKETYPE(cv::DataType<T>::depth, guideCns));
+  guide = createSourceImage(size.height, size.width,
+                            CV_MAKETYPE(cv::DataType<T>::depth, guideCns));
   cv::Mat dst(size.height, size.width,
               CV_MAKETYPE(cv::DataType<T>::depth, srcCns));
   cv::Mat cv_dst(size.height, size.width,
                  CV_MAKETYPE(cv::DataType<T>::depth, srcCns));
-  if (srcCns == 1) {
-    src.copyTo(guide);
-  }
-  else if (srcCns == 3) {
-    cv::cvtColor(src, guide, cv::COLOR_BGR2GRAY);
-  }
-  else {
-    cv::cvtColor(src, guide, cv::COLOR_BGRA2GRAY);
-  }
   cv::cuda::GpuMat gpu_src(src);
   cv::cuda::GpuMat gpu_guide(guide);
   cv::cuda::GpuMat gpu_dst(dst);
+
+  int src_size = size.height * size.width * srcCns * sizeof(T);
+  int guide_size = size.height * size.width * guideCns * sizeof(T);
+  T* input  = (T*)malloc(src_size);
+  T* guide1 = (T*)malloc(guide_size);
+  T* output = (T*)malloc(src_size);
+  T* gpu_input;
+  T* gpu_guide1;
+  T* gpu_output;
+  cudaMalloc((void**)&gpu_input, src_size);
+  cudaMalloc((void**)&gpu_guide1, guide_size);
+  cudaMalloc((void**)&gpu_output, src_size);
+  copyMatToArray(src, input);
+  copyMatToArray(guide, guide1);
+  cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(gpu_guide1, guide1, guide_size, cudaMemcpyHostToDevice);
 
   cv::ximgproc::guidedFilter(guide, src, cv_dst, config.radius, config.eps, -1);
 
   if (memory_pool == kActivated) {
     size_t size_width = size.width * sizeof(float);
-    size_t size_height = size.height * (srcCns * 4 + guideCns + 9);
+    size_t size_height = size.height * (srcCns * 2 + guideCns + 28);
     size_t ceiled_volume = ppl::cv::cuda::ceil2DVolume(size_width, size_height);
     ppl::cv::cuda::activateGpuMemoryPool(ceiled_volume);
   }
@@ -113,6 +120,12 @@ bool PplCvCudaGuidedFilterTest<T, srcCns, guideCns>::apply() {
       gpu_guide.step / sizeof(T), (T*)gpu_guide.data, gpu_dst.step / sizeof(T),
       (T*)gpu_dst.data, config.radius, config.eps, ppl::cv::BORDER_REFLECT);
   gpu_dst.download(dst);
+
+  ppl::cv::cuda::GuidedFilter<T, srcCns, guideCns>(0, size.height, size.width,
+      size.width * srcCns, gpu_input, size.width * guideCns, gpu_guide1,
+      size.width * srcCns, gpu_output, config.radius, config.eps,
+      ppl::cv::BORDER_REFLECT);
+  cudaMemcpy(output, gpu_output, src_size, cudaMemcpyDeviceToHost);
 
   if (memory_pool == kActivated) {
     ppl::cv::cuda::shutDownGpuMemoryPool();
@@ -125,9 +138,17 @@ bool PplCvCudaGuidedFilterTest<T, srcCns, guideCns>::apply() {
   else {
     epsilon = EPSILON_E6;
   }
-  bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
+  bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
+  bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
 
-  return identity;
+  free(input);
+  free(guide1);
+  free(output);
+  cudaFree(gpu_input);
+  cudaFree(gpu_guide1);
+  cudaFree(gpu_output);
+
+  return (identity0 && identity1);
 }
 
 #define UNITTEST(T, srcCns, guideCns)                                          \
@@ -157,6 +178,12 @@ INSTANTIATE_TEST_CASE_P(IsEqual,                                               \
 UNITTEST(uchar, 1, 1)
 UNITTEST(uchar, 3, 1)
 UNITTEST(uchar, 4, 1)
+UNITTEST(uchar, 1, 3)
+UNITTEST(uchar, 3, 3)
+UNITTEST(uchar, 4, 3)
 UNITTEST(float, 1, 1)
 UNITTEST(float, 3, 1)
 UNITTEST(float, 4, 1)
+UNITTEST(float, 1, 3)
+UNITTEST(float, 3, 3)
+UNITTEST(float, 4, 3)

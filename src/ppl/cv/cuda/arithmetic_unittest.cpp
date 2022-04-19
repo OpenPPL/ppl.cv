@@ -96,38 +96,31 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
                            CV_MAKETYPE(cv::DataType<T>::depth, channels));
   src1 = createSourceImage(size.height, size.width,
                            CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  dst  = createSourceImage(size.height, size.width,
-                           CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  dst.copyTo(cv_dst);
-  cv::cuda::GpuMat gpu_src0(src0);
-  cv::cuda::GpuMat gpu_src1(src1);
+  src0.copyTo(dst);
+  src0.copyTo(cv_dst);
+  cv::cuda::GpuMat gpu_src(src1);
   cv::cuda::GpuMat gpu_dst(dst);
 
   int src_size = size.height * size.width * channels * sizeof(T);
-  T* input0 = (T*)malloc(src_size);
-  T* input1 = (T*)malloc(src_size);
+  T* input  = (T*)malloc(src_size);
   T* output = (T*)malloc(src_size);
-  T* gpu_input0;
-  T* gpu_input1;
+  T* gpu_input;
   T* gpu_output;
-  cudaMalloc((void**)&gpu_input0, src_size);
-  cudaMalloc((void**)&gpu_input1, src_size);
+  cudaMalloc((void**)&gpu_input, src_size);
   cudaMalloc((void**)&gpu_output, src_size);
-  copyMatToArray(src0, input0);
-  copyMatToArray(src1, input1);
+  copyMatToArray(src1, input);
   copyMatToArray(dst, output);
-  cudaMemcpy(gpu_input0, input0, src_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(gpu_input1, input1, src_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(gpu_input, input, src_size, cudaMemcpyHostToDevice);
   cudaMemcpy(gpu_output, output, src_size, cudaMemcpyHostToDevice);
 
   if (function == kADD) {
     cv::add(src0, src1, cv_dst);
 
-    ppl::cv::cuda::Add<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
-        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Add<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_src.step / sizeof(T),
+        (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     ppl::cv::cuda::Add<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output, size.width * channels, gpu_input,
         size.width * channels, gpu_output);
   }
   else if (function == kADDWEITHTED) {
@@ -136,13 +129,13 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
     float gamma = 0.3f;
     cv::addWeighted(src0, alpha, src1, beta, gamma, cv_dst);
 
-    ppl::cv::cuda::AddWeighted<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, alpha,
-        gpu_src1.step / sizeof(T), (T*)gpu_src1.data, beta, gamma,
+    ppl::cv::cuda::AddWeighted<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, alpha,
+        gpu_src.step / sizeof(T), (T*)gpu_src.data, beta, gamma,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     ppl::cv::cuda::AddWeighted<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input0, alpha, size.width * channels,
-        gpu_input1, beta, gamma, size.width * channels, gpu_output);
+        size.width * channels, gpu_output, alpha, size.width * channels,
+        gpu_input, beta, gamma, size.width * channels, gpu_output);
   }
   else if (function == kSUBTRACT) {
     cv::Scalar scalar;
@@ -153,31 +146,31 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
     }
     cv::subtract(src0, scalar, cv_dst);
 
-    ppl::cv::cuda::Subtract<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, (T*)scalars,
+    ppl::cv::cuda::Subtract<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, (T*)scalars,
         gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     ppl::cv::cuda::Subtract<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input0, (T*)scalars, size.width * channels,
+        size.width * channels, gpu_output, (T*)scalars, size.width * channels,
         gpu_output);
   }
   else if (function == kMUL) {
     cv::multiply(src0, src1, cv_dst);
 
-    ppl::cv::cuda::Mul<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
-        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Mul<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_src.step / sizeof(T),
+        (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     ppl::cv::cuda::Mul<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output, size.width * channels, gpu_input,
         size.width * channels, gpu_output);
   }
   else if (function == kDIV) {
     cv::divide(src0, src1, cv_dst);
 
-    ppl::cv::cuda::Div<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
-        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Div<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_src.step / sizeof(T),
+        (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     ppl::cv::cuda::Div<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output, size.width * channels, gpu_input,
         size.width * channels, gpu_output);
   }
   else if (function == kMLA && sizeof(T) == 4) {
@@ -185,15 +178,15 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
                   CV_MAKETYPE(cv::DataType<T>::depth, channels));
     cv::Mat temp1(size.height, size.width,
                   CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    dst.copyTo(temp1);
-    cv::multiply(src0, src1, temp0);
+    dst.copyTo(temp0);
+    cv::multiply(src0, src1, temp1);
     cv::add(temp0, temp1, cv_dst);
 
-    ppl::cv::cuda::Mla<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
-        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Mla<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_src.step / sizeof(T),
+        (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     ppl::cv::cuda::Mla<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output, size.width * channels, gpu_input,
         size.width * channels, gpu_output);
   }
   else if (function == kMLS && sizeof(T) == 4) {
@@ -201,15 +194,15 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
                   CV_MAKETYPE(cv::DataType<T>::depth, channels));
     cv::Mat temp1(size.height, size.width,
                   CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    dst.copyTo(temp1);
-    cv::multiply(src0, src1, temp0);
-    cv::subtract(temp1, temp0, cv_dst);
+    dst.copyTo(temp0);
+    cv::multiply(src0, src1, temp1);
+    cv::subtract(temp0, temp1, cv_dst);
 
-    ppl::cv::cuda::Mls<T, channels>(0, gpu_src0.rows, gpu_src0.cols,
-        gpu_src0.step / sizeof(T), (T*)gpu_src0.data, gpu_src1.step / sizeof(T),
-        (T*)gpu_src1.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
+    ppl::cv::cuda::Mls<T, channels>(0, gpu_dst.rows, gpu_dst.cols,
+        gpu_dst.step / sizeof(T), (T*)gpu_dst.data, gpu_src.step / sizeof(T),
+        (T*)gpu_src.data, gpu_dst.step / sizeof(T), (T*)gpu_dst.data);
     ppl::cv::cuda::Mls<T, channels>(0, size.height, size.width,
-        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output, size.width * channels, gpu_input,
         size.width * channels, gpu_output);
   }
   else {
@@ -235,11 +228,9 @@ bool PplCvCudaArithmeticTest<T, channels>::apply() {
     identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
   }
 
-  free(input0);
-  free(input1);
+  free(input);
   free(output);
-  cudaFree(gpu_input0);
-  cudaFree(gpu_input1);
+  cudaFree(gpu_input);
   cudaFree(gpu_output);
 
   return (identity0 && identity1);

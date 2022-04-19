@@ -32,7 +32,7 @@ namespace cuda {
  *         uint8_t(uchar) and float are supported.
  * @tparam srcCns The number of channels of input&output image, 1, 3 and 4
  *         are supported for now.
- * @tparam guideCns The number of channels of guide image, 1 is supported
+ * @tparam guideCns The number of channels of guide image, 1 and 3 are supported
  *         for now.
  * @param stream           cuda stream object.
  * @param height           input&guide&output image's height.
@@ -57,9 +57,11 @@ namespace cuda {
  *         recommended.
  *       2 This function needs a memory buffer to store the intermediate
  *         result, which is not less than ppl::cv::cuda::ceil2DVolume(
- *         width * sizeof(float), height * (srcCns * 4 + guideCns + 7)). When
- *         CUDA Memory Pool is used, the capacity of CUDA Memory Pool must be
- *         not less than the size of the memory buffer.
+ *         width * sizeof(float), height * (srcCns * 2 + guideCns + 14))
+ *         regarding guideCns is 1 and ppl::cv::cuda::ceil2DVolume(width *
+ *         sizeof(float), height * (srcCns * 2 + guideCns + 28)) regarding
+ *         guideCns is 3. When CUDA Memory Pool is used, the capacity of CUDA
+ *         Memory Pool must be not less than the size of the memory buffer.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -70,6 +72,12 @@ namespace cuda {
  * <tr><td>float<td>1<td>1
  * <tr><td>float<td>3<td>1
  * <tr><td>float<td>4<td>1
+ * <tr><td>uint8_t(uchar)<td>1<td>3
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>1<td>3
+ * <tr><td>float<td>3<td>3
+ * <tr><td>float<td>4<td>3
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>

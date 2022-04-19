@@ -27,6 +27,10 @@ namespace cuda {
 
 /**************************** function declaration **************************/
 
+RetCode add(const float* src0, int rows, int cols, int channels,
+            int src0_stride, const float* src1, int src1_stride, float* dst,
+            int dst_stride, cudaStream_t stream);
+
 RetCode multiply(const float* src0, int rows, int cols, int channels,
                  int src0_stride, const float* src1, int src1_stride,
                  float* dst, int dst_stride, float scale, cudaStream_t stream);
@@ -35,7 +39,11 @@ RetCode divide(const float* src0, int rows, int cols, int channels,
                int src0_stride, const float* src1, int src1_stride,
                float* dst, int dst_stride, float scale, cudaStream_t stream);
 
-RetCode add(const float* src0, int rows, int cols, int channels,
+RetCode mla(const float* src0, int rows, int cols, int channels,
+            int src0_stride, const float* src1, int src1_stride, float* dst,
+            int dst_stride, cudaStream_t stream);
+
+RetCode mls(const float* src0, int rows, int cols, int channels,
             int src0_stride, const float* src1, int src1_stride, float* dst,
             int dst_stride, cudaStream_t stream);
 
@@ -170,48 +178,39 @@ RetCode subtract(const float* src0, int rows, int cols, int channels,
 
 /*
  * guide image: 1 channel.
- * input image: 1 channel.
- * output image: 1 channel.
  */
 void initialize1to1(const float* guide, int rows, int cols, int guide_stride,
-                    int radius, float eps, float* meanI, float* varI,
-                    int i_pitch, BorderType border_type, cudaStream_t stream) {
+                    int ksize, float eps, float* mean_i, float* var_i,
+                    int pitch0, BorderType border_type, cudaStream_t stream) {
   float* buffer;
-  size_t pitch;
+  size_t pitch1;
 
   cudaError_t code;
   GpuMemoryBlock buffer_block;
   if (memoryPoolUsed()) {
-    pplCudaMallocPitch(cols * sizeof(float), rows * 2, buffer_block);
+    pplCudaMallocPitch(cols * sizeof(float), rows, buffer_block);
     buffer = (float*)(buffer_block.data);
-    pitch  = buffer_block.pitch;
+    pitch1 = buffer_block.pitch;
   }
   else {
-    code = cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows * 2);
+    code = cudaMallocPitch(&buffer, &pitch1, cols * sizeof(float), rows);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return;
     }
   }
 
-  int offset = pitch * rows;
-  float* II     = buffer;
-  float* meanII = (float*)((uchar*)buffer + offset);
+  float* ii = buffer;
+  float* mean_ii = var_i;
 
-  int ksize = (radius << 1) + 1;
-  multiply(guide, rows, cols, 1, guide_stride, guide, guide_stride, II, pitch,
+  multiply(guide, rows, cols, 1, guide_stride, guide, guide_stride, ii, pitch1,
            1.f, stream);
-  boxFilter(II, rows, cols, 1, pitch, ksize, ksize, true, meanII, pitch,
+  boxFilter(ii, rows, cols, 1, pitch1, ksize, ksize, true, mean_ii, pitch0,
             border_type, stream);
-  boxFilter(guide, rows, cols, 1, guide_stride, ksize, ksize, true, meanI,
-            i_pitch, border_type, stream);
-
-  float* meanII_mul = II;
-  multiply(meanI, rows, cols, 1, i_pitch, meanI, i_pitch, meanII_mul, pitch,
-           1.f, stream);
-  subtract(meanII, rows, cols, 1, pitch, meanII_mul, pitch, varI, i_pitch,
-           stream);
-  addScalar(varI, rows, cols, 1, i_pitch, eps, stream);
+  boxFilter(guide, rows, cols, 1, guide_stride, ksize, ksize, true, mean_i,
+            pitch0, border_type, stream);
+  mls(mean_i, rows, cols, 1, pitch0, mean_i, pitch0, var_i, pitch0, stream);
+  addScalar(var_i, rows, cols, 1, pitch0, eps, stream);
 
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
@@ -222,70 +221,334 @@ void initialize1to1(const float* guide, int rows, int cols, int guide_stride,
 }
 
 /*
- * guide image: 1 channel.
- * input image: 1 channel.
- * output image: 1 channel.
+ * guide image: 3 channel.
  */
-void filter1to1(const float* src, int rows, int cols, int src_stride,
-                const float* guide, int guide_stride, float* meanI, float* varI,
-                int i_pitch, float* dst, int dst_stride, int radius,
-                BorderType border_type, cudaStream_t stream) {
+void initialize3to1(const float* guide, int rows, int cols, int guide_stride,
+                    int ksize, float eps, float* guide0, float* guide1,
+                    float* guide2, float* mean_guide0, float* mean_guide1,
+                    float* mean_guide2, float* inv_var_guide00,
+                    float* inv_var_guide01, float* inv_var_guide02,
+                    float* inv_var_guide11, float* inv_var_guide12,
+                    float* inv_var_guide22, int pitch0, BorderType border_type,
+                    cudaStream_t stream) {
+  split3Channels(guide, rows, cols, guide_stride, guide0, guide1, guide2,
+                 pitch0, stream);
+  boxFilter(guide0, rows, cols, 1, pitch0, ksize, ksize, true, mean_guide0,
+            pitch0, border_type, stream);
+  boxFilter(guide1, rows, cols, 1, pitch0, ksize, ksize, true, mean_guide1,
+            pitch0, border_type, stream);
+  boxFilter(guide2, rows, cols, 1, pitch0, ksize, ksize, true, mean_guide2,
+            pitch0, border_type, stream);
+
   float* buffer;
-  size_t pitch;
+  size_t pitch1;
 
   cudaError_t code;
   GpuMemoryBlock buffer_block;
   if (memoryPoolUsed()) {
-    pplCudaMallocPitch(cols * sizeof(float), rows * 4, buffer_block);
+    pplCudaMallocPitch(cols * sizeof(float), rows * 12, buffer_block);
     buffer = (float*)(buffer_block.data);
-    pitch  = buffer_block.pitch;
+    pitch1 = buffer_block.pitch;
   }
   else {
-    code = cudaMallocPitch(&buffer, &pitch, cols * sizeof(float), rows * 4);
+    code = cudaMallocPitch(&buffer, &pitch1, cols * sizeof(float), rows * 12);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return;
     }
   }
 
-  int offset = pitch * rows;
-  float* IP     = buffer;
-  float* meanP  = (float*)((uchar*)buffer + offset);
-  float* meanIP = (float*)((uchar*)buffer + offset * 2);
-  float* covIP  = (float*)((uchar*)buffer + offset * 3);
+  int offset = pitch1 * rows;
+  float* guide00 = buffer;
+  float* guide01 = (float*)((uchar*)buffer + offset);
+  float* guide02 = (float*)((uchar*)buffer + offset * 2);
+  float* guide11 = (float*)((uchar*)buffer + offset * 3);
+  float* guide12 = (float*)((uchar*)buffer + offset * 4);
+  float* guide22 = (float*)((uchar*)buffer + offset * 5);
+  float* var_guide00 = (float*)((uchar*)buffer + offset * 6);
+  float* var_guide01 = (float*)((uchar*)buffer + offset * 7);
+  float* var_guide02 = (float*)((uchar*)buffer + offset * 8);
+  float* var_guide11 = (float*)((uchar*)buffer + offset * 9);
+  float* var_guide12 = (float*)((uchar*)buffer + offset * 10);
+  float* var_guide22 = (float*)((uchar*)buffer + offset * 11);
 
-  int ksize = (radius << 1) + 1;
-  multiply(guide, rows, cols, 1, guide_stride, src, src_stride, IP, pitch, 1.f,
+  multiply(guide0, rows, cols, 1, pitch0, guide0, pitch0, guide00, pitch1, 1.f,
            stream);
-  boxFilter(src, rows, cols, 1, src_stride, ksize, ksize, true, meanP, pitch,
-            border_type, stream);
-  boxFilter(IP, rows, cols, 1, src_stride, ksize, ksize, true, meanIP, pitch,
-            border_type, stream);
+  multiply(guide0, rows, cols, 1, pitch0, guide1, pitch0, guide01, pitch1, 1.f,
+           stream);
+  multiply(guide0, rows, cols, 1, pitch0, guide2, pitch0, guide02, pitch1, 1.f,
+           stream);
+  multiply(guide1, rows, cols, 1, pitch0, guide1, pitch0, guide11, pitch1, 1.f,
+           stream);
+  multiply(guide1, rows, cols, 1, pitch0, guide2, pitch0, guide12, pitch1, 1.f,
+           stream);
+  multiply(guide2, rows, cols, 1, pitch0, guide2, pitch0, guide22, pitch1, 1.f,
+           stream);
 
-  float* meanIP_mul = IP;
-  multiply(meanI, rows, cols, 1, i_pitch, meanP, pitch, meanIP_mul, pitch,
+  boxFilter(guide00, rows, cols, 1, pitch1, ksize, ksize, true, var_guide00,
+            pitch1, border_type, stream);
+  boxFilter(guide01, rows, cols, 1, pitch1, ksize, ksize, true, var_guide01,
+            pitch1, border_type, stream);
+  boxFilter(guide02, rows, cols, 1, pitch1, ksize, ksize, true, var_guide02,
+            pitch1, border_type, stream);
+  boxFilter(guide11, rows, cols, 1, pitch1, ksize, ksize, true, var_guide11,
+            pitch1, border_type, stream);
+  boxFilter(guide12, rows, cols, 1, pitch1, ksize, ksize, true, var_guide12,
+            pitch1, border_type, stream);
+  boxFilter(guide22, rows, cols, 1, pitch1, ksize, ksize, true, var_guide22,
+            pitch1, border_type, stream);
+
+  mls(mean_guide0, rows, cols, 1, pitch0, mean_guide0, pitch0, var_guide00,
+      pitch1, stream);
+  mls(mean_guide0, rows, cols, 1, pitch0, mean_guide1, pitch0, var_guide01,
+      pitch1, stream);
+  mls(mean_guide0, rows, cols, 1, pitch0, mean_guide2, pitch0, var_guide02,
+      pitch1, stream);
+  mls(mean_guide1, rows, cols, 1, pitch0, mean_guide1, pitch0, var_guide11,
+      pitch1, stream);
+  mls(mean_guide1, rows, cols, 1, pitch0, mean_guide2, pitch0, var_guide12,
+      pitch1, stream);
+  mls(mean_guide2, rows, cols, 1, pitch0, mean_guide2, pitch0, var_guide22,
+      pitch1, stream);
+
+  addScalar(var_guide00, rows, cols, 1, pitch1, eps, stream);
+  addScalar(var_guide11, rows, cols, 1, pitch1, eps, stream);
+  addScalar(var_guide22, rows, cols, 1, pitch1, eps, stream);
+
+  multiply(var_guide11, rows, cols, 1, pitch1, var_guide22, pitch1,
+           inv_var_guide00, pitch0, 1.f, stream);
+  multiply(var_guide12, rows, cols, 1, pitch1, var_guide02, pitch1,
+           inv_var_guide01, pitch0, 1.f, stream);
+  multiply(var_guide01, rows, cols, 1, pitch1, var_guide12, pitch1,
+           inv_var_guide02, pitch0, 1.f, stream);
+  multiply(var_guide00, rows, cols, 1, pitch1, var_guide22, pitch1,
+           inv_var_guide11, pitch0, 1.f, stream);
+  multiply(var_guide02, rows, cols, 1, pitch1, var_guide01, pitch1,
+           inv_var_guide12, pitch0, 1.f, stream);
+  multiply(var_guide00, rows, cols, 1, pitch1, var_guide11, pitch1,
+           inv_var_guide22, pitch0, 1.f, stream);
+
+  mls(var_guide12, rows, cols, 1, pitch1, var_guide12, pitch1, inv_var_guide00,
+      pitch0, stream);
+  mls(var_guide01, rows, cols, 1, pitch1, var_guide22, pitch1, inv_var_guide01,
+      pitch0, stream);
+  mls(var_guide11, rows, cols, 1, pitch1, var_guide02, pitch1, inv_var_guide02,
+      pitch0, stream);
+  mls(var_guide02, rows, cols, 1, pitch1, var_guide02, pitch1, inv_var_guide11,
+      pitch0, stream);
+  mls(var_guide00, rows, cols, 1, pitch1, var_guide12, pitch1, inv_var_guide12,
+      pitch0, stream);
+  mls(var_guide01, rows, cols, 1, pitch1, var_guide01, pitch1, inv_var_guide22,
+      pitch0, stream);
+
+  float* conv_det = guide00;
+  multiply(inv_var_guide00, rows, cols, 1, pitch0, var_guide00, pitch1, conv_det,
+           pitch1, 1.f, stream);
+  mla(inv_var_guide01, rows, cols, 1, pitch0, var_guide01, pitch1, conv_det,
+      pitch1, stream);
+  mla(inv_var_guide02, rows, cols, 1, pitch0, var_guide02, pitch1, conv_det,
+      pitch1, stream);
+
+  divide(inv_var_guide00, rows, cols, 1, pitch0, conv_det, pitch1,
+         inv_var_guide00, pitch0, 1.f, stream);
+  divide(inv_var_guide01, rows, cols, 1, pitch0, conv_det, pitch1,
+         inv_var_guide01, pitch0, 1.f, stream);
+  divide(inv_var_guide02, rows, cols, 1, pitch0, conv_det, pitch1,
+         inv_var_guide02, pitch0, 1.f, stream);
+  divide(inv_var_guide11, rows, cols, 1, pitch0, conv_det, pitch1,
+         inv_var_guide11, pitch0, 1.f, stream);
+  divide(inv_var_guide12, rows, cols, 1, pitch0, conv_det, pitch1,
+         inv_var_guide12, pitch0, 1.f, stream);
+  divide(inv_var_guide22, rows, cols, 1, pitch0, conv_det, pitch1,
+         inv_var_guide22, pitch0, 1.f, stream);
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
+  }
+}
+
+/*
+ * input image: 1 channel.
+ * guide image: 1 channel.
+ * output image: 1 channel.
+ */
+void filter1to1(const float* src, int rows, int cols, int src_stride,
+                const float* guide, int guide_stride, const float* mean_i,
+                const float* var_i, int pitch0, float* dst, int dst_stride,
+                int ksize, BorderType border_type, cudaStream_t stream) {
+  float* buffer;
+  size_t pitch1;
+
+  cudaError_t code;
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMallocPitch(cols * sizeof(float), rows * 3, buffer_block);
+    buffer = (float*)(buffer_block.data);
+    pitch1 = buffer_block.pitch;
+  }
+  else {
+    code = cudaMallocPitch(&buffer, &pitch1, cols * sizeof(float), rows * 3);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return;
+    }
+  }
+
+  int offset = pitch1 * rows;
+  float* ip      = buffer;
+  float* mean_p  = (float*)((uchar*)buffer + offset);
+  float* mean_ip = (float*)((uchar*)buffer + offset * 2);
+
+  multiply(guide, rows, cols, 1, guide_stride, src, src_stride, ip, pitch1, 1.f,
+           stream);
+  boxFilter(src, rows, cols, 1, src_stride, ksize, ksize, true, mean_p, pitch1,
+            border_type, stream);
+  boxFilter(ip, rows, cols, 1, pitch1, ksize, ksize, true, mean_ip, pitch1,
+            border_type, stream);
+  mls(mean_i, rows, cols, 1, pitch0, mean_p, pitch1, mean_ip, pitch1, stream);
+
+  float* alpha = ip;
+  float* beta  = mean_p;
+  divide(mean_ip, rows, cols, 1, pitch1, var_i, pitch0, alpha, pitch1, 1.f,
+         stream);
+  mls(alpha, rows, cols, 1, pitch1, mean_i, pitch0, beta, pitch1, stream);
+
+  float* mean_alpha = mean_ip;
+  float* mean_beta = dst;
+  boxFilter(alpha, rows, cols, 1, pitch1, ksize, ksize, true, mean_alpha,
+            pitch1, border_type, stream);
+  boxFilter(beta, rows, cols, 1, pitch1, ksize, ksize, true, mean_beta,
+            dst_stride, border_type, stream);
+  mla(mean_alpha, rows, cols, 1, pitch1, guide, guide_stride, dst, dst_stride,
+      stream);
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block);
+  }
+  else {
+    cudaFree(buffer);
+  }
+}
+
+/*
+ * input image: 1 channel.
+ * guide image: 3 channel.
+ * output image: 1 channel.
+ */
+void filter3to1(const float* src, int rows, int cols, int src_stride, int ksize,
+                const float* guide0, const float* guide1, const float* guide2,
+                const float* mean_guide0, const float* mean_guide1,
+                const float* mean_guide2, const float* inv_var_guide00,
+                const float* inv_var_guide01, const float* inv_var_guide02,
+                const float* inv_var_guide11, const float* inv_var_guide12,
+                const float* inv_var_guide22, int pitch0, float* dst,
+                int dst_stride, BorderType border_type, cudaStream_t stream) {
+  float* buffer;
+  size_t pitch1;
+
+  cudaError_t code;
+  GpuMemoryBlock buffer_block;
+  if (memoryPoolUsed()) {
+    pplCudaMallocPitch(cols * sizeof(float), rows * 7, buffer_block);
+    buffer = (float*)(buffer_block.data);
+    pitch1 = buffer_block.pitch;
+  }
+  else {
+    code = cudaMallocPitch(&buffer, &pitch1, cols * sizeof(float), rows * 7);
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return;
+    }
+  }
+
+  int offset = pitch1 * rows;
+  float* mean_p = buffer;
+  float* guide0_p = (float*)((uchar*)buffer + offset);
+  float* guide1_p = (float*)((uchar*)buffer + offset * 2);
+  float* guide2_p = (float*)((uchar*)buffer + offset * 3);
+  float* mean_guide0_p = (float*)((uchar*)buffer + offset * 4);
+  float* mean_guide1_p = (float*)((uchar*)buffer + offset * 5);
+  float* mean_guide2_p = (float*)((uchar*)buffer + offset * 6);
+
+  boxFilter(src, rows, cols, 1, src_stride, ksize, ksize, true, mean_p, pitch1,
+            border_type, stream);
+  multiply(guide0, rows, cols, 1, pitch0, src, src_stride, guide0_p, pitch1,
            1.f, stream);
-  subtract(meanIP, rows, cols, 1, pitch, meanIP_mul, pitch, covIP, pitch,
-           stream);
+  multiply(guide1, rows, cols, 1, pitch0, src, src_stride, guide1_p, pitch1,
+           1.f, stream);
+  multiply(guide2, rows, cols, 1, pitch0, src, src_stride, guide2_p, pitch1,
+           1.f, stream);
+  boxFilter(guide0_p, rows, cols, 1, pitch1, ksize, ksize, true, mean_guide0_p,
+            pitch1, border_type, stream);
+  boxFilter(guide1_p, rows, cols, 1, pitch1, ksize, ksize, true, mean_guide1_p,
+            pitch1, border_type, stream);
+  boxFilter(guide2_p, rows, cols, 1, pitch1, ksize, ksize, true, mean_guide2_p,
+            pitch1, border_type, stream);
 
-  float* a = IP;
-  float* b = meanIP;
-  float* aMeanI = covIP;
-  divide(covIP, rows, cols, 1, pitch, varI, i_pitch, a, pitch, 1.f, stream);
-  multiply(a, rows, cols, 1, pitch, meanI, i_pitch, aMeanI, pitch, 1.f, stream);
-  subtract(meanP, rows, cols, 1, pitch, aMeanI, pitch, b, pitch, stream);
+  float* cov_guide0_p = mean_guide0_p;
+  float* cov_guide1_p = mean_guide1_p;
+  float* cov_guide2_p = mean_guide2_p;
+  mls(mean_guide0, rows, cols, 1, pitch0, mean_p, pitch1, cov_guide0_p, pitch1,
+      stream);
+  mls(mean_guide1, rows, cols, 1, pitch0, mean_p, pitch1, cov_guide1_p, pitch1,
+      stream);
+  mls(mean_guide2, rows, cols, 1, pitch0, mean_p, pitch1, cov_guide2_p, pitch1,
+      stream);
 
-  float* meanA = meanP;
-  float* meanB = IP;
-  boxFilter(a, rows, cols, 1, src_stride, ksize, ksize, true, meanA, pitch,
-            border_type, stream);
-  boxFilter(b, rows, cols, 1, src_stride, ksize, ksize, true, meanB, pitch,
-            border_type, stream);
+  float* alpha0 = guide0_p;
+  float* alpha1 = guide1_p;
+  float* alpha2 = guide2_p;
+  multiply(cov_guide0_p, rows, cols, 1, pitch1, inv_var_guide00, pitch0, alpha0,
+           pitch1, 1.f, stream);
+  multiply(cov_guide0_p, rows, cols, 1, pitch1, inv_var_guide01, pitch0, alpha1,
+           pitch1, 1.f, stream);
+  multiply(cov_guide0_p, rows, cols, 1, pitch1, inv_var_guide02, pitch0, alpha2,
+           pitch1, 1.f, stream);
 
-  float* meanAI = meanIP;
-  multiply(meanA, rows, cols, 1, pitch, guide, guide_stride, meanAI, pitch, 1.f,
-           stream);
-  add(meanAI, rows, cols, 1, pitch, meanB, pitch, dst, dst_stride, stream);
+  mla(cov_guide1_p, rows, cols, 1, pitch1, inv_var_guide01, pitch0, alpha0,
+      pitch1, stream);
+  mla(cov_guide1_p, rows, cols, 1, pitch1, inv_var_guide11, pitch0, alpha1,
+      pitch1, stream);
+  mla(cov_guide1_p, rows, cols, 1, pitch1, inv_var_guide12, pitch0, alpha2,
+      pitch1, stream);
+
+  mla(cov_guide2_p, rows, cols, 1, pitch1, inv_var_guide02, pitch0, alpha0,
+      pitch1, stream);
+  mla(cov_guide2_p, rows, cols, 1, pitch1, inv_var_guide12, pitch0, alpha1,
+      pitch1, stream);
+  mla(cov_guide2_p, rows, cols, 1, pitch1, inv_var_guide22, pitch0, alpha2,
+      pitch1, stream);
+
+  float* beta = mean_p;
+  mls(alpha0, rows, cols, 1, pitch1, mean_guide0, pitch1, beta, pitch1, stream);
+  mls(alpha1, rows, cols, 1, pitch1, mean_guide1, pitch1, beta, pitch1, stream);
+  mls(alpha2, rows, cols, 1, pitch1, mean_guide2, pitch1, beta, pitch1, stream);
+
+  float* mean_alpha0 = mean_guide0_p;
+  float* mean_alpha1 = mean_guide1_p;
+  float* mean_alpha2 = mean_guide2_p;
+  boxFilter(alpha0, rows, cols, 1, pitch1, ksize, ksize, true, mean_alpha0,
+            pitch1, border_type, stream);
+  boxFilter(alpha1, rows, cols, 1, pitch1, ksize, ksize, true, mean_alpha1,
+            pitch1, border_type, stream);
+  boxFilter(alpha2, rows, cols, 1, pitch1, ksize, ksize, true, mean_alpha2,
+            pitch1, border_type, stream);
+
+  multiply(mean_alpha0, rows, cols, 1, pitch1, guide0, pitch0, dst, dst_stride,
+           1.f, stream);
+  mla(mean_alpha1, rows, cols, 1, pitch1, guide1, pitch0, dst, dst_stride,
+      stream);
+  mla(mean_alpha2, rows, cols, 1, pitch1, guide2, pitch0, dst, dst_stride,
+      stream);
+
+  float* mean_beta = mean_guide0_p;
+  boxFilter(beta, rows, cols, 1, pitch1, ksize, ksize, true, mean_beta,
+            pitch1, border_type, stream);
+  add(dst, rows, cols, 1, dst_stride, mean_beta, pitch1, dst, dst_stride,
+      stream);
 
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
@@ -299,11 +562,13 @@ void filtering(const float* src, int rows, int cols, int src_channels,
                int src_stride, const float* guide, int guide_channels,
                int guide_stride, float* dst, int dst_stride, int radius,
                float eps, BorderType border_type, cudaStream_t stream) {
+  int ksize = (radius << 1) + 1;
+  GpuMemoryBlock buffer_block0;
+  float* buffer0;
+  size_t pitch0;
+
   cudaError_t code;
   if (guide_channels == 1) {
-    float* buffer0;
-    size_t pitch0;
-    GpuMemoryBlock buffer_block0;
     if (memoryPoolUsed()) {
       pplCudaMallocPitch(cols * sizeof(float), rows * 2, buffer_block0);
       buffer0 = (float*)(buffer_block0.data);
@@ -318,14 +583,14 @@ void filtering(const float* src, int rows, int cols, int src_channels,
     }
 
     int offset = pitch0 * rows;
-    float* meanI = buffer0;
-    float* varI  = (float*)((uchar*)buffer0 + offset);
-    initialize1to1(guide, rows, cols, guide_stride, radius, eps, meanI, varI,
+    float* mean_i = buffer0;
+    float* var_i  = (float*)((uchar*)buffer0 + offset);
+    initialize1to1(guide, rows, cols, guide_stride, ksize, eps, mean_i, var_i,
                    pitch0, border_type, stream);
 
     if (src_channels == 1) {
-      filter1to1(src, rows, cols, src_stride, guide, guide_stride, meanI, varI,
-                 pitch0, dst, dst_stride, radius, border_type, stream);
+      filter1to1(src, rows, cols, src_stride, guide, guide_stride, mean_i,
+                 var_i, pitch0, dst, dst_stride, ksize, border_type, stream);
     }
     else if (src_channels == 3) {  // src_channels == 3
       float* buffer1;
@@ -356,12 +621,12 @@ void filtering(const float* src, int rows, int cols, int src_channels,
 
       split3Channels(src, rows, cols, src_stride, src0, src1, src2, pitch1,
                      stream);
-      filter1to1(src0, rows, cols, pitch1, guide, guide_stride, meanI, varI,
-                 pitch0, dst0, pitch1, radius, border_type, stream);
-      filter1to1(src1, rows, cols, pitch1, guide, guide_stride, meanI, varI,
-                 pitch0, dst1, pitch1, radius, border_type, stream);
-      filter1to1(src2, rows, cols, pitch1, guide, guide_stride, meanI, varI,
-                 pitch0, dst2, pitch1, radius, border_type, stream);
+      filter1to1(src0, rows, cols, pitch1, guide, guide_stride, mean_i, var_i,
+                 pitch0, dst0, pitch1, ksize, border_type, stream);
+      filter1to1(src1, rows, cols, pitch1, guide, guide_stride, mean_i, var_i,
+                 pitch0, dst1, pitch1, ksize, border_type, stream);
+      filter1to1(src2, rows, cols, pitch1, guide, guide_stride, mean_i, var_i,
+                 pitch0, dst2, pitch1, ksize, border_type, stream);
       merge3Channels(dst0, dst1, dst2, rows, cols, pitch1, dst, dst_stride,
                      stream);
 
@@ -403,14 +668,14 @@ void filtering(const float* src, int rows, int cols, int src_channels,
 
       split4Channels(src, rows, cols, src_stride, src0, src1, src2, src3,
                      pitch1, stream);
-      filter1to1(src0, rows, cols, pitch1, guide, guide_stride, meanI, varI,
-                 pitch0, dst0, pitch1, radius, border_type, stream);
-      filter1to1(src1, rows, cols, pitch1, guide, guide_stride, meanI, varI,
-                 pitch0, dst1, pitch1, radius, border_type, stream);
-      filter1to1(src2, rows, cols, pitch1, guide, guide_stride, meanI, varI,
-                 pitch0, dst2, pitch1, radius, border_type, stream);
-      filter1to1(src3, rows, cols, pitch1, guide, guide_stride, meanI, varI,
-                 pitch0, dst3, pitch1, radius, border_type, stream);
+      filter1to1(src0, rows, cols, pitch1, guide, guide_stride, mean_i, var_i,
+                 pitch0, dst0, pitch1, ksize, border_type, stream);
+      filter1to1(src1, rows, cols, pitch1, guide, guide_stride, mean_i, var_i,
+                 pitch0, dst1, pitch1, ksize, border_type, stream);
+      filter1to1(src2, rows, cols, pitch1, guide, guide_stride, mean_i, var_i,
+                 pitch0, dst2, pitch1, ksize, border_type, stream);
+      filter1to1(src3, rows, cols, pitch1, guide, guide_stride, mean_i, var_i,
+                 pitch0, dst3, pitch1, ksize, border_type, stream);
       merge4Channels(dst0, dst1, dst2, dst3, rows, cols, pitch1, dst,
                      dst_stride, stream);
 
@@ -421,21 +686,170 @@ void filtering(const float* src, int rows, int cols, int src_channels,
         cudaFree(buffer1);
       }
     }
-
-    if (memoryPoolUsed()) {
-      pplCudaFree(buffer_block0);
-    }
-    else {
-      cudaFree(buffer0);
-    }
   }
   else {  // guide_channels == 3
+    if (memoryPoolUsed()) {
+      pplCudaMallocPitch(cols * sizeof(float), rows * 12, buffer_block0);
+      buffer0 = (float*)(buffer_block0.data);
+      pitch0  = buffer_block0.pitch;
+    }
+    else {
+      code = cudaMallocPitch(&buffer0, &pitch0, cols * sizeof(float),
+                             rows * 12);
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return;
+      }
+    }
+
+    int offset = pitch0 * rows;
+    float* guide0 = buffer0;
+    float* guide1 = (float*)((uchar*)buffer0 + offset);
+    float* guide2 = (float*)((uchar*)buffer0 + offset * 2);
+    float* mean_guide0 = (float*)((uchar*)buffer0 + offset * 3);
+    float* mean_guide1 = (float*)((uchar*)buffer0 + offset * 4);
+    float* mean_guide2 = (float*)((uchar*)buffer0 + offset * 5);
+    float* inv_var_guide00 = (float*)((uchar*)buffer0 + offset * 6);
+    float* inv_var_guide01 = (float*)((uchar*)buffer0 + offset * 7);
+    float* inv_var_guide02 = (float*)((uchar*)buffer0 + offset * 8);
+    float* inv_var_guide11 = (float*)((uchar*)buffer0 + offset * 9);
+    float* inv_var_guide12 = (float*)((uchar*)buffer0 + offset * 10);
+    float* inv_var_guide22 = (float*)((uchar*)buffer0 + offset * 11);
+    initialize3to1(guide, rows, cols, guide_stride, ksize, eps, guide0, guide1,
+                   guide2, mean_guide0, mean_guide1, mean_guide2,
+                   inv_var_guide00, inv_var_guide01, inv_var_guide02,
+                   inv_var_guide11, inv_var_guide12, inv_var_guide22, pitch0,
+                   border_type, stream);
+
     if (src_channels == 1) {
+      filter3to1(src, rows, cols, src_stride, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst, dst_stride,
+                 border_type, stream);
     }
     else if (src_channels == 3) { // src_channels == 3
+      float* buffer1;
+      size_t pitch1;
+
+      GpuMemoryBlock buffer_block1;
+      if (memoryPoolUsed()) {
+        pplCudaMallocPitch(cols * sizeof(float), rows * 6, buffer_block1);
+        buffer1 = (float*)(buffer_block1.data);
+        pitch1  = buffer_block1.pitch;
+      }
+      else {
+        code = cudaMallocPitch(&buffer1, &pitch1, cols * sizeof(float),
+                               rows * 6);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return;
+        }
+      }
+
+      offset = pitch1 * rows;
+      float* src0 = buffer1;
+      float* src1 = (float*)((uchar*)buffer1 + offset);
+      float* src2 = (float*)((uchar*)buffer1 + offset * 2);
+      float* dst0 = (float*)((uchar*)buffer1 + offset * 3);
+      float* dst1 = (float*)((uchar*)buffer1 + offset * 4);
+      float* dst2 = (float*)((uchar*)buffer1 + offset * 5);
+
+      split3Channels(src, rows, cols, src_stride, src0, src1, src2, pitch1,
+                     stream);
+      filter3to1(src0, rows, cols, pitch1, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst0, pitch1,
+                 border_type, stream);
+      filter3to1(src1, rows, cols, pitch1, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst1, pitch1,
+                 border_type, stream);
+      filter3to1(src2, rows, cols, pitch1, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst2, pitch1,
+                 border_type, stream);
+      merge3Channels(dst0, dst1, dst2, rows, cols, pitch1, dst, dst_stride,
+                     stream);
+
+      if (memoryPoolUsed()) {
+        pplCudaFree(buffer_block1);
+      }
+      else {
+        cudaFree(buffer1);
+      }
     }
     else { // src_channels == 4
+      float* buffer1;
+      size_t pitch1;
+
+      GpuMemoryBlock buffer_block1;
+      if (memoryPoolUsed()) {
+        pplCudaMallocPitch(cols * sizeof(float), rows * 8, buffer_block1);
+        buffer1 = (float*)(buffer_block1.data);
+        pitch1  = buffer_block1.pitch;
+      }
+      else {
+        code = cudaMallocPitch(&buffer1, &pitch1, cols * sizeof(float),
+                               rows * 8);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return;
+        }
+      }
+
+      offset = pitch1 * rows;
+      float* src0 = buffer1;
+      float* src1 = (float*)((uchar*)buffer1 + offset);
+      float* src2 = (float*)((uchar*)buffer1 + offset * 2);
+      float* src3 = (float*)((uchar*)buffer1 + offset * 3);
+      float* dst0 = (float*)((uchar*)buffer1 + offset * 4);
+      float* dst1 = (float*)((uchar*)buffer1 + offset * 5);
+      float* dst2 = (float*)((uchar*)buffer1 + offset * 6);
+      float* dst3 = (float*)((uchar*)buffer1 + offset * 7);
+
+      split4Channels(src, rows, cols, src_stride, src0, src1, src2, src3,
+                     pitch1, stream);
+      filter3to1(src0, rows, cols, pitch1, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst0, pitch1,
+                 border_type, stream);
+      filter3to1(src1, rows, cols, pitch1, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst1, pitch1,
+                 border_type, stream);
+      filter3to1(src2, rows, cols, pitch1, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst2, pitch1,
+                 border_type, stream);
+      filter3to1(src3, rows, cols, pitch1, ksize, guide0, guide1, guide2,
+                 mean_guide0, mean_guide1, mean_guide2, inv_var_guide00,
+                 inv_var_guide01, inv_var_guide02, inv_var_guide11,
+                 inv_var_guide12, inv_var_guide22, pitch0, dst3, pitch1,
+                 border_type, stream);
+      merge4Channels(dst0, dst1, dst2, dst3, rows, cols, pitch1, dst,
+                     dst_stride, stream);
+
+      if (memoryPoolUsed()) {
+        pplCudaFree(buffer_block1);
+      }
+      else {
+        cudaFree(buffer1);
+      }
     }
+  }
+
+  if (memoryPoolUsed()) {
+    pplCudaFree(buffer_block0);
+  }
+  else {
+    cudaFree(buffer0);
   }
 }
 
@@ -447,15 +861,17 @@ RetCode guidedFilter(const uchar* src, int rows, int cols, int src_channels,
   PPL_ASSERT(guide != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(guide_channels == 1 || guide_channels == 3);
+  PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));
   PPL_ASSERT(guide_stride >= cols * guide_channels * (int)sizeof(uchar));
   PPL_ASSERT(dst_stride >= cols * src_channels * (int)sizeof(uchar));
-  PPL_ASSERT(guide_channels == 1);
-  PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(radius > 0);
   PPL_ASSERT(eps > 0.0);
-  PPL_ASSERT(border_type == BORDER_REFLECT_101 ||
-             border_type == BORDER_REFLECT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   float* fguide;
   float* fsrc;
@@ -532,15 +948,17 @@ RetCode guidedFilter(const float* src, int rows, int cols, int src_channels,
   PPL_ASSERT(guide != nullptr);
   PPL_ASSERT(dst != nullptr);
   PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(guide_channels == 1 || guide_channels == 3);
+  PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(float));
   PPL_ASSERT(guide_stride >= cols * guide_channels * (int)sizeof(float));
   PPL_ASSERT(dst_stride >= cols * src_channels * (int)sizeof(float));
-  PPL_ASSERT(guide_channels == 1);
-  PPL_ASSERT(src_channels == 1 || src_channels == 3 || src_channels == 4);
   PPL_ASSERT(radius > 0);
   PPL_ASSERT(eps > 0.0);
-  PPL_ASSERT(border_type == BORDER_REFLECT_101 ||
-             border_type == BORDER_REFLECT);
+  PPL_ASSERT(border_type == BORDER_REPLICATE ||
+             border_type == BORDER_REFLECT ||
+             border_type == BORDER_REFLECT_101 ||
+             border_type == BORDER_DEFAULT);
 
   filtering(src, rows, cols, src_channels, src_stride, guide, guide_channels,
             guide_stride, dst, dst_stride, radius, eps, border_type, stream);
@@ -603,6 +1021,66 @@ RetCode GuidedFilter<uchar, 4, 1>(cudaStream_t stream,
                                   BorderType border_type) {
   RetCode code = guidedFilter(inData, height, width, 4, inWidthStride,
                               guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode GuidedFilter<uchar, 1, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const uchar* inData,
+                                  int guideWidthStride,
+                                  const uchar* guideData,
+                                  int outWidthStride,
+                                  uchar* outData,
+                                  int radius,
+                                  float eps,
+                                  BorderType border_type) {
+  RetCode code = guidedFilter(inData, height, width, 1, inWidthStride,
+                              guideData, 3, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode GuidedFilter<uchar, 3, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const uchar* inData,
+                                  int guideWidthStride,
+                                  const uchar* guideData,
+                                  int outWidthStride,
+                                  uchar* outData,
+                                  int radius,
+                                  float eps,
+                                  BorderType border_type) {
+  RetCode code = guidedFilter(inData, height, width, 3, inWidthStride,
+                              guideData, 3, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode GuidedFilter<uchar, 4, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const uchar* inData,
+                                  int guideWidthStride,
+                                  const uchar* guideData,
+                                  int outWidthStride,
+                                  uchar* outData,
+                                  int radius,
+                                  float eps,
+                                  BorderType border_type) {
+  RetCode code = guidedFilter(inData, height, width, 4, inWidthStride,
+                              guideData, 3, guideWidthStride, outData,
                               outWidthStride, radius, eps, border_type, stream);
 
   return code;
@@ -672,6 +1150,75 @@ RetCode GuidedFilter<float, 4, 1>(cudaStream_t stream,
   outWidthStride   *= sizeof(float);
   RetCode code = guidedFilter(inData, height, width, 4, inWidthStride,
                               guideData, 1, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode GuidedFilter<float, 1, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const float* inData,
+                                  int guideWidthStride,
+                                  const float* guideData,
+                                  int outWidthStride,
+                                  float* outData,
+                                  int radius,
+                                  float eps,
+                                  BorderType border_type) {
+  inWidthStride    *= sizeof(float);
+  guideWidthStride *= sizeof(float);
+  outWidthStride   *= sizeof(float);
+  RetCode code = guidedFilter(inData, height, width, 1, inWidthStride,
+                              guideData, 3, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode GuidedFilter<float, 3, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const float* inData,
+                                  int guideWidthStride,
+                                  const float* guideData,
+                                  int outWidthStride,
+                                  float* outData,
+                                  int radius,
+                                  float eps,
+                                  BorderType border_type) {
+  inWidthStride    *= sizeof(float);
+  guideWidthStride *= sizeof(float);
+  outWidthStride   *= sizeof(float);
+  RetCode code = guidedFilter(inData, height, width, 3, inWidthStride,
+                              guideData, 3, guideWidthStride, outData,
+                              outWidthStride, radius, eps, border_type, stream);
+
+  return code;
+}
+
+template <>
+RetCode GuidedFilter<float, 4, 3>(cudaStream_t stream,
+                                  int height,
+                                  int width,
+                                  int inWidthStride,
+                                  const float* inData,
+                                  int guideWidthStride,
+                                  const float* guideData,
+                                  int outWidthStride,
+                                  float* outData,
+                                  int radius,
+                                  float eps,
+                                  BorderType border_type) {
+  inWidthStride    *= sizeof(float);
+  guideWidthStride *= sizeof(float);
+  outWidthStride   *= sizeof(float);
+  RetCode code = guidedFilter(inData, height, width, 4, inWidthStride,
+                              guideData, 3, guideWidthStride, outData,
                               outWidthStride, radius, eps, border_type, stream);
 
   return code;
