@@ -80,23 +80,26 @@ void rotate90Kernel(const T* src, int src_rows, int src_cols, int src_stride,
   }
 }
 
-template <typename T>
 __global__
-void rotate180C1Kernel(const T* src, int src_rows, int src_cols, int src_stride,
-                       T* dst, int dst_stride) {
+void rotate180UcharC1Kernel(const uchar* src, int src_rows, int src_cols,
+                            int src_stride, uchar* dst, int dst_stride) {
   int element_x = (blockIdx.x << SHIFT_X) + threadIdx.x;
   int element_y = (blockIdx.y << SHIFT_Y) + threadIdx.y;
-  T* input = (T*)((uchar*)src + element_y * src_stride);
-  T value = input[element_x];
 
-  T* output = (T*)((uchar*)dst + (src_rows - 1 - element_y) * dst_stride);
-  output[src_cols - 1 - element_x] = value;
+  if (element_x < src_cols && element_y < src_rows) {
+    uchar* input = (uchar*)((uchar*)src + element_y * src_stride);
+    uchar value = input[element_x];
+
+    uchar* output = (uchar*)((uchar*)dst +
+                             (src_rows - 1 - element_y) * dst_stride);
+    output[src_cols - 1 - element_x] = value;
+  }
 }
 
 template <typename T>
 __global__
-void rotate180CnKernel(const T* src, int src_rows, int src_cols, int src_stride,
-                       T* dst, int dst_stride) {
+void rotate180Kernel(const T* src, int src_rows, int src_cols, int src_stride,
+                     T* dst, int dst_stride) {
   __shared__ T data[LENGTH_Y][LENGTH_X];
   int element_x = (blockIdx.x << SHIFT_X) + threadIdx.x;
   int element_y = (blockIdx.y << SHIFT_Y) + threadIdx.y;
@@ -227,8 +230,8 @@ RetCode rotate(const uchar* src, int src_rows, int src_cols, int channels,
 
   if (degree == 90) {
     if (channels == 1) {
-      rotate90Kernel<<<grid0, block0, 0, stream>>>((uchar*)src, src_rows,
-          src_cols, src_stride, (uchar*)dst, dst_stride);
+      rotate90Kernel<<<grid0, block0, 0, stream>>>(src, src_rows, src_cols,
+          src_stride, (uchar*)dst, dst_stride);
     }
     else if (channels == 3) {
       rotate90Kernel<<<grid0, block0, 0, stream>>>((uchar3*)src, src_rows,
@@ -240,22 +243,22 @@ RetCode rotate(const uchar* src, int src_rows, int src_cols, int channels,
     }
   } else if (degree == 180) {
     if (channels == 1) {
-      rotate180C1Kernel<<<grid1, block1, 0, stream>>>((uchar*)src, src_rows,
-          src_cols, src_stride, (uchar*)dst, dst_stride);
+      rotate180UcharC1Kernel<<<grid1, block1, 0, stream>>>(src, src_rows,
+          src_cols, src_stride, dst, dst_stride);
     }
     else if (channels == 3) {
-      rotate180CnKernel<<<grid1, block1, 0, stream>>>((uchar3*)src, src_rows,
+      rotate180Kernel<<<grid1, block1, 0, stream>>>((uchar3*)src, src_rows,
           src_cols, src_stride, (uchar3*)dst, dst_stride);
     }
     else {  // channels == 4
-      rotate180CnKernel<<<grid1, block1, 0, stream>>>((uchar4*)src, src_rows,
+      rotate180Kernel<<<grid1, block1, 0, stream>>>((uchar4*)src, src_rows,
           src_cols, src_stride, (uchar4*)dst, dst_stride);
     }
   }
   else {  // degree == 270
     if (channels == 1) {
-      rotate270Kernel<<<grid0, block0, 0, stream>>>((uchar*)src, src_rows,
-          src_cols, src_stride, (uchar*)dst, dst_stride);
+      rotate270Kernel<<<grid0, block0, 0, stream>>>(src, src_rows, src_cols,
+          src_stride, (uchar*)dst, dst_stride);
     }
     else if (channels == 3) {
       rotate270Kernel<<<grid0, block0, 0, stream>>>((uchar3*)src, src_rows,
@@ -304,8 +307,8 @@ RetCode rotate(const float* src, int src_rows, int src_cols, int channels,
 
   if (degree == 90) {
     if (channels == 1) {
-      rotate90Kernel<<<grid0, block0, 0, stream>>>((float*)src, src_rows,
-          src_cols, src_stride, (float*)dst, dst_stride);
+      rotate90Kernel<<<grid0, block0, 0, stream>>>(src, src_rows, src_cols,
+          src_stride, (float*)dst, dst_stride);
     }
     else if (channels == 3) {
       rotate90Kernel<<<grid0, block0, 0, stream>>>((float3*)src, src_rows,
@@ -317,22 +320,22 @@ RetCode rotate(const float* src, int src_rows, int src_cols, int channels,
     }
   } else if (degree == 180) {
     if (channels == 1) {
-      rotate180CnKernel<<<grid1, block1, 0, stream>>>((float*)src, src_rows,
-          src_cols, src_stride, (float*)dst, dst_stride);
+      rotate180Kernel<<<grid1, block1, 0, stream>>>(src, src_rows, src_cols,
+          src_stride, (float*)dst, dst_stride);
     }
     else if (channels == 3) {
-      rotate180CnKernel<<<grid1, block1, 0, stream>>>((float3*)src, src_rows,
+      rotate180Kernel<<<grid1, block1, 0, stream>>>((float3*)src, src_rows,
           src_cols, src_stride, (float3*)dst, dst_stride);
     }
     else {  // channels == 4
-      rotate180CnKernel<<<grid1, block1, 0, stream>>>((float4*)src, src_rows,
+      rotate180Kernel<<<grid1, block1, 0, stream>>>((float4*)src, src_rows,
           src_cols, src_stride, (float4*)dst, dst_stride);
     }
   }
   else {  // degree == 270
     if (channels == 1) {
-      rotate270Kernel<<<grid0, block0, 0, stream>>>((float*)src, src_rows,
-          src_cols, src_stride, (float*)dst, dst_stride);
+      rotate270Kernel<<<grid0, block0, 0, stream>>>(src, src_rows, src_cols,
+          src_stride, (float*)dst, dst_stride);
     }
     else if (channels == 3) {
       rotate270Kernel<<<grid0, block0, 0, stream>>>((float3*)src, src_rows,

@@ -162,7 +162,7 @@ bool PplCvCudaSepFilter2DTest<Tsrc, Tdst, channels>::apply() {
     epsilon = EPSILON_1F;
   }
   else {
-    epsilon = EPSILON_E4;
+    epsilon = EPSILON_E3;
   }
   bool identity0 = checkMatricesIdentity<Tdst>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<Tdst>(cv_dst, output, epsilon);

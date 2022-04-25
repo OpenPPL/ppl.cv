@@ -94,7 +94,7 @@ bool PplCvCudaPerspectiveTransformTest<T, srcCns, dstCns>::apply() {
       gpu_output, trans_coeff1);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
-  float epsilon = EPSILON_E5;
+  float epsilon = EPSILON_E4;
   bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
   bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
 

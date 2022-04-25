@@ -33,7 +33,7 @@ void laplacianC1SharedKernel(const Tsrc* src, int rows, int cols,
                              int dst_stride, float scale, float delta,
                              BorderInterpolation interpolation) {
   __shared__ Tsrc data[kDimY0 + RADIUS * 2][(kDimX0 << 2) + RADIUS * 2];
-  __shared__ float kernel[9];
+  __shared__ float kernel[25];
 
   int element_x = ((blockIdx.x << kShiftX0) + threadIdx.x) << 2;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
@@ -260,7 +260,7 @@ void laplacianCnSharedKernel0(const Tsrc* src, int rows, int cols,
                               int dst_stride, float scale, float delta,
                               BorderInterpolation interpolation) {
   __shared__ Tsrcn data[kDimY0 + RADIUS * 2][kDimX0 + RADIUS * 2];
-  __shared__ float kernel[9];
+  __shared__ float kernel[25];
 
   int element_x = (blockIdx.x << kShiftX0) + threadIdx.x;
   int element_y = (blockIdx.y << kShiftY0) + threadIdx.y;
