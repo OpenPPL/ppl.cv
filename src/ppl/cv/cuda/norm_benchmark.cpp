@@ -26,11 +26,6 @@
 
 using namespace ppl::cv::debug;
 
-enum MaskType {
-  NO_MASK,
-  WITH_MASK,
-};
-
 template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Norm_ppl_cuda(benchmark::State &state) {
@@ -70,7 +65,7 @@ void BM_Norm_ppl_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      if (mask_type == NO_MASK) {
+      if (mask_type == kUnmasked) {
         ppl::cv::cuda::Norm<T, channels>(0, gpu_src.rows, gpu_src.cols,
             gpu_src.step / sizeof(T), (T*)gpu_src.data, &result, norm_type);
       }
@@ -140,7 +135,7 @@ void BM_Norm_opencv_cuda(benchmark::State &state) {
   for (auto _ : state) {
     cudaEventRecord(start, 0);
     for (int i = 0; i < iterations; i++) {
-      if (mask_type == NO_MASK) {
+      if (mask_type == kUnmasked) {
         result = cv::cuda::norm(gpu_src, cv_norm_type);
       }
       else {
@@ -183,7 +178,7 @@ void BM_Norm_opencv_x86_cuda(benchmark::State &state) {
   double result;
 
   for (auto _ : state) {
-    if (mask_type == NO_MASK) {
+    if (mask_type == kUnmasked) {
       result = cv::norm(src, cv_norm_type);
     }
     else {
@@ -205,35 +200,35 @@ BENCHMARK_TEMPLATE(BM_Norm_opencv_cuda, float, channels, norm_type,            \
 BENCHMARK_TEMPLATE(BM_Norm_ppl_cuda, float, channels, norm_type, mask_type)->  \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, WITH_MASK, 640, 480)
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, WITH_MASK, 1920, 1080)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, kMasked, 640, 480)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, kMasked, 1920, 1080)
 
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, WITH_MASK, 640, 480)
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, WITH_MASK, 1920, 1080)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, kMasked, 640, 480)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, kMasked, 1920, 1080)
 
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, WITH_MASK, 640, 480)
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, WITH_MASK, 1920, 1080)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, kMasked, 640, 480)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, kMasked, 1920, 1080)
 
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c3, ppl::cv::NORM_INF, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c4, ppl::cv::NORM_INF, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK0(c3, ppl::cv::NORM_INF, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK0(c4, ppl::cv::NORM_INF, NO_MASK, 1920, 1080)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c3, ppl::cv::NORM_INF, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c4, ppl::cv::NORM_INF, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_INF, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK0(c3, ppl::cv::NORM_INF, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK0(c4, ppl::cv::NORM_INF, kUnmasked, 1920, 1080)
 
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c3, ppl::cv::NORM_L1, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c4, ppl::cv::NORM_L1, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK0(c3, ppl::cv::NORM_L1, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK0(c4, ppl::cv::NORM_L1, NO_MASK, 1920, 1080)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c3, ppl::cv::NORM_L1, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c4, ppl::cv::NORM_L1, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L1, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK0(c3, ppl::cv::NORM_L1, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK0(c4, ppl::cv::NORM_L1, kUnmasked, 1920, 1080)
 
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c3, ppl::cv::NORM_L2, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c4, ppl::cv::NORM_L2, NO_MASK, 640, 480)
-// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK0(c3, ppl::cv::NORM_L2, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK0(c4, ppl::cv::NORM_L2, NO_MASK, 1920, 1080)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c3, ppl::cv::NORM_L2, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c4, ppl::cv::NORM_L2, kUnmasked, 640, 480)
+// RUN_BENCHMARK0(c1, ppl::cv::NORM_L2, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK0(c3, ppl::cv::NORM_L2, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK0(c4, ppl::cv::NORM_L2, kUnmasked, 1920, 1080)
 
 #define RUN_BENCHMARK1(channels, norm_type, mask_type, width, height)          \
 BENCHMARK_TEMPLATE(BM_Norm_opencv_x86_cuda, uchar, channels, norm_type,        \
@@ -245,47 +240,47 @@ BENCHMARK_TEMPLATE(BM_Norm_opencv_x86_cuda, float, channels, norm_type,        \
 BENCHMARK_TEMPLATE(BM_Norm_ppl_cuda, float, channels, norm_type, mask_type)->  \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, WITH_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, WITH_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, WITH_MASK, 1920, 1080)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, kMasked, 640, 480)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, kMasked, 640, 480)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, kMasked, 640, 480)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, kMasked, 1920, 1080)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, kMasked, 1920, 1080)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, kMasked, 1920, 1080)
 
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, WITH_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, WITH_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, WITH_MASK, 1920, 1080)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, kMasked, 640, 480)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, kMasked, 640, 480)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, kMasked, 640, 480)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, kMasked, 1920, 1080)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, kMasked, 1920, 1080)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, kMasked, 1920, 1080)
 
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, WITH_MASK, 640, 480)
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, WITH_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, WITH_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, WITH_MASK, 1920, 1080)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, kMasked, 640, 480)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, kMasked, 640, 480)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, kMasked, 640, 480)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, kMasked, 1920, 1080)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, kMasked, 1920, 1080)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, kMasked, 1920, 1080)
 
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, NO_MASK, 1920, 1080)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_INF, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_INF, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_INF, kUnmasked, 1920, 1080)
 
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, NO_MASK, 1920, 1080)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L1, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L1, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L1, kUnmasked, 1920, 1080)
 
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, NO_MASK, 640, 480)
-// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, NO_MASK, 1920, 1080)
-// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, NO_MASK, 1920, 1080)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, kUnmasked, 640, 480)
+// RUN_BENCHMARK1(c1, ppl::cv::NORM_L2, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(c3, ppl::cv::NORM_L2, kUnmasked, 1920, 1080)
+// RUN_BENCHMARK1(c4, ppl::cv::NORM_L2, kUnmasked, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, norm_type, mask_type)                  \
 BENCHMARK_TEMPLATE(BM_Norm_opencv_x86_cuda, type, c1, norm_type, mask_type)->  \
@@ -315,28 +310,28 @@ BENCHMARK_TEMPLATE(BM_Norm_ppl_cuda, type, c3, norm_type, mask_type)->         \
 BENCHMARK_TEMPLATE(BM_Norm_ppl_cuda, type, c4, norm_type, mask_type)->         \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, WITH_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, WITH_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, WITH_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, WITH_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, WITH_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, WITH_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, NO_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, NO_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, NO_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, NO_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, NO_MASK)
-RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, NO_MASK)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, kMasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, kUnmasked)
+RUN_OPENCV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, kUnmasked)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, WITH_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, WITH_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, WITH_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, WITH_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, WITH_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, WITH_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, NO_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, NO_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, NO_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, NO_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, NO_MASK)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, NO_MASK)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, kMasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_INF, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L1, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, ppl::cv::NORM_L2, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_INF, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L1, kUnmasked)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, ppl::cv::NORM_L2, kUnmasked)

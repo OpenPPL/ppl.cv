@@ -34,10 +34,11 @@ namespace cuda {
 
 static __device__ uint block_count = 0;
 
+template <typename T>
 __DEVICE__
-void checkMinMax1(uchar value, int index, int element_x, int element_y,
-                  uchar* min_vals, uchar* max_vals, int* min_loc_xs,
-                  int* min_loc_ys, int* max_loc_xs, int* max_loc_ys) {
+void checkMinMax1(T value, int index, int element_x, int element_y, T* min_vals,
+                  T* max_vals, int* min_loc_xs, int* min_loc_ys,
+                  int* max_loc_xs, int* max_loc_ys) {
   if (value < min_vals[index]) {
     min_vals[index]  = value;
     min_loc_xs[index] = element_x;
@@ -51,25 +52,9 @@ void checkMinMax1(uchar value, int index, int element_x, int element_y,
   }
 }
 
+template <typename T>
 __DEVICE__
-void checkMinMax1(float value, int index, int element_x, int element_y,
-                  float* min_vals, float* max_vals, int* min_loc_xs,
-                  int* min_loc_ys, int* max_loc_xs, int* max_loc_ys) {
-  if (value < min_vals[index]) {
-    min_vals[index]  = value;
-    min_loc_xs[index] = element_x;
-    min_loc_ys[index] = element_y;
-  }
-
-  if (value > max_vals[index]) {
-    max_vals[index]  = value;
-    max_loc_xs[index] = element_x;
-    max_loc_ys[index] = element_y;
-  }
-}
-
-__DEVICE__
-void checkMinMax2(int index0, int index1, uchar* min_vals, uchar* max_vals,
+void checkMinMax2(int index0, int index1, T* min_vals, T* max_vals,
                   int* min_loc_xs, int* min_loc_ys, int* max_loc_xs,
                   int* max_loc_ys) {
   if (min_vals[index1] < min_vals[index0]) {
@@ -115,63 +100,29 @@ void checkMinMax2(int index0, int index1, uchar* min_vals, uchar* max_vals,
   }
 }
 
+template <typename T>
 __DEVICE__
-void checkMinMax2(int index0, int index1, float* min_vals, float* max_vals,
-                  int* min_loc_xs, int* min_loc_ys, int* max_loc_xs,
-                  int* max_loc_ys) {
-  if (min_vals[index1] < min_vals[index0]) {
-    min_vals[index0]  = min_vals[index1];
-    min_loc_xs[index0] = min_loc_xs[index1];
-    min_loc_ys[index0] = min_loc_ys[index1];
-  }
-  else if (min_vals[index1] == min_vals[index0]) {
-    if (min_loc_ys[index1] < min_loc_ys[index0]) {
-      min_loc_xs[index0] = min_loc_xs[index1];
-      min_loc_ys[index0] = min_loc_ys[index1];
-    }
-    else if (min_loc_ys[index1] == min_loc_ys[index0]) {
-      if (min_loc_xs[index1] < min_loc_xs[index0]) {
-        min_loc_xs[index0] = min_loc_xs[index1];
-      }
-    }
-    else {
-    }
-  }
-  else {
-  }
-
-  if (max_vals[index1] > max_vals[index0]) {
-    max_vals[index0]  = max_vals[index1];
-    max_loc_xs[index0] = max_loc_xs[index1];
-    max_loc_ys[index0] = max_loc_ys[index1];
-  }
-  else if (max_vals[index1] == max_vals[index0]) {
-    if (max_loc_ys[index1] < max_loc_ys[index0]) {
-      max_loc_xs[index0] = max_loc_xs[index1];
-      max_loc_ys[index0] = max_loc_ys[index1];
-    }
-    else if (max_loc_ys[index1] == max_loc_ys[index0]) {
-      if (max_loc_xs[index1] < max_loc_xs[index0]) {
-        max_loc_xs[index0] = max_loc_xs[index1];
-      }
-    }
-    else {
-    }
-  }
-  else {
-  }
-}
-
-__DEVICE__
-void checkMinMax3(int g_index, int sh_index, uchar* g_min_vals,
-                  uchar* g_max_vals, int* g_min_loc_xs, int* g_min_loc_ys,
-                  int* g_max_loc_xs, int* g_max_loc_ys, uchar* min_vals,
-                  uchar* max_vals, int* min_loc_xs, int* min_loc_ys,
-                  int* max_loc_xs, int* max_loc_ys) {
+void checkMinMax3(int g_index, int sh_index, T* g_min_vals, T* g_max_vals,
+                  int* g_min_loc_xs, int* g_min_loc_ys, int* g_max_loc_xs,
+                  int* g_max_loc_ys, T* min_vals,  T* max_vals, int* min_loc_xs,
+                  int* min_loc_ys, int* max_loc_xs, int* max_loc_ys) {
   if (g_min_vals[g_index] < min_vals[sh_index]) {
     min_vals[sh_index]  = g_min_vals[g_index];
     min_loc_xs[sh_index] = g_min_loc_xs[g_index];
     min_loc_ys[sh_index] = g_min_loc_ys[g_index];
+  }
+  else if (g_min_vals[g_index] == min_vals[sh_index]) {
+    if (g_min_loc_ys[g_index] < min_loc_ys[sh_index]) {
+      min_loc_xs[sh_index] = g_min_loc_xs[g_index];
+      min_loc_ys[sh_index] = g_min_loc_ys[g_index];
+    }
+    else if (g_min_loc_ys[g_index] == min_loc_ys[sh_index]) {
+      if (g_min_loc_xs[sh_index] < min_loc_xs[g_index]) {
+        min_loc_xs[sh_index] = g_min_loc_xs[g_index];
+      }
+    }
+  }
+  else {
   }
 
   if (g_max_vals[g_index] > max_vals[sh_index]) {
@@ -179,24 +130,18 @@ void checkMinMax3(int g_index, int sh_index, uchar* g_min_vals,
     max_loc_xs[sh_index] = g_max_loc_xs[g_index];
     max_loc_ys[sh_index] = g_max_loc_ys[g_index];
   }
-}
-
-__DEVICE__
-void checkMinMax3(int g_index, int sh_index, float* g_min_vals,
-                  float* g_max_vals, int* g_min_loc_xs, int* g_min_loc_ys,
-                  int* g_max_loc_xs, int* g_max_loc_ys, float* min_vals,
-                  float* max_vals, int* min_loc_xs, int* min_loc_ys,
-                  int* max_loc_xs, int* max_loc_ys) {
-  if (g_min_vals[g_index] < min_vals[sh_index]) {
-    min_vals[sh_index]  = g_min_vals[g_index];
-    min_loc_xs[sh_index] = g_min_loc_xs[g_index];
-    min_loc_ys[sh_index] = g_min_loc_ys[g_index];
+  else if (g_max_vals[g_index] == max_vals[sh_index]) {
+    if (g_max_loc_ys[g_index] < max_loc_ys[sh_index]) {
+      max_loc_xs[sh_index] = g_max_loc_xs[g_index];
+      max_loc_ys[sh_index] = g_max_loc_ys[g_index];
+    }
+    else if (g_max_loc_ys[g_index] == max_loc_ys[sh_index]) {
+      if (g_max_loc_xs[sh_index] < max_loc_xs[g_index]) {
+        max_loc_xs[sh_index] = g_max_loc_xs[g_index];
+      }
+    }
   }
-
-  if (g_max_vals[g_index] > max_vals[sh_index]) {
-    max_vals[sh_index]  = g_max_vals[g_index];
-    max_loc_xs[sh_index] = g_max_loc_xs[g_index];
-    max_loc_ys[sh_index] = g_max_loc_ys[g_index];
+  else {
   }
 }
 
@@ -655,8 +600,8 @@ RetCode minMaxLoc(const uchar* src, int rows, int cols, int src_stride,
   grid.y = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  size_t buffer_size = blocks * sizeof(int) * 6;
   int* buffer;
+  size_t buffer_size = blocks * 6 * sizeof(int);
   cudaError_t code;
   GpuMemoryBlock buffer_block;
   if (memoryPoolUsed()) {
@@ -739,8 +684,8 @@ RetCode minMaxLoc(const float* src, int rows, int cols, int src_stride,
   grid.y = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  size_t buffer_size = blocks * sizeof(float) * 6;
   float* buffer;
+  size_t buffer_size = blocks * 6 * sizeof(float);
   GpuMemoryBlock buffer_block;
   cudaError_t code;
   if (memoryPoolUsed()) {

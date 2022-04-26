@@ -49,6 +49,11 @@ enum MemoryPool {
   kUnactivated,
 };
 
+enum MaskType {
+  kUnmasked,
+  kMasked,
+};
+
 inline
 schar randomChar() {
   int flag   = rand() % 2;

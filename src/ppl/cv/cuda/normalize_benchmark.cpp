@@ -26,11 +26,6 @@
 
 using namespace ppl::cv::debug;
 
-enum MaskType {
-  kUnmasked,
-  kMasked,
-};
-
 template <typename T, int channels, ppl::cv::NormTypes norm_type,
           MaskType mask_type>
 void BM_Normalize_ppl_cuda(benchmark::State &state) {
