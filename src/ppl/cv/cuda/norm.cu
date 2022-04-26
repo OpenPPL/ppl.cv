@@ -51,13 +51,13 @@ RetCode norm(const uchar* src, int rows, int cols, int channels, int src_stride,
   grid.y  = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  size_t norms_size = blocks * sizeof(long);
-  long* norm_values;
+  size_t norms_size = blocks * sizeof(long long);
+  long long* norm_values;
   cudaError_t code;
   GpuMemoryBlock buffer_block;
   if (memoryPoolUsed()) {
     pplCudaMalloc(norms_size, buffer_block);
-    norm_values = (long*)(buffer_block.data);
+    norm_values = (long long*)(buffer_block.data);
   }
   else {
     code = cudaMalloc(&norm_values, norms_size);
@@ -68,16 +68,17 @@ RetCode norm(const uchar* src, int rows, int cols, int channels, int src_stride,
   }
 
   if (norm_type == NORM_INF) {
-    normLinfKernel<uchar, long><<<grid, block, 0, stream>>>(src, rows, cols,
-        channels, src_stride, mask, mask_stride, blocks, norm_values);
+    normLinfKernel<uchar, long long><<<grid, block, 0, stream>>>(src, rows,
+        cols, channels, src_stride, mask, mask_stride, blocks, norm_values);
   }
   else if (norm_type == NORM_L1) {
-    normL1Kernel<uchar, uint, long><<<grid, block, 0, stream>>>(src, rows, cols,
-        channels, src_stride, mask, mask_stride, blocks, norm_values);
+    normL1Kernel<uchar, uint, long long><<<grid, block, 0, stream>>>(src, rows,
+        cols, channels, src_stride, mask, mask_stride, blocks, norm_values);
   }
   else {  // norm_type == NORM_L2
-    normL2Kernel<uchar, long, long><<<grid, block, 0, stream>>>(src, rows, cols,
-        channels, src_stride, mask, mask_stride, blocks, norm_values);
+    normL2Kernel<uchar, long long, long long><<<grid, block, 0, stream>>>(src,
+        rows, cols, channels, src_stride, mask, mask_stride, blocks,
+        norm_values);
   }
 
   code = cudaGetLastError();
@@ -92,8 +93,9 @@ RetCode norm(const uchar* src, int rows, int cols, int channels, int src_stride,
     return RC_DEVICE_RUNTIME_ERROR;
   }
 
-  long value;
-  code = cudaMemcpy(&value, norm_values, sizeof(long), cudaMemcpyDeviceToHost);
+  long long value;
+  code = cudaMemcpy(&value, norm_values, sizeof(long long),
+                    cudaMemcpyDeviceToHost);
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
   }
