@@ -26,11 +26,6 @@
 
 using namespace ppl::cv::debug;
 
-enum MaskType {
-  kUnmasked,
-  kMasked,
-};
-
 template <typename T, MaskType mask_type>
 void BM_MinMaxLoc_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);

@@ -25,11 +25,6 @@
 
 #include "utility/infrastructure.hpp"
 
-enum MaskType {
-  kUnmasked,
-  kMasked,
-};
-
 using Parameters = std::tuple<MemoryPool, ppl::cv::NormTypes, MaskType, int,
                               int, cv::Size>;
 inline std::string convertToStringNormalize(const Parameters& parameters) {

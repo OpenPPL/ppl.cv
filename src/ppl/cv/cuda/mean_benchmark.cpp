@@ -24,11 +24,6 @@
 
 using namespace ppl::cv::debug;
 
-enum MaskType {
-  kUnmasked,
-  kMasked,
-};
-
 template <typename T, int channels, MaskType mask_type>
 void BM_Mean_ppl_cuda(benchmark::State &state) {
   int width  = state.range(0);

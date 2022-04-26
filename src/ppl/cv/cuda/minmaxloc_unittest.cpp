@@ -25,11 +25,6 @@
 
 #include "utility/infrastructure.hpp"
 
-enum MaskType {
-  kUnmasked,
-  kMasked,
-};
-
 using Parameters = std::tuple<MemoryPool, MaskType, cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
   std::ostringstream formatted;

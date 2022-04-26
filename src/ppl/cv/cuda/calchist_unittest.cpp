@@ -24,11 +24,6 @@
 
 #include "utility/infrastructure.hpp"
 
-enum MaskType {
-  kUnmasked,
-  kMasked,
-};
-
 using Parameters = std::tuple<MaskType, cv::Size>;
 inline std::string convertToStringHist(const Parameters& parameters) {
   std::ostringstream formatted;
