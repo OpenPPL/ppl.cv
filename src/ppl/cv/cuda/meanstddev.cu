@@ -28,7 +28,7 @@ namespace cuda {
 template <typename Tsrc>
 __global__
 void unmaskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
-                         uint blocks, float* mean_values,
+                         uint blocks, float weight, float* mean_values,
                          float* stddev_values) {
   __shared__ float partial_sums[BLOCK_SIZE];
 
@@ -120,8 +120,6 @@ void unmaskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
-      int elements = rows * cols;
-      float weight = 1.f / elements;
       float square = stddev_values[0] * weight;
       stddev_values[0] = sqrtf(square);
 
@@ -133,8 +131,8 @@ void unmaskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 template <typename Tsrc, typename Tsrcn, typename Tsumn>
 __global__
 void unmaskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
-                         int src_stride, uint blocks, float* mean_values,
-                         float* stddev_values) {
+                         int src_stride, uint blocks, float weight,
+                         float* mean_values, float* stddev_values) {
   __shared__ Tsumn partial_sums[BLOCK_SIZE];
 
   int threadIdx_x = threadIdx.x;
@@ -206,12 +204,11 @@ void unmaskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
 
   if (threadIdx_x == 0) {
     atomicAddVector(stddev_values, partial_sums[0]);
+    __threadfence();
 
     uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
-      int elements = rows * cols;
-      float weight = 1.f / elements;
       float square = stddev_values[0] * weight;
       stddev_values[0] = sqrtf(square);
       if (channels > 2) {
@@ -341,6 +338,7 @@ void maskedDevC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
   if (threadIdx_x == 0) {
     atomicAdd(stddev_values, partial_sums[0]);
     atomicAdd(&mask_count, partial_counts[0]);
+    __threadfence();
 
     uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
@@ -451,6 +449,7 @@ void maskedDevCnKernel(const Tsrc* src, int rows, int cols, int channels,
   if (threadIdx_x == 0) {
     atomicAddVector(stddev_values, partial_sums[0]);
     atomicAdd(&mask_count, partial_counts[0]);
+    __threadfence();
 
     uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
@@ -505,24 +504,25 @@ RetCode meanStdDev(const uchar* src, int rows, int cols, int channels,
 
   int blocks = grid.x * grid.y;
   if (mask == nullptr) {
+    float weight = 1.f / (rows * cols);
     if (channels == 1) {
       unmaskedMeanC1Kernel<uchar, uint><<<grid, block, 0, stream>>>(src, rows,
-          cols, src_stride, blocks, mean_values);
+          cols, src_stride, blocks, weight, mean_values);
       unmaskedDevC1Kernel<uchar><<<grid, block, 0, stream>>>(src, rows, cols,
-          src_stride, blocks, mean_values, stddev_values);
+          src_stride, blocks, weight, mean_values, stddev_values);
     }
     else if (channels == 3) {
       unmaskedMeanCnKernel<uchar, uchar3, uint3><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
       unmaskedDevCnKernel<uchar, uchar3, float3><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values,
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values,
           stddev_values);
     }
     else {  //  channels == 4
       unmaskedMeanCnKernel<uchar, uchar4, uint4><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
       unmaskedDevCnKernel<uchar, uchar4, float4><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values,
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values,
           stddev_values);
     }
   }
@@ -590,24 +590,25 @@ RetCode meanStdDev(const float* src, int rows, int cols, int channels,
 
   int blocks = grid.x * grid.y;
   if (mask == nullptr) {
+    float weight = 1.f / (rows * cols);
     if (channels == 1) {
       unmaskedMeanC1Kernel<float, float><<<grid, block, 0, stream>>>(src, rows,
-          cols, src_stride, blocks, mean_values);
+          cols, src_stride, blocks, weight, mean_values);
       unmaskedDevC1Kernel<float><<<grid, block, 0, stream>>>(src, rows, cols,
-          src_stride, blocks, mean_values, stddev_values);
+          src_stride, blocks, weight, mean_values, stddev_values);
     }
     else if (channels == 3) {
       unmaskedMeanCnKernel<float, float3, float3><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
       unmaskedDevCnKernel<float, float3, float3><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values,
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values,
           stddev_values);
     }
     else {  //  channels == 4
       unmaskedMeanCnKernel<float, float4, float4><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
       unmaskedDevCnKernel<float, float4, float4><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values,
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values,
           stddev_values);
     }
   }

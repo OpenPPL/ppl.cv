@@ -53,17 +53,18 @@ RetCode mean(const uchar* src, int rows, int cols, int channels, int src_stride,
 
   int blocks = grid.x * grid.y;
   if (mask == nullptr) {
+    float weight = 1.f / (rows * cols);
     if (channels == 1) {
       unmaskedMeanC1Kernel<uchar, uint><<<grid, block, 0, stream>>>(src, rows,
-          cols, src_stride, blocks, mean_values);
+          cols, src_stride, blocks, weight, mean_values);
     }
     else if (channels == 3) {
       unmaskedMeanCnKernel<uchar, uchar3, uint3><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
     }
     else {  //  channels == 4
       unmaskedMeanCnKernel<uchar, uchar4, uint4><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
     }
   }
   else {
@@ -120,17 +121,18 @@ RetCode mean(const float* src, int rows, int cols, int channels, int src_stride,
 
   int blocks = grid.x * grid.y;
   if (mask == nullptr) {
+    float weight = 1.f / (rows * cols);
     if (channels == 1) {
       unmaskedMeanC1Kernel<float, float><<<grid, block, 0, stream>>>(src, rows,
-          cols, src_stride, blocks, mean_values);
+          cols, src_stride, blocks, weight, mean_values);
     }
     else if (channels == 3) {
       unmaskedMeanCnKernel<float, float3, float3><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
     }
     else {  //  channels == 4
       unmaskedMeanCnKernel<float, float4, float4><<<grid, block, 0, stream>>>(
-          src, rows, cols, channels, src_stride, blocks, mean_values);
+          src, rows, cols, channels, src_stride, blocks, weight, mean_values);
     }
   }
   else {
