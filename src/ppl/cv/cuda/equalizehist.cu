@@ -275,6 +275,11 @@ RetCode EqualizeHist(cudaStream_t stream, int rows, int cols, int src_stride,
       histogram, dst, dst_stride);
 
   code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
   }
@@ -282,9 +287,10 @@ RetCode EqualizeHist(cudaStream_t stream, int rows, int cols, int src_stride,
     cudaFree(histogram);
   }
 
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
+    return RC_DEVICE_MEMORY_ERROR;
   }
   else {
     return RC_SUCCESS;

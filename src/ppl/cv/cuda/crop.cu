@@ -165,6 +165,7 @@ RetCode crop(const float* src, int src_rows, int src_cols, int channels,
   else {
     cropKernel<float><<<grid, block, 0, stream>>>(src, src_stride, top,
         left * channels, scale, dst, dst_rows, columns, dst_stride);
+
     code = cudaGetLastError();
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
