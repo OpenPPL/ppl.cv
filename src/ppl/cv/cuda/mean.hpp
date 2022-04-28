@@ -154,7 +154,7 @@ void atomicAddVector(float* address, float4 &value) {
 template <typename Tsrc, typename Tsum>
 __global__
 void unmaskedMeanC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
-                          uint blocks, float* mean_values) {
+                          uint blocks, float weight, float* mean_values) {
   __shared__ Tsum partial_sums[BLOCK_SIZE];
 
   int threadIdx_x = threadIdx.x;
@@ -244,8 +244,6 @@ void unmaskedMeanC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
     uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
-      int elements = rows * cols;
-      float weight = 1.f / elements;
       mean_values[0] *= weight;
 
       block_count = 0;
@@ -256,7 +254,8 @@ void unmaskedMeanC1Kernel(const Tsrc* src, int rows, int cols, int src_stride,
 template <typename Tsrc, typename Tsrcn, typename Tsumn>
 __global__
 void unmaskedMeanCnKernel(const Tsrc* src, int rows, int cols, int channels,
-                          int src_stride, uint blocks, float* mean_values) {
+                          int src_stride, uint blocks, float weight,
+                          float* mean_values) {
   __shared__ Tsumn partial_sums[BLOCK_SIZE];
 
   int threadIdx_x = threadIdx.x;
@@ -324,12 +323,11 @@ void unmaskedMeanCnKernel(const Tsrc* src, int rows, int cols, int channels,
 
   if (threadIdx_x == 0) {
     atomicAddVector(mean_values, partial_sums[0]);
+    __threadfence();
 
     uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
     if (is_last_block_done) {
-      int elements = rows * cols;
-      float weight = 1.f / elements;
       mean_values[0] *= weight;
       if (channels > 2) {
         mean_values[1] *= weight;
@@ -559,6 +557,7 @@ void maskedMeanCnKernel(const Tsrc* src, int rows, int cols, int channels,
   if (threadIdx_x == 0) {
     atomicAddVector(mean_values, partial_sums[0]);
     atomicAdd(&mask_count, partial_counts[0]);
+    __threadfence();
 
     uint local_count = atomicInc(&block_count, blocks);
     bool is_last_block_done = (local_count == (blocks - 1));
