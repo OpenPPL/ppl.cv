@@ -2121,6 +2121,11 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       }
 
       code = cudaGetLastError();
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+
       if (memoryPoolUsed()) {
         pplCudaFree(buffer_block);
       }
@@ -2128,9 +2133,10 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
         cudaFree(histograms);
       }
 
+      code = cudaGetLastError();
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-        return RC_DEVICE_RUNTIME_ERROR;
+        return RC_DEVICE_MEMORY_ERROR;
       }
       else {
         return RC_SUCCESS;
@@ -2152,6 +2158,15 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       }
       else {
         RUN_CN_SMALL_KERNELS(Reflect101Border);
+      }
+
+      code = cudaGetLastError();
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+      else {
+        return RC_SUCCESS;
       }
     }
     else {
@@ -2192,6 +2207,11 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       }
 
       code = cudaGetLastError();
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+
       if (memoryPoolUsed()) {
         pplCudaFree(buffer_block);
       }
@@ -2199,23 +2219,16 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
         cudaFree(histograms);
       }
 
+      code = cudaGetLastError();
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-        return RC_DEVICE_RUNTIME_ERROR;
+        return RC_DEVICE_MEMORY_ERROR;
       }
       else {
         return RC_SUCCESS;
       }
     }
   }
-
-  code = cudaGetLastError();
-  if (code != cudaSuccess) {
-    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
-  }
-
-  return RC_SUCCESS;
 }
 
 RetCode medainblur(const float* src, int rows, int cols, int channels,

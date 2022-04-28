@@ -211,6 +211,11 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
       alpha, beta, norm_type);
 
   code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
   }
@@ -218,9 +223,10 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
     cudaFree(norms_values);
   }
 
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
+    return RC_DEVICE_MEMORY_ERROR;
   }
   else {
     return RC_SUCCESS;
@@ -301,6 +307,11 @@ RetCode normalize(const float* src, int rows, int cols, int channels,
       alpha, beta, norm_type);
 
   code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
   }
@@ -308,9 +319,10 @@ RetCode normalize(const float* src, int rows, int cols, int channels,
     cudaFree(norms_values);
   }
 
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
+    return RC_DEVICE_MEMORY_ERROR;
   }
   else {
     return RC_SUCCESS;

@@ -1035,6 +1035,11 @@ RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
   }
 
   code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
   }
@@ -1042,9 +1047,10 @@ RetCode boxFilter(const uchar* src, int rows, int cols, int channels,
     cudaFree(buffer);
   }
 
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
+    return RC_DEVICE_MEMORY_ERROR;
   }
   else {
     return RC_SUCCESS;
@@ -1196,6 +1202,11 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
   }
 
   code = cudaGetLastError();
+  if (code != cudaSuccess) {
+    LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
+
   if (memoryPoolUsed()) {
     pplCudaFree(buffer_block);
   }
@@ -1203,9 +1214,10 @@ RetCode boxFilter(const float* src, int rows, int cols, int channels,
     cudaFree(buffer);
   }
 
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-    return RC_DEVICE_RUNTIME_ERROR;
+    return RC_DEVICE_MEMORY_ERROR;
   }
   else {
     return RC_SUCCESS;

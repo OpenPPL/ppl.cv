@@ -723,7 +723,9 @@ RetCode gaussianblur(const uchar* src, int rows, int cols, int channels,
       return RC_DEVICE_MEMORY_ERROR;
     }
   }
+
   getGaussianKernel<<<1, 1>>>(sigma, ksize, gpu_kernel);
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
@@ -867,8 +869,12 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
     else {
       RUN_CHANNELN_SMALL_KERNELS1(float, float, Reflect101Border);
     }
-
     code = cudaGetLastError();
+    if (code != cudaSuccess) {
+      LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+      return RC_DEVICE_RUNTIME_ERROR;
+    }
+
     if (memoryPoolUsed()) {
       pplCudaFree(buffer_block);
     }
@@ -876,9 +882,10 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
       cudaFree(buffer);
     }
 
+    code = cudaGetLastError();
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-      return RC_DEVICE_RUNTIME_ERROR;
+      return RC_DEVICE_MEMORY_ERROR;
     }
     else {
       return RC_SUCCESS;
@@ -899,7 +906,9 @@ RetCode gaussianblur(const float* src, int rows, int cols, int channels,
       return RC_DEVICE_MEMORY_ERROR;
     }
   }
+
   getGaussianKernel<<<1, 1>>>(sigma, ksize, gpu_kernel);
+  code = cudaGetLastError();
   if (code != cudaSuccess) {
     LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
     return RC_DEVICE_RUNTIME_ERROR;
