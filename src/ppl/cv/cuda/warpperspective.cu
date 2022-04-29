@@ -124,6 +124,13 @@ RetCode warpPerspective(const uchar* src, int src_rows, int src_cols,
       warpLinearTexKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
           src_rows, src_cols, channels, src_stride, perspective_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
+
+      if (channels == 1) {
+        cudaUnbindTexture(uchar_c1_ref);
+      }
+      else {
+        cudaUnbindTexture(uchar_c4_ref);
+      }
     }
     else {
       warpLinearKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
@@ -225,6 +232,13 @@ RetCode warpPerspective(const float* src, int src_rows, int src_cols,
       warpLinearTexKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
           src_rows, src_cols, channels, src_stride, perspective_transform, dst,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
+
+      if (channels == 1) {
+        cudaUnbindTexture(float_c1_ref);
+      }
+      else {
+        cudaUnbindTexture(float_c4_ref);
+      }
     }
     else {
       warpLinearKernel<PerspectiveTransform><<<grid, block, 0, stream>>>(src,
