@@ -164,20 +164,20 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
   grid.y  = (grid_y < rows) ? grid_y : rows;
 
   int blocks = grid.x * grid.y;
-  long* norms_values;
+  long long* norms_values;
   cudaError_t code;
 
   size_t norms_size;;
   if (norm_type == NORM_MINMAX) {
-    norms_size = blocks * 2 * sizeof(long);
+    norms_size = blocks * 2 * sizeof(long long);
   }
   else {
-    norms_size = blocks * sizeof(long);
+    norms_size = blocks * sizeof(long long);
   }
   GpuMemoryBlock buffer_block;
   if (memoryPoolUsed()) {
     pplCudaMalloc(norms_size, buffer_block);
-    norms_values = (long*)(buffer_block.data);
+    norms_values = (long long*)(buffer_block.data);
   }
   else {
     code = cudaMalloc(&norms_values, norms_size);
@@ -188,25 +188,26 @@ RetCode normalize(const uchar* src, int rows, int cols, int channels,
   }
 
   if (norm_type == NORM_INF) {
-    normLinfKernel<uchar, long><<<grid, block, 0, stream>>>(src, rows, cols,
-        channels, src_stride, mask, mask_stride, blocks, norms_values);
+    normLinfKernel<uchar, long long><<<grid, block, 0, stream>>>(src, rows,
+        cols, channels, src_stride, mask, mask_stride, blocks, norms_values);
   }
   else if (norm_type == NORM_L1) {
-    normL1Kernel<uchar, uint, long><<<grid, block, 0, stream>>>(src, rows, cols,
-        channels, src_stride, mask, mask_stride, blocks, norms_values);
+    normL1Kernel<uchar, uint, long long><<<grid, block, 0, stream>>>(src, rows,
+        cols, channels, src_stride, mask, mask_stride, blocks, norms_values);
   }
   else if (norm_type == NORM_L2) {
-    normL2Kernel<uchar, long, long><<<grid, block, 0, stream>>>(src, rows, cols,
-        channels, src_stride, mask, mask_stride, blocks, norms_values);
+    normL2Kernel<uchar, long long, long long><<<grid, block, 0, stream>>>(src,
+        rows, cols, channels, src_stride, mask, mask_stride, blocks,
+        norms_values);
   }
   else {  // norm_type == NORM_MINMAX
     if (alpha > beta) {
       swap(alpha, beta);
     }
-    MinMaxKernel<uchar, long><<<grid, block, 0, stream>>>(src, rows, cols,
+    MinMaxKernel<uchar, long long><<<grid, block, 0, stream>>>(src, rows, cols,
         channels, src_stride, mask, mask_stride, blocks, norms_values);
   }
-  convertKernel<uchar, long><<<grid, block, 0, stream>>>(src, rows, cols,
+  convertKernel<uchar, long long><<<grid, block, 0, stream>>>(src, rows, cols,
       channels, src_stride, mask, mask_stride, dst, dst_stride, norms_values,
       alpha, beta, norm_type);
 
