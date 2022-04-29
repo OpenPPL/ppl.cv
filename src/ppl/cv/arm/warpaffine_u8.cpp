@@ -1143,9 +1143,9 @@ void warpAffine_nearest(
         int32x4_t v_round_delta = vdupq_n_s32(round_delta);
         float32x4_t v_AB_SCALE = vdupq_n_f32(AB_SCALE);
         for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
-            size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
+            size_t blockHeight = std::min<size_t>(BLOCK_SIZE, outHeight - i);
             for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
-                size_t blockWidth = std::min<size_t>(BLOCK_SIZE, inWidth - j);
+                size_t blockWidth = std::min<size_t>(BLOCK_SIZE, outWidth - j);
 
                 // compute table
                 for (size_t y = 0; y < blockHeight; ++y) {
@@ -1199,9 +1199,9 @@ void warpAffine_nearest(
         int32x4_t v_round_delta = vdupq_n_s32(round_delta);
         float32x4_t v_AB_SCALE = vdupq_n_f32(AB_SCALE);
         for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
-            size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
+            size_t blockHeight = std::min<size_t>(BLOCK_SIZE, outHeight - i);
             for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
-                size_t blockWidth = std::min<size_t>(BLOCK_SIZE, inWidth - j);
+                size_t blockWidth = std::min<size_t>(BLOCK_SIZE, outWidth - j);
 
                 // compute table
                 for (size_t y = 0; y < blockHeight; ++y) {
@@ -1258,9 +1258,9 @@ void warpAffine_nearest(
         int32x4_t v_round_delta = vdupq_n_s32(round_delta);
         float32x4_t v_AB_SCALE = vdupq_n_f32(AB_SCALE);
         for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
-            size_t blockHeight = std::min<size_t>(BLOCK_SIZE, inHeight - i);
+            size_t blockHeight = std::min<size_t>(BLOCK_SIZE, outHeight - i);
             for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
-                size_t blockWidth = std::min<size_t>(BLOCK_SIZE, inWidth - j);
+                size_t blockWidth = std::min<size_t>(BLOCK_SIZE, outWidth - j);
 
                 // compute table
                 for (size_t y = 0; y < blockHeight; ++y) {
