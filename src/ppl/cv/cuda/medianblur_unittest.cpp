@@ -95,7 +95,9 @@ bool PplCvCudaMedianBlurTest<T, channels>::apply() {
     cv::medianBlur(src, cv_dst, ksize);
   }
 
-  if (memory_pool == kActivated && sizeof(T) == 1 && ksize > 7) {
+  if (memory_pool == kActivated && sizeof(T) == 1 &&
+      ((channels == 1 && ksize > 7) ||
+       ((channels == 3 || channels == 4) && ksize > 5))) {
     size_t volume = size.width * channels * (size.height + 255) / 256 * 272 *
                     sizeof(ushort);
     size_t ceiled_volume = ppl::cv::cuda::ceil1DVolume(volume);
@@ -112,7 +114,9 @@ bool PplCvCudaMedianBlurTest<T, channels>::apply() {
       ksize, ppl::cv::BORDER_REPLICATE);
   cudaMemcpy(output, gpu_output, dst_size, cudaMemcpyDeviceToHost);
 
-  if (memory_pool == kActivated && sizeof(T) == 1 && ksize > 7) {
+  if (memory_pool == kActivated && sizeof(T) == 1 &&
+      ((channels == 1 && ksize > 7) ||
+       ((channels == 3 || channels == 4) && ksize > 5))) {
     ppl::cv::cuda::shutDownGpuMemoryPool();
   }
 

@@ -2082,6 +2082,15 @@ RetCode medainblur(const uchar* src, int rows, int cols, int channels,
       else {
         RUN_C1_SMALL_KERNELS(Reflect101Border);
       }
+
+      code = cudaGetLastError();
+      if (code != cudaSuccess) {
+        LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+        return RC_DEVICE_RUNTIME_ERROR;
+      }
+      else {
+        return RC_SUCCESS;
+      }
     }
     else {
       block.x = BLOCK_WIDTH;

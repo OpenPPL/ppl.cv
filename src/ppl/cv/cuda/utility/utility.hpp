@@ -922,6 +922,37 @@ struct Reflect101Border {
 
 typedef struct Reflect101Border DefaultBorder;
 
+template <typename T>
+inline bool checkOverlapping(T* address0, size_t pitch0, size_t rows0,
+                             T* address1, size_t pitch1, size_t rows1) {
+  T* end0 = (T*)((uchar*)address0 + pitch0 * rows0);
+  T* end1 = (T*)((uchar*)address1 + pitch1 * rows1);
+  T* temp;
+
+  if (address0 > address1) {
+    temp = address0;
+    address0 = address1;
+    address1 = temp;
+
+    temp = end0;
+    end0 = end1;
+    end1 = temp;
+  }
+
+  if (address0 == address1) {
+    return true;
+  }
+
+  if (address0 < address1) {
+    if (address1 < end0) {
+      return true;
+    }
+  }
+  else {
+    return false;
+  }
+}
+
 }  // namespace cuda
 }  // namespace cv
 }  // namespace ppl
