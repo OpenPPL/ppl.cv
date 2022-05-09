@@ -122,7 +122,7 @@ void BM_Transpose_opencv_x86_cuda(benchmark::State &state) {
   state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_BENCHMARK(channels, width, height)                                 \
+#define RUN_BENCHMARK0(channels, width, height)                                \
 BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, uchar, channels)->            \
                    Args({width, height});                                      \
 BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, uchar, channels)->                   \
@@ -132,18 +132,35 @@ BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, float, channels)->            \
 BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, float, channels)->                   \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(c1, 640, 480)
-// RUN_BENCHMARK(c3, 640, 480)
-// RUN_BENCHMARK(c4, 640, 480)
+// RUN_BENCHMARK0(c1, 640, 480)
+// RUN_BENCHMARK0(c3, 640, 480)
+// RUN_BENCHMARK0(c4, 640, 480)
 
-// RUN_BENCHMARK(c1, 1920, 1080)
-// RUN_BENCHMARK(c3, 1920, 1080)
-// RUN_BENCHMARK(c4, 1920, 1080)
+// RUN_BENCHMARK0(c1, 1920, 1080)
+// RUN_BENCHMARK0(c3, 1920, 1080)
+// RUN_BENCHMARK0(c4, 1920, 1080)
+
+#define RUN_BENCHMARK1(channels, type, width, height)                          \
+BENCHMARK_TEMPLATE(BM_Transpose_opencv_cuda, type, channels)->                 \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, channels)->                    \
+                   Args({width, height})->UseManualTime()->Iterations(10);
+
+// RUN_BENCHMARK1(c1, uchar, 640, 480)
+// RUN_BENCHMARK1(c4, uchar, 640, 480)
+// RUN_BENCHMARK1(c1, float, 640, 480)
+
+// RUN_BENCHMARK1(c1, uchar, 1920, 1080)
+// RUN_BENCHMARK1(c4, uchar, 1920, 1080)
+// RUN_BENCHMARK1(c1, float, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type)                                        \
 BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c1)->Args({640, 480});  \
 BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c3)->Args({640, 480});  \
-BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c4)->Args({640, 480});
+BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c4)->Args({640, 480});  \
+BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c1)->Args({1920, 1080});\
+BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c3)->Args({1920, 1080});\
+BENCHMARK_TEMPLATE(BM_Transpose_opencv_x86_cuda, type, c4)->Args({1920, 1080});
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(type)                                        \
 BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c1)->Args({640, 480})->        \
@@ -151,6 +168,12 @@ BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c1)->Args({640, 480})->        \
 BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c3)->Args({640, 480})->        \
                    UseManualTime()->Iterations(10);                            \
 BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c4)->Args({640, 480})->        \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c1)->Args({1920, 1080})->      \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c3)->Args({1920, 1080})->      \
+                   UseManualTime()->Iterations(10);                            \
+BENCHMARK_TEMPLATE(BM_Transpose_ppl_cuda, type, c4)->Args({1920, 1080})->      \
                    UseManualTime()->Iterations(10);
 
 RUN_OPENCV_TYPE_FUNCTIONS(uchar)
