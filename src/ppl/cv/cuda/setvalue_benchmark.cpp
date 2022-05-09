@@ -340,6 +340,20 @@ BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c3, c1, function)->     \
 BENCHMARK_TEMPLATE(BM_SetValue_opencv_x86_cuda, float, c4, c1, function)->     \
                    Args({width, height});
 
+#define RUN_OPENCV_TYPE_FUNCTIONS2(function, width, height)                    \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c1, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c3, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, uchar, c4, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c1, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c3, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);     \
+BENCHMARK_TEMPLATE(BM_SetValue_opencv_cuda, float, c4, c1, function)->         \
+                   Args({width, height})->UseManualTime()->Iterations(10);
+
 #define RUN_PPL_CV_TYPE_FUNCTIONS0(function, width, height)                    \
 BENCHMARK_TEMPLATE(BM_SetValue_ppl_cuda, uchar, c1, c1, function)->            \
                    Args({width, height})->UseManualTime()->Iterations(10);     \
@@ -391,10 +405,10 @@ RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 640, 480)
 RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1280, 720)
 RUN_OPENCV_TYPE_FUNCTIONS1(kOnes, 1920, 1080)
 
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 320, 240)
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 640, 480)
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1280, 720)
-RUN_OPENCV_TYPE_FUNCTIONS1(kZeros, 1920, 1080)
+RUN_OPENCV_TYPE_FUNCTIONS2(kZeros, 320, 240)
+RUN_OPENCV_TYPE_FUNCTIONS2(kZeros, 640, 480)
+RUN_OPENCV_TYPE_FUNCTIONS2(kZeros, 1280, 720)
+RUN_OPENCV_TYPE_FUNCTIONS2(kZeros, 1920, 1080)
 
 RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 320, 240)
 RUN_PPL_CV_TYPE_FUNCTIONS0(kUnmaskedSetTo, 640, 480)

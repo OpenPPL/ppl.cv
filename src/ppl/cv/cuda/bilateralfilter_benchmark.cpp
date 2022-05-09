@@ -254,9 +254,11 @@ BENCHMARK_TEMPLATE(BM_BilateralFilter_ppl_cuda, float, c3, diameter,           \
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, diameter, border_type)                 \
 BENCHMARK_TEMPLATE(BM_BilateralFilter_opencv_cuda, type, c1, diameter,         \
-                   border_type)->Args({640, 480});                             \
+                   border_type)->Args({640, 480})->                            \
+                   UseManualTime()->Iterations(10);                            \
 BENCHMARK_TEMPLATE(BM_BilateralFilter_opencv_cuda, type, c3, diameter,         \
-                   border_type)->Args({640, 480});
+                   border_type)->Args({640, 480})->                            \
+                   UseManualTime()->Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(type, diameter, border_type)                 \
 BENCHMARK_TEMPLATE(BM_BilateralFilter_ppl_cuda, type, c1, diameter,            \
