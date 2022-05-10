@@ -11,12 +11,32 @@ if(PPLCV_HOLD_DEPS)
     set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 endif()
 
-FetchContent_Declare(hpcc
-    GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG 888a2960c20ed7c5a8cff5a1dc0c18244feec38e
-    SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
-    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
-    SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
+# --------------------------------------------------------------------------- #
+
+set(__HPCC_COMMIT__ d3302ce75b8bca78f25c770517e99d29a16c8ccb)
+
+if(PPLCV_DEP_HPCC_PKG)
+    FetchContent_Declare(hpcc
+        URL ${PPLCV_DEP_HPCC_PKG}
+        SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
+        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
+        SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
+elseif(PPLCV_DEP_HPCC_GIT)
+    FetchContent_Declare(hpcc
+        GIT_REPOSITORY ${PPLCV_DEP_HPCC_GIT}
+        GIT_TAG ${__HPCC_COMMIT__}
+        SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
+        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
+        SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
+else()
+    FetchContent_Declare(hpcc
+        URL https://github.com/openppl-public/hpcc/archive/${__HPCC_COMMIT__}.zip
+        SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
+        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
+        SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
+endif()
+
+unset(__HPCC_COMMIT__)
 
 FetchContent_GetProperties(hpcc)
 if(NOT hpcc_POPULATED)
@@ -26,31 +46,67 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(INSTALL_GTEST OFF CACHE BOOL "")
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
-
-hpcc_declare_pkg_dep(googletest
-    https://github.com/google/googletest/archive/refs/tags/release-1.8.1.zip
-    ad6868782b5952b7476a7c1c72d5a714)
-
-# --------------------------------------------------------------------------- #
-
 set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable pplcommon tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable pplcommon benchmark")
 set(PPLCOMMON_HOLD_DEPS ${PPLCV_HOLD_DEPS})
 
-hpcc_declare_git_dep(pplcommon
-    https://github.com/openppl-public/ppl.common.git
-    edaee076831a619af032348d5c5f2c304aa49c7b)
+set(__PPLCOMMON_COMMIT__ 4c54cc4d6781cd8f7170be70c1f2af93429588c6)
+
+if(PPLCV_DEP_PPLCOMMON_PKG)
+    hpcc_declare_pkg_dep(pplcommon
+        ${PPLCV_DEP_PPLCOMMON_PKG})
+elseif(PPLCV_DEP_PPLCOMMON_GIT)
+    hpcc_declare_git_dep(pplcommon
+        ${PPLCV_DEP_PPLCOMMON_GIT}
+        ${__PPLCOMMON_COMMIT__})
+else()
+    hpcc_declare_pkg_dep(pplcommon
+        https://github.com/openppl-public/ppl.common/archive/${__PPLCOMMON_COMMIT__}.zip)
+endif()
+
+unset(__PPLCOMMON_COMMIT__)
+
+# --------------------------------------------------------------------------- #
+
+set(INSTALL_GTEST OFF CACHE BOOL "")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
+
+set(__GOOGLETEST_TAG__ release-1.8.1)
+
+if(PPLCV_DEP_GOOGLETEST_PKG)
+    hpcc_declare_pkg_dep(googletest
+        ${PPLCV_DEP_GOOGLETEST_PKG})
+elseif(PPLCV_DEP_GOOGLETEST_GIT)
+    hpcc_declare_git_dep(googletest
+        ${PPLCV_DEP_GOOGLETEST_GIT}
+        ${__GOOGLETEST_TAG__})
+else()
+    hpcc_declare_pkg_dep(googletest
+        https://github.com/google/googletest/archive/refs/tags/${__GOOGLETEST_TAG__}.zip)
+endif()
+
+unset(__GOOGLETEST_TAG__)
 
 # --------------------------------------------------------------------------- #
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "disable benchmark tests")
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")
 
-hpcc_declare_pkg_dep(benchmark
-    https://github.com/google/benchmark/archive/refs/tags/v1.5.6.zip
-    2abe04dc31fc7f18b5f0647775b16249)
+set(__BENCHMARK__TAG__ v1.5.6)
+
+if(PPLCV_DEP_BENCHMARK_PKG)
+    hpcc_declare_pkg_dep(benchmark
+        ${PPLCV_DEP_BENCHMARK_PKG})
+elseif(PPLCV_DEP_BENCHMARK_GIT)
+    hpcc_declare_git_dep(benchmark
+        ${PPLCV_DEP_BENCHMARK_GIT}
+        ${__BENCHMARK__TAG__})
+else()
+    hpcc_declare_pkg_dep(benchmark
+        https://github.com/google/benchmark/archive/refs/tags/${__BENCHMARK__TAG__}.zip)
+endif()
+
+unset(__BENCHMARK__TAG__)
 
 # --------------------------------------------------------------------------- #
 
@@ -60,10 +116,30 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "")
 set(BUILD_opencv_apps OFF CACHE BOOL "")
 set(OPENCV_EXTRA_MODULES_PATH "${HPCC_DEPS_DIR}/opencv_contrib/modules" CACHE INTERNAL "")
 
-hpcc_declare_pkg_dep(opencv
-    https://github.com/opencv/opencv/archive/refs/tags/4.4.0.zip
-    4b00f5cdb1cf393c4a84696362c5a72a)
+set(__OPENCV_TAG__ 4.4.0)
 
-hpcc_declare_pkg_dep(opencv_contrib
-    https://github.com/opencv/opencv_contrib/archive/refs/tags/4.4.0.zip
-    d5fc20e0eb036f702f5b8f9b8f5531a6)
+if(PPLCV_DEP_OPENCV_PKG)
+    hpcc_declare_pkg_dep(opencv
+        ${PPLCV_DEP_OPENCV_PKG})
+elseif(PPLCV_DEP_OPENCV_GIT)
+    hpcc_declare_git_dep(opencv
+        ${PPLCV_DEP_OPENCV_GIT}
+        ${__OPENCV_TAG__})
+else()
+    hpcc_declare_pkg_dep(opencv
+        https://github.com/opencv/opencv/archive/refs/tags/${__OPENCV_TAG__}.zip)
+endif()
+
+if(PPLCV_DEP_OPENCV_CONTRIB_PKG)
+    hpcc_declare_pkg_dep(opencv_contrib
+        ${PPLCV_DEP_OPENCV_CONTRIB_PKG})
+elseif(PPLCV_DEP_OPENCV_CONTRIB_GIT)
+    hpcc_declare_git_dep(opencv_contrib
+        ${PPLCV_DEP_OPENCV_CONTRIB_GIT}
+        ${__OPENCV_TAG__})
+else()
+    hpcc_declare_pkg_dep(opencv_contrib
+        https://github.com/opencv/opencv_contrib/archive/refs/tags/${__OPENCV_TAG__}.zip)
+endif()
+
+unset(__OPENCV_TAG__)
