@@ -13,7 +13,7 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(__HPCC_COMMIT__ d3302ce75b8bca78f25c770517e99d29a16c8ccb)
+set(__HPCC_COMMIT__ 266579679761dd2c37440c700fb5602187056fce)
 
 if(PPLCV_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -50,7 +50,7 @@ set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable pplcommon tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable pplcommon benchmark")
 set(PPLCOMMON_HOLD_DEPS ${PPLCV_HOLD_DEPS})
 
-set(__PPLCOMMON_COMMIT__ 4c54cc4d6781cd8f7170be70c1f2af93429588c6)
+set(__PPLCOMMON_COMMIT__ 868c14594f2d317923b6ab45f9182cb7be394afc)
 
 if(PPLCV_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon

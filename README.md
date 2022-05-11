@@ -20,7 +20,7 @@ $ ./build.sh cuda                           # for linux-x86_64_cuda
 Using vs2015 for example:
 
 ```
-build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_X86_64=ON
+build.bat -G "Visual Studio 14 2015 Win64" -DPPLCV_USE_X86_64=ON
 ```
 
 ### Documentation

@@ -1,3 +1,5 @@
+include(${HPCC_DEPS_DIR}/hpcc/cmake/cuda-common.cmake)
+
 set(_NVCC_FLAGS )
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_35,code=sm_35")
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_37,code=sm_37")
@@ -28,7 +30,6 @@ file(GLOB PPLCV_CUDA_PUBLIC_HEADERS src/ppl/cv/cuda/*.h)
 install(FILES ${PPLCV_CUDA_PUBLIC_HEADERS}
     DESTINATION include/ppl/cv/cuda)
 
-set(PPLCV_USE_CUDA ON)
 list(APPEND PPLCV_COMPILE_DEFINITIONS PPLCV_USE_CUDA)
 
 file(GLOB PPLCV_CUDA_SRC src/ppl/cv/cuda/*.cpp src/ppl/cv/cuda/utility/*.cpp)

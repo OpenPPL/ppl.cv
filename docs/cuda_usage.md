@@ -22,7 +22,7 @@ ppl.cv/cuda-build/install/
 
 If what you want to build includes not only the static library but also the executable unit test and benchmark, then run the following command in the root directory of ppl.cv.
 
-`$ ./build.sh cuda -DHPCC_USE_X86_64=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
+`$ ./build.sh cuda -DPPLCV_USE_X86_64=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
 
 Besides the static library, the executable program files of ppl.cv unittest and benchmark will be generated and the location looks like this:
 
@@ -37,9 +37,9 @@ ppl.cv/cuda-build/bin/
 
 Similar to compiling and linking on linux, script and commands to invoke Microsoft Visual Studio are used to build ppl.cv. For now, "Visual Studio 2015" and "Visual Studio 2019" are supported and tested. If you just want ppl.cv binary libary to link, then run the following command in the root directory of ppl.cv.
 
-`$ ./build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_CUDA=ON`
+`$ ./build.bat -G "Visual Studio 14 2015 Win64" -DPPLCV_USE_CUDA=ON`
 
-`$ ./build.bat -G "Visual Studio 16 2019" -A x64 -DHPCC_USE_CUDA=ON`
+`$ ./build.bat -G "Visual Studio 16 2019" -A x64 -DPPLCV_USE_CUDA=ON`
 
 The generated directories and files look something like this:
 
@@ -57,9 +57,9 @@ ppl.cv/cuda-build/install/
 
 If what you want to build includes not only the static library but also the executable unit test and benchmark, then run the following command in the root directory of ppl.cv.
 
-`$ ./build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_X86_64=ON -DHPCC_USE_CUDA=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
+`$ ./build.bat -G "Visual Studio 14 2015 Win64" -DPPLCV_USE_X86_64=ON -DPPLCV_USE_CUDA=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
 
-`$ ./build.bat -G "Visual Studio 16 2019" -A x64 -DHPCC_USE_X86_64=ON -DHPCC_USE_CUDA=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
+`$ ./build.bat -G "Visual Studio 16 2019" -A x64 -DPPLCV_USE_X86_64=ON -DPPLCV_USE_CUDA=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
 
 Besides directories of the header files and the static library, the executable unittest and benchmark are located as:
 

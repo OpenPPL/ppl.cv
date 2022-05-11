@@ -3,11 +3,14 @@ file(GLOB PPLCV_X86_PUBLIC_HEADERS src/ppl/cv/x86/*.h)
 install(FILES ${PPLCV_X86_PUBLIC_HEADERS}
         DESTINATION include/ppl/cv/x86)
 
-option(WITH_X86 "Build pplcv with x86 support" ON)
-option(PPLCV_USE_X86 "Build unittest & benchmark with x86 support" ON)
-option(USE_X86_OMP "Build x86 kernel with openmp support" OFF)
+set(WITH_X86 ON)
+set(PPLCV_USE_X86 ON)
 
-if(HPCC_USE_OPENMP)
+if(HPCC_USE_OPENMP AND NOT PPLCV_USE_OPENMP)
+    message(FATAL_ERROR "`HPCC_USE_OPENMP` is deprecated. use `PPLCV_USE_OPENMP` instead.")
+endif()
+
+if(PPLCV_USE_OPENMP)
     set(USE_X86_OMP ON)
 endif()
 

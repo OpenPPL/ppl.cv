@@ -10,6 +10,21 @@ option(PPLCV_BUILD_TESTS "build tests" OFF)
 option(PPLCV_BUILD_BENCHMARK "build benchmark" OFF)
 option(PPLCV_HOLD_DEPS "don't update dependencies" OFF)
 
+option(PPLCV_USE_X86_64 "" OFF)
+option(PPLCV_USE_AARCH64 "" OFF)
+option(PPLCV_USE_CUDA "" OFF)
+
+# deprecated options
+if(HPCC_USE_X86_64 AND NOT PPLCV_USE_X86_64)
+    message(FATAL_ERROR "`HPCC_USE_X86_64` is deprecated. use `PPLCV_USE_X86_64` instead.")
+endif()
+if(HPCC_USE_AARCH64 AND NOT PPLCV_USE_AARCH64)
+    message(FATAL_ERROR "`HPCC_USE_AARCH64` is deprecated. use `PPLCV_USE_AARCH64` instead.")
+endif()
+if(HPCC_USE_CUDA AND NOT PPLCV_USE_CUDA)
+    message(FATAL_ERROR "`HPCC_USE_CUDA` is deprecated. use `PPLCV_USE_CUDA` instead.")
+endif()
+
 # --------------------------------------------------------------------------- #
 
 set(PPLCV_VERSION_MAJOR 0)
@@ -32,15 +47,15 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18.0")
     cmake_policy(SET CMP0104 OLD)
 endif()
 
-if(HPCC_USE_X86_64)
+if(PPLCV_USE_X86_64)
     include(cmake/x86.cmake)
 endif()
 
-if(HPCC_USE_CUDA)
+if(PPLCV_USE_CUDA)
     include(cmake/cuda.cmake)
 endif()
 
-if(HPCC_USE_AARCH64)
+if(PPLCV_USE_AARCH64)
     include(cmake/arm.cmake)
 endif()
 
