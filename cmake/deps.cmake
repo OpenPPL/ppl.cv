@@ -13,7 +13,7 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(__HPCC_COMMIT__ 266579679761dd2c37440c700fb5602187056fce)
+set(__HPCC_COMMIT__ 800a280b41228df99a3d585d27b3fd962e780414)
 
 if(PPLCV_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -52,7 +52,7 @@ set(PPLCOMMON_HOLD_DEPS ${PPLCV_HOLD_DEPS})
 set(PPLCOMMON_USE_X86_64 ${PPLCV_USE_X86_64})
 set(PPLCOMMON_USE_AARCH64 ${PPLCV_USE_AARCH64})
 
-set(__PPLCOMMON_COMMIT__ 868c14594f2d317923b6ab45f9182cb7be394afc)
+set(__PPLCOMMON_COMMIT__ 3c0ceaa58b6077a7ba342608db58be437ad8e835)
 
 if(PPLCV_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
@@ -70,10 +70,12 @@ unset(__PPLCOMMON_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 
+set(BUILD_GMOCK OFF CACHE BOOL "")
 set(INSTALL_GTEST OFF CACHE BOOL "")
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
+# Prevent overriding the parent project's compiler/linker settings on Windows
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-set(__GOOGLETEST_TAG__ release-1.8.1)
+set(__GOOGLETEST_TAG__ release-1.10.0)
 
 if(PPLCV_DEP_GOOGLETEST_PKG)
     hpcc_declare_pkg_dep(googletest

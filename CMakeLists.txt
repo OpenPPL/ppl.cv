@@ -10,6 +10,10 @@ option(PPLCV_BUILD_TESTS "build tests" OFF)
 option(PPLCV_BUILD_BENCHMARK "build benchmark" OFF)
 option(PPLCV_HOLD_DEPS "don't update dependencies" OFF)
 
+if(MSVC)
+    option(PPLCV_USE_MSVC_STATIC_RUNTIME "" ON)
+endif()
+
 option(PPLCV_USE_X86_64 "" OFF)
 option(PPLCV_USE_AARCH64 "" OFF)
 option(PPLCV_USE_CUDA "" OFF)
@@ -39,6 +43,14 @@ set(PPLCV_UNITTEST_SRC )
 set(PPLCV_INCLUDE_DIRECTORIES )
 set(PPLCV_LINK_LIBRARIES )
 set(PPLCV_COMPILE_DEFINITIONS )
+
+# --------------------------------------------------------------------------- #
+
+if(PPLCV_USE_MSVC_STATIC_RUNTIME)
+    hpcc_use_msvc_static_runtime()
+else()
+    hpcc_use_msvc_dynamic_runtime()
+endif()
 
 # --------------------------------------------------------------------------- #
 

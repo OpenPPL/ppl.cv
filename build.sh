@@ -14,14 +14,15 @@ else
     processor_num=1
 fi
 
-options='-DCMAKE_BUILD_TYPE=Release'
+build_type='Release'
+options="-DCMAKE_BUILD_TYPE=${build_type}"
 
 # --------------------------------------------------------------------------- #
 
 function BuildCuda() {
     mkdir ${cuda_build_dir}
     cd ${cuda_build_dir}
-    cmd="cmake $options -DPPLCV_USE_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && make -j${processor_num} && make install"
+    cmd="cmake $options -DPPLCV_USE_CUDA=ON -DCMAKE_INSTALL_PREFIX=${cuda_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
@@ -29,7 +30,7 @@ function BuildCuda() {
 function BuildX86_64() {
     mkdir ${x86_64_build_dir}
     cd ${x86_64_build_dir}
-    cmd="cmake $options -DPPLCV_USE_X86_64=ON -DCMAKE_INSTALL_PREFIX=${x86_64_build_dir}/install .. && make -j${processor_num} && make install"
+    cmd="cmake $options -DPPLCV_USE_X86_64=ON -DCMAKE_INSTALL_PREFIX=${x86_64_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
@@ -50,7 +51,7 @@ function BuildAarch64() {
 
     mkdir ${aarch64_build_dir}
     cd ${aarch64_build_dir}
-    cmd="cmake $options ${extra_options} -DPPLCV_USE_AARCH64=ON -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install .. && make -j${processor_num} && make install"
+    cmd="cmake $options ${extra_options} -DPPLCV_USE_AARCH64=ON -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
@@ -69,7 +70,7 @@ function BuildRiscv() {
 
     mkdir ${riscv_build_dir}
     cd ${riscv_build_dir}
-    cmd="cmake $options ${extra_options} -DPPLCV_USE_RISCV64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF .. && make -j${processor_num}"
+    cmd="cmake $options ${extra_options} -DPPLCV_USE_RISCV64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
     eval "$cmd"      
 }

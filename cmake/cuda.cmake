@@ -1,5 +1,9 @@
 include(${HPCC_DEPS_DIR}/hpcc/cmake/cuda-common.cmake)
 
+if(PPLCV_USE_MSVC_STATIC_RUNTIME)
+    hpcc_cuda_use_msvc_static_runtime()
+endif()
+
 set(_NVCC_FLAGS )
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_35,code=sm_35")
 set(_NVCC_FLAGS "${_NVCC_FLAGS} -gencode arch=compute_37,code=sm_37")
