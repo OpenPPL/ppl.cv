@@ -13,7 +13,7 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(__HPCC_COMMIT__ 800a280b41228df99a3d585d27b3fd962e780414)
+set(__HPCC_COMMIT__ e6e445437fba399cc86867536fdf4252bbefae61)
 
 if(PPLCV_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -21,16 +21,13 @@ if(PPLCV_DEP_HPCC_PKG)
         SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
         SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
-elseif(PPLCV_DEP_HPCC_GIT)
+else()
+    if(NOT PPLCV_DEP_HPCC_GIT)
+        set(PPLCV_DEP_HPCC_GIT "https://github.com/openppl-public/hpcc.git")
+    endif()
     FetchContent_Declare(hpcc
         GIT_REPOSITORY ${PPLCV_DEP_HPCC_GIT}
         GIT_TAG ${__HPCC_COMMIT__}
-        SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
-        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
-        SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
-else()
-    FetchContent_Declare(hpcc
-        URL https://github.com/openppl-public/hpcc/archive/${__HPCC_COMMIT__}.zip
         SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
         SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
@@ -52,18 +49,18 @@ set(PPLCOMMON_HOLD_DEPS ${PPLCV_HOLD_DEPS})
 set(PPLCOMMON_USE_X86_64 ${PPLCV_USE_X86_64})
 set(PPLCOMMON_USE_AARCH64 ${PPLCV_USE_AARCH64})
 
-set(__PPLCOMMON_COMMIT__ 3c0ceaa58b6077a7ba342608db58be437ad8e835)
+set(__PPLCOMMON_COMMIT__ af2d3683f3816895675dd8f347ac42ce53f3130b)
 
 if(PPLCV_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
         ${PPLCV_DEP_PPLCOMMON_PKG})
-elseif(PPLCV_DEP_PPLCOMMON_GIT)
+else()
+    if(NOT PPLCV_DEP_PPLCOMMON_GIT)
+        set(PPLCV_DEP_PPLCOMMON_GIT "https://github.com/openppl-public/ppl.common.git")
+    endif()
     hpcc_declare_git_dep(pplcommon
         ${PPLCV_DEP_PPLCOMMON_GIT}
         ${__PPLCOMMON_COMMIT__})
-else()
-    hpcc_declare_pkg_dep(pplcommon
-        https://github.com/openppl-public/ppl.common/archive/${__PPLCOMMON_COMMIT__}.zip)
 endif()
 
 unset(__PPLCOMMON_COMMIT__)
@@ -80,13 +77,13 @@ set(__GOOGLETEST_TAG__ release-1.10.0)
 if(PPLCV_DEP_GOOGLETEST_PKG)
     hpcc_declare_pkg_dep(googletest
         ${PPLCV_DEP_GOOGLETEST_PKG})
-elseif(PPLCV_DEP_GOOGLETEST_GIT)
+else()
+    if(NOT PPLCV_DEP_GOOGLETEST_GIT)
+        set(PPLCV_DEP_GOOGLETEST_GIT "https://github.com/google/googletest.git")
+    endif()
     hpcc_declare_git_dep(googletest
         ${PPLCV_DEP_GOOGLETEST_GIT}
         ${__GOOGLETEST_TAG__})
-else()
-    hpcc_declare_pkg_dep(googletest
-        https://github.com/google/googletest/archive/refs/tags/${__GOOGLETEST_TAG__}.zip)
 endif()
 
 unset(__GOOGLETEST_TAG__)
@@ -101,13 +98,13 @@ set(__BENCHMARK__TAG__ v1.5.6)
 if(PPLCV_DEP_BENCHMARK_PKG)
     hpcc_declare_pkg_dep(benchmark
         ${PPLCV_DEP_BENCHMARK_PKG})
-elseif(PPLCV_DEP_BENCHMARK_GIT)
+else()
+    if(NOT PPLCV_DEP_BENCHMARK_GIT)
+        set(PPLCV_DEP_BENCHMARK_GIT "https://github.com/google/benchmark.git")
+    endif()
     hpcc_declare_git_dep(benchmark
         ${PPLCV_DEP_BENCHMARK_GIT}
         ${__BENCHMARK__TAG__})
-else()
-    hpcc_declare_pkg_dep(benchmark
-        https://github.com/google/benchmark/archive/refs/tags/${__BENCHMARK__TAG__}.zip)
 endif()
 
 unset(__BENCHMARK__TAG__)
@@ -125,25 +122,25 @@ set(__OPENCV_TAG__ 4.4.0)
 if(PPLCV_DEP_OPENCV_PKG)
     hpcc_declare_pkg_dep(opencv
         ${PPLCV_DEP_OPENCV_PKG})
-elseif(PPLCV_DEP_OPENCV_GIT)
+else()
+    if(NOT PPLCV_DEP_OPENCV_GIT)
+        set(PPLCV_DEP_OPENCV_GIT "https://github.com/opencv/opencv.git")
+    endif()
     hpcc_declare_git_dep(opencv
         ${PPLCV_DEP_OPENCV_GIT}
         ${__OPENCV_TAG__})
-else()
-    hpcc_declare_pkg_dep(opencv
-        https://github.com/opencv/opencv/archive/refs/tags/${__OPENCV_TAG__}.zip)
 endif()
 
 if(PPLCV_DEP_OPENCV_CONTRIB_PKG)
     hpcc_declare_pkg_dep(opencv_contrib
         ${PPLCV_DEP_OPENCV_CONTRIB_PKG})
-elseif(PPLCV_DEP_OPENCV_CONTRIB_GIT)
+else()
+    if(NOT PPLCV_DEP_OPENCV_CONTRIB_GIT)
+        set(PPLCV_DEP_OPENCV_CONTRIB_GIT "https://github.com/opencv/opencv_contrib.git")
+    endif()
     hpcc_declare_git_dep(opencv_contrib
         ${PPLCV_DEP_OPENCV_CONTRIB_GIT}
         ${__OPENCV_TAG__})
-else()
-    hpcc_declare_pkg_dep(opencv_contrib
-        https://github.com/opencv/opencv_contrib/archive/refs/tags/${__OPENCV_TAG__}.zip)
 endif()
 
 unset(__OPENCV_TAG__)
