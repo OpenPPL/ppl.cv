@@ -43,13 +43,10 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
     return;
   }
 
-  transform.calculateCoordinates(element_x, element_y);
-  float src_x = transform.getX();
-  float src_y = transform.getY();
-
+  float2 src_xy = transform.calculateCoordinates(element_x, element_y);
   if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
-    int src_x0 = __float2int_rd(src_x);
-    int src_y0 = __float2int_rd(src_y);
+    int src_x0 = __float2int_rd(src_xy.x);
+    int src_y0 = __float2int_rd(src_xy.y);
     int src_x1 = src_x0 + 1;
     int src_y1 = src_y0 + 1;
 
@@ -69,7 +66,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
 
     if (channels == 1) {
       if (flag0 && flag1 && flag2 && flag3) {
-        float value = tex2D(uchar_c1_ref, src_x + 0.5f, src_y + 0.5f);
+        float value = tex2D(uchar_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
         value *= 255.0f;
 
         uchar* output = (uchar*)(dst + element_y * dst_stride);
@@ -79,8 +76,8 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
         uchar* input = (uchar*)(src + src_y0 * src_stride);
         uchar src_value0 = flag0 ? input[src_x0] : border_value;
         uchar src_value1 = flag1 ? input[src_x1] : border_value;
-        float value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-        float value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+        float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+        float value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
         float sum = 0.f;
         sum += value0;
         sum += value1;
@@ -88,8 +85,8 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
         input = (uchar*)(src + src_y1 * src_stride);
         src_value0 = flag2 ? input[src_x0] : border_value;
         src_value1 = flag3 ? input[src_x1] : border_value;
-        value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-        value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+        value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+        value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
         sum += value0;
         sum += value1;
 
@@ -99,7 +96,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
     }
     else {  // channels == 4
       if (flag0 && flag1 && flag2 && flag3) {
-        float4 value = tex2D(uchar_c4_ref, src_x + 0.5f, src_y + 0.5f);
+        float4 value = tex2D(uchar_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
         value.x *= 255.0f;
         value.y *= 255.0f;
         value.z *= 255.0f;
@@ -114,8 +111,8 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
         uchar4* input = (uchar4*)(src + src_y0 * src_stride);
         uchar4 src_value0 = flag0 ? input[src_x0] : border_value1;
         uchar4 src_value1 = flag1 ? input[src_x1] : border_value1;
-        float4 value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-        float4 value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+        float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+        float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
         float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
         sum += value0;
         sum += value1;
@@ -123,8 +120,8 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
         input = (uchar4*)(src + src_y1 * src_stride);
         src_value0 = flag2 ? input[src_x0] : border_value1;
         src_value1 = flag3 ? input[src_x1] : border_value1;
-        value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-        value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+        value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+        value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
         sum += value0;
         sum += value1;
 
@@ -135,14 +132,14 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
   }
   else if (border_type == BORDER_REPLICATE) {
     if (channels == 1) {
-      float value = tex2D(uchar_c1_ref, src_x + 0.5f, src_y + 0.5f);
+      float value = tex2D(uchar_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
       value *= 255.0f;
 
       uchar* output = (uchar*)(dst + element_y * dst_stride);
       output[element_x] = saturateCast(value);
     }
     else {  // channels == 4
-      float4 value = tex2D(uchar_c4_ref, src_x + 0.5f, src_y + 0.5f);
+      float4 value = tex2D(uchar_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
       value.x *= 255.0f;
       value.y *= 255.0f;
       value.z *= 255.0f;
@@ -168,12 +165,10 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
     return;
   }
 
-  transform.calculateCoordinates(element_x, element_y);
-  float src_x = transform.getX();
-  float src_y = transform.getY();
+  float2 src_xy = transform.calculateCoordinates(element_x, element_y);
   if (border_type == BORDER_CONSTANT || border_type == BORDER_TRANSPARENT) {
-    int src_x0 = __float2int_rd(src_x);
-    int src_y0 = __float2int_rd(src_y);
+    int src_x0 = __float2int_rd(src_xy.x);
+    int src_y0 = __float2int_rd(src_xy.y);
     int src_x1 = src_x0 + 1;
     int src_y1 = src_y0 + 1;
 
@@ -193,7 +188,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
 
     if (channels == 1) {
       if (flag0 && flag1 && flag2 && flag3) {
-        float value = tex2D(float_c1_ref, src_x + 0.5f, src_y + 0.5f);
+        float value = tex2D(float_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
         float* output = (float*)((uchar*)dst + element_y * dst_stride);
         output[element_x] = value;
@@ -202,8 +197,8 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
         float* input = (float*)((uchar*)src + src_y0 * src_stride);
         float src_value0 = flag0 ? input[src_x0] : border_value;
         float src_value1 = flag1 ? input[src_x1] : border_value;
-        float value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-        float value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+        float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+        float value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
         float sum = 0.f;
         sum += value0;
         sum += value1;
@@ -211,8 +206,8 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
         input = (float*)((uchar*)src + src_y1 * src_stride);
         src_value0 = flag2 ? input[src_x0] : border_value;
         src_value1 = flag3 ? input[src_x1] : border_value;
-        value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-        value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+        value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+        value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
         sum += value0;
         sum += value1;
 
@@ -222,7 +217,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
     }
     else {  // channels == 4
       if (flag0 && flag1 && flag2 && flag3) {
-        float4 value = tex2D(float_c4_ref, src_x + 0.5f, src_y + 0.5f);
+        float4 value = tex2D(float_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
         float4* output = (float4*)((uchar*)dst + element_y * dst_stride);
         output[element_x] = value;
@@ -233,8 +228,8 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
         float4* input = (float4*)((uchar*)src + src_y0 * src_stride);
         float4 src_value0 = flag0 ? input[src_x0] : border_value1;
         float4 src_value1 = flag1 ? input[src_x1] : border_value1;
-        float4 value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-        float4 value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+        float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+        float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
         float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
         sum += value0;
         sum += value1;
@@ -242,8 +237,8 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
         input = (float4*)((uchar*)src + src_y1 * src_stride);
         src_value0 = flag2 ? input[src_x0] : border_value1;
         src_value1 = flag3 ? input[src_x1] : border_value1;
-        value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-        value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+        value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+        value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
         sum += value0;
         sum += value1;
 
@@ -254,13 +249,13 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
   }
   else if (border_type == BORDER_REPLICATE) {
     if (channels == 1) {
-      float value = tex2D(float_c1_ref, src_x + 0.5f, src_y + 0.5f);
+      float value = tex2D(float_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
       float* output = (float*)((uchar*)dst + element_y * dst_stride);
       output[element_x] = value;
     }
     else {  // channels == 4
-      float4 value = tex2D(float_c4_ref, src_x + 0.5f, src_y + 0.5f);
+      float4 value = tex2D(float_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
       float4* output = (float4*)((uchar*)dst + element_y * dst_stride);
       output[element_x] = value;
@@ -282,12 +277,9 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
     return;
   }
 
-  transform.calculateCoordinates(element_x, element_y);
-  float src_x = transform.getX();
-  float src_y = transform.getY();
-
-  int src_x0 = __float2int_rd(src_x);
-  int src_y0 = __float2int_rd(src_y);
+  float2 src_xy = transform.calculateCoordinates(element_x, element_y);
+  int src_x0 = __float2int_rd(src_xy.x);
+  int src_y0 = __float2int_rd(src_xy.y);
   int src_x1 = src_x0 + 1;
   int src_y1 = src_y0 + 1;
 
@@ -310,8 +302,8 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
       uchar* input = (uchar*)(src + src_y0 * src_stride);
       uchar src_value0 = flag0 ? input[src_x0] : border_value;
       uchar src_value1 = flag1 ? input[src_x1] : border_value;
-      float value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-      float value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+      float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+      float value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float sum = 0.f;
       sum += value0;
       sum += value1;
@@ -319,8 +311,8 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
       input = (uchar*)(src + src_y1 * src_stride);
       src_value0 = flag2 ? input[src_x0] : border_value;
       src_value1 = flag3 ? input[src_x1] : border_value;
-      value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-      value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
@@ -333,8 +325,8 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
       uchar3* input = (uchar3*)(src + src_y0 * src_stride);
       uchar3 src_value0 = flag0 ? input[src_x0] : border_value1;
       uchar3 src_value1 = flag1 ? input[src_x1] : border_value1;
-      float3 value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-      float3 value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+      float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+      float3 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float3 sum = make_float3(0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
@@ -342,13 +334,13 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
       input = (uchar3*)(src + src_y1 * src_stride);
       src_value0 = flag2 ? input[src_x0] : border_value1;
       src_value1 = flag3 ? input[src_x1] : border_value1;
-      value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-      value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
       uchar3* output = (uchar3*)(dst + element_y * dst_stride);
-      if (src_x > src_cols - 1 || src_y > src_rows - 1) {
+      if (src_xy.x > src_cols - 1 || src_xy.y > src_rows - 1) {
         output[element_x] = border_value1;  // align with npp.
       }
       else {
@@ -361,8 +353,8 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
       uchar4* input = (uchar4*)(src + src_y0 * src_stride);
       uchar4 src_value0 = flag0 ? input[src_x0] : border_value1;
       uchar4 src_value1 = flag1 ? input[src_x1] : border_value1;
-      float4 value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-      float4 value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+      float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+      float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
@@ -370,8 +362,8 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
       input = (uchar4*)(src + src_y1 * src_stride);
       src_value0 = flag2 ? input[src_x0] : border_value1;
       src_value1 = flag3 ? input[src_x1] : border_value1;
-      value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-      value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
@@ -380,10 +372,10 @@ void warpLinearKernel(const uchar* src, int src_rows, int src_cols,
     }
   }
   else if (border_type == BORDER_REPLICATE) {
-    float diff_x0 = src_x - src_x0;
-    float diff_x1 = src_x1 - src_x;
-    float diff_y0 = src_y - src_y0;
-    float diff_y1 = src_y1 - src_y;
+    float diff_x0 = src_xy.x - src_x0;
+    float diff_x1 = src_x1 - src_xy.x;
+    float diff_y0 = src_xy.y - src_y0;
+    float diff_y1 = src_y1 - src_xy.y;
 
     src_x0 = clip(src_x0, 0, src_cols - 1);
     src_y0 = clip(src_y0, 0, src_rows - 1);
@@ -470,12 +462,9 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
     return;
   }
 
-  transform.calculateCoordinates(element_x, element_y);
-  float src_x = transform.getX();
-  float src_y = transform.getY();
-
-  int src_x0 = __float2int_rd(src_x);
-  int src_y0 = __float2int_rd(src_y);
+  float2 src_xy = transform.calculateCoordinates(element_x, element_y);
+  int src_x0 = __float2int_rd(src_xy.x);
+  int src_y0 = __float2int_rd(src_xy.y);
   int src_x1 = src_x0 + 1;
   int src_y1 = src_y0 + 1;
 
@@ -498,8 +487,8 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
       float* input = (float*)((uchar*)src + src_y0 * src_stride);
       float src_value0 = flag0 ? input[src_x0] : border_value;
       float src_value1 = flag1 ? input[src_x1] : border_value;
-      float value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-      float value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+      float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+      float value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float sum = 0.f;
       sum += value0;
       sum += value1;
@@ -507,8 +496,8 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
       input = (float*)((uchar*)src + src_y1 * src_stride);
       src_value0 = flag2 ? input[src_x0] : border_value;
       src_value1 = flag3 ? input[src_x1] : border_value;
-      value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-      value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
@@ -521,8 +510,8 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
       float3* input = (float3*)((uchar*)src + src_y0 * src_stride);
       float3 src_value0 = flag0 ? input[src_x0] : border_value1;
       float3 src_value1 = flag1 ? input[src_x1] : border_value1;
-      float3 value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-      float3 value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+      float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+      float3 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float3 sum = make_float3(0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
@@ -530,8 +519,8 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
       input = (float3*)((uchar*)src + src_y1 * src_stride);
       src_value0 = flag2 ? input[src_x0] : border_value1;
       src_value1 = flag3 ? input[src_x1] : border_value1;
-      value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-      value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
@@ -544,8 +533,8 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
       float4* input = (float4*)((uchar*)src + src_y0 * src_stride);
       float4 src_value0 = flag0 ? input[src_x0] : border_value1;
       float4 src_value1 = flag1 ? input[src_x1] : border_value1;
-      float4 value0 = (src_x1 - src_x) * (src_y1 - src_y) * src_value0;
-      float4 value1 = (src_x - src_x0) * (src_y1 - src_y) * src_value1;
+      float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
+      float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float4 sum = make_float4(0.f, 0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
@@ -553,8 +542,8 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
       input = (float4*)((uchar*)src + src_y1 * src_stride);
       src_value0 = flag2 ? input[src_x0] : border_value1;
       src_value1 = flag3 ? input[src_x1] : border_value1;
-      value0 = (src_x1 - src_x) * (src_y - src_y0) * src_value0;
-      value1 = (src_x - src_x0) * (src_y - src_y0) * src_value1;
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
@@ -563,10 +552,10 @@ void warpLinearKernel(const float* src, int src_rows, int src_cols,
     }
   }
   else if (border_type == BORDER_REPLICATE) {
-    float diff_x0 = src_x - src_x0;
-    float diff_x1 = src_x1 - src_x;
-    float diff_y0 = src_y - src_y0;
-    float diff_y1 = src_y1 - src_y;
+    float diff_x0 = src_xy.x - src_x0;
+    float diff_x1 = src_x1 - src_xy.x;
+    float diff_y0 = src_xy.y - src_y0;
+    float diff_y1 = src_y1 - src_xy.y;
 
     src_x0 = clip(src_x0, 0, src_cols - 1);
     src_y0 = clip(src_y0, 0, src_rows - 1);
@@ -660,9 +649,9 @@ void warpNearestKernel(const T* src, int src_rows, int src_cols, int channels,
     return;
   }
 
-  transform.calculateCoordinates(element_x, element_y);
-  int src_x = transform.getX();
-  int src_y = transform.getY();
+  float2 src_xy = transform.calculateCoordinates(element_x, element_y);
+  int src_x = src_xy.x;
+  int src_y = src_xy.y;
 
   if (border_type == BORDER_CONSTANT) {
     Tn* output = (Tn*)((uchar*)dst + element_y * dst_stride);

@@ -32,8 +32,6 @@ struct AffineTransform {
   float coeffe3;
   float coeffe4;
   float coeffe5;
-  float x;
-  float y;
 
   AffineTransform(const float* coefficients) : coeffe0(coefficients[0]),
       coeffe1(coefficients[1]), coeffe2(coefficients[2]),
@@ -41,21 +39,15 @@ struct AffineTransform {
       coeffe5(coefficients[5]) {}
 
   __DEVICE__
-  void calculateCoordinates(int element_x, int element_y) {
-    x = coeffe0 * element_x + coeffe1 * element_y + coeffe2;
-    y = coeffe3 * element_x + coeffe4 * element_y + coeffe5;
-  }
+  float2 calculateCoordinates(int element_x, int element_y) {
+    float2 result;
+    result.x = coeffe0 * element_x + coeffe1 * element_y + coeffe2;
+    result.y = coeffe3 * element_x + coeffe4 * element_y + coeffe5;
 
-  __DEVICE__
-  float getX() const {
-    return x;
-  }
-
-  __DEVICE__
-  float getY() const {
-    return y;
+    return result;
   }
 };
+
 RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
                    int src_stride, const float* affine_matrix, uchar* dst,
                    int dst_rows, int dst_cols, int dst_stride,
