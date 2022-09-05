@@ -35,8 +35,6 @@ struct PerspectiveTransform {
   float coeffe6;
   float coeffe7;
   float coeffe8;
-  float x;
-  float y;
 
   PerspectiveTransform(const float* coefficients) : coeffe0(coefficients[0]),
       coeffe1(coefficients[1]), coeffe2(coefficients[2]),
@@ -45,24 +43,15 @@ struct PerspectiveTransform {
       coeffe7(coefficients[7]), coeffe8(coefficients[8]) {}
 
   __DEVICE__
-  void calculateCoordinates(int element_x, int element_y) {
-    x = coeffe0 * element_x + coeffe1 * element_y + coeffe2;
-    y = coeffe3 * element_x + coeffe4 * element_y + coeffe5;
-
+  float2 calculateCoordinates(int element_x, int element_y) {
     float weight = coeffe6 * element_x + coeffe7 * element_y + coeffe8;
     weight = 1.f / weight;
-    x *= weight;
-    y *= weight;
-  }
 
-  __DEVICE__
-  float getX() const {
-    return x;
-  }
+    float2 result;
+    result.x = (coeffe0 * element_x + coeffe1 * element_y + coeffe2) * weight;
+    result.y = (coeffe3 * element_x + coeffe4 * element_y + coeffe5) * weight;
 
-  __DEVICE__
-  float getY() const {
-    return y;
+    return result;
   }
 };
 
