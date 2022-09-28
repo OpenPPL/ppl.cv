@@ -17,6 +17,8 @@ endif()
 option(PPLCV_USE_X86_64 "" OFF)
 option(PPLCV_USE_AARCH64 "" OFF)
 option(PPLCV_USE_CUDA "" OFF)
+option(PPLCV_USE_RISCV64 "" OFF)
+option(PPLCV_USE_OCL "" OFF)
 
 # deprecated options
 if(HPCC_USE_X86_64 AND NOT PPLCV_USE_X86_64)
@@ -73,6 +75,10 @@ endif()
 
 if(PPLCV_USE_RISCV64)
     include(cmake/riscv.cmake)
+endif()
+
+if(PPLCV_USE_OCL)
+    include(cmake/ocl.cmake)
 endif()
 
 hpcc_populate_dep(pplcommon)

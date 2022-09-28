@@ -43,7 +43,7 @@ class PplCvOclAbsTest : public ::testing::TestWithParam<Parameters> {
     const Parameters& parameters = GetParam();
     size = std::get<0>(parameters);
 
-    ppl::common::ocl::FrameChain frame_chain();
+    ppl::common::ocl::FrameChain frame_chain;
     frame_chain.createDefaultOclFrame(false);
     context = frame_chain.getContext();
     queue   = frame_chain.getQueue();
@@ -78,7 +78,7 @@ bool PplCvOclAbsTest<T, channels>::apply() {
                                   &error_code);
   cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
                                   &error_code);
-  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_FALSE, 0, src_bytes, 
+  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_FALSE, 0, src_bytes,
                                     src.data, 0, NULL, NULL);
 
   int data_size = size.height * size.width * channels * sizeof(T);
@@ -89,18 +89,18 @@ bool PplCvOclAbsTest<T, channels>::apply() {
   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size, NULL,
                                      &error_code);
   copyMatToArray(src, input);
-  error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, data_size, 
+  error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, data_size,
                                     input, 0, NULL, NULL);
 
   cv_dst = cv::abs(src);
   ppl::cv::ocl::Abs<T, channels>(queue, src.rows, src.cols,
       src.step / sizeof(T), gpu_src, dst.step / sizeof(T), gpu_dst);
-  error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,  
+  error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,
                                    dst.data, 0, NULL, NULL);
 
   ppl::cv::ocl::Abs<T, channels>(queue, size.height, size.width,
       size.width * channels, gpu_input, size.width * channels, gpu_output);
-  error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,  
+  error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
                                    output, 0, NULL, NULL);
 
   float epsilon;

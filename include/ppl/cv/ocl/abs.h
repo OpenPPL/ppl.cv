@@ -62,7 +62,7 @@ namespace ocl {
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/abs.h"
- * #include "ppl/common/context.h"  ???
+ * #include "ppl/common/framechain.h"
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -70,24 +70,25 @@ namespace ocl {
  *   int height   = 480;
  *   int channels = 3;
  *
- *   std::pair<cl_context, cl_command_queue> default_env = getDefaultOclQueue();
- *   cl_context context     = default_env.first;
- *   cl_command_queue queue = default_env.second;
+ *   FrameChain frame_chain;
+ *   frame_chain.createDefaultOclFrame(false);
+ *   cl_context context     = frame_chain.getContext();
+ *   cl_command_queue queue = frame_chain.getQueue();
+ *
  *   cl_int error_code = 0;
- * 
  *   int data_size = height * width * channels * sizeof(float);
  *   float* input = (float*)malloc(data_size);
  *   float* output = (float*)malloc(data_size);
- *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,  
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
  *                                     NULL, &error_code);
- *   cl_mem gpu_output = = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size, 
+ *   cl_mem gpu_output = = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
  *                                        NULL, &error_code);
- *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, 
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
  *                                     data_size, input, 0, NULL, NULL);
  *
  *   Abs<float, 3>(queue, height, width, width * channels, gpu_input,
  *                 width * channels, gpu_output);
- *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size, 
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
  *                                    output, 0, NULL, NULL);
  *
  *   free(input);

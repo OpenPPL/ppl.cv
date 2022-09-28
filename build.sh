@@ -5,6 +5,7 @@ x86_64_build_dir="${workdir}/x86-64-build"
 cuda_build_dir="${workdir}/cuda-build"
 aarch64_build_dir="${workdir}/aarch64-build"
 riscv_build_dir="${workdir}/riscv-build"
+ocl_build_dir="${workdir}/ocl-build"
 
 if [[ `uname` == "Linux" ]]; then
     processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
@@ -72,7 +73,15 @@ function BuildRiscv() {
     cd ${riscv_build_dir}
     cmd="cmake $options ${extra_options} -DPPLCV_USE_RISCV64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
-    eval "$cmd"      
+    eval "$cmd"
+}
+
+function BuildOcl() {
+    mkdir ${ocl_build_dir}
+    cd ${ocl_build_dir}
+    cmd="cmake $options -DPPLCV_USE_OCL=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
+    echo "cmd -> $cmd"
+    eval "$cmd"
 }
 
 declare -A engine2func=(
@@ -80,6 +89,7 @@ declare -A engine2func=(
     ["x86_64"]=BuildX86_64
     ["aarch64"]=BuildAarch64
     ["riscv"]=BuildRiscv
+    ["ocl"]=BuildOcl
 )
 
 # --------------------------------------------------------------------------- #

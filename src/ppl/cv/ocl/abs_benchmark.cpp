@@ -37,18 +37,18 @@ void BM_Abs_ppl_ocl(benchmark::State &state) {
                           channels));
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  ppl::common::ocl::FrameChain frame_chain();
+  ppl::common::ocl::FrameChain frame_chain;
   frame_chain.createDefaultOclFrame(false);
   context = frame_chain.getContext();
   queue   = frame_chain.getQueue();
   int src_bytes = src.rows * src.step;
   int dst_bytes = dst.rows * dst.step;
   cl_int error_code = 0;
-  cl_mem gpu_src = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL, 
+  cl_mem gpu_src = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
                                   &error_code);
-  cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL, 
+  cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
                                   &error_code);
-  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_TRUE, 0, src_bytes, 
+  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_TRUE, 0, src_bytes,
                                     src.data, 0, NULL, NULL);
 
   int iterations = 100;
@@ -88,7 +88,7 @@ void BM_Abs_ppl1_ocl(benchmark::State &state) {
                           channels));
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  ppl::common::ocl::FrameChain frame_chain();
+  ppl::common::ocl::FrameChain frame_chain;
   frame_chain.createDefaultOclFrame(false);
   context = frame_chain.getContext();
   queue   = frame_chain.getQueue();
@@ -97,10 +97,10 @@ void BM_Abs_ppl1_ocl(benchmark::State &state) {
   T* output = (T*)malloc(data_size);
   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size, NULL,
                                     &error_code);
-  cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size, 
+  cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
                                      NULL, &error_code);
   copyMatToArray(src, input);
-  error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, data_size, 
+  error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, data_size,
                                     input, 0, NULL, NULL);
 
   int iterations = 100;
@@ -108,7 +108,7 @@ void BM_Abs_ppl1_ocl(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::ocl::Abs<T, channels>(queue, height, width, width * channels, 
+    ppl::cv::ocl::Abs<T, channels>(queue, height, width, width * channels,
                                    gpu_input, width * channels, gpu_output);
   }
   clFinish(queue);
@@ -116,7 +116,7 @@ void BM_Abs_ppl1_ocl(benchmark::State &state) {
   for (auto _ : state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
-      ppl::cv::ocl::Abs<T, channels>(queue, height, width, width * channels, 
+      ppl::cv::ocl::Abs<T, channels>(queue, height, width, width * channels,
                                      gpu_input, width * channels, gpu_output);
     }
     clFinish(queue);
