@@ -22,7 +22,7 @@
 #include "opencv2/core.hpp"
 #include "benchmark/benchmark.h"
 
-// #include "ppl/cv/debug.h"
+#include "ppl/cv/debug.h"
 #include "ppl/common/ocl/framechain.h"
 #include "utility/infrastructure.hpp"
 
@@ -30,6 +30,11 @@ using namespace ppl::cv::debug;
 
 template <typename T, int channels>
 void BM_Abs_ppl_ocl(benchmark::State &state) {
+  ppl::common::ocl::FrameChain frame_chain;
+  frame_chain.createDefaultOclFrame(false);
+  cl_context context = frame_chain.getContext();
+  cl_command_queue queue = frame_chain.getQueue();
+
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
@@ -37,19 +42,25 @@ void BM_Abs_ppl_ocl(benchmark::State &state) {
                           channels));
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  ppl::common::ocl::FrameChain frame_chain;
-  frame_chain.createDefaultOclFrame(false);
-  context = frame_chain.getContext();
-  queue   = frame_chain.getQueue();
   int src_bytes = src.rows * src.step;
   int dst_bytes = dst.rows * dst.step;
   cl_int error_code = 0;
   cl_mem gpu_src = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
                                   &error_code);
+  if (error_code != CL_SUCCESS) {
+    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
+  }
   cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
                                   &error_code);
+  if (error_code != CL_SUCCESS) {
+    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
+  }
   error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_TRUE, 0, src_bytes,
                                     src.data, 0, NULL, NULL);
+  if (error_code != CL_SUCCESS) {
+    LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: "
+               << error_code;
+  }
 
   int iterations = 100;
   struct timeval start, end;
@@ -81,6 +92,11 @@ void BM_Abs_ppl_ocl(benchmark::State &state) {
 
 template <typename T, int channels>
 void BM_Abs_ppl1_ocl(benchmark::State &state) {
+  ppl::common::ocl::FrameChain frame_chain;
+  frame_chain.createDefaultOclFrame(false);
+  cl_context context = frame_chain.getContext();
+  cl_command_queue queue = frame_chain.getQueue();
+
   int width  = state.range(0);
   int height = state.range(1);
   cv::Mat src;
@@ -88,20 +104,27 @@ void BM_Abs_ppl1_ocl(benchmark::State &state) {
                           channels));
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  ppl::common::ocl::FrameChain frame_chain;
-  frame_chain.createDefaultOclFrame(false);
-  context = frame_chain.getContext();
-  queue   = frame_chain.getQueue();
   int data_size = height * width * channels * sizeof(T);
   T* input  = (T*)malloc(data_size);
   T* output = (T*)malloc(data_size);
+  cl_int error_code = 0;
   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size, NULL,
                                     &error_code);
+  if (error_code != CL_SUCCESS) {
+    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
+  }
   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
                                      NULL, &error_code);
+  if (error_code != CL_SUCCESS) {
+    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
+  }
   copyMatToArray(src, input);
   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, data_size,
                                     input, 0, NULL, NULL);
+  if (error_code != CL_SUCCESS) {
+    LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: "
+               << error_code;
+  }
 
   int iterations = 100;
   struct timeval start, end;

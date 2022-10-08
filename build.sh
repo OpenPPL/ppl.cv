@@ -79,7 +79,7 @@ function BuildRiscv() {
 function BuildOcl() {
     mkdir ${ocl_build_dir}
     cd ${ocl_build_dir}
-    cmd="cmake $options -DPPLCV_USE_OCL=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
+    cmd="cmake $options -DPPLCV_USE_OPENCL=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
     eval "$cmd"
 }

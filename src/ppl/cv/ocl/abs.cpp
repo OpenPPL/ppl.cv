@@ -16,9 +16,11 @@
 
 #include "ppl/cv/ocl/abs.h"
 
+#include <iostream>  // debug
+
 #include "utility/utility.hpp"
-#include "ppl/common/ocl/kernel.h"
 #include "ppl/common/ocl/framechain.h"
+#include "ppl/common/ocl/kernel.h"
 
 #include "abs.ocl"
 
@@ -44,34 +46,40 @@ RetCode abs_u8(const cl_mem src, int rows, int cols, int channels,
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
   size_t global_size[] = {(size_t)cols, (size_t)rows};
 
-  // detect gpu vendor?
   FrameChain frame_chain(queue);
   SET_PROGRAM_SOURCE(frame_chain);
-  compileOclKernels(frame_chain);
+  bool succeeded = compileOclKernels(frame_chain);
+  if (!succeeded) {
+    LOG(ERROR) << "Failed to compile the kernels of abs_u8().";
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   if ((src_stride & 3) == 0 && (dst_stride & 3) == 0) {
-    // checkNDrange(2, global_size, local_size, frame_chain);
-    runOclKernel(frame_chain, "absU8Kernel0", 2, global_size, local_size, src,
-                 rows, cols, src_stride, dst, dst_stride);
+    // std::cout << "coming in absU8Kernel0" << std::endl;
+    succeeded = runOclKernel(frame_chain, "absU8Kernel0", 2, global_size,
+                             local_size, src, rows, cols, src_stride, dst,
+                             dst_stride);
+    // std::cout << "after absU8Kernel0" << std::endl;
   }
   else if (src_stride == columns && dst_stride == columns) {
     columns *= rows;
     cols = divideUp(columns, 4, 2);
-    size_t local_size[]  = {256};
-    size_t global_size[] = {(size_t)divideUp(cols, 256, 8)};
-    runOclKernel(frame_chain, "absU8Kernel1", 2, global_size, local_size, src,
-                 columns, dst);
+    local_size[0]  = 256;
+    local_size[1]  = 1;
+    global_size[0] = (size_t)roundUp(cols, 256, 8);
+    global_size[1] = 1;
+    succeeded = runOclKernel(frame_chain, "absU8Kernel1", 2, global_size,
+                             local_size, src, columns, dst);
   }
   else {
-    runOclKernel(frame_chain, "absU8Kernel2", 2, global_size, local_size, src,
-                 rows, columns, src_stride, dst, dst_stride);
+    succeeded = runOclKernel(frame_chain, "absU8Kernel2", 2, global_size,
+                             local_size, src, rows, columns, src_stride, dst,
+                             dst_stride);
   }
-
-  // cudaError_t code = cudaGetLastError();
-  // if (code != cudaSuccess) {
-  //   LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-  //   return RC_DEVICE_RUNTIME_ERROR;
-  // }
+  if (!succeeded) {
+    LOG(ERROR) << "Failed to run the kernel of abs_u8().";
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
@@ -87,28 +95,32 @@ RetCode abs_f32(const cl_mem src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
 
   int columns = cols * channels;
-  size_t local_size[] = {kBlockDimX0, kBlockDimY0};
-  size_t global_size[]  = {(size_t)divideUp(columns, 2, 1), (size_t)rows};
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+  size_t global_size[] = {(size_t)divideUp(columns, 2, 1), (size_t)rows};
 
   FrameChain frame_chain(queue);
   SET_PROGRAM_SOURCE(frame_chain);
-  compileOclKernels(frame_chain);
+  bool succeeded = compileOclKernels(frame_chain);
+  if (!succeeded) {
+    LOG(ERROR) << "Failed to compile the kernels of abs_f32().";
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   if ((src_stride & 7) == 0 && (dst_stride & 7) == 0) {
     cols = divideUp(columns, 2, 1);
-    runOclKernel(frame_chain, "absF32Kernel0", 2, global_size, local_size, src,
-                 rows, cols, src_stride, dst, dst_stride);
+    succeeded = runOclKernel(frame_chain, "absF32Kernel0", 2, global_size,
+                             local_size, src, rows, cols, src_stride, dst,
+                             dst_stride);
   }
   else {
-    runOclKernel(frame_chain, "absF32Kernel1", 2, global_size, local_size, src,
-                 rows, columns, src_stride, dst, dst_stride);
+    succeeded = runOclKernel(frame_chain, "absF32Kernel1", 2, global_size,
+                             local_size, src, rows, columns, src_stride, dst,
+                             dst_stride);
   }
-
-  // cudaError_t code = cudaGetLastError();
-  // if (code != cudaSuccess) {
-  //   LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
-  //   return RC_DEVICE_RUNTIME_ERROR;
-  // }
+  if (!succeeded) {
+    LOG(ERROR) << "Failed to run the kernel of abs_f32().";
+    return RC_DEVICE_RUNTIME_ERROR;
+  }
 
   return RC_SUCCESS;
 }
