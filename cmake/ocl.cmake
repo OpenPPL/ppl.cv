@@ -19,12 +19,6 @@ foreach(KERNEL_FILE IN ITEMS ${KERNEL_FILES})
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${TMP2} ${KERNEL_STRING})
 endforeach()
 
-# file(STRINGS test.cl KERNEL NEWLINE_CONSUME NO_HEX_CONVERSION)
-# file(STRINGS src/ppl/cv/ocl/abs.cl KERNEL)
-# set(KERNEL_STRING "static const char* source_string = \"${KERNEL}\"\;")
-# # file(WRITE src/ppl/cv/ocl/abs.ocl ${KERNEL_STRING})
-# file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/abs.ocl ${KERNEL_STRING})
-
 file(GLOB __OCL_UNITTEST_SRC__ "src/ppl/cv/ocl/*_unittest.cpp")
 list(APPEND PPLCV_UNITTEST_SRC ${__OCL_UNITTEST_SRC__})
 unset(__OCL_UNITTEST_SRC__)
