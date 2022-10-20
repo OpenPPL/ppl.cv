@@ -22,7 +22,7 @@
 #include "ppl/common/ocl/framechain.h"
 #include "ppl/common/ocl/kernel.h"
 
-#include "abs.ocl"
+#include "kernels/abs.cl"
 
 using namespace ppl::common;
 using namespace ppl::common::ocl;
@@ -48,17 +48,16 @@ RetCode abs_u8(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain frame_chain(queue);
   SET_PROGRAM_SOURCE(frame_chain);
-  bool succeeded = compileOclKernels(frame_chain);
-  if (!succeeded) {
-    LOG(ERROR) << "Failed to compile the kernels of abs_u8().";
-    return RC_DEVICE_RUNTIME_ERROR;
-  }
 
+  bool status;
   if ((src_stride & 3) == 0 && (dst_stride & 3) == 0) {
     // std::cout << "coming in absU8Kernel0" << std::endl;
-    succeeded = runOclKernel(frame_chain, "absU8Kernel0", 2, global_size,
-                             local_size, src, rows, cols, src_stride, dst,
-                             dst_stride);
+    status = compileOclKernels(frame_chain, "-D U8 -D U8ALIGNED");
+    CHECK_RETURN(status, "Failed to compile absU8Kernel0.", RC_DEVICE_RUNTIME_ERROR);
+    status = runOclKernel(frame_chain, "absU8Kernel0", 2, global_size,
+                          local_size, src, rows, cols, src_stride, dst,
+                          dst_stride);
+    CHECK_RETURN(status, "Failed to run absU8Kernel0().", RC_DEVICE_RUNTIME_ERROR);
     // std::cout << "after absU8Kernel0" << std::endl;
   }
   else if (src_stride == columns && dst_stride == columns) {
@@ -68,17 +67,19 @@ RetCode abs_u8(const cl_mem src, int rows, int cols, int channels,
     local_size[1]  = 1;
     global_size[0] = (size_t)roundUp(cols, 256, 8);
     global_size[1] = 1;
-    succeeded = runOclKernel(frame_chain, "absU8Kernel1", 2, global_size,
-                             local_size, src, columns, dst);
+    status = compileOclKernels(frame_chain, "-D U8 -D U81D");
+    CHECK_RETURN(status, "Failed to compile absU8Kernel1.", RC_DEVICE_RUNTIME_ERROR);
+    status = runOclKernel(frame_chain, "absU8Kernel1", 2, global_size,
+                          local_size, src, columns, dst);
+    CHECK_RETURN(status, "Failed to run absU8Kernel1().", RC_DEVICE_RUNTIME_ERROR);
   }
   else {
-    succeeded = runOclKernel(frame_chain, "absU8Kernel2", 2, global_size,
-                             local_size, src, rows, columns, src_stride, dst,
-                             dst_stride);
-  }
-  if (!succeeded) {
-    LOG(ERROR) << "Failed to run the kernel of abs_u8().";
-    return RC_DEVICE_RUNTIME_ERROR;
+    status = compileOclKernels(frame_chain, "-D U8 -D U8UNALIGNED");
+    CHECK_RETURN(status, "Failed to compile absU8Kernel2.", RC_DEVICE_RUNTIME_ERROR);
+    status = runOclKernel(frame_chain, "absU8Kernel2", 2, global_size,
+                          local_size, src, rows, columns, src_stride, dst,
+                          dst_stride);
+    CHECK_RETURN(status, "Failed to run absU8Kernel2().", RC_DEVICE_RUNTIME_ERROR);
   }
 
   return RC_SUCCESS;
@@ -100,26 +101,24 @@ RetCode abs_f32(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain frame_chain(queue);
   SET_PROGRAM_SOURCE(frame_chain);
-  bool succeeded = compileOclKernels(frame_chain);
-  if (!succeeded) {
-    LOG(ERROR) << "Failed to compile the kernels of abs_f32().";
-    return RC_DEVICE_RUNTIME_ERROR;
-  }
 
+  bool status;
   if ((src_stride & 7) == 0 && (dst_stride & 7) == 0) {
     cols = divideUp(columns, 2, 1);
-    succeeded = runOclKernel(frame_chain, "absF32Kernel0", 2, global_size,
-                             local_size, src, rows, cols, src_stride, dst,
-                             dst_stride);
+    status = compileOclKernels(frame_chain, "-D F32 -D F32ALIGNED");
+    CHECK_RETURN(status, "Failed to compile absF32Kernel0.", RC_DEVICE_RUNTIME_ERROR);
+    status = runOclKernel(frame_chain, "absF32Kernel0", 2, global_size,
+                          local_size, src, rows, cols, src_stride, dst,
+                          dst_stride);
+    CHECK_RETURN(status, "Failed to run absF32Kernel0().", RC_DEVICE_RUNTIME_ERROR);
   }
   else {
-    succeeded = runOclKernel(frame_chain, "absF32Kernel1", 2, global_size,
-                             local_size, src, rows, columns, src_stride, dst,
-                             dst_stride);
-  }
-  if (!succeeded) {
-    LOG(ERROR) << "Failed to run the kernel of abs_f32().";
-    return RC_DEVICE_RUNTIME_ERROR;
+    status = compileOclKernels(frame_chain, "-D F32 -D F32UNALIGNED");
+    CHECK_RETURN(status, "Failed to compile absF32Kernel1.", RC_DEVICE_RUNTIME_ERROR);
+    status = runOclKernel(frame_chain, "absF32Kernel1", 2, global_size,
+                          local_size, src, rows, columns, src_stride, dst,
+                          dst_stride);
+    CHECK_RETURN(status, "Failed to run absF32Kernel1().", RC_DEVICE_RUNTIME_ERROR);
   }
 
   return RC_SUCCESS;

@@ -57,7 +57,8 @@ if(PPLCV_DEP_PPLCOMMON_PKG)
         ${PPLCV_DEP_PPLCOMMON_PKG})
 else()
     if(NOT PPLCV_DEP_PPLCOMMON_GIT)
-        set(PPLCV_DEP_PPLCOMMON_GIT "https://github.com/openppl-public/ppl.common.git")
+        # set(PPLCV_DEP_PPLCOMMON_GIT "https://github.com/openppl-public/ppl.common.git")
+        set(PPLCV_DEP_PPLCOMMON_GIT "https://github.com/jimurk/ppl.common.git")
     endif()
     hpcc_declare_git_dep(pplcommon
         ${PPLCV_DEP_PPLCOMMON_GIT}

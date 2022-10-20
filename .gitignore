@@ -4,6 +4,8 @@ x86-64-build
 aarch64-build
 pplcv-build
 ocl-build
+ocl_x86-build
+ocl_aarch64_build
 .vscode
 .idea
 .swp

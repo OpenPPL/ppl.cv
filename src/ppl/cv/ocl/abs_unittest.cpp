@@ -154,32 +154,28 @@ bool PplCvOclAbsTest<T, channels>::apply() {
   return (identity0 && identity1);
 }
 
-#define UNITTEST(T, channels)                                                  \
-using PplCvOclAbsTest ## T ## channels = PplCvOclAbsTest<T, channels>;         \
-TEST_P(PplCvOclAbsTest ## T ## channels, Standard) {                           \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
-}                                                                              \
-                                                                               \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclAbsTest ## T ## channels,             \
-  ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                    \
-                    cv::Size{1283, 720}, cv::Size{1934, 1080},                 \
-                    cv::Size{320, 240}, cv::Size{640, 480},                    \
-                    cv::Size{1280, 720}, cv::Size{1920, 1080}),                \
-  [](const testing::TestParamInfo<                                             \
-      PplCvOclAbsTest ## T ## channels::ParamType>& info) {                    \
-    return convertToString(info.param);                                        \
-  }                                                                            \
-);
+// #define UNITTEST(T, channels)                                                  \
+// using PplCvOclAbsTest ## T ## channels = PplCvOclAbsTest<T, channels>;         \
+// TEST_P(PplCvOclAbsTest ## T ## channels, Standard) {                           \
+//   bool identity = this->apply();                                               \
+//   EXPECT_TRUE(identity);                                                       \
+// }                                                                              \
+//                                                                                \
+// INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclAbsTest ## T ## channels,             \
+//   ::testing::Values(cv::Size{3, 3}),                \
+//   [](const testing::TestParamInfo<                                             \
+//       PplCvOclAbsTest ## T ## channels::ParamType>& info) {                    \
+//     return convertToString(info.param);                                        \
+//   }                                                                            \
+// );
 
 // UNITTEST(schar, 1)
-// UNITTEST(schar, 3)
-// UNITTEST(schar, 4)
-UNITTEST(float, 1)
-UNITTEST(float, 3)
-UNITTEST(float, 4)
+// // UNITTEST(schar, 3)
+// // UNITTEST(schar, 4)
+// // UNITTEST(float, 1)
+// // UNITTEST(float, 3)
+// // UNITTEST(float, 4)
 
-/*
 #define UNITTEST(T, channels)                                                  \
 using PplCvOclAbsTest ## T ## channels = PplCvOclAbsTest<T, channels>;         \
 TEST_P(PplCvOclAbsTest ## T ## channels, Standard) {                           \
@@ -203,4 +199,4 @@ UNITTEST(schar, 3)
 UNITTEST(schar, 4)
 UNITTEST(float, 1)
 UNITTEST(float, 3)
-UNITTEST(float, 4) */
+UNITTEST(float, 4)

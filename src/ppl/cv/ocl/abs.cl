@@ -1,3 +1,4 @@
+#if defined(U8)
 inline signed char abs_device0(signed char src) {
   if (src == -128) {
     return 127;
@@ -7,6 +8,7 @@ inline signed char abs_device0(signed char src) {
   }
 }
 
+#elif defined(F32)
 inline float abs_device1(float src) {
   if (src >= 0.f) {
     return src;
@@ -16,7 +18,9 @@ inline float abs_device1(float src) {
   }
 
 }
+#endif
 
+#if defined(U8ALIGNED)
 __kernel void absU8Kernel0(global const signed char* src, int rows, int cols,
                   int src_stride, global signed char* dst, int dst_stride) {
   int element_x = get_global_id(0);
@@ -38,6 +42,7 @@ __kernel void absU8Kernel0(global const signed char* src, int rows, int cols,
   output[element_x] = output_value;
 }
 
+#elif defined(U81D)
 __kernel void absU8Kernel1(global const signed char* src, int cols,
                            global signed char* dst) {
   int element_x = get_global_id(0);
@@ -78,6 +83,7 @@ __kernel void absU8Kernel1(global const signed char* src, int cols,
   }
 }
 
+#elif defined(U8UNALIGNED)
 __kernel void absU8Kernel2(global const signed char* src, int rows, int cols,
                   int src_stride, global signed char* dst, int dst_stride) {
   int element_x = get_global_id(0);
@@ -136,6 +142,7 @@ __kernel void absU8Kernel2(global const signed char* src, int rows, int cols,
   }
 }
 
+#elif defined(U8KERNEL3)
 __kernel void absU8Kernel3(global const signed char* src, int rows, int cols,
                   int src_stride, global signed char* dst, int dst_stride) {
   int element_x = get_global_id(0);
@@ -157,6 +164,7 @@ __kernel void absU8Kernel3(global const signed char* src, int rows, int cols,
   vstore4(output_value, element_x, output);
 }
 
+#elif defined(F32ALIGNED)
 __kernel void absF32Kernel0(global const float* src, int rows, int cols,
                             int src_stride, global float* dst, int dst_stride) {
   int element_x = get_global_id(0);
@@ -176,6 +184,7 @@ __kernel void absF32Kernel0(global const float* src, int rows, int cols,
   output[element_x] = output_value;
 }
 
+#elif defined(F32UNALIGNED)
 __kernel void absF32Kernel1(global const float* src, int rows, int cols, int src_stride,
                    global float* dst, int dst_stride) {
   int element_x = get_global_id(0);
@@ -217,6 +226,7 @@ __kernel void absF32Kernel1(global const float* src, int rows, int cols, int src
   }
 }
 
+#elif defined(F32KERNEL2)
 __kernel void absF32Kernel2(global const float* src, int rows, int cols, int src_stride,
                    global float* dst, int dst_stride) {
   int element_x = get_global_id(0);
@@ -237,3 +247,4 @@ __kernel void absF32Kernel2(global const float* src, int rows, int cols, int src
   global float* output = (global float*)(dst + element_y * dst_stride);
   vstore4(output_value, element_x, output);
 }
+#endif

@@ -34,6 +34,12 @@ if (!(expression)) {                                                           \
   return ppl::common::RC_INVALID_VALUE;                                        \
 }
 
+#define CHECK_RETURN(status, message, error_code)                              \
+if (!status) {                                                                 \
+  LOG(ERROR) << message;                                                       \
+  return error_code;                                                           \
+}
+
 typedef unsigned char uchar;
 typedef signed char schar;
 typedef unsigned short ushort;
