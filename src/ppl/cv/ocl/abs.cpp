@@ -47,13 +47,19 @@ RetCode abs_u8(const cl_mem src, int rows, int cols, int channels,
   size_t global_size[] = {(size_t)cols, (size_t)rows};
 
   FrameChain frame_chain(queue);
+  frame_chain.setProjectName("cv");
   SET_PROGRAM_SOURCE(frame_chain);
+
+  // std::cout << "rows: " << rows << std::endl;  // debug
+  // std::cout << "cols: " << cols << std::endl;  // debug
+  // std::cout << "columns: " << columns << std::endl;  // debug
+  // std::cout << "src_stride: " << src_stride << std::endl;  // debug
+  // std::cout << "dst_stride: " << dst_stride << std::endl;  // debug
 
   bool status;
   if ((src_stride & 3) == 0 && (dst_stride & 3) == 0) {
     // std::cout << "coming in absU8Kernel0" << std::endl;
-    status = compileOclKernels(frame_chain, "-D U8 -D U8ALIGNED");
-    CHECK_RETURN(status, "Failed to compile absU8Kernel0.", RC_DEVICE_RUNTIME_ERROR);
+    frame_chain.setCompileOptions("-D U8 -D U8ALIGNED");
     status = runOclKernel(frame_chain, "absU8Kernel0", 2, global_size,
                           local_size, src, rows, cols, src_stride, dst,
                           dst_stride);
@@ -67,15 +73,14 @@ RetCode abs_u8(const cl_mem src, int rows, int cols, int channels,
     local_size[1]  = 1;
     global_size[0] = (size_t)roundUp(cols, 256, 8);
     global_size[1] = 1;
-    status = compileOclKernels(frame_chain, "-D U8 -D U81D");
-    CHECK_RETURN(status, "Failed to compile absU8Kernel1.", RC_DEVICE_RUNTIME_ERROR);
+    frame_chain.setCompileOptions("-D U8 -D U81D");
+    // std::cout << "src: " << &src << std::endl;  // debug
     status = runOclKernel(frame_chain, "absU8Kernel1", 2, global_size,
                           local_size, src, columns, dst);
     CHECK_RETURN(status, "Failed to run absU8Kernel1().", RC_DEVICE_RUNTIME_ERROR);
   }
   else {
-    status = compileOclKernels(frame_chain, "-D U8 -D U8UNALIGNED");
-    CHECK_RETURN(status, "Failed to compile absU8Kernel2.", RC_DEVICE_RUNTIME_ERROR);
+    frame_chain.setCompileOptions("-D U8 -D U8UNALIGNED");
     status = runOclKernel(frame_chain, "absU8Kernel2", 2, global_size,
                           local_size, src, rows, columns, src_stride, dst,
                           dst_stride);
@@ -100,21 +105,20 @@ RetCode abs_f32(const cl_mem src, int rows, int cols, int channels,
   size_t global_size[] = {(size_t)divideUp(columns, 2, 1), (size_t)rows};
 
   FrameChain frame_chain(queue);
+  frame_chain.setProjectName("cv");
   SET_PROGRAM_SOURCE(frame_chain);
 
   bool status;
   if ((src_stride & 7) == 0 && (dst_stride & 7) == 0) {
     cols = divideUp(columns, 2, 1);
-    status = compileOclKernels(frame_chain, "-D F32 -D F32ALIGNED");
-    CHECK_RETURN(status, "Failed to compile absF32Kernel0.", RC_DEVICE_RUNTIME_ERROR);
+    frame_chain.setCompileOptions("-D F32 -D F32ALIGNED");
     status = runOclKernel(frame_chain, "absF32Kernel0", 2, global_size,
                           local_size, src, rows, cols, src_stride, dst,
                           dst_stride);
     CHECK_RETURN(status, "Failed to run absF32Kernel0().", RC_DEVICE_RUNTIME_ERROR);
   }
   else {
-    status = compileOclKernels(frame_chain, "-D F32 -D F32UNALIGNED");
-    CHECK_RETURN(status, "Failed to compile absF32Kernel1.", RC_DEVICE_RUNTIME_ERROR);
+    frame_chain.setCompileOptions("-D F32 -D F32UNALIGNED");
     status = runOclKernel(frame_chain, "absF32Kernel1", 2, global_size,
                           local_size, src, rows, columns, src_stride, dst,
                           dst_stride);

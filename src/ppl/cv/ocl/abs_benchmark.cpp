@@ -183,12 +183,12 @@ BENCHMARK_TEMPLATE(BM_Abs_ppl1_ocl, float, channels)->Args({width, height})->  \
                    UseManualTime()->Iterations(10);
 
 RUN_BENCHMARK(c1, 640, 480)
-// RUN_BENCHMARK(c3, 640, 480)
-// RUN_BENCHMARK(c4, 640, 480)
+RUN_BENCHMARK(c3, 640, 480)
+RUN_BENCHMARK(c4, 640, 480)
 
-// RUN_BENCHMARK(c1, 1920, 1080)
-// RUN_BENCHMARK(c3, 1920, 1080)
-// RUN_BENCHMARK(c4, 1920, 1080)
+RUN_BENCHMARK(c1, 1920, 1080)
+RUN_BENCHMARK(c3, 1920, 1080)
+RUN_BENCHMARK(c4, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, width, height)                         \
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c1)->Args({width, height})->       \
