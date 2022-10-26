@@ -45,10 +45,9 @@ class PplCvOclAbsTest : public ::testing::TestWithParam<Parameters> {
     const Parameters& parameters = GetParam();
     size = std::get<0>(parameters);
 
-    ppl::common::ocl::FrameChain frame_chain;
-    frame_chain.createDefaultOclFrame(false);
-    context = frame_chain.getContext();
-    queue   = frame_chain.getQueue();
+    ppl::common::ocl::createSharedFrameChain(false);
+    context = ppl::common::ocl::getSharedFrameChain()->getContext();
+    queue   = ppl::common::ocl::getSharedFrameChain()->getQueue();
   }
 
   ~PplCvOclAbsTest() {

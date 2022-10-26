@@ -30,10 +30,9 @@ using namespace ppl::cv::debug;
 
 template <typename T, int channels>
 void BM_Abs_ppl_ocl(benchmark::State &state) {
-  ppl::common::ocl::FrameChain frame_chain;
-  frame_chain.createDefaultOclFrame(false);
-  cl_context context = frame_chain.getContext();
-  cl_command_queue queue = frame_chain.getQueue();
+  ppl::common::ocl::createSharedFrameChain(false);
+  cl_context context = ppl::common::ocl::getSharedFrameChain()->getContext();
+  cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->getQueue();
 
   int width  = state.range(0);
   int height = state.range(1);
@@ -90,12 +89,11 @@ void BM_Abs_ppl_ocl(benchmark::State &state) {
   clReleaseMemObject(gpu_dst);
 }
 
-template <typename T, int channels>
+/* template <typename T, int channels>
 void BM_Abs_ppl1_ocl(benchmark::State &state) {
-  ppl::common::ocl::FrameChain frame_chain;
-  frame_chain.createDefaultOclFrame(false);
-  cl_context context = frame_chain.getContext();
-  cl_command_queue queue = frame_chain.getQueue();
+  ppl::common::ocl::createSharedFrameChain(false);
+  cl_context context = ppl::common::ocl::getSharedFrameChain()->getContext();
+  cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->getQueue();
 
   int width  = state.range(0);
   int height = state.range(1);
@@ -154,7 +152,7 @@ void BM_Abs_ppl1_ocl(benchmark::State &state) {
   free(output);
   clReleaseMemObject(gpu_input);
   clReleaseMemObject(gpu_output);
-}
+} */
 
 template <typename T, int channels>
 void BM_Abs_opencv_ocl(benchmark::State &state) {
@@ -174,13 +172,13 @@ void BM_Abs_opencv_ocl(benchmark::State &state) {
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, schar, channels)->Args({width, height}); \
 BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, schar, channels)->Args({width, height})->   \
                    UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_ppl1_ocl, schar, channels)->Args({width, height})->  \
-                   UseManualTime()->Iterations(10);                            \
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, float, channels)->Args({width, height}); \
 BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, float, channels)->Args({width, height})->   \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_ppl1_ocl, float, channels)->Args({width, height})->  \
                    UseManualTime()->Iterations(10);
+
+RUN_BENCHMARK(c1, 320, 240)
+RUN_BENCHMARK(c3, 320, 240)
+RUN_BENCHMARK(c4, 320, 240)
 
 RUN_BENCHMARK(c1, 640, 480)
 RUN_BENCHMARK(c3, 640, 480)
@@ -191,19 +189,23 @@ RUN_BENCHMARK(c3, 1920, 1080)
 RUN_BENCHMARK(c4, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, width, height)                         \
-BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c1)->Args({width, height})->       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c3)->Args({width, height})->       \
-                   UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c4)->Args({width, height})->       \
-                   UseManualTime()->Iterations(10);
+BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c1)->Args({width, height});        \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c3)->Args({width, height});        \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c4)->Args({width, height});
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, width, height)                         \
-BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c1)->Args({width, height})->          \
+// #define RUN_PPL_CV_TYPE_FUNCTIONS(type, width, height)                         \
+// BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c1)->Args({width, height})->          \
+//                    UseManualTime()->Iterations(10);                            \
+// BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c3)->Args({width, height})->          \
+//                    UseManualTime()->Iterations(10);                            \
+// BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c4)->Args({width, height})->          \
+//                    UseManualTime()->Iterations(10);
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type, channel)                         \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, channel)->Args({320, 240})->          \
                    UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c3)->Args({width, height})->          \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, channel)->Args({640, 480})->          \
                    UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c4)->Args({width, height})->          \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, channel)->Args({1280, 720})->          \
                    UseManualTime()->Iterations(10);
 
 // RUN_OPENCV_TYPE_FUNCTIONS(schar, 640, 480)
@@ -215,3 +217,10 @@ BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c4)->Args({width, height})->          \
 // RUN_PPL_CV_TYPE_FUNCTIONS(schar, 1920, 1080)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, 640, 480)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, 1920, 1080)
+
+// RUN_PPL_CV_TYPE_FUNCTIONS(schar, c1)
+// RUN_PPL_CV_TYPE_FUNCTIONS(schar, c3)
+// RUN_PPL_CV_TYPE_FUNCTIONS(schar, c4)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, c1)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, c3)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, c4)
