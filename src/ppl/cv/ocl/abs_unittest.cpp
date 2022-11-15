@@ -16,8 +16,6 @@
 
 #include "ppl/cv/ocl/abs.h"
 
-// #include <iostream>  // debug
-
 #include <tuple>
 #include <sstream>
 
@@ -72,13 +70,8 @@ bool PplCvOclAbsTest<T, channels>::apply() {
   cv::Mat cv_dst(size.height, size.width,
                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  // std::cout << "context: " << context << std::endl;
-  // std::cout << "queue: " << queue << std::endl;
-
   int src_bytes = src.rows * src.step;
   int dst_bytes = dst.rows * dst.step;
-  // std::cout << "src_bytes: " << src_bytes << std::endl;
-  // std::cout << "dst_bytes: " << dst_bytes << std::endl;
   cl_int error_code = 0;
   cl_mem gpu_src = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
                                   &error_code);
@@ -117,16 +110,13 @@ bool PplCvOclAbsTest<T, channels>::apply() {
   }
 
   cv_dst = cv::abs(src);
-  // std::cout << "before Abs()" << std::endl;
   ppl::cv::ocl::Abs<T, channels>(queue, src.rows, src.cols,
       src.step / sizeof(T), gpu_src, dst.step / sizeof(T), gpu_dst);
-  // std::cout << "after Abs()" << std::endl;
   error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,
                                    dst.data, 0, NULL, NULL);
   if (error_code != CL_SUCCESS) {
     LOG(ERROR) << "Call clEnqueueReadBuffer() failed with code: " << error_code;
   }
-  // std::cout << "after clEnqueueReadBuffer()" << std::endl;
 
   ppl::cv::ocl::Abs<T, channels>(queue, size.height, size.width,
       size.width * channels, gpu_input, size.width * channels, gpu_output);
@@ -155,28 +145,6 @@ bool PplCvOclAbsTest<T, channels>::apply() {
 
   return (identity0 && identity1);
 }
-
-/* #define UNITTEST(T, channels)                                                  \
-using PplCvOclAbsTest ## T ## channels = PplCvOclAbsTest<T, channels>;         \
-TEST_P(PplCvOclAbsTest ## T ## channels, Standard) {                           \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
-}                                                                              \
-                                                                               \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclAbsTest ## T ## channels,             \
-  ::testing::Values(cv::Size{3, 3}),                \
-  [](const testing::TestParamInfo<                                             \
-      PplCvOclAbsTest ## T ## channels::ParamType>& info) {                    \
-    return convertToString(info.param);                                        \
-  }                                                                            \
-);
-
-UNITTEST(schar, 1)
-// UNITTEST(schar, 3)
-// UNITTEST(schar, 4)
-// UNITTEST(float, 1)
-// UNITTEST(float, 3)
-// UNITTEST(float, 4) */
 
 #define UNITTEST(T, channels)                                                  \
 using PplCvOclAbsTest ## T ## channels = PplCvOclAbsTest<T, channels>;         \

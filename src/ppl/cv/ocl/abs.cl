@@ -16,8 +16,8 @@
 
 #include "kerneltypes.h"
 
-#if defined(U8)
-inline signed char abs_device0(signed char src) {
+#if defined(U8) || defined(SPIR)
+inline char abs_device0(char src) {
   if (src == -128) {
     return 127;
   }
@@ -25,8 +25,9 @@ inline signed char abs_device0(signed char src) {
     return abs((int)src);
   }
 }
+#endif
 
-#elif defined(F32)
+#if defined(F32) || defined(SPIR)
 inline float abs_device1(float src) {
   if (src >= 0.f) {
     return src;
@@ -38,17 +39,18 @@ inline float abs_device1(float src) {
 }
 #endif
 
-#if defined(U8ALIGNED)
-__kernel void absU8Kernel0(global const signed char* src, int rows, int cols,
-                  int src_stride, global signed char* dst, int dst_stride) {
+#if defined(U8ALIGNED) || defined(SPIR)
+__kernel
+void absU8Kernel0(global const char* src, int rows, int cols, int src_stride,
+                  global char* dst, int dst_stride) {
   int element_x = get_global_id(0);
   int element_y = get_global_id(1);
   if (element_y >= rows || element_x >= cols) {
     return;
   }
 
-  global const char4* input = (global char4*)(src + element_y * src_stride);
-  char4 input_value = input[element_x];
+  global const char* input = src + element_y * src_stride;
+  char4 input_value = vload4(element_x, input);
 
   char4 output_value;
   output_value.x = abs_device0(input_value.x);
@@ -56,33 +58,36 @@ __kernel void absU8Kernel0(global const signed char* src, int rows, int cols,
   output_value.z = abs_device0(input_value.z);
   output_value.w = abs_device0(input_value.w);
 
-  global char4* output = (global char4*)(dst + element_y * dst_stride);
-  output[element_x] = output_value;
+  global char* output = dst + element_y * dst_stride;
+  vstore4(output_value, element_x, output);
 }
+#endif
 
-#elif defined(U81D)
-__kernel void absU8Kernel1(global const signed char* src, int cols,
-                           global signed char* dst) {
+#if defined(U81D) || defined(SPIR)
+__kernel
+void absU8Kernel1(global const char* src, int cols, global char* dst) {
   int element_x = get_global_id(0);
   int index_x = element_x << 2;
   if (index_x >= cols) {
     return;
   }
 
-  global const char4* input = (global char4*)src;
-  char4 input_value, output_value;
-  input_value = input[element_x];
-
   if (index_x < cols - 3) {
+    char4 input_value = vload4(element_x, src);
+
+    char4 output_value;
     output_value.x = abs_device0(input_value.x);
     output_value.y = abs_device0(input_value.y);
     output_value.z = abs_device0(input_value.z);
     output_value.w = abs_device0(input_value.w);
 
-    global char4* output = (global char4*)dst;
-    output[element_x] = output_value;
+    vstore4(output_value, element_x, dst);
   }
   else {
+    global const char4* input = src;
+    char4 input_value, output_value;
+    input_value = input[element_x];
+
     output_value.x = abs_device0(input_value.x);
     if (index_x < cols - 1) {
       output_value.y = abs_device0(input_value.y);
@@ -100,10 +105,12 @@ __kernel void absU8Kernel1(global const signed char* src, int cols,
     }
   }
 }
+#endif
 
-#elif defined(U8UNALIGNED)
-__kernel void absU8Kernel2(global const signed char* src, int rows, int cols,
-                  int src_stride, global signed char* dst, int dst_stride) {
+#if defined(U8UNALIGNED) || defined(SPIR)
+__kernel
+void absU8Kernel2(global const char* src, int rows, int cols, int src_stride,
+                  global char* dst, int dst_stride) {
   int element_x = get_global_id(0);
   int element_y = get_global_id(1);
   int index_x = element_x << 2;
@@ -111,29 +118,26 @@ __kernel void absU8Kernel2(global const signed char* src, int rows, int cols,
     return;
   }
 
-  global const signed char* input = (global char*)(src + element_y * src_stride);
-  global signed char* output = (global char*)(dst + element_y * dst_stride);
-
-  signed char input_value0, input_value1, input_value2, input_value3;
-  signed char output_value0, output_value1, output_value2, output_value3;
-
   if (index_x < cols - 3) {
-    input_value0 = input[index_x];
-    input_value1 = input[index_x + 1];
-    input_value2 = input[index_x + 2];
-    input_value3 = input[index_x + 3];
+    global const char* input = src + element_y * src_stride;
+    char4 input_value = vload4(element_x, input);
 
-    output_value0 = abs_device0(input_value0);
-    output_value1 = abs_device0(input_value1);
-    output_value2 = abs_device0(input_value2);
-    output_value3 = abs_device0(input_value3);
+    char4 output_value;
+    output_value.x = abs_device0(input_value.x);
+    output_value.y = abs_device0(input_value.y);
+    output_value.z = abs_device0(input_value.z);
+    output_value.w = abs_device0(input_value.w);
 
-    output[index_x]     = output_value0;
-    output[index_x + 1] = output_value1;
-    output[index_x + 2] = output_value2;
-    output[index_x + 3] = output_value3;
+    global char* output = dst + element_y * dst_stride;
+    vstore4(output_value, element_x, output);
   }
   else {
+    global const char* input = src + element_y * src_stride;
+    global char* output = dst + element_y * dst_stride;
+
+    char input_value0, input_value1, input_value2;
+    char output_value0, output_value1, output_value2;
+
     input_value0 = input[index_x];
     if (index_x < cols - 1) {
       input_value1 = input[index_x + 1];
@@ -159,51 +163,35 @@ __kernel void absU8Kernel2(global const signed char* src, int rows, int cols,
     }
   }
 }
+#endif
 
-#elif defined(U8KERNEL3)
-__kernel void absU8Kernel3(global const signed char* src, int rows, int cols,
-                  int src_stride, global signed char* dst, int dst_stride) {
+#if defined(F32ALIGNED) || defined(SPIR)
+__kernel
+void absF32Kernel0(global const float* src, int rows, int cols, int src_stride,
+                   global float* dst, int dst_stride) {
   int element_x = get_global_id(0);
   int element_y = get_global_id(1);
   if (element_y >= rows || element_x >= cols) {
     return;
   }
 
-  global const char* input = (global char*)(src + element_y * src_stride);
-  char4 input_value = vload4(element_x, input);
-
-  char4 output_value;
-  output_value.x = abs_device0(input_value.x);
-  output_value.y = abs_device0(input_value.y);
-  output_value.z = abs_device0(input_value.z);
-  output_value.w = abs_device0(input_value.w);
-
-  global char* output = (global char*)(dst + element_y * dst_stride);
-  vstore4(output_value, element_x, output);
-}
-
-#elif defined(F32ALIGNED)
-__kernel void absF32Kernel0(global const float* src, int rows, int cols,
-                            int src_stride, global float* dst, int dst_stride) {
-  int element_x = get_global_id(0);
-  int element_y = get_global_id(1);
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  global const float2* input = (global float2*)((global uchar*)src + element_y * src_stride);
-  float2 input_value = input[element_x];
+  global const float* input = (global float*)((global uchar*)src +
+                               element_y * src_stride);
+  float2 input_value = vload2(element_x, input);
 
   float2 output_value;
   output_value.x = abs_device1(input_value.x);
   output_value.y = abs_device1(input_value.y);
 
-  global float2* output = (global float2*)((global uchar*)dst + element_y * dst_stride);
-  output[element_x] = output_value;
+  global float* output = (global float*)((global uchar*)dst +
+                          element_y * dst_stride);
+  vstore2(output_value, element_x, output);
 }
+#endif
 
-#elif defined(F32UNALIGNED)
-__kernel void absF32Kernel1(global const float* src, int rows, int cols, int src_stride,
+#if defined(F32UNALIGNED) || defined(SPIR)
+__kernel
+void absF32Kernel1(global const float* src, int rows, int cols, int src_stride,
                    global float* dst, int dst_stride) {
   int element_x = get_global_id(0);
   int element_y = get_global_id(1);
@@ -212,57 +200,29 @@ __kernel void absF32Kernel1(global const float* src, int rows, int cols, int src
     return;
   }
 
-  global float* input  = (global float*)((global uchar*)src + element_y * src_stride);
-  global float* output = (global float*)((global uchar*)dst + element_y * dst_stride);
-  float input_value0, input_value1;
-  float output_value0, output_value1;
-
   if (index_x < cols - 1) {
-    input_value0 = input[index_x];
-    input_value1 = input[index_x + 1];
-    output_value0 = abs_device1(input_value0);
-    output_value1 = abs_device1(input_value1);
+    global const float* input = (global float*)((global uchar*)src +
+                                 element_y * src_stride);
+    float2 input_value = vload2(element_x, input);
 
-    output[index_x]     = output_value0;
-    output[index_x + 1] = output_value1;
+    float2 output_value;
+    output_value.x = abs_device1(input_value.x);
+    output_value.y = abs_device1(input_value.y);
+
+    global float* output = (global float*)((global uchar*)dst +
+                            element_y * dst_stride);
+    vstore2(output_value, element_x, output);
   }
   else {
-    input_value0 = input[index_x];
-    if (index_x < cols - 1) {
-      input_value1 = input[index_x + 1];
-    }
+    global float* input = (global float*)((global uchar*)src +
+                           element_y * src_stride);
+    global float* output = (global float*)((global uchar*)dst +
+                            element_y * dst_stride);
 
-    output_value0 = abs_device1(input_value0);
-    if (index_x < cols - 1) {
-      output_value1 = abs_device1(input_value1);
-    }
+    float input_value = input[index_x];
+    float output_value = abs_device1(input_value);
 
-    output[index_x] = output_value0;
-    if (index_x < cols - 1) {
-      output[index_x + 1] = output_value1;
-    }
+    output[index_x] = output_value;
   }
-}
-
-#elif defined(F32KERNEL2)
-__kernel void absF32Kernel2(global const float* src, int rows, int cols, int src_stride,
-                   global float* dst, int dst_stride) {
-  int element_x = get_global_id(0);
-  int element_y = get_global_id(1);
-  if (element_y >= rows || element_x >= cols) {
-    return;
-  }
-
-  global const float* input = (global float*)(src + element_y * src_stride);
-  float4 input_value = vload4(element_x, input);
-
-  float4 output_value;
-  output_value.x = abs_device1(input_value.x);
-  output_value.y = abs_device1(input_value.y);
-  output_value.z = abs_device1(input_value.z);
-  output_value.w = abs_device1(input_value.w);
-
-  global float* output = (global float*)(dst + element_y * dst_stride);
-  vstore4(output_value, element_x, output);
 }
 #endif

@@ -89,71 +89,6 @@ void BM_Abs_ppl_ocl(benchmark::State &state) {
   clReleaseMemObject(gpu_dst);
 }
 
-/* template <typename T, int channels>
-void BM_Abs_ppl1_ocl(benchmark::State &state) {
-  ppl::common::ocl::createSharedFrameChain(false);
-  cl_context context = ppl::common::ocl::getSharedFrameChain()->getContext();
-  cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->getQueue();
-
-  int width  = state.range(0);
-  int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
-  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
-
-  int data_size = height * width * channels * sizeof(T);
-  T* input  = (T*)malloc(data_size);
-  T* output = (T*)malloc(data_size);
-  cl_int error_code = 0;
-  cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size, NULL,
-                                    &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
-  cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
-                                     NULL, &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
-  copyMatToArray(src, input);
-  error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, data_size,
-                                    input, 0, NULL, NULL);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: "
-               << error_code;
-  }
-
-  int iterations = 100;
-  struct timeval start, end;
-
-  // Warm up the GPU.
-  for (int i = 0; i < iterations; i++) {
-    ppl::cv::ocl::Abs<T, channels>(queue, height, width, width * channels,
-                                   gpu_input, width * channels, gpu_output);
-  }
-  clFinish(queue);
-
-  for (auto _ : state) {
-    gettimeofday(&start, NULL);
-    for (int i = 0; i < iterations; i++) {
-      ppl::cv::ocl::Abs<T, channels>(queue, height, width, width * channels,
-                                     gpu_input, width * channels, gpu_output);
-    }
-    clFinish(queue);
-    gettimeofday(&end, NULL);
-    int time = ((end.tv_sec * 1000000 + end.tv_usec) -
-                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;
-    state.SetIterationTime(time * 1e-6);
-  }
-  state.SetItemsProcessed(state.iterations() * 1);
-
-  free(input);
-  free(output);
-  clReleaseMemObject(gpu_input);
-  clReleaseMemObject(gpu_output);
-} */
-
 template <typename T, int channels>
 void BM_Abs_opencv_ocl(benchmark::State &state) {
   int width  = state.range(0);
@@ -193,19 +128,12 @@ BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c1)->Args({width, height});        \
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c3)->Args({width, height});        \
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c4)->Args({width, height});
 
-// #define RUN_PPL_CV_TYPE_FUNCTIONS(type, width, height)                         \
-// BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c1)->Args({width, height})->          \
-//                    UseManualTime()->Iterations(10);                            \
-// BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c3)->Args({width, height})->          \
-//                    UseManualTime()->Iterations(10);                            \
-// BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c4)->Args({width, height})->          \
-//                    UseManualTime()->Iterations(10);
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, channel)                         \
-BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, channel)->Args({320, 240})->          \
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type, width, height)                         \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c1)->Args({width, height})->          \
                    UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, channel)->Args({640, 480})->          \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c3)->Args({width, height})->          \
                    UseManualTime()->Iterations(10);                            \
-BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, channel)->Args({1280, 720})->          \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c4)->Args({width, height})->          \
                    UseManualTime()->Iterations(10);
 
 // RUN_OPENCV_TYPE_FUNCTIONS(schar, 640, 480)
@@ -217,10 +145,3 @@ BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, channel)->Args({1280, 720})->          
 // RUN_PPL_CV_TYPE_FUNCTIONS(schar, 1920, 1080)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, 640, 480)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, 1920, 1080)
-
-// RUN_PPL_CV_TYPE_FUNCTIONS(schar, c1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(schar, c3)
-// RUN_PPL_CV_TYPE_FUNCTIONS(schar, c4)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, c1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, c3)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, c4)
