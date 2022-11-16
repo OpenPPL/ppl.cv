@@ -24,7 +24,7 @@
 
 #include "ppl/cv/debug.h"
 #include "ppl/common/ocl/framechain.h"
-#include "utility/infrastructure.hpp"
+#include "utility/infrastructure.h"
 
 using namespace ppl::cv::debug;
 

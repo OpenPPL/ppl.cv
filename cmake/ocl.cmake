@@ -1,6 +1,7 @@
 list(APPEND PPLCV_COMPILE_DEFINITIONS PPLCV_USE_OPENCL)
 
-file(GLOB_RECURSE __PPLCV_OCL_SRC__ src/ppl/cv/ocl/*.cpp)
+file(GLOB __PPLCV_OCL_SRC__ src/ppl/cv/ocl/*.cpp)
+# file(GLOB_RECURSE __PPLCV_OCL_SRC__ src/ppl/cv/ocl/*.cpp)
 list(APPEND PPLCV_SRC ${__PPLCV_OCL_SRC__})
 unset(__PPLCV_OCL_SRC__)
 
@@ -40,6 +41,7 @@ endforeach()
 file(GLOB __OCL_UNITTEST_SRC__ "src/ppl/cv/ocl/*_unittest.cpp")
 list(APPEND PPLCV_UNITTEST_SRC ${__OCL_UNITTEST_SRC__})
 unset(__OCL_UNITTEST_SRC__)
+# message("ocl unittest file: ${PPLCV_UNITTEST_SRC}")  #debug
 
 file(GLOB __OCL_BENCHMARK_SRC__ "src/ppl/cv/ocl/*_benchmark.cpp")
 list(APPEND PPLCV_BENCHMARK_SRC ${__OCL_BENCHMARK_SRC__})

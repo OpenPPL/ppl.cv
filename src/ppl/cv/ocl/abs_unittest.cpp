@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 
 #include "ppl/common/ocl/framechain.h"
-#include "utility/infrastructure.hpp"
+#include "utility/infrastructure.h"
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
@@ -133,8 +133,12 @@ bool PplCvOclAbsTest<T, channels>::apply() {
   else {
     epsilon = EPSILON_E6;
   }
-  bool identity0 = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
-  bool identity1 = checkMatArrayIdentity<T>(cv_dst, output, epsilon);
+  bool identity0 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,
+      cv_dst.cols, cv_dst.channels(), cv_dst.step, (const T*)dst.data, dst.step,
+      epsilon);
+  bool identity1 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,
+      cv_dst.cols, cv_dst.channels(), cv_dst.step, output,
+      size.width * channels * sizeof(T), epsilon);
 
   free(input);
   free(output);

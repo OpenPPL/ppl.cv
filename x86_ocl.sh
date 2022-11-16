@@ -19,4 +19,6 @@ cmd="cmake .. \
 echo "cmd -> $cmd"
 eval $cmd
 
+# make VERBOSE=1 pplcv_unittest
+# make VERBOSE=1
 cmake --build . -j 8 --config Release --target install

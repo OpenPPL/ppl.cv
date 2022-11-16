@@ -12,43 +12,11 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
- *
- * Infrastructure functions for the convenience of unittest and benchmark.
  */
 
-#ifndef _ST_HPC_PPL_CV_OCL_INFRASTRUCTURE_HPP_
-#define _ST_HPC_PPL_CV_OCL_INFRASTRUCTURE_HPP_
+#include "infrastructure.h"
+#include "utility.hpp"
 
-#include <cstdlib>
-
-#include <iostream>
-
-#include "opencv2/core.hpp"
-
-#include "ppl/common/log.h"
-
-#define EPSILON_1F 1.1f
-#define EPSILON_2F 2.1f
-#define EPSILON_4F 4.1f
-#define EPSILON_E1 1e-1
-#define EPSILON_E2 1e-2
-#define EPSILON_E3 0.002
-#define EPSILON_E4 1e-4
-#define EPSILON_E5 1e-5
-#define EPSILON_E6 1e-6
-
-#define AUX_ASSERT(expression)                                                 \
-if (!(expression)) {                                                           \
-  LOG(ERROR) << "Infrastructure assertion failed: " << #expression;            \
-  exit(-1);                                                                    \
-}
-
-enum MaskType {
-  kUnmasked,
-  kMasked,
-};
-
-inline
 schar randomChar() {
   int flag   = rand() % 2;
   int number = rand() % 128;
@@ -216,7 +184,6 @@ void randomImage(cv::Mat& image, int basic_type, int channels, T begin, T end) {
   }
 }
 
-inline
 cv::Mat createSourceImage(int rows, int cols, int type) {
   AUX_ASSERT(rows >= 1 && cols >= 1);
   AUX_ASSERT(type == CV_8UC1 || type == CV_8UC2 ||
@@ -284,7 +251,6 @@ cv::Mat createSourceImage(int rows, int cols, int type) {
   return image;
 }
 
-inline
 cv::Mat createSourceImage(int rows, int cols, int type, float begin,
                           float end) {
   AUX_ASSERT(rows >= 1 && cols >= 1);
@@ -354,7 +320,6 @@ cv::Mat createSourceImage(int rows, int cols, int type, float begin,
   return image;
 }
 
-inline
 cv::Mat createBinaryImage(int rows, int cols, int type) {
   AUX_ASSERT(rows >= 1 && cols >= 1);
   AUX_ASSERT(type == CV_8UC1);
@@ -411,6 +376,15 @@ void copyMatToArray(const cv::Mat& image0, T* image1) {
   }
 }
 
+template
+void copyMatToArray(const cv::Mat& image0, uchar* image1);
+
+template
+void copyMatToArray(const cv::Mat& image0, schar* image1);
+
+template
+void copyMatToArray(const cv::Mat& image0, float* image1);
+
 inline
 void findMax(float& max, const float& value) {
   if (value > max) {
@@ -426,41 +400,24 @@ void findMax(double& max, const double& value) {
 }
 
 template <typename T>
-bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
-                           float epsilon, bool display = false) {
-  AUX_ASSERT(image0.data != nullptr);
-  AUX_ASSERT(image1.data != nullptr);
-  AUX_ASSERT(image0.data != image1.data);
-  AUX_ASSERT(image0.rows >= 1 && image0.cols >= 1);
-  AUX_ASSERT(image0.rows == image1.rows && image0.cols == image1.cols);
-  AUX_ASSERT(image0.channels() == 1 || image0.channels() == 2 ||
-             image0.channels() == 3 || image0.channels() == 4);
-  AUX_ASSERT(image0.channels() == image1.channels());
-  AUX_ASSERT(image0.type() == CV_8UC1 || image0.type() == CV_8UC2 ||
-             image0.type() == CV_8UC3 || image0.type() == CV_8UC4 ||
-             image0.type() == CV_8SC1 || image0.type() == CV_8SC2 ||
-             image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
-             image0.type() == CV_16SC1 || image0.type() == CV_16SC2 ||
-             image0.type() == CV_16SC3 || image0.type() == CV_16SC4 ||
-             image0.type() == CV_32SC1 || image0.type() == CV_32SC2 ||
-             image0.type() == CV_32SC3 || image0.type() == CV_32SC4 ||
-             image0.type() == CV_32FC1 || image0.type() == CV_32FC2 ||
-             image0.type() == CV_32FC3 || image0.type() == CV_32FC4 ||
-             image0.type() == CV_64FC1 || image0.type() == CV_64FC2 ||
-             image0.type() == CV_64FC3 || image0.type() == CV_64FC4);
-  AUX_ASSERT(image0.type() == image1.type());
+bool checkMatricesIdentity(const T* src0, int rows, int cols, int channels,
+                           int src0_stride, const T* src1, int src1_stride,
+                           float epsilon, bool display) {
+  AUX_ASSERT(src0 != nullptr);
+  AUX_ASSERT(src1 != nullptr);
+  AUX_ASSERT(rows >= 1 && cols >= 1);
+  AUX_ASSERT(channels == 1 || channels == 2 || channels == 3 || channels == 4);
+  AUX_ASSERT(src0_stride >= cols * channels * (int)sizeof(T));
+  AUX_ASSERT(src1_stride >= cols * channels * (int)sizeof(T));
   AUX_ASSERT(epsilon > 0.f);
 
-  int rows = image0.rows;
-  int cols = image0.cols;
-  int channels = image0.channels();
-  float difference, max = 0.0f;
-  const T *element0, *element1;
+  float difference, max = 0.f;
+  T *element0, *element1;
 
   std::cout.precision(7);
   for (int row = 0; row < rows; ++row) {
-    element0 = image0.ptr<const T>(row);
-    element1 = image1.ptr<const T>(row);
+    element0 = (T*)((uchar*)src0 + row * src0_stride);
+    element1 = (T*)((uchar*)src1 + row * src1_stride);
 
     for (int col = 0; col < cols; ++col) {
       difference = fabs((float) element0[0] - (float) element1[0]);
@@ -509,83 +466,17 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
   }
 }
 
-template <typename T>
-bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
-                           float epsilon, bool display = false) {
-  AUX_ASSERT(image0.data != nullptr);
-  AUX_ASSERT(image1 != nullptr);
-  AUX_ASSERT(image0.data != (uchar*)image1);
-  AUX_ASSERT(image0.rows >= 1 && image0.cols >= 1);
-  AUX_ASSERT(image0.channels() == 1 || image0.channels() == 2 ||
-             image0.channels() == 3 || image0.channels() == 4);
-  AUX_ASSERT(image0.type() == CV_8UC1 || image0.type() == CV_8UC2 ||
-             image0.type() == CV_8UC3 || image0.type() == CV_8UC4 ||
-             image0.type() == CV_8SC1 || image0.type() == CV_8SC2 ||
-             image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
-             image0.type() == CV_16SC1 || image0.type() == CV_16SC2 ||
-             image0.type() == CV_16SC3 || image0.type() == CV_16SC4 ||
-             image0.type() == CV_32SC1 || image0.type() == CV_32SC2 ||
-             image0.type() == CV_32SC3 || image0.type() == CV_32SC4 ||
-             image0.type() == CV_32FC1 || image0.type() == CV_32FC2 ||
-             image0.type() == CV_32FC3 || image0.type() == CV_32FC4 ||
-             image0.type() == CV_64FC1 || image0.type() == CV_64FC2 ||
-             image0.type() == CV_64FC3 || image0.type() == CV_64FC4);
-  AUX_ASSERT(epsilon > 0.f);
+template
+bool checkMatricesIdentity(const uchar* src0, int rows, int cols, int channels,
+                           int src0_stride, const uchar* src1, int src1_stride,
+                           float epsilon, bool display);
 
-  int rows = image0.rows;
-  int cols = image0.cols;
-  int channels = image0.channels();
-  float difference, max = 0.0f;
-  const T *element0, *element1;
+template
+bool checkMatricesIdentity(const schar* src0, int rows, int cols, int channels,
+                           int src0_stride, const schar* src1, int src1_stride,
+                           float epsilon, bool display);
 
-  std::cout.precision(7);
-  for (int row = 0; row < rows; ++row) {
-    element0 = image0.ptr<const T>(row);
-    element1 = (T*)((uchar*)image1 + row * cols * channels * sizeof(T));
-
-    for (int col = 0; col < cols; ++col) {
-      difference = fabs((float) element0[0] - (float) element1[0]);
-      findMax(max, difference);
-      if (difference > epsilon || display) {
-        std::cout << "[" << row << ", " << col <<"].0: " << (float)element0[0]
-                  << ", " << (float)element1[0] << std::endl;
-      }
-      if (channels >= 3) {
-        difference = fabs((float) element0[1] - (float) element1[1]);
-        findMax(max, difference);
-        if (difference > epsilon || display) {
-          std::cout << "[" << row << ", " << col <<"].1: " << (float)element0[1]
-                    << ", " << (float)element1[1] << std::endl;
-        }
-        difference = fabs((float) element0[2] - (float) element1[2]);
-        findMax(max, difference);
-        if (difference > epsilon || display) {
-          std::cout << "[" << row << ", " << col <<"].2: " << (float)element0[2]
-                    << ", " << (float)element1[2] << std::endl;
-        }
-      }
-      if (channels == 4) {
-        difference = fabs((float) element0[3] - (float) element1[3]);
-        findMax(max, difference);
-        if (difference > epsilon || display) {
-          std::cout << "[" << row << ", " << col <<"].3: " << (float)element0[3]
-                    << ", " << (float)element1[3] << std::endl;
-        }
-      }
-
-      element0 += channels;
-      element1 += channels;
-    }
-  }
-
-  if (max <= epsilon) {
-    return true;
-  }
-  else {
-    std::cout << "Max difference between elements of the two images: "
-              << max << std::endl;
-    return false;
-  }
-}
-
-#endif  // _ST_HPC_PPL_CV_OCL_INFRASTRUCTURE_HPP_
+template
+bool checkMatricesIdentity(const float* src0, int rows, int cols, int channels,
+                           int src0_stride, const float* src1, int src1_stride,
+                           float epsilon, bool display);

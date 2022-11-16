@@ -41,6 +41,8 @@ namespace ocl {
  *                       inWidthStride.
  * @param outData        output image data, similar to inData.
  * @return The execution status, succeeds or fails with an error code.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning All parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
@@ -63,6 +65,7 @@ namespace ocl {
  * @code{.cpp}
  * #include "ppl/cv/ocl/abs.h"
  * #include "ppl/common/framechain.h"
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -70,10 +73,9 @@ namespace ocl {
  *   int height   = 480;
  *   int channels = 3;
  *
- *   FrameChain frame_chain;
- *   frame_chain.createDefaultOclFrame(false);
- *   cl_context context     = frame_chain.getContext();
- *   cl_command_queue queue = frame_chain.getQueue();
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
  *   cl_int error_code = 0;
  *   int data_size = height * width * channels * sizeof(float);
@@ -81,8 +83,8 @@ namespace ocl {
  *   float* output = (float*)malloc(data_size);
  *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
  *                                     NULL, &error_code);
- *   cl_mem gpu_output = = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
- *                                        NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
+ *                                      NULL, &error_code);
  *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
  *                                     data_size, input, 0, NULL, NULL);
  *
