@@ -25,6 +25,7 @@
 #include "ppl/cv/debug.h"
 #include "ppl/common/ocl/framechain.h"
 #include "utility/infrastructure.h"
+#include "utility/utility.hpp"
 
 using namespace ppl::cv::debug;
 
@@ -46,20 +47,13 @@ void BM_Abs_ppl_ocl(benchmark::State &state) {
   cl_int error_code = 0;
   cl_mem gpu_src = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
                                   &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clCreateBuffer);
   cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
                                   &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clCreateBuffer);
   error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_TRUE, 0, src_bytes,
                                     src.data, 0, NULL, NULL);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: "
-               << error_code;
-  }
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
   int iterations = 100;
   struct timeval start, end;

@@ -133,7 +133,6 @@ void absU8Kernel2(global const char* src, int rows, int cols, int src_stride,
   }
   else {
     global const char* input = src + element_y * src_stride;
-    global char* output = dst + element_y * dst_stride;
 
     char input_value0, input_value1, input_value2;
     char output_value0, output_value1, output_value2;
@@ -154,6 +153,7 @@ void absU8Kernel2(global const char* src, int rows, int cols, int src_stride,
       output_value2 = abs_device0(input_value2);
     }
 
+    global char* output = dst + element_y * dst_stride;
     output[index_x] = output_value0;
     if (index_x < cols - 1) {
       output[index_x + 1] = output_value1;
@@ -216,12 +216,11 @@ void absF32Kernel1(global const float* src, int rows, int cols, int src_stride,
   else {
     global float* input = (global float*)((global uchar*)src +
                            element_y * src_stride);
-    global float* output = (global float*)((global uchar*)dst +
-                            element_y * dst_stride);
-
     float input_value = input[index_x];
     float output_value = abs_device1(input_value);
 
+    global float* output = (global float*)((global uchar*)dst +
+                            element_y * dst_stride);
     output[index_x] = output_value;
   }
 }

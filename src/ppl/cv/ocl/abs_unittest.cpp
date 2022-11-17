@@ -24,6 +24,7 @@
 
 #include "ppl/common/ocl/framechain.h"
 #include "utility/infrastructure.h"
+#include "utility/utility.hpp"
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {
@@ -55,7 +56,6 @@ class PplCvOclAbsTest : public ::testing::TestWithParam<Parameters> {
 
  private:
   cv::Size size;
-
   cl_context context;
   cl_command_queue queue;
 };
@@ -75,56 +75,40 @@ bool PplCvOclAbsTest<T, channels>::apply() {
   cl_int error_code = 0;
   cl_mem gpu_src = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
                                   &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clCreateBuffer);
   cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
                                   &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clCreateBuffer);
   error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_FALSE, 0, src_bytes,
                                     src.data, 0, NULL, NULL);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
   int data_size = size.height * size.width * channels * sizeof(T);
   T* input  = (T*)malloc(data_size);
   T* output = (T*)malloc(data_size);
   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size, NULL,
                                     &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clCreateBuffer);
   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size, NULL,
                                      &error_code);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clCreateBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clCreateBuffer);
   copyMatToArray(src, input);
   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0, data_size,
                                     input, 0, NULL, NULL);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
   cv_dst = cv::abs(src);
   ppl::cv::ocl::Abs<T, channels>(queue, src.rows, src.cols,
       src.step / sizeof(T), gpu_src, dst.step / sizeof(T), gpu_dst);
   error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,
                                    dst.data, 0, NULL, NULL);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clEnqueueReadBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clEnqueueReadBuffer);
 
   ppl::cv::ocl::Abs<T, channels>(queue, size.height, size.width,
       size.width * channels, gpu_input, size.width * channels, gpu_output);
   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
                                    output, 0, NULL, NULL);
-  if (error_code != CL_SUCCESS) {
-    LOG(ERROR) << "Call clEnqueueReadBuffer() failed with code: " << error_code;
-  }
+  CHECK_ERROR(error_code, clEnqueueReadBuffer);
 
   float epsilon;
   if (sizeof(T) == 1) {

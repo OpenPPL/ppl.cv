@@ -34,6 +34,11 @@ if (!(expression)) {                                                           \
   return ppl::common::RC_INVALID_VALUE;                                        \
 }
 
+#define CHECK_ERROR(error_code, function)                                      \
+if (error_code != CL_SUCCESS) {                                                \
+  LOG(ERROR) << "Call " << #function << " failed with code: " << error_code;   \
+}
+
 typedef unsigned char uchar;
 typedef signed char schar;
 typedef unsigned short ushort;
