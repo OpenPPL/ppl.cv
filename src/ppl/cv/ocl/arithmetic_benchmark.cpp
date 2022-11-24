@@ -29,9 +29,9 @@
 
 using namespace ppl::cv::debug;
 
-double double_alpha = 0.1;
-double double_beta  = 0.2;
-double double_gamma = 0.3;
+float falpha = 0.1f;
+float fbeta  = 0.2f;
+float fgamma = 0.3f;
 
 enum ArithFunctions {
   kADD,
@@ -72,9 +72,16 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
 
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
-    ppl::cv::ocl::Add<T, channels>(queue, src.rows, src.cols,
-        src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
-        dst.step / sizeof(T), gpu_dst);
+    if (function == kADD) {
+      ppl::cv::ocl::Add<T, channels>(queue, src.rows, src.cols,
+          src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+          dst.step / sizeof(T), gpu_dst);
+    }
+    else if (function == kADDWEITHTED) {
+      ppl::cv::ocl::AddWeighted<T, channels>(queue, src.rows, src.cols,
+        src.step / sizeof(T), gpu_src, falpha, src.step / sizeof(T), gpu_src,
+        fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+    }
   }
   clFinish(queue);
 
@@ -85,6 +92,11 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
         ppl::cv::ocl::Add<T, channels>(queue, src.rows, src.cols,
             src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
             dst.step / sizeof(T), gpu_dst);
+      }
+      else if (function == kADDWEITHTED) {
+        ppl::cv::ocl::AddWeighted<T, channels>(queue, src.rows, src.cols,
+            src.step / sizeof(T), gpu_src, falpha, src.step / sizeof(T), gpu_src,
+            fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
       }
     }
     clFinish(queue);
@@ -108,7 +120,12 @@ void BM_Arith_opencv_ocl(benchmark::State &state) {
                           channels));
 
   for (auto _ : state) {
-    cv::add(src, src, dst);
+    if (function == kADD) {
+      cv::add(src, src, dst);
+    }
+    else if (function == kADDWEITHTED) {
+      cv::addWeighted(src, falpha, src, fbeta, fgamma, dst);
+    }
   }
   state.SetItemsProcessed(state.iterations() * 1);
 }
@@ -123,17 +140,29 @@ BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, float, channels, function)->           \
 BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, float, channels, function)->              \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-RUN_BENCHMARK(c1, kADD, 320, 240)
-RUN_BENCHMARK(c3, kADD, 320, 240)
-RUN_BENCHMARK(c4, kADD, 320, 240)
+// RUN_BENCHMARK(c1, kADD, 320, 240)
+// RUN_BENCHMARK(c3, kADD, 320, 240)
+// RUN_BENCHMARK(c4, kADD, 320, 240)
 
-RUN_BENCHMARK(c1, kADD, 640, 480)
-RUN_BENCHMARK(c3, kADD, 640, 480)
-RUN_BENCHMARK(c4, kADD, 640, 480)
+// RUN_BENCHMARK(c1, kADD, 640, 480)
+// RUN_BENCHMARK(c3, kADD, 640, 480)
+// RUN_BENCHMARK(c4, kADD, 640, 480)
 
-RUN_BENCHMARK(c1, kADD, 1920, 1080)
-RUN_BENCHMARK(c3, kADD, 1920, 1080)
-RUN_BENCHMARK(c4, kADD, 1920, 1080)
+// RUN_BENCHMARK(c1, kADD, 1920, 1080)
+// RUN_BENCHMARK(c3, kADD, 1920, 1080)
+// RUN_BENCHMARK(c4, kADD, 1920, 1080)
+
+// RUN_BENCHMARK(c1, kADDWEITHTED, 320, 240)
+// RUN_BENCHMARK(c3, kADDWEITHTED, 320, 240)
+// RUN_BENCHMARK(c4, kADDWEITHTED, 320, 240)
+
+// RUN_BENCHMARK(c1, kADDWEITHTED, 640, 480)
+// RUN_BENCHMARK(c3, kADDWEITHTED, 640, 480)
+// RUN_BENCHMARK(c4, kADDWEITHTED, 640, 480)
+
+// RUN_BENCHMARK(c1, kADDWEITHTED, 1920, 1080)
+// RUN_BENCHMARK(c3, kADDWEITHTED, 1920, 1080)
+// RUN_BENCHMARK(c4, kADDWEITHTED, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, function)                              \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c1, function)->Args({320, 240}); \
@@ -171,6 +200,10 @@ BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, type, c4, function)->Args({1920, 1080})-> \
 
 // RUN_OPENCV_TYPE_FUNCTIONS(uchar, kADD)
 // RUN_OPENCV_TYPE_FUNCTIONS(float, kADD)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, kADDWEITHTED)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADD)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kADD)
+RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADD)
+RUN_PPL_CV_TYPE_FUNCTIONS(float, kADD)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, kADDWEITHTED)

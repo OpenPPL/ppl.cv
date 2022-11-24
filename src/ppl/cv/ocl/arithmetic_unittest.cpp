@@ -146,18 +146,30 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
     ppl::cv::ocl::Add<T, channels>(queue, src0.rows, src0.cols,
         src0.step / sizeof(T), gpu_src0, src1.step / sizeof(T), gpu_src1,
         dst.step / sizeof(T), gpu_dst);
-    error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,
-                                    dst.data, 0, NULL, NULL);
-    CHECK_ERROR(error_code, clEnqueueReadBuffer);
 
     ppl::cv::ocl::Add<T, channels>(queue, size.height, size.width,
         size.width * channels, gpu_input0, size.width * channels, gpu_input1,
         size.width * channels, gpu_output);
-    error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
-                                    output, 0, NULL, NULL);
-    CHECK_ERROR(error_code, clEnqueueReadBuffer);
   }
+  else if (function == kADDWEITHTED) {
+    float alpha = 0.1f;
+    float beta  = 0.2f;
+    float gamma = 0.3f;
+    cv::addWeighted(src0, alpha, src1, beta, gamma, cv_dst);
 
+    ppl::cv::ocl::AddWeighted<T, channels>(queue, src0.rows, src0.cols,
+        src0.step / sizeof(T), gpu_src0, alpha, src1.step / sizeof(T), gpu_src1,
+        beta, gamma, dst.step / sizeof(T), gpu_dst);
+    ppl::cv::ocl::AddWeighted<T, channels>(queue, size.height, size.width,
+        size.width * channels, gpu_input0, alpha, size.width * channels,
+        gpu_input1, beta, gamma, size.width * channels, gpu_output);
+  }
+  error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,
+                                  dst.data, 0, NULL, NULL);
+  CHECK_ERROR(error_code, clEnqueueReadBuffer);
+  error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
+                                   output, 0, NULL, NULL);
+  CHECK_ERROR(error_code, clEnqueueReadBuffer);
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -196,7 +208,7 @@ TEST_P(PplCvOclArithmeticTest ## T ## channels, Standard) {                    \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclArithmeticTest ## T ## channels,      \
   ::testing::Combine(                                                          \
-    ::testing::Values(kADD),              \
+    ::testing::Values(kADDWEITHTED),              \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
