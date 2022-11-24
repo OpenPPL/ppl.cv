@@ -266,3 +266,140 @@ void addWeightedF32Kernel1(global const float* src0, int rows, int cols,
   }
 }
 #endif
+
+/**************************** multiply operation *****************************/
+
+#if defined(MUL_U81D) || defined(SPIR)
+__kernel
+void mulU8Kernel0(global const uchar* src0, int cols, global const uchar* src1,
+                  float scale, global uchar* dst) {
+  int element_x = get_global_id(0);
+  int index_x = element_x << 2;
+  if (index_x >= cols) {
+    return;
+  }
+
+  uchar4 input_value0 = vload4(element_x, src0);
+  uchar4 input_value1 = vload4(element_x, src1);
+  uchar4 output_value;
+  if (scale == 1.f) {
+    output_value = convert_uchar4_sat(convert_ushort4(input_value0) *
+                                      convert_ushort4(input_value1));
+  }
+  else {
+    float4 sum = convert_float4(input_value0) * scale;
+    sum = sum * convert_float4(input_value1);
+    output_value = convert_uchar4_sat(sum);
+  }
+
+  if (index_x < cols - 3) {
+    vstore4(output_value, element_x, dst);
+  }
+  else {
+    dst[index_x] = output_value.x;
+    if (index_x < cols - 1) {
+      dst[index_x + 1] = output_value.y;
+    }
+    if ((index_x < cols - 2)) {
+      dst[index_x + 2] = output_value.z;
+    }
+  }
+}
+#endif
+
+#if defined(MUL_U82D) || defined(SPIR)
+__kernel
+void mulU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
+                  global const uchar* src1, int src1_stride, float scale,
+                  global uchar* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  int index_x = element_x << 2;
+  if (element_y >= rows || index_x >= cols) {
+    return;
+  }
+
+  global uchar* data = src0 + mul24(element_y, src0_stride);
+  uchar4 input_value0 = vload4(element_x, data);
+  data = src1 + mul24(element_y, src1_stride);
+  uchar4 input_value1 = vload4(element_x, data);
+  uchar4 output_value;
+  if (scale == 1.f) {
+    output_value = convert_uchar4_sat(convert_ushort4(input_value0) *
+                                      convert_ushort4(input_value1));
+  }
+  else {
+    float4 sum = convert_float4(input_value0) * scale;
+    sum = sum * convert_float4(input_value1);
+    output_value = convert_uchar4_sat(sum);
+  }
+
+  data = dst + mul24(element_y, dst_stride);
+  if (index_x < cols - 3) {
+    vstore4(output_value, element_x, data);
+  }
+  else {
+    data[index_x] = output_value.x;
+    if (index_x < cols - 1) {
+      data[index_x + 1] = output_value.y;
+    }
+    if ((index_x < cols - 2)) {
+      data[index_x + 2] = output_value.z;
+    }
+  }
+}
+#endif
+
+#if defined(MUL_F32ALIGNED) || defined(SPIR)
+__kernel
+void mulF32Kernel0(global const float* src0, int rows, int cols,
+                   int src0_stride, global const float* src1, int src1_stride,
+                   float scale, global float* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  global float* data = (global float*)((global uchar*)src0 +
+                        mul24(element_y, src0_stride));
+  float2 input_value0 = vload2(element_x, data);
+  data = (global float*)((global uchar*)src1 + mul24(element_y, src1_stride));
+  float2 input_value1 = vload2(element_x, data);
+  float2 output_value = input_value0 * input_value1;
+  output_value = output_value * scale;
+
+  data = (global float*)((global uchar*)dst + mul24(element_y, dst_stride));
+  vstore2(output_value, element_x, data);
+}
+#endif
+
+#if defined(MUL_F32UNALIGNED) || defined(SPIR)
+__kernel
+void mulF32Kernel1(global const float* src0, int rows, int cols,
+                   int src0_stride, global const float* src1, int src1_stride,
+                   float scale, global float* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  int index_x = element_x << 1;
+  if (element_y >= rows || index_x >= cols) {
+    return;
+  }
+
+  global float* data = (global float*)((global uchar*)src0 +
+                        mul24(element_y, src0_stride));
+  float2 input_value0 = vload2(element_x, data);
+  data = (global float*)((global uchar*)src1 + mul24(element_y, src1_stride));
+  float2 input_value1 = vload2(element_x, data);
+  float2 output_value = input_value0 * input_value1;
+  output_value = output_value * scale;
+
+  data = (global float*)((global uchar*)dst + mul24(element_y, dst_stride));
+  if (index_x < cols - 1) {
+    vstore2(output_value, element_x, data);
+  }
+  else {
+    data[index_x] = output_value.x;
+  }
+}
+#endif

@@ -37,7 +37,8 @@ enum ArithFunctions {
   kADD,
   kADDWEITHTED,
   kSUBTRACT,
-  kMUL,
+  kMUL0,
+  kMUL1,
   kDIV,
 };
 
@@ -79,8 +80,20 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
     }
     else if (function == kADDWEITHTED) {
       ppl::cv::ocl::AddWeighted<T, channels>(queue, src.rows, src.cols,
-        src.step / sizeof(T), gpu_src, falpha, src.step / sizeof(T), gpu_src,
-        fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+          src.step / sizeof(T), gpu_src, falpha, src.step / sizeof(T), gpu_src,
+          fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+    }
+    else if (function == kMUL0) {
+      ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
+          src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+          dst.step / sizeof(T), gpu_dst);
+    }
+    else if (function == kMUL1) {
+      ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
+          src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+          dst.step / sizeof(T), gpu_dst, falpha);
+    }
+    else {
     }
   }
   clFinish(queue);
@@ -97,6 +110,18 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
         ppl::cv::ocl::AddWeighted<T, channels>(queue, src.rows, src.cols,
             src.step / sizeof(T), gpu_src, falpha, src.step / sizeof(T), gpu_src,
             fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+      }
+      else if (function == kMUL0) {
+        ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
+            src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+            dst.step / sizeof(T), gpu_dst);
+      }
+      else if (function == kMUL1) {
+        ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
+            src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+            dst.step / sizeof(T), gpu_dst, falpha);
+      }
+      else {
       }
     }
     clFinish(queue);
@@ -125,6 +150,14 @@ void BM_Arith_opencv_ocl(benchmark::State &state) {
     }
     else if (function == kADDWEITHTED) {
       cv::addWeighted(src, falpha, src, fbeta, fgamma, dst);
+    }
+    else if (function == kMUL0) {
+      cv::multiply(src, src, dst);
+    }
+    else if (function == kMUL1) {
+      cv::multiply(src, src, dst, falpha);
+    }
+    else {
     }
   }
   state.SetItemsProcessed(state.iterations() * 1);
@@ -164,6 +197,30 @@ BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, float, channels, function)->              \
 // RUN_BENCHMARK(c3, kADDWEITHTED, 1920, 1080)
 // RUN_BENCHMARK(c4, kADDWEITHTED, 1920, 1080)
 
+RUN_BENCHMARK(c1, kMUL0, 320, 240)
+RUN_BENCHMARK(c3, kMUL0, 320, 240)
+RUN_BENCHMARK(c4, kMUL0, 320, 240)
+
+RUN_BENCHMARK(c1, kMUL0, 640, 480)
+RUN_BENCHMARK(c3, kMUL0, 640, 480)
+RUN_BENCHMARK(c4, kMUL0, 640, 480)
+
+RUN_BENCHMARK(c1, kMUL0, 1920, 1080)
+RUN_BENCHMARK(c3, kMUL0, 1920, 1080)
+RUN_BENCHMARK(c4, kMUL0, 1920, 1080)
+
+RUN_BENCHMARK(c1, kMUL1, 320, 240)
+RUN_BENCHMARK(c3, kMUL1, 320, 240)
+RUN_BENCHMARK(c4, kMUL1, 320, 240)
+
+RUN_BENCHMARK(c1, kMUL1, 640, 480)
+RUN_BENCHMARK(c3, kMUL1, 640, 480)
+RUN_BENCHMARK(c4, kMUL1, 640, 480)
+
+RUN_BENCHMARK(c1, kMUL1, 1920, 1080)
+RUN_BENCHMARK(c3, kMUL1, 1920, 1080)
+RUN_BENCHMARK(c4, kMUL1, 1920, 1080)
+
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, function)                              \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c1, function)->Args({320, 240}); \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c3, function)->Args({320, 240}); \
@@ -202,8 +259,16 @@ BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, type, c4, function)->Args({1920, 1080})-> \
 // RUN_OPENCV_TYPE_FUNCTIONS(float, kADD)
 // RUN_OPENCV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
 // RUN_OPENCV_TYPE_FUNCTIONS(float, kADDWEITHTED)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMUL0)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, kMUL0)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMUL1)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, kMUL1)
 
-RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADD)
-RUN_PPL_CV_TYPE_FUNCTIONS(float, kADD)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADD)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, kADD)
 // RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, kADDWEITHTED)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMUL0)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, kMUL0)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMUL1)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, kMUL1)
