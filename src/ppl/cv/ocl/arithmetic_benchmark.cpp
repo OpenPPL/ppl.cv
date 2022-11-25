@@ -39,7 +39,8 @@ enum ArithFunctions {
   kSUBTRACT,
   kMUL0,
   kMUL1,
-  kDIV,
+  kDIV0,
+  kDIV1,
 };
 
 template <typename T, int channels, ArithFunctions function>
@@ -50,22 +51,31 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
 
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
+  cv::Mat src0, src1;
+  src0 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           channels));
+  src1 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           channels));
   cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  int src_bytes = src.rows * src.step;
+  int src_bytes0 = src0.rows * src0.step;
+  int src_bytes1 = src1.rows * src1.step;
   int dst_bytes = dst.rows * dst.step;
   cl_int error_code = 0;
-  cl_mem gpu_src = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
-                                  &error_code);
+  cl_mem gpu_src0 = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes0, NULL,
+                                   &error_code);
+  CHECK_ERROR(error_code, clCreateBuffer);
+  cl_mem gpu_src1 = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes1, NULL,
+                                   &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
   cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
                                   &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
-  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_TRUE, 0, src_bytes,
-                                    src.data, 0, NULL, NULL);
+  error_code = clEnqueueWriteBuffer(queue, gpu_src0, CL_TRUE, 0, src_bytes0,
+                                    src0.data, 0, NULL, NULL);
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);
+  error_code = clEnqueueWriteBuffer(queue, gpu_src1, CL_TRUE, 0, src_bytes1,
+                                    src1.data, 0, NULL, NULL);
   CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
   int iterations = 100;
@@ -74,23 +84,38 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
   // Warm up the GPU.
   for (int i = 0; i < iterations; i++) {
     if (function == kADD) {
-      ppl::cv::ocl::Add<T, channels>(queue, src.rows, src.cols,
-          src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+      ppl::cv::ocl::Add<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
           dst.step / sizeof(T), gpu_dst);
     }
     else if (function == kADDWEITHTED) {
-      ppl::cv::ocl::AddWeighted<T, channels>(queue, src.rows, src.cols,
-          src.step / sizeof(T), gpu_src, falpha, src.step / sizeof(T), gpu_src,
-          fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+      ppl::cv::ocl::AddWeighted<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, falpha, src0.step / sizeof(T),
+          gpu_src1, fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+    }
+    else if (function == kSUBTRACT) {
+      ppl::cv::ocl::Subtract<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+          dst.step / sizeof(T), gpu_dst);
     }
     else if (function == kMUL0) {
-      ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
-          src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+      ppl::cv::ocl::Mul<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
           dst.step / sizeof(T), gpu_dst);
     }
     else if (function == kMUL1) {
-      ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
-          src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+      ppl::cv::ocl::Mul<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+          dst.step / sizeof(T), gpu_dst, falpha);
+    }
+    else if (function == kDIV0) {
+      ppl::cv::ocl::Div<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+          dst.step / sizeof(T), gpu_dst);
+    }
+    else if (function == kDIV1) {
+      ppl::cv::ocl::Div<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
           dst.step / sizeof(T), gpu_dst, falpha);
     }
     else {
@@ -102,23 +127,38 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
     gettimeofday(&start, NULL);
     for (int i = 0; i < iterations; i++) {
       if (function == kADD) {
-        ppl::cv::ocl::Add<T, channels>(queue, src.rows, src.cols,
-            src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+        ppl::cv::ocl::Add<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
             dst.step / sizeof(T), gpu_dst);
       }
       else if (function == kADDWEITHTED) {
-        ppl::cv::ocl::AddWeighted<T, channels>(queue, src.rows, src.cols,
-            src.step / sizeof(T), gpu_src, falpha, src.step / sizeof(T), gpu_src,
-            fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+        ppl::cv::ocl::AddWeighted<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, falpha, src0.step / sizeof(T),
+            gpu_src1, fbeta, fgamma, dst.step / sizeof(T), gpu_dst);
+      }
+      else if (function == kSUBTRACT) {
+        ppl::cv::ocl::Subtract<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+            dst.step / sizeof(T), gpu_dst);
       }
       else if (function == kMUL0) {
-        ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
-            src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+        ppl::cv::ocl::Mul<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
             dst.step / sizeof(T), gpu_dst);
       }
       else if (function == kMUL1) {
-        ppl::cv::ocl::Mul<T, channels>(queue, src.rows, src.cols,
-            src.step / sizeof(T), gpu_src, src.step / sizeof(T), gpu_src,
+        ppl::cv::ocl::Mul<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+            dst.step / sizeof(T), gpu_dst, falpha);
+      }
+      else if (function == kDIV0) {
+        ppl::cv::ocl::Div<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+            dst.step / sizeof(T), gpu_dst);
+      }
+      else if (function == kDIV1) {
+        ppl::cv::ocl::Div<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
             dst.step / sizeof(T), gpu_dst, falpha);
       }
       else {
@@ -132,7 +172,8 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
   }
   state.SetItemsProcessed(state.iterations() * 1);
 
-  clReleaseMemObject(gpu_src);
+  clReleaseMemObject(gpu_src0);
+  clReleaseMemObject(gpu_src1);
   clReleaseMemObject(gpu_dst);
 }
 
@@ -140,22 +181,33 @@ template <typename T, int channels, ArithFunctions function>
 void BM_Arith_opencv_ocl(benchmark::State &state) {
   int width  = state.range(0);
   int height = state.range(1);
-  cv::Mat src, dst;
-  src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
-                          channels));
+  cv::Mat src0, src1, dst;
+  src0 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           channels));
+  src1 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                           channels));
 
   for (auto _ : state) {
     if (function == kADD) {
-      cv::add(src, src, dst);
+      cv::add(src0, src1, dst);
     }
     else if (function == kADDWEITHTED) {
-      cv::addWeighted(src, falpha, src, fbeta, fgamma, dst);
+      cv::addWeighted(src0, falpha, src1, fbeta, fgamma, dst);
+    }
+    else if (function == kSUBTRACT) {
+      cv::subtract(src0, src1, dst);
     }
     else if (function == kMUL0) {
-      cv::multiply(src, src, dst);
+      cv::multiply(src0, src1, dst);
     }
     else if (function == kMUL1) {
-      cv::multiply(src, src, dst, falpha);
+      cv::multiply(src0, src1, dst, falpha);
+    }
+    else if (function == kDIV0) {
+      cv::divide(src0, src1, dst);
+    }
+    else if (function == kDIV1) {
+      cv::divide(src0, src1, dst, falpha);
     }
     else {
     }
@@ -173,29 +225,41 @@ BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, float, channels, function)->           \
 BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, float, channels, function)->              \
                    Args({width, height})->UseManualTime()->Iterations(10);
 
-// RUN_BENCHMARK(c1, kADD, 320, 240)
-// RUN_BENCHMARK(c3, kADD, 320, 240)
-// RUN_BENCHMARK(c4, kADD, 320, 240)
+RUN_BENCHMARK(c1, kADD, 320, 240)
+RUN_BENCHMARK(c3, kADD, 320, 240)
+RUN_BENCHMARK(c4, kADD, 320, 240)
 
-// RUN_BENCHMARK(c1, kADD, 640, 480)
-// RUN_BENCHMARK(c3, kADD, 640, 480)
-// RUN_BENCHMARK(c4, kADD, 640, 480)
+RUN_BENCHMARK(c1, kADD, 640, 480)
+RUN_BENCHMARK(c3, kADD, 640, 480)
+RUN_BENCHMARK(c4, kADD, 640, 480)
 
-// RUN_BENCHMARK(c1, kADD, 1920, 1080)
-// RUN_BENCHMARK(c3, kADD, 1920, 1080)
-// RUN_BENCHMARK(c4, kADD, 1920, 1080)
+RUN_BENCHMARK(c1, kADD, 1920, 1080)
+RUN_BENCHMARK(c3, kADD, 1920, 1080)
+RUN_BENCHMARK(c4, kADD, 1920, 1080)
 
-// RUN_BENCHMARK(c1, kADDWEITHTED, 320, 240)
-// RUN_BENCHMARK(c3, kADDWEITHTED, 320, 240)
-// RUN_BENCHMARK(c4, kADDWEITHTED, 320, 240)
+RUN_BENCHMARK(c1, kADDWEITHTED, 320, 240)
+RUN_BENCHMARK(c3, kADDWEITHTED, 320, 240)
+RUN_BENCHMARK(c4, kADDWEITHTED, 320, 240)
 
-// RUN_BENCHMARK(c1, kADDWEITHTED, 640, 480)
-// RUN_BENCHMARK(c3, kADDWEITHTED, 640, 480)
-// RUN_BENCHMARK(c4, kADDWEITHTED, 640, 480)
+RUN_BENCHMARK(c1, kADDWEITHTED, 640, 480)
+RUN_BENCHMARK(c3, kADDWEITHTED, 640, 480)
+RUN_BENCHMARK(c4, kADDWEITHTED, 640, 480)
 
-// RUN_BENCHMARK(c1, kADDWEITHTED, 1920, 1080)
-// RUN_BENCHMARK(c3, kADDWEITHTED, 1920, 1080)
-// RUN_BENCHMARK(c4, kADDWEITHTED, 1920, 1080)
+RUN_BENCHMARK(c1, kADDWEITHTED, 1920, 1080)
+RUN_BENCHMARK(c3, kADDWEITHTED, 1920, 1080)
+RUN_BENCHMARK(c4, kADDWEITHTED, 1920, 1080)
+
+RUN_BENCHMARK(c1, kSUBTRACT, 320, 240)
+RUN_BENCHMARK(c3, kSUBTRACT, 320, 240)
+RUN_BENCHMARK(c4, kSUBTRACT, 320, 240)
+
+RUN_BENCHMARK(c1, kSUBTRACT, 640, 480)
+RUN_BENCHMARK(c3, kSUBTRACT, 640, 480)
+RUN_BENCHMARK(c4, kSUBTRACT, 640, 480)
+
+RUN_BENCHMARK(c1, kSUBTRACT, 1920, 1080)
+RUN_BENCHMARK(c3, kSUBTRACT, 1920, 1080)
+RUN_BENCHMARK(c4, kSUBTRACT, 1920, 1080)
 
 RUN_BENCHMARK(c1, kMUL0, 320, 240)
 RUN_BENCHMARK(c3, kMUL0, 320, 240)
@@ -220,6 +284,30 @@ RUN_BENCHMARK(c4, kMUL1, 640, 480)
 RUN_BENCHMARK(c1, kMUL1, 1920, 1080)
 RUN_BENCHMARK(c3, kMUL1, 1920, 1080)
 RUN_BENCHMARK(c4, kMUL1, 1920, 1080)
+
+RUN_BENCHMARK(c1, kDIV0, 320, 240)
+RUN_BENCHMARK(c3, kDIV0, 320, 240)
+RUN_BENCHMARK(c4, kDIV0, 320, 240)
+
+RUN_BENCHMARK(c1, kDIV0, 640, 480)
+RUN_BENCHMARK(c3, kDIV0, 640, 480)
+RUN_BENCHMARK(c4, kDIV0, 640, 480)
+
+RUN_BENCHMARK(c1, kDIV0, 1920, 1080)
+RUN_BENCHMARK(c3, kDIV0, 1920, 1080)
+RUN_BENCHMARK(c4, kDIV0, 1920, 1080)
+
+RUN_BENCHMARK(c1, kDIV1, 320, 240)
+RUN_BENCHMARK(c3, kDIV1, 320, 240)
+RUN_BENCHMARK(c4, kDIV1, 320, 240)
+
+RUN_BENCHMARK(c1, kDIV1, 640, 480)
+RUN_BENCHMARK(c3, kDIV1, 640, 480)
+RUN_BENCHMARK(c4, kDIV1, 640, 480)
+
+RUN_BENCHMARK(c1, kDIV1, 1920, 1080)
+RUN_BENCHMARK(c3, kDIV1, 1920, 1080)
+RUN_BENCHMARK(c4, kDIV1, 1920, 1080)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(type, function)                              \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c1, function)->Args({320, 240}); \
@@ -259,16 +347,28 @@ BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, type, c4, function)->Args({1920, 1080})-> \
 // RUN_OPENCV_TYPE_FUNCTIONS(float, kADD)
 // RUN_OPENCV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
 // RUN_OPENCV_TYPE_FUNCTIONS(float, kADDWEITHTED)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kSUBTRACT)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, kSUBTRACT)
 // RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMUL0)
 // RUN_OPENCV_TYPE_FUNCTIONS(float, kMUL0)
 // RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMUL1)
 // RUN_OPENCV_TYPE_FUNCTIONS(float, kMUL1)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kDIV0)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, kDIV0)
+// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kDIV1)
+// RUN_OPENCV_TYPE_FUNCTIONS(float, kDIV1)
 
 // RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADD)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, kADD)
 // RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, kADDWEITHTED)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kSUBTRACT)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, kSUBTRACT)
 // RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMUL0)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, kMUL0)
 // RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMUL1)
 // RUN_PPL_CV_TYPE_FUNCTIONS(float, kMUL1)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kDIV0)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, kDIV0)
+// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kDIV1)
+// RUN_PPL_CV_TYPE_FUNCTIONS(float, kDIV1)

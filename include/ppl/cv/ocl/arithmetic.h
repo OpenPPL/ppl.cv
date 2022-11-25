@@ -95,7 +95,7 @@ namespace ocl {
  *                                     data_size, input, 0, NULL, NULL);
  *
  *   Add<float, 3>(queue, height, width, width * channels, gpu_input0,
- *                 width * channels, gpu_input0, width * channels, gpu_output);
+ *                 width * channels, gpu_input1, width * channels, gpu_output);
  *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
  *                                    output, 0, NULL, NULL);
  *
@@ -193,7 +193,7 @@ ppl::common::RetCode Add(cl_command_queue queue,
  *                                     data_size, input, 0, NULL, NULL);
  *
  *   AddWeighted<float, 3>(queue, height, width, width * channels, gpu_input0,
- *                         0.1f, width * channels, gpu_input0, 0.2f, 0.3f,
+ *                         0.1f, width * channels, gpu_input1, 0.2f, 0.3f,
  *                         width * channels, gpu_output);
  *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
  *                                    output, 0, NULL, NULL);
@@ -223,7 +223,7 @@ ppl::common::RetCode AddWeighted(cl_command_queue queue,
                                  cl_mem outData);
 
 /**
- * @brief Calculates the element-wise difference between an array and a scalar.
+ * @brief Calculates the element-wise difference of two matrices.
  * @tparam T The data type, used for both source image and destination image,
  *         currently only uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
@@ -231,13 +231,14 @@ ppl::common::RetCode AddWeighted(cl_command_queue queue,
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inWidthStride  input image's width stride, which is not less than
- *                       `width * channels`.
- * @param inData         input image data.
- * @param scalar         input scalar data, equals to `channels * sizeof(T)` on
- *                       the host memory.
+ * @param inWidthStride0 first input image's width stride, which is not less
+ *                       than `width * channels`.
+ * @param inData0        first input image data.
+ * @param inWidthStride1 second input image's width stride, similar to
+ *                       inWidthStride0.
+ * @param inData1        second input image data.
  * @param outWidthStride the width stride of output image, similar to
- *                       inWidthStride.
+ *                       inWidthStride0.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
  * @note For best performance, rows of input&output aligned with 64 bits are
@@ -270,7 +271,6 @@ ppl::common::RetCode AddWeighted(cl_command_queue queue,
  *   int width    = 640;
  *   int height   = 480;
  *   int channels = 3;
- *   float scalar[3] = {1.f, 2.f, 3.f};
  *
  *   createSharedFrameChain(false);
  *   cl_context context = getSharedFrameChain()->getContext();
@@ -278,23 +278,29 @@ ppl::common::RetCode AddWeighted(cl_command_queue queue,
  *
  *   cl_int error_code = 0;
  *   int data_size = height * width * channels * sizeof(float);
- *   float* input = (float*)malloc(data_size);
+ *   float* input  = (float*)malloc(data_size);
  *   float* output = (float*)malloc(data_size);
- *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
- *                                     NULL, &error_code);
- *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
+ *   cl_mem gpu_input0 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
  *                                      NULL, &error_code);
- *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *   cl_mem gpu_input1 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_output = = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
+ *                                        NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input0, CL_FALSE, 0,
+ *                                     data_size, input, 0, NULL, NULL);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input1, CL_FALSE, 0,
  *                                     data_size, input, 0, NULL, NULL);
  *
- *   Subtract<float, 3>(queue, height, width, width * channels, gpu_input,
- *                      scalar, width * channels, gpu_output);
+ *   Subtract<float, 3>(queue, height, width, width * channels, gpu_input0,
+ *                      width * channels, gpu_input1, width * channels,
+ *                      gpu_output);
  *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
  *                                    output, 0, NULL, NULL);
  *
  *   free(input);
  *   free(output);
- *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_input0);
+ *   clReleaseMemObject(gpu_input1);
  *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
@@ -305,9 +311,10 @@ template <typename T, int channels>
 ppl::common::RetCode Subtract(cl_command_queue queue,
                               int height,
                               int width,
-                              int inWidthStride,
-                              const cl_mem inData,
-                              const T* scalar,
+                              int inWidthStride0,
+                              const cl_mem inData0,
+                              int inWidthStride1,
+                              const cl_mem inData1,
                               int outWidthStride,
                               cl_mem outData);
 
@@ -382,7 +389,7 @@ ppl::common::RetCode Subtract(cl_command_queue queue,
  *                                     data_size, input, 0, NULL, NULL);
  *
  *   Mul<float, 3>(queue, height, width, width * channels, gpu_input0,
- *                 width * channels, gpu_input0, width * channels, gpu_output);
+ *                 width * channels, gpu_input1, width * channels, gpu_output);
  *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
  *                                    output, 0, NULL, NULL);
  *
@@ -409,7 +416,7 @@ ppl::common::RetCode Mul(cl_command_queue queue,
                          float scale = 1.f);
 
 /**
- * @brief Calculates the element-wise division of two matrices.
+ * @brief Calculates the element-wise scaled division of two matrices.
  * @tparam T The data type, used for both input and output image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
@@ -479,7 +486,7 @@ ppl::common::RetCode Mul(cl_command_queue queue,
  *                                     data_size, input, 0, NULL, NULL);
  *
  *   Div<float, 3>(queue, height, width, width * channels, gpu_input0,
- *                 width * channels, gpu_input0, width * channels, gpu_output);
+ *                 width * channels, gpu_input1, width * channels, gpu_output);
  *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
  *                                    output, 0, NULL, NULL);
  *

@@ -16,8 +16,6 @@
 
 #include "ppl/cv/ocl/arithmetic.h"
 
-// #include <iostream>> // debug
-
 #include "utility/utility.hpp"
 #include "ppl/common/ocl/framechain.h"
 #include "ppl/common/ocl/kernel.h"
@@ -52,7 +50,6 @@ RetCode addU8(const cl_mem src0, int rows, int cols, int channels,
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
       dst_stride == columns) {
-    // std::cout << "came in if()" << std::endl;
     columns *= rows;
     cols = divideUp(columns, 4, 2);
     size_t local_size[]  = {512, 1};
@@ -63,7 +60,6 @@ RetCode addU8(const cl_mem src0, int rows, int cols, int channels,
                  columns, src1, dst);
   }
   else {
-    // std::cout << "came in else()" << std::endl;
     columns = cols * channels;
     cols = divideUp(columns, 4, 2);
     size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -100,14 +96,12 @@ RetCode addF32(const cl_mem src0, int rows, int cols, int channels,
 
   if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
       (dst_stride & 7) == 0) {
-    // std::cout << "came in if()" << std::endl;
     cols = divideUp(columns, 2, 1);
     frame_chain->setCompileOptions("-D ADD_F32ALIGNED");
     runOclKernel(frame_chain, "addF32Kernel0", 2, global_size, local_size, src0,
                  rows, cols, src0_stride, src1, src1_stride, dst, dst_stride);
   }
   else {
-    // std::cout << "came in else()" << std::endl;
     frame_chain->setCompileOptions("-D ADD_F32UNALIGNED");
     runOclKernel(frame_chain, "addF32Kernel1", 2, global_size, local_size, src0,
                  rows, columns, src0_stride, src1, src1_stride, dst,
@@ -244,7 +238,6 @@ RetCode addWeightedU8(const cl_mem src0, int rows, int cols, int channels,
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
       dst_stride == columns) {
-    // std::cout << "came in if()" << std::endl;
     columns *= rows;
     cols = divideUp(columns, 4, 2);
     size_t local_size[]  = {512, 1};
@@ -255,7 +248,6 @@ RetCode addWeightedU8(const cl_mem src0, int rows, int cols, int channels,
                  local_size, src0, columns, alpha, src1, beta, gamma, dst);
   }
   else {
-    // std::cout << "came in else()" << std::endl;
     columns = cols * channels;
     cols = divideUp(columns, 4, 2);
     size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -293,7 +285,6 @@ RetCode addWeightedF32(const cl_mem src0, int rows, int cols, int channels,
 
   if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
       (dst_stride & 7) == 0) {
-    // std::cout << "came in if()" << std::endl;
     cols = divideUp(columns, 2, 1);
     frame_chain->setCompileOptions("-D ADDWEIGHTED_F32ALIGNED");
     runOclKernel(frame_chain, "addWeightedF32Kernel0", 2, global_size,
@@ -301,7 +292,6 @@ RetCode addWeightedF32(const cl_mem src0, int rows, int cols, int channels,
                  src1_stride, beta, gamma, dst, dst_stride);
   }
   else {
-    // std::cout << "came in else()" << std::endl;
     frame_chain->setCompileOptions("-D ADDWEIGHTED_F32UNALIGNED");
     runOclKernel(frame_chain, "addWeightedF32Kernel1", 2, global_size,
                  local_size, src0, rows, columns, src0_stride, alpha, src1,
@@ -440,6 +430,194 @@ RetCode AddWeighted<float, 4>(cl_command_queue queue,
   return code;
 }
 
+/**************************** subtract operation ****************************/
+
+RetCode subtractU8(const cl_mem src0, int rows, int cols, int channels,
+                   int src0_stride, const cl_mem src1, int src1_stride,
+                   cl_mem dst, int dst_stride, cl_command_queue queue) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
+
+  FrameChain* frame_chain = getSharedFrameChain();
+  frame_chain->setProjectName("cv");
+  SET_PROGRAM_SOURCE(frame_chain);
+
+  int columns = cols * channels;
+  if (src0_stride == columns && src1_stride == columns &&
+      dst_stride == columns) {
+    columns *= rows;
+    cols = divideUp(columns, 4, 2);
+    size_t local_size[]  = {512, 1};
+    size_t global_size[] = {(size_t)roundUp(cols, 512, 9), 1};
+
+    frame_chain->setCompileOptions("-D SUBTRACT_U81D");
+    runOclKernel(frame_chain, "subtractU8Kernel0", 2, global_size, local_size,
+                 src0, columns, src1, dst);
+  }
+  else {
+    columns = cols * channels;
+    cols = divideUp(columns, 4, 2);
+    size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+    size_t global_size[] = {(size_t)cols, (size_t)rows};
+
+    frame_chain->setCompileOptions("-D SUBTRACT_U82D");
+    runOclKernel(frame_chain, "subtractU8Kernel1", 2, global_size, local_size,
+                 src0, rows, columns, src0_stride, src1, src1_stride, dst,
+                 dst_stride);
+  }
+
+  return RC_SUCCESS;
+}
+
+RetCode subtractF32(const cl_mem src0, int rows, int cols, int channels,
+                    int src0_stride, const cl_mem src1, int src1_stride,
+                    cl_mem dst, int dst_stride, cl_command_queue queue) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
+
+  FrameChain* frame_chain = getSharedFrameChain();
+  frame_chain->setProjectName("cv");
+  SET_PROGRAM_SOURCE(frame_chain);
+
+  int columns = cols * channels;
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+  size_t global_size[] = {(size_t)divideUp(columns, 2, 1), (size_t)rows};
+
+  if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
+      (dst_stride & 7) == 0) {
+    cols = divideUp(columns, 2, 1);
+    frame_chain->setCompileOptions("-D SUBTRACT_F32ALIGNED");
+    runOclKernel(frame_chain, "subtractF32Kernel0", 2, global_size, local_size,
+                 src0, rows, cols, src0_stride, src1, src1_stride, dst,
+                 dst_stride);
+  }
+  else {
+    frame_chain->setCompileOptions("-D SUBTRACT_F32UNALIGNED");
+    runOclKernel(frame_chain, "subtractF32Kernel1", 2, global_size, local_size,
+                 src0, rows, columns, src0_stride, src1, src1_stride, dst,
+                 dst_stride);
+  }
+
+  return RC_SUCCESS;
+}
+
+template <>
+RetCode Subtract<uchar, 1>(cl_command_queue queue,
+                           int height,
+                           int width,
+                           int inWidthStride0,
+                           const cl_mem inData0,
+                           int inWidthStride1,
+                           const cl_mem inData1,
+                           int outWidthStride,
+                           cl_mem outData) {
+  RetCode code = subtractU8(inData0, height, width, 1, inWidthStride0, inData1,
+                            inWidthStride1, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Subtract<uchar, 3>(cl_command_queue queue,
+                           int height,
+                           int width,
+                           int inWidthStride0,
+                           const cl_mem inData0,
+                           int inWidthStride1,
+                           const cl_mem inData1,
+                           int outWidthStride,
+                           cl_mem outData) {
+  RetCode code = subtractU8(inData0, height, width, 3, inWidthStride0, inData1,
+                            inWidthStride1, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Subtract<uchar, 4>(cl_command_queue queue,
+                           int height,
+                           int width,
+                           int inWidthStride0,
+                           const cl_mem inData0,
+                           int inWidthStride1,
+                           const cl_mem inData1,
+                           int outWidthStride,
+                           cl_mem outData) {
+  RetCode code = subtractU8(inData0, height, width, 4, inWidthStride0, inData1,
+                            inWidthStride1, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Subtract<float, 1>(cl_command_queue queue,
+                           int height,
+                           int width,
+                           int inWidthStride0,
+                           const cl_mem inData0,
+                           int inWidthStride1,
+                           const cl_mem inData1,
+                           int outWidthStride,
+                           cl_mem outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = subtractF32(inData0, height, width, 1, inWidthStride0, inData1,
+                             inWidthStride1, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Subtract<float, 3>(cl_command_queue queue,
+                           int height,
+                           int width,
+                           int inWidthStride0,
+                           const cl_mem inData0,
+                           int inWidthStride1,
+                           const cl_mem inData1,
+                           int outWidthStride,
+                           cl_mem outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = subtractF32(inData0, height, width, 3, inWidthStride0, inData1,
+                             inWidthStride1, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Subtract<float, 4>(cl_command_queue queue,
+                           int height,
+                           int width,
+                           int inWidthStride0,
+                           const cl_mem inData0,
+                           int inWidthStride1,
+                           const cl_mem inData1,
+                           int outWidthStride,
+                           cl_mem outData) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = subtractF32(inData0, height, width, 4, inWidthStride0, inData1,
+                             inWidthStride1, outData, outWidthStride, queue);
+
+  return code;
+}
+
 /**************************** multiply operation *****************************/
 
 RetCode mulU8(const cl_mem src0, int rows, int cols, int channels,
@@ -461,7 +639,6 @@ RetCode mulU8(const cl_mem src0, int rows, int cols, int channels,
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
       dst_stride == columns) {
-    // std::cout << "came in if()" << std::endl;
     columns *= rows;
     cols = divideUp(columns, 4, 2);
     size_t local_size[]  = {512, 1};
@@ -472,7 +649,6 @@ RetCode mulU8(const cl_mem src0, int rows, int cols, int channels,
                  columns, src1, scale, dst);
   }
   else {
-    // std::cout << "came in else()" << std::endl;
     columns = cols * channels;
     cols = divideUp(columns, 4, 2);
     size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -509,7 +685,6 @@ RetCode mulF32(const cl_mem src0, int rows, int cols, int channels,
 
   if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
       (dst_stride & 7) == 0) {
-    // std::cout << "came in if()" << std::endl;
     cols = divideUp(columns, 2, 1);
     frame_chain->setCompileOptions("-D MUL_F32ALIGNED");
     runOclKernel(frame_chain, "mulF32Kernel0", 2, global_size, local_size, src0,
@@ -517,7 +692,6 @@ RetCode mulF32(const cl_mem src0, int rows, int cols, int channels,
                  dst_stride);
   }
   else {
-    // std::cout << "came in else()" << std::endl;
     frame_chain->setCompileOptions("-D MUL_F32UNALIGNED");
     runOclKernel(frame_chain, "mulF32Kernel1", 2, global_size, local_size, src0,
                  rows, columns, src0_stride, src1, src1_stride, scale, dst,
@@ -633,6 +807,200 @@ RetCode Mul<float, 4>(cl_command_queue queue,
   inWidthStride1 *= sizeof(float);
   outWidthStride *= sizeof(float);
   RetCode code = mulF32(inData0, height, width, 4, inWidthStride0, inData1,
+                        inWidthStride1, scale, outData, outWidthStride, queue);
+
+  return code;
+}
+
+/***************************** divide operation ******************************/
+
+RetCode divU8(const cl_mem src0, int rows, int cols, int channels,
+              int src0_stride, const cl_mem src1, int src1_stride, float scale,
+              cl_mem dst, int dst_stride, cl_command_queue queue) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
+
+  FrameChain* frame_chain = getSharedFrameChain();
+  frame_chain->setProjectName("cv");
+  SET_PROGRAM_SOURCE(frame_chain);
+
+  int columns = cols * channels;
+  if (src0_stride == columns && src1_stride == columns &&
+      dst_stride == columns) {
+    columns *= rows;
+    cols = divideUp(columns, 4, 2);
+    size_t local_size[]  = {512, 1};
+    size_t global_size[] = {(size_t)roundUp(cols, 512, 9), 1};
+
+    frame_chain->setCompileOptions("-D DIV_U81D");
+    runOclKernel(frame_chain, "divU8Kernel0", 2, global_size, local_size, src0,
+                 columns, src1, scale, dst);
+  }
+  else {
+    columns = cols * channels;
+    cols = divideUp(columns, 4, 2);
+    size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+    size_t global_size[] = {(size_t)cols, (size_t)rows};
+
+    frame_chain->setCompileOptions("-D DIV_U82D");
+    runOclKernel(frame_chain, "divU8Kernel1", 2, global_size, local_size, src0,
+                 rows, columns, src0_stride, src1, src1_stride, scale, dst,
+                 dst_stride);
+  }
+
+  return RC_SUCCESS;
+}
+
+RetCode divF32(const cl_mem src0, int rows, int cols, int channels,
+               int src0_stride, const cl_mem src1, int src1_stride, float scale,
+               cl_mem dst, int dst_stride, cl_command_queue queue) {
+  PPL_ASSERT(src0 != nullptr);
+  PPL_ASSERT(src1 != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT(channels == 1 || channels == 3 || channels == 4);
+  PPL_ASSERT(src0_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(src1_stride >= cols * channels * (int)sizeof(float));
+  PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
+
+  FrameChain* frame_chain = getSharedFrameChain();
+  frame_chain->setProjectName("cv");
+  SET_PROGRAM_SOURCE(frame_chain);
+
+  int columns = cols * channels;
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+  size_t global_size[] = {(size_t)divideUp(columns, 2, 1), (size_t)rows};
+
+  if ((src0_stride & 7) == 0 && (src1_stride & 7) == 0 &&
+      (dst_stride & 7) == 0) {
+    cols = divideUp(columns, 2, 1);
+    frame_chain->setCompileOptions("-D DIV_F32ALIGNED");
+    runOclKernel(frame_chain, "divF32Kernel0", 2, global_size, local_size, src0,
+                 rows, cols, src0_stride, src1, src1_stride, scale, dst,
+                 dst_stride);
+  }
+  else {
+    frame_chain->setCompileOptions("-D DIV_F32UNALIGNED");
+    runOclKernel(frame_chain, "divF32Kernel1", 2, global_size, local_size, src0,
+                 rows, columns, src0_stride, src1, src1_stride, scale, dst,
+                 dst_stride);
+  }
+
+  return RC_SUCCESS;
+}
+
+template <>
+RetCode Div<uchar, 1>(cl_command_queue queue,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const cl_mem inData0,
+                      int inWidthStride1,
+                      const cl_mem inData1,
+                      int outWidthStride,
+                      cl_mem outData,
+                      float scale) {
+  RetCode code = divU8(inData0, height, width, 1, inWidthStride0, inData1,
+                       inWidthStride1, scale, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Div<uchar, 3>(cl_command_queue queue,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const cl_mem inData0,
+                      int inWidthStride1,
+                      const cl_mem inData1,
+                      int outWidthStride,
+                      cl_mem outData,
+                      float scale) {
+  RetCode code = divU8(inData0, height, width, 3, inWidthStride0, inData1,
+                       inWidthStride1, scale, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Div<uchar, 4>(cl_command_queue queue,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const cl_mem inData0,
+                      int inWidthStride1,
+                      const cl_mem inData1,
+                      int outWidthStride,
+                      cl_mem outData,
+                      float scale) {
+  RetCode code = divU8(inData0, height, width, 4, inWidthStride0, inData1,
+                       inWidthStride1, scale, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Div<float, 1>(cl_command_queue queue,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const cl_mem inData0,
+                      int inWidthStride1,
+                      const cl_mem inData1,
+                      int outWidthStride,
+                      cl_mem outData,
+                      float scale) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = divF32(inData0, height, width, 1, inWidthStride0, inData1,
+                        inWidthStride1, scale, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Div<float, 3>(cl_command_queue queue,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const cl_mem inData0,
+                      int inWidthStride1,
+                      const cl_mem inData1,
+                      int outWidthStride,
+                      cl_mem outData,
+                      float scale) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = divF32(inData0, height, width, 3, inWidthStride0, inData1,
+                        inWidthStride1, scale, outData, outWidthStride, queue);
+
+  return code;
+}
+
+template <>
+RetCode Div<float, 4>(cl_command_queue queue,
+                      int height,
+                      int width,
+                      int inWidthStride0,
+                      const cl_mem inData0,
+                      int inWidthStride1,
+                      const cl_mem inData1,
+                      int outWidthStride,
+                      cl_mem outData,
+                      float scale) {
+  inWidthStride0 *= sizeof(float);
+  inWidthStride1 *= sizeof(float);
+  outWidthStride *= sizeof(float);
+  RetCode code = divF32(inData0, height, width, 4, inWidthStride0, inData1,
                         inWidthStride1, scale, outData, outWidthStride, queue);
 
   return code;
