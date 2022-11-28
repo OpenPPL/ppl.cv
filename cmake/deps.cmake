@@ -13,7 +13,7 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(__HPCC_COMMIT__ e6e445437fba399cc86867536fdf4252bbefae61)
+set(__HPCC_COMMIT__ af7dcc6c1b1eaf622b3d01472b89ce62d881f66c)
 
 if(PPLCV_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -49,7 +49,7 @@ set(PPLCOMMON_HOLD_DEPS ${PPLCV_HOLD_DEPS})
 set(PPLCOMMON_USE_X86_64 ${PPLCV_USE_X86_64})
 set(PPLCOMMON_USE_AARCH64 ${PPLCV_USE_AARCH64})
 
-set(__PPLCOMMON_COMMIT__ af2d3683f3816895675dd8f347ac42ce53f3130b)
+set(__PPLCOMMON_COMMIT__ 47c0e4178529422df0ab31749d684e79f6032ba4)
 
 if(PPLCV_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
