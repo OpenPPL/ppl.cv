@@ -14,28 +14,14 @@
  * under the License.
  */
 
-#include "kerneltypes.h"
-
 #if defined(U8) || defined(SPIR)
-inline char abs_device0(char src) {
-  if (src == -128) {
+inline char abs_device(char value) {
+  if (value == -128) {
     return 127;
   }
   else {
-    return abs((int)src);
+    return abs(value);
   }
-}
-#endif
-
-#if defined(F32) || defined(SPIR)
-inline float abs_device1(float src) {
-  if (src >= 0.f) {
-    return src;
-  }
-  else {
-    return (0.f - src);
-  }
-
 }
 #endif
 
@@ -49,17 +35,17 @@ void absU8Kernel0(global const char* src, int rows, int cols, int src_stride,
     return;
   }
 
-  global const char* input = src + element_y * src_stride;
-  char4 input_value = vload4(element_x, input);
+  global char* data = src + element_y * src_stride;
+  char4 input_value = vload4(element_x, data);
 
   char4 output_value;
-  output_value.x = abs_device0(input_value.x);
-  output_value.y = abs_device0(input_value.y);
-  output_value.z = abs_device0(input_value.z);
-  output_value.w = abs_device0(input_value.w);
+  output_value.x = abs_device(input_value.x);
+  output_value.y = abs_device(input_value.y);
+  output_value.z = abs_device(input_value.z);
+  output_value.w = abs_device(input_value.w);
 
-  global char* output = dst + element_y * dst_stride;
-  vstore4(output_value, element_x, output);
+  data = dst + element_y * dst_stride;
+  vstore4(output_value, element_x, data);
 }
 #endif
 
@@ -76,10 +62,10 @@ void absU8Kernel1(global const char* src, int cols, global char* dst) {
     char4 input_value = vload4(element_x, src);
 
     char4 output_value;
-    output_value.x = abs_device0(input_value.x);
-    output_value.y = abs_device0(input_value.y);
-    output_value.z = abs_device0(input_value.z);
-    output_value.w = abs_device0(input_value.w);
+    output_value.x = abs_device(input_value.x);
+    output_value.y = abs_device(input_value.y);
+    output_value.z = abs_device(input_value.z);
+    output_value.w = abs_device(input_value.w);
 
     vstore4(output_value, element_x, dst);
   }
@@ -88,12 +74,12 @@ void absU8Kernel1(global const char* src, int cols, global char* dst) {
     char4 input_value, output_value;
     input_value = input[element_x];
 
-    output_value.x = abs_device0(input_value.x);
+    output_value.x = abs_device(input_value.x);
     if (index_x < cols - 1) {
-      output_value.y = abs_device0(input_value.y);
+      output_value.y = abs_device(input_value.y);
     }
     if ((index_x < cols - 2)) {
-      output_value.z = abs_device0(input_value.z);
+      output_value.z = abs_device(input_value.z);
     }
 
     dst[index_x] = output_value.x;
@@ -118,48 +104,46 @@ void absU8Kernel2(global const char* src, int rows, int cols, int src_stride,
     return;
   }
 
+  global char* data = src + element_y * src_stride;
   if (index_x < cols - 3) {
-    global const char* input = src + element_y * src_stride;
-    char4 input_value = vload4(element_x, input);
+    char4 input_value = vload4(element_x, data);
 
     char4 output_value;
-    output_value.x = abs_device0(input_value.x);
-    output_value.y = abs_device0(input_value.y);
-    output_value.z = abs_device0(input_value.z);
-    output_value.w = abs_device0(input_value.w);
+    output_value.x = abs_device(input_value.x);
+    output_value.y = abs_device(input_value.y);
+    output_value.z = abs_device(input_value.z);
+    output_value.w = abs_device(input_value.w);
 
-    global char* output = dst + element_y * dst_stride;
-    vstore4(output_value, element_x, output);
+    data = dst + element_y * dst_stride;
+    vstore4(output_value, element_x, data);
   }
   else {
-    global const char* input = src + element_y * src_stride;
-
     char input_value0, input_value1, input_value2;
     char output_value0, output_value1, output_value2;
 
-    input_value0 = input[index_x];
+    input_value0 = data[index_x];
     if (index_x < cols - 1) {
-      input_value1 = input[index_x + 1];
+      input_value1 = data[index_x + 1];
     }
     if ((index_x < cols - 2)) {
-      input_value2 = input[index_x + 2];
+      input_value2 = data[index_x + 2];
     }
 
-    output_value0 = abs_device0(input_value0);
+    output_value0 = abs_device(input_value0);
     if (index_x < cols - 1) {
-      output_value1 = abs_device0(input_value1);
+      output_value1 = abs_device(input_value1);
     }
     if ((index_x < cols - 2)) {
-      output_value2 = abs_device0(input_value2);
+      output_value2 = abs_device(input_value2);
     }
 
-    global char* output = dst + element_y * dst_stride;
-    output[index_x] = output_value0;
+    data = dst + element_y * dst_stride;
+    data[index_x] = output_value0;
     if (index_x < cols - 1) {
-      output[index_x + 1] = output_value1;
+      data[index_x + 1] = output_value1;
     }
     if ((index_x < cols - 2)) {
-      output[index_x + 2] = output_value2;
+      data[index_x + 2] = output_value2;
     }
   }
 }
@@ -175,17 +159,13 @@ void absF32Kernel0(global const float* src, int rows, int cols, int src_stride,
     return;
   }
 
-  global const float* input = (global float*)((global uchar*)src +
-                               element_y * src_stride);
-  float2 input_value = vload2(element_x, input);
+  global float* data = (global float*)((global uchar*)src +
+                        element_y * src_stride);
+  float2 input_value = vload2(element_x, data);
+  float2 output_value = fabs(input_value);
 
-  float2 output_value;
-  output_value.x = abs_device1(input_value.x);
-  output_value.y = abs_device1(input_value.y);
-
-  global float* output = (global float*)((global uchar*)dst +
-                          element_y * dst_stride);
-  vstore2(output_value, element_x, output);
+  data = (global float*)((global uchar*)dst + element_y * dst_stride);
+  vstore2(output_value, element_x, data);
 }
 #endif
 
@@ -200,28 +180,21 @@ void absF32Kernel1(global const float* src, int rows, int cols, int src_stride,
     return;
   }
 
+  global float* data = (global float*)((global uchar*)src +
+                        element_y * src_stride);
   if (index_x < cols - 1) {
-    global const float* input = (global float*)((global uchar*)src +
-                                 element_y * src_stride);
-    float2 input_value = vload2(element_x, input);
+    float2 input_value = vload2(element_x, data);
+    float2 output_value = fabs(input_value);
 
-    float2 output_value;
-    output_value.x = abs_device1(input_value.x);
-    output_value.y = abs_device1(input_value.y);
-
-    global float* output = (global float*)((global uchar*)dst +
-                            element_y * dst_stride);
-    vstore2(output_value, element_x, output);
+    data = (global float*)((global uchar*)dst + element_y * dst_stride);
+    vstore2(output_value, element_x, data);
   }
   else {
-    global float* input = (global float*)((global uchar*)src +
-                           element_y * src_stride);
-    float input_value = input[index_x];
-    float output_value = abs_device1(input_value);
+    float input_value = data[index_x];
+    float output_value = fabs(input_value);
 
-    global float* output = (global float*)((global uchar*)dst +
-                            element_y * dst_stride);
-    output[index_x] = output_value;
+    data = (global float*)((global uchar*)dst + element_y * dst_stride);
+    data[index_x] = output_value;
   }
 }
 #endif

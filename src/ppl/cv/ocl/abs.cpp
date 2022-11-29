@@ -93,12 +93,12 @@ RetCode absF32(const cl_mem src, int rows, int cols, int channels,
 
   if ((src_stride & 7) == 0 && (dst_stride & 7) == 0) {
     cols = divideUp(columns, 2, 1);
-    frame_chain->setCompileOptions("-D F32 -D F32ALIGNED");
+    frame_chain->setCompileOptions("-D F32ALIGNED");
     runOclKernel(frame_chain, "absF32Kernel0", 2, global_size, local_size, src,
                  rows, cols, src_stride, dst, dst_stride);
   }
   else {
-    frame_chain->setCompileOptions("-D F32 -D F32UNALIGNED");
+    frame_chain->setCompileOptions("-D F32UNALIGNED");
     runOclKernel(frame_chain, "absF32Kernel1", 2, global_size, local_size, src,
                  rows, columns, src_stride, dst, dst_stride);
   }
