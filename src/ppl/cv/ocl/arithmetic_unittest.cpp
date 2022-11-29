@@ -127,26 +127,32 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
   CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
   int data_size = size.height * size.width * channels * sizeof(T);
-  T* input0 = (T*)malloc(data_size);
-  T* input1 = (T*)malloc(data_size);
-  T* output = (T*)malloc(data_size);
-  cl_mem gpu_input0 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size, NULL,
-                                     &error_code);
+  cl_mem gpu_input0 = clCreateBuffer(context,
+                                     CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,
+                                     data_size, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
-  cl_mem gpu_input1 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size, NULL,
-                                     &error_code);
+  cl_mem gpu_input1 = clCreateBuffer(context,
+                                     CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,
+                                     data_size, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
-  cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
-                                     NULL, &error_code);
+  cl_mem gpu_output = clCreateBuffer(context,
+                                     CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,
+                                     data_size, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
+  T* input0 = (T*)clEnqueueMapBuffer(queue, gpu_input0, CL_TRUE, CL_MAP_WRITE,
+                                     0, data_size, 0, NULL, NULL, &error_code);
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);
+  T* input1 = (T*)clEnqueueMapBuffer(queue, gpu_input1, CL_TRUE, CL_MAP_WRITE,
+                                     0, data_size, 0, NULL, NULL, &error_code);
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);
   copyMatToArray(src0, input0);
   copyMatToArray(src1, input1);
-  error_code = clEnqueueWriteBuffer(queue, gpu_input0, CL_FALSE, 0, data_size,
-                                    input0, 0, NULL, NULL);
-  CHECK_ERROR(error_code, clEnqueueWriteBuffer);
-  error_code = clEnqueueWriteBuffer(queue, gpu_input1, CL_FALSE, 0, data_size,
-                                    input1, 0, NULL, NULL);
-  CHECK_ERROR(error_code, clEnqueueWriteBuffer);
+  error_code = clEnqueueUnmapMemObject(queue, gpu_input0, input0, 0, NULL,
+                                       NULL);
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);
+  error_code = clEnqueueUnmapMemObject(queue, gpu_input1, input1, 0, NULL,
+                                       NULL);
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);
 
   if (function == kADD) {
     cv::add(src0, src1, cv_dst);
@@ -232,9 +238,9 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
   error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,
                                    dst.data, 0, NULL, NULL);
   CHECK_ERROR(error_code, clEnqueueReadBuffer);
-  error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
-                                   output, 0, NULL, NULL);
-  CHECK_ERROR(error_code, clEnqueueReadBuffer);
+  T* output = (T*)clEnqueueMapBuffer(queue, gpu_output, CL_TRUE, CL_MAP_READ,
+                                     0, data_size, 0, NULL, NULL, &error_code);
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);
 
   float epsilon;
   if (sizeof(T) == 1) {
@@ -254,10 +260,10 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
   bool identity1 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,
       cv_dst.cols, cv_dst.channels(), cv_dst.step, output,
       size.width * channels * sizeof(T), epsilon);
+  error_code = clEnqueueUnmapMemObject(queue, gpu_output, output, 0, NULL,
+                                       NULL);
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);
 
-  free(input0);
-  free(input1);
-  free(output);
   clReleaseMemObject(gpu_src0);
   clReleaseMemObject(gpu_src1);
   clReleaseMemObject(gpu_dst);
