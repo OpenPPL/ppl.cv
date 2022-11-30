@@ -22,10 +22,9 @@
 #include "opencv2/core.hpp"
 #include "benchmark/benchmark.h"
 
+#include "ppl/common/ocl/oclcommon.h"
 #include "ppl/cv/debug.h"
-#include "ppl/common/ocl/framechain.h"
 #include "utility/infrastructure.h"
-#include "utility/utility.hpp"
 
 using namespace ppl::cv::debug;
 
@@ -62,14 +61,17 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
   int src_bytes1 = src1.rows * src1.step;
   int dst_bytes = dst.rows * dst.step;
   cl_int error_code = 0;
-  cl_mem gpu_src0 = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes0, NULL,
-                                   &error_code);
+  cl_mem gpu_src0 = clCreateBuffer(context,
+                                   CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
+                                   src_bytes0, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
-  cl_mem gpu_src1 = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes1, NULL,
-                                   &error_code);
+  cl_mem gpu_src1 = clCreateBuffer(context,
+                                   CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
+                                   src_bytes1, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
-  cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
-                                  &error_code);
+  cl_mem gpu_dst = clCreateBuffer(context,
+                                  CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY,
+                                  dst_bytes, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
   error_code = clEnqueueWriteBuffer(queue, gpu_src0, CL_TRUE, 0, src_bytes0,
                                     src0.data, 0, NULL, NULL);

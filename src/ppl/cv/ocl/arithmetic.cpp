@@ -16,9 +16,8 @@
 
 #include "ppl/cv/ocl/arithmetic.h"
 
+#include "ppl/common/ocl/oclcommon.h"
 #include "utility/utility.hpp"
-#include "ppl/common/ocl/framechain.h"
-#include "ppl/common/ocl/kernel.h"
 
 #include "kernels/arithmetic.cl"
 

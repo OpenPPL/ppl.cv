@@ -22,9 +22,8 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "ppl/common/ocl/framechain.h"
+#include "ppl/common/ocl/oclcommon.h"
 #include "utility/infrastructure.h"
-#include "utility/utility.hpp"
 
 using Parameters = std::tuple<cv::Size>;
 inline std::string convertToString(const Parameters& parameters) {

@@ -17,7 +17,6 @@
  * functions to facilitate computation.
  */
 
-
 #ifndef _ST_HPC_PPL_CV_OCL_UTILITY_HPP_
 #define _ST_HPC_PPL_CV_OCL_UTILITY_HPP_
 
@@ -32,11 +31,6 @@ namespace ocl {
 if (!(expression)) {                                                           \
   LOG(ERROR) << "Assertion failed: " << #expression;                           \
   return ppl::common::RC_INVALID_VALUE;                                        \
-}
-
-#define CHECK_ERROR(error_code, function)                                      \
-if (error_code != CL_SUCCESS) {                                                \
-  LOG(ERROR) << "Call " << #function << " failed with code: " << error_code;   \
 }
 
 typedef unsigned char uchar;

@@ -22,9 +22,8 @@
 #include "opencv2/core.hpp"
 #include "gtest/gtest.h"
 
-#include "ppl/common/ocl/framechain.h"
+#include "ppl/common/ocl/oclcommon.h"
 #include "utility/infrastructure.h"
-#include "utility/utility.hpp"
 
 enum ArithFunctions {
   kADD,
@@ -110,14 +109,17 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
   int src_bytes = src0.rows * src0.step;
   int dst_bytes = dst.rows * dst.step;
   cl_int error_code = 0;
-  cl_mem gpu_src0 = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
-                                   &error_code);
+  cl_mem gpu_src0 = clCreateBuffer(context,
+                                   CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
+                                   src_bytes, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
-  cl_mem gpu_src1 = clCreateBuffer(context, CL_MEM_READ_ONLY, src_bytes, NULL,
-                                   &error_code);
+  cl_mem gpu_src1 = clCreateBuffer(context,
+                                   CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
+                                   src_bytes, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
-  cl_mem gpu_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_bytes, NULL,
-                                  &error_code);
+  cl_mem gpu_dst = clCreateBuffer(context,
+                                  CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY,
+                                  dst_bytes, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
   error_code = clEnqueueWriteBuffer(queue, gpu_src0, CL_FALSE, 0, src_bytes,
                                     src0.data, 0, NULL, NULL);

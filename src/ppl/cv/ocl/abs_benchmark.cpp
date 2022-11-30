@@ -22,10 +22,9 @@
 #include "opencv2/core.hpp"
 #include "benchmark/benchmark.h"
 
+#include "ppl/common/ocl/oclcommon.h"
 #include "ppl/cv/debug.h"
-#include "ppl/common/ocl/framechain.h"
 #include "utility/infrastructure.h"
-#include "utility/utility.hpp"
 
 using namespace ppl::cv::debug;
 
