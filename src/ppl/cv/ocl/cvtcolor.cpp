@@ -131,8 +131,24 @@ RetCode function <float>(cl_command_queue queue,                               \
   return code;                                                                 \
 }
 
+// BGR(RBB) <-> BGRA(RGBA)
 CVT_COLOR_INVOCATION(BGR2BGRA, 3, 4);
-// CVT_COLOR_INVOCATION(RGB2RGBA, 3, 4);
+CVT_COLOR_INVOCATION(RGB2RGBA, 3, 4);
+CVT_COLOR_INVOCATION(BGRA2BGR, 4, 3);
+CVT_COLOR_INVOCATION(RGBA2RGB, 4, 3);
+CVT_COLOR_INVOCATION(BGR2RGBA, 3, 4);
+CVT_COLOR_INVOCATION(RGB2BGRA, 3, 4);
+CVT_COLOR_INVOCATION(BGRA2RGB, 4, 3);
+CVT_COLOR_INVOCATION(RGBA2BGR, 4, 3);
+
+// BGR <-> RGB
+CVT_COLOR_INVOCATION(BGR2RGB, 3, 3);
+CVT_COLOR_INVOCATION(RGB2BGR, 3, 3);
+
+// BGRA <-> RGBA
+CVT_COLOR_INVOCATION(BGRA2RGBA, 4, 4);
+CVT_COLOR_INVOCATION(RGBA2BGRA, 4, 4);
+
 
 }  // namespace ocl
 }  // namespace cv
