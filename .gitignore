@@ -3,9 +3,8 @@ cuda-build
 x86-64-build
 aarch64-build
 pplcv-build
-ocl-build
-ocl_x86-build
-ocl_aarch64-build
+x86_ocl-build
+aarch64_ocl-build
 .vscode
 .idea
 .swp

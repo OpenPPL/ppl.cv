@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mkdir ocl_aarch64-build
-cd ocl_aarch64-build
+mkdir aarch64_ocl-build
+cd aarch64_ocl-build
 
 cmd="cmake .. \
       -DPPLCV_HOLD_DEPS=ON \
@@ -21,11 +21,11 @@ cmd="cmake .. \
       -DPPLCV_BUILD_TESTS=ON \
       -DPPLCV_BUILD_BENCHMARK=ON \
       -DPPLCV_OPENCL_INCLUDE_DIRS='/opt/toolchains/android-toolchain-aarch64/include/OpenCL' \
-      -DPPLCV_OPENCL_LIBRARIES='/opt/toolchains/android-toolchain-aarch64/lib64/OpenCL/mali/t860/libGLES_mali.so'"
+      -DPPLCV_OPENCL_LIBRARIES='/opt/toolchains/android-toolchain-aarch64/lib64/OpenCL/qualcomm/libOpenCL.so'"
 echo "cmd -> $cmd"
 eval $cmd
 
 cmake --build . -j 8 --config Release --target install
 
-      # -DPPLCV_OPENCL_LIBRARIES='/opt/toolchains/android-toolchain-aarch64/lib64/OpenCL/qualcomm/libOpenCL.so'"
+      # -DPPLCV_OPENCL_LIBRARIES='/opt/toolchains/android-toolchain-aarch64/lib64/OpenCL/mali/t860/libGLES_mali.so'"
       # -DPPLCV_OPENCL_LIBRARIES='/opt/toolchains/android-toolchain-aarch64/lib64/OpenCL/mali/libOpenCL.so'"

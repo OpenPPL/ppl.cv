@@ -64,7 +64,8 @@ namespace ocl {
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/abs.h"
- * #include "ppl/common/framechain.h"
+ * #include "ppl/common/oclcommon.h"
+ *
  * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *

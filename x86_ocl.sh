@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mkdir ocl_x86-build
-cd ocl_x86-build
+mkdir x86_ocl-build
+cd x86_ocl-build
 
 cmd="cmake .. \
       -DPPLCV_HOLD_DEPS=ON \

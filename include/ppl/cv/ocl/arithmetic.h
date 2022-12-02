@@ -67,6 +67,8 @@ namespace ocl {
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/arithmetic.h"
+ * #include "ppl/common/oclcommon.h"
+ *
  * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
@@ -165,6 +167,8 @@ ppl::common::RetCode Add(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/arithmetic.h"
+ * #include "ppl/common/oclcommon.h"
+ *
  * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
@@ -264,6 +268,8 @@ ppl::common::RetCode AddWeighted(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/arithmetic.h"
+ * #include "ppl/common/oclcommon.h"
+ *
  * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
@@ -361,6 +367,8 @@ ppl::common::RetCode Subtract(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/arithmetic.h"
+ * #include "ppl/common/oclcommon.h"
+ *
  * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
@@ -458,6 +466,8 @@ ppl::common::RetCode Mul(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/arithmetic.h"
+ * #include "ppl/common/oclcommon.h"
+ *
  * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
