@@ -803,45 +803,45 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 
 #if defined(GRAY2BGR_U8_1D) || defined(GRAY2BGR_U8_2D) || defined(SPIR)
 uchar3 GRAY2BGRCompute(const uchar src) {
-    uchar3 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
+  uchar3 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
 
-    return dst;
+  return dst;
 }
 #endif
 
 #if defined(GRAY2BGR_F32_1D) || defined(GRAY2BGR_F32_2D) || defined(SPIR)
 float3 GRAY2BGRCompute(const float src) {
-    float3 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
+  float3 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
 
-    return dst;
+  return dst;
 }
 #endif
 
 #if defined(GRAY2RGB_U8_1D) || defined(GRAY2RGB_U8_2D) || defined(SPIR)
 uchar3 GRAY2RGBCompute(const uchar src) {
-    uchar3 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
+  uchar3 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
 
-    return dst;
+  return dst;
 }
 #endif
 
 #if defined(GRAY2RGB_F32_1D) || defined(GRAY2RGB_F32_2D) || defined(SPIR)
 float3 GRAY2RGBCompute(const float src) {
-    float3 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
+  float3 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
 
-    return dst;
+  return dst;
 }
 #endif
 
@@ -919,49 +919,49 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 
 #if defined(GRAY2BGRA_U8_1D) || defined(GRAY2BGRA_U8_2D) || defined(SPIR)
 uchar4 GRAY2BGRACompute(const uchar src) {
-    uchar4 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
-    dst.w = 255;
+  uchar4 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
+  dst.w = 255;
 
-    return dst;
+  return dst;
 }
 #endif
 
 #if defined(GRAY2BGRA_F32_1D) || defined(GRAY2BGRA_F32_2D) || defined(SPIR)
 float4 GRAY2BGRACompute(const float src) {
-    float4 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
-    dst.w = 1.0f;
+  float4 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
+  dst.w = 1.0f;
 
-    return dst;
+  return dst;
 }
 #endif
 
 #if defined(GRAY2RGBA_U8_1D) || defined(GRAY2RGBA_U8_2D) || defined(SPIR)
 uchar4 GRAY2RGBACompute(const uchar src) {
-    uchar4 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
-    dst.w = 255;
+  uchar4 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
+  dst.w = 255;
 
-    return dst;
+  return dst;
 }
 #endif
 
 #if defined(GRAY2RGBA_F32_1D) || defined(GRAY2RGBA_F32_2D) || defined(SPIR)
 float4 GRAY2RGBACompute(const float src) {
-    float4 dst;
-    dst.x = src;
-    dst.y = src;
-    dst.z = src;
-    dst.w = 1.0f;
+  float4 dst;
+  dst.x = src;
+  dst.y = src;
+  dst.z = src;
+  dst.w = 1.0f;
 
-    return dst;
+  return dst;
 }
 #endif
 
@@ -997,3 +997,527 @@ GRAY2BGRATYPE_1D(GRAY2RGBA, F32, float, float4)
 GRAY2BGRATYPE_2D(GRAY2RGBA, F32, float, float4)
 #endif
 
+/*********************** BGR/RGB/BGRA/RGBA <-> YCrCb ************************/
+
+#define R2Y_FLOAT_COEFF 0.299f
+#define G2Y_FLOAT_COEFF 0.587f
+#define B2Y_FLOAT_COEFF 0.114f
+#define CR_FLOAT_COEFF 0.713f
+#define CB_FLOAT_COEFF 0.564f
+#define YCRCB_UCHAR_DELTA 128
+#define YCRCB_FLOAT_DELTA 0.5f
+#define CR2R_FLOAT_COEFF 1.403f
+#define CB2R_FLOAT_COEFF 1.773f
+#define Y2G_CR_FLOAT_COEFF -0.714f
+#define Y2G_CB_FLOAT_COEFF -0.344f
+
+enum YCrCbIntegerCoefficients1 {
+  kB2YCoeff = 1868,
+  kG2YCoeff = 9617,
+  kR2YCoeff = 4899,
+  kCRCoeff  = 11682,
+  kCBCoeff  = 9241,
+};
+
+enum YCrCbIntegerCoefficients2 {
+  kCr2RCoeff  = 22987,
+  kCb2BCoeff  = 29049,
+  kY2GCrCoeff = -11698,
+  kY2GCbCoeff = -5636,
+};
+
+enum YCrCbShifts {
+  kYCrCbShift   = 14,
+  kShift14Delta = 2097152,
+};
+
+#if defined(BGR2YCrCb_U8_1D) || defined(BGR2YCrCb_F32_1D) ||                   \
+    defined(RGB2YCrCb_U8_1D) || defined(RGB2YCrCb_F32_1D) ||                   \
+    defined(YCrCb2BGR_U8_1D) || defined(YCrCb2BGR_F32_1D) ||                   \
+    defined(YCrCb2RGB_U8_1D) || defined(YCrCb2RGB_F32_1D) || defined(SPIR)
+#define Convert3To3_1D(Function, base_type, T, T3)                             \
+__kernel                                                                       \
+void Function ## base_type ## Kernel0(global const T* src, int cols,           \
+                                      global T* dst) {                         \
+  int element_x = get_global_id(0);                                            \
+  if (element_x >= cols) {                                                     \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  T3 input_value = vload3(element_x, src);                                     \
+  T3 value = Function ## Compute(input_value);                                 \
+                                                                               \
+  vstore3(value, element_x, dst);                                              \
+}
+#endif
+
+#if defined(BGR2YCrCb_U8_2D) || defined(BGR2YCrCb_F32_2D) ||                   \
+    defined(RGB2YCrCb_U8_2D) || defined(RGB2YCrCb_F32_2D) ||                   \
+    defined(YCrCb2BGR_U8_2D) || defined(YCrCb2BGR_F32_2D) ||                   \
+    defined(YCrCb2RGB_U8_2D) || defined(YCrCb2RGB_F32_2D) || defined(SPIR)
+#define Convert3To3_2D(Function, base_type, T, T3)                             \
+__kernel                                                                       \
+void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
+                                      int src_stride, global T* dst,           \
+                                      int dst_stride) {                        \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
+  T3 input_value = vload3(element_x, data);                                    \
+  T3 value = Function ## Compute(input_value);                                 \
+                                                                               \
+  data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
+  vstore3(value, element_x, data);                                             \
+}
+#endif
+
+#if defined(BGR2YCrCb_U8_1D) || defined(BGR2YCrCb_U8_2D) || defined(SPIR)
+uchar3 BGR2YCrCbCompute(const uchar3 src) {
+  int3 value;
+  value.x = divideUp(src.z * kR2YCoeff + src.y * kG2YCoeff + src.x * kB2YCoeff,
+                     kYCrCbShift);
+  value.y = divideUp((src.z - value.x) * kCRCoeff + kShift14Delta, kYCrCbShift);
+  value.z = divideUp((src.x - value.x) * kCBCoeff + kShift14Delta, kYCrCbShift);
+
+  uchar3 dst = convert_uchar3_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(BGR2YCrCb_F32_1D) || defined(BGR2YCrCb_F32_2D) || defined(SPIR)
+float3 BGR2YCrCbCompute(const float3 src) {
+  float3 dst;
+  dst.x = src.z * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
+          src.x * B2Y_FLOAT_COEFF;
+  dst.y = (src.z - dst.x) * CR_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+  dst.z = (src.x - dst.x) * CB_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+
+  return dst;
+}
+#endif
+
+#if defined(RGB2YCrCb_U8_1D) || defined(RGB2YCrCb_U8_2D) || defined(SPIR)
+uchar3 RGB2YCrCbCompute(const uchar3 src) {
+  int3 value;
+  value.x = divideUp(src.x * kR2YCoeff + src.y * kG2YCoeff + src.z * kB2YCoeff,
+                     kYCrCbShift);
+  value.y = divideUp((src.x - value.x) * kCRCoeff + kShift14Delta, kYCrCbShift);
+  value.z = divideUp((src.z - value.x) * kCBCoeff + kShift14Delta, kYCrCbShift);
+
+  uchar3 dst = convert_uchar3_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(RGB2YCrCb_F32_1D) || defined(RGB2YCrCb_F32_2D) || defined(SPIR)
+float3 RGB2YCrCbCompute(const float3 src) {
+  float3 dst;
+  dst.x = src.x * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
+          src.z * B2Y_FLOAT_COEFF;
+  dst.y = (src.x - dst.x) * CR_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+  dst.z = (src.z - dst.x) * CB_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+
+  return dst;
+}
+#endif
+
+#if defined(BGR2YCrCb_U8_1D) || defined(SPIR)
+Convert3To3_1D(BGR2YCrCb, U8, uchar, uchar3)
+#endif
+
+#if defined(BGR2YCrCb_U8_2D) || defined(SPIR)
+Convert3To3_2D(BGR2YCrCb, U8, uchar, uchar3)
+#endif
+
+#if defined(BGR2YCrCb_F32_1D) || defined(SPIR)
+Convert3To3_1D(BGR2YCrCb, F32, float, float3)
+#endif
+
+#if defined(BGR2YCrCb_F32_2D) || defined(SPIR)
+Convert3To3_2D(BGR2YCrCb, F32, float, float3)
+#endif
+
+#if defined(RGB2YCrCb_U8_1D) || defined(SPIR)
+Convert3To3_1D(RGB2YCrCb, U8, uchar, uchar3)
+#endif
+
+#if defined(RGB2YCrCb_U8_2D) || defined(SPIR)
+Convert3To3_2D(RGB2YCrCb, U8, uchar, uchar3)
+#endif
+
+#if defined(RGB2YCrCb_F32_1D) || defined(SPIR)
+Convert3To3_1D(RGB2YCrCb, F32, float, float3)
+#endif
+
+#if defined(RGB2YCrCb_F32_2D) || defined(SPIR)
+Convert3To3_2D(RGB2YCrCb, F32, float, float3)
+#endif
+
+
+#if defined(BGRA2YCrCb_U8_1D) || defined(BGRA2YCrCb_F32_1D) ||                 \
+    defined(RGBA2YCrCb_U8_1D) || defined(RGBA2YCrCb_F32_1D) || defined(SPIR)
+#define Convert4To3_1D(Function, base_type, T, T4, T3)                         \
+__kernel                                                                       \
+void Function ## base_type ## Kernel0(global const T* src, int cols,           \
+                                      global T* dst) {                         \
+  int element_x = get_global_id(0);                                            \
+  if (element_x >= cols) {                                                     \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  T4 input_value = vload4(element_x, src);                                     \
+  T3 value = Function ## Compute(input_value);                                 \
+                                                                               \
+  vstore3(value, element_x, dst);                                              \
+}
+#endif
+
+#if defined(BGRA2YCrCb_U8_2D) || defined(BGRA2YCrCb_F32_2D) ||                 \
+    defined(RGBA2YCrCb_U8_2D) || defined(RGBA2YCrCb_F32_2D) || defined(SPIR)
+#define Convert4To3_2D(Function, base_type, T, T4, T3)                         \
+__kernel                                                                       \
+void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
+                                      int src_stride, global T* dst,           \
+                                      int dst_stride) {                        \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
+  T4 input_value = vload4(element_x, data);                                    \
+  T3 value = Function ## Compute(input_value);                                 \
+                                                                               \
+  data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
+  vstore3(value, element_x, data);                                             \
+}
+#endif
+
+#if defined(BGRA2YCrCb_U8_1D) || defined(BGRA2YCrCb_U8_2D) || defined(SPIR)
+uchar3 BGRA2YCrCbCompute(const uchar4 src) {
+  int3 value;
+  value.x = divideUp(src.z * kR2YCoeff + src.y * kG2YCoeff + src.x * kB2YCoeff,
+                     kYCrCbShift);
+  value.y = divideUp((src.z - value.x) * kCRCoeff + kShift14Delta, kYCrCbShift);
+  value.z = divideUp((src.x - value.x) * kCBCoeff + kShift14Delta, kYCrCbShift);
+
+  uchar3 dst = convert_uchar3_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(BGRA2YCrCb_F32_1D) || defined(BGRA2YCrCb_F32_2D) || defined(SPIR)
+float3 BGRA2YCrCbCompute(const float4 src) {
+  float3 dst;
+  dst.x = src.z * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
+          src.x * B2Y_FLOAT_COEFF;
+  dst.y = (src.z - dst.x) * CR_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+  dst.z = (src.x - dst.x) * CB_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+
+  return dst;
+}
+#endif
+
+#if defined(RGBA2YCrCb_U8_1D) || defined(RGBA2YCrCb_U8_2D) || defined(SPIR)
+uchar3 RGBA2YCrCbCompute(const uchar4 src) {
+  int3 value;
+  value.x = divideUp(src.x * kR2YCoeff + src.y * kG2YCoeff + src.z * kB2YCoeff,
+                     kYCrCbShift);
+  value.y = divideUp((src.x - value.x) * kCRCoeff + kShift14Delta, kYCrCbShift);
+  value.z = divideUp((src.z - value.x) * kCBCoeff + kShift14Delta, kYCrCbShift);
+
+  uchar3 dst = convert_uchar3_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(RGBA2YCrCb_F32_1D) || defined(RGBA2YCrCb_F32_2D) || defined(SPIR)
+float3 RGBA2YCrCbCompute(const float4 src) {
+  float3 dst;
+  dst.x = src.x * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
+          src.z * B2Y_FLOAT_COEFF;
+  dst.y = (src.x - dst.x) * CR_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+  dst.z = (src.z - dst.x) * CB_FLOAT_COEFF + YCRCB_FLOAT_DELTA;
+
+  return dst;
+}
+#endif
+
+#if defined(BGRA2YCrCb_U8_1D) || defined(SPIR)
+Convert4To3_1D(BGRA2YCrCb, U8, uchar, uchar4, uchar3)
+#endif
+
+#if defined(BGRA2YCrCb_U8_2D) || defined(SPIR)
+Convert4To3_2D(BGRA2YCrCb, U8, uchar, uchar4, uchar3)
+#endif
+
+#if defined(BGRA2YCrCb_F32_1D) || defined(SPIR)
+Convert4To3_1D(BGRA2YCrCb, F32, float, float4, float3)
+#endif
+
+#if defined(BGRA2YCrCb_F32_2D) || defined(SPIR)
+Convert4To3_2D(BGRA2YCrCb, F32, float, float4, float3)
+#endif
+
+#if defined(RGBA2YCrCb_U8_1D) || defined(SPIR)
+Convert4To3_1D(RGBA2YCrCb, U8, uchar, uchar4, uchar3)
+#endif
+
+#if defined(RGBA2YCrCb_U8_2D) || defined(SPIR)
+Convert4To3_2D(RGBA2YCrCb, U8, uchar, uchar4, uchar3)
+#endif
+
+#if defined(RGBA2YCrCb_F32_1D) || defined(SPIR)
+Convert4To3_1D(RGBA2YCrCb, F32, float, float4, float3)
+#endif
+
+#if defined(RGBA2YCrCb_F32_2D) || defined(SPIR)
+Convert4To3_2D(RGBA2YCrCb, F32, float, float4, float3)
+#endif
+
+
+#if defined(YCrCb2BGR_U8_1D) || defined(YCrCb2BGR_U8_2D) || defined(SPIR)
+uchar3 YCrCb2BGRCompute(const uchar3 src) {
+  int y  = src.x;
+  int cr = src.y - YCRCB_UCHAR_DELTA;
+  int cb = src.z - YCRCB_UCHAR_DELTA;
+
+  int3 value;
+  value.x = y + divideUp(cb * kCb2BCoeff, kYCrCbShift);
+  value.y = y + divideUp(cr * kY2GCrCoeff + cb * kY2GCbCoeff, kYCrCbShift);
+  value.z = y + divideUp(cr * kCr2RCoeff, kYCrCbShift);
+
+  uchar3 dst = convert_uchar3_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2BGR_F32_1D) || defined(YCrCb2BGR_F32_2D) || defined(SPIR)
+float3 YCrCb2BGRCompute(const float3 src) {
+  float y  = src.x;
+  float cr = src.y - YCRCB_FLOAT_DELTA;
+  float cb = src.z - YCRCB_FLOAT_DELTA;
+
+  float3 dst;
+  dst.x = y + cb * CB2R_FLOAT_COEFF;
+  dst.y = y + cr * Y2G_CR_FLOAT_COEFF + cb * Y2G_CB_FLOAT_COEFF;
+  dst.z = y + cr * CR2R_FLOAT_COEFF;
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2RGB_U8_1D) || defined(YCrCb2RGB_U8_2D) || defined(SPIR)
+uchar3 YCrCb2RGBCompute(const uchar3 src) {
+  int y  = src.x;
+  int cr = src.y - YCRCB_UCHAR_DELTA;
+  int cb = src.z - YCRCB_UCHAR_DELTA;
+
+  int3 value;
+  value.x = y + divideUp(cr * kCr2RCoeff, kYCrCbShift);
+  value.y = y + divideUp(cr * kY2GCrCoeff + cb * kY2GCbCoeff, kYCrCbShift);
+  value.z = y + divideUp(cb * kCb2BCoeff, kYCrCbShift);
+
+  uchar3 dst = convert_uchar3_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2RGB_F32_1D) || defined(YCrCb2RGB_F32_2D) || defined(SPIR)
+float3 YCrCb2RGBCompute(const float3 src) {
+  float y  = src.x;
+  float cr = src.y - YCRCB_FLOAT_DELTA;
+  float cb = src.z - YCRCB_FLOAT_DELTA;
+
+  float3 dst;
+  dst.x = y + cr * CR2R_FLOAT_COEFF;
+  dst.y = y + cr * Y2G_CR_FLOAT_COEFF + cb * Y2G_CB_FLOAT_COEFF;
+  dst.z = y + cb * CB2R_FLOAT_COEFF;
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2BGR_U8_1D) || defined(SPIR)
+Convert3To3_1D(YCrCb2BGR, U8, uchar, uchar3)
+#endif
+
+#if defined(YCrCb2BGR_U8_2D) || defined(SPIR)
+Convert3To3_2D(YCrCb2BGR, U8, uchar, uchar3)
+#endif
+
+#if defined(YCrCb2BGR_F32_1D) || defined(SPIR)
+Convert3To3_1D(YCrCb2BGR, F32, float, float3)
+#endif
+
+#if defined(YCrCb2BGR_F32_2D) || defined(SPIR)
+Convert3To3_2D(YCrCb2BGR, F32, float, float3)
+#endif
+
+#if defined(YCrCb2RGB_U8_1D) || defined(SPIR)
+Convert3To3_1D(YCrCb2RGB, U8, uchar, uchar3)
+#endif
+
+#if defined(YCrCb2RGB_U8_2D) || defined(SPIR)
+Convert3To3_2D(YCrCb2RGB, U8, uchar, uchar3)
+#endif
+
+#if defined(YCrCb2RGB_F32_1D) || defined(SPIR)
+Convert3To3_1D(YCrCb2RGB, F32, float, float3)
+#endif
+
+#if defined(YCrCb2RGB_F32_2D) || defined(SPIR)
+Convert3To3_2D(YCrCb2RGB, F32, float, float3)
+#endif
+
+
+#if defined(YCrCb2BGRA_U8_1D) || defined(YCrCb2BGRA_F32_1D) ||                 \
+    defined(YCrCb2RGBA_U8_1D) || defined(YCrCb2RGBA_F32_1D) || defined(SPIR)
+#define Convert3To4_1D(Function, base_type, T, T3, T4)                         \
+__kernel                                                                       \
+void Function ## base_type ## Kernel0(global const T* src, int cols,           \
+                                      global T* dst) {                         \
+  int element_x = get_global_id(0);                                            \
+  if (element_x >= cols) {                                                     \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  T3 input_value = vload3(element_x, src);                                     \
+  T4 value = Function ## Compute(input_value);                                 \
+                                                                               \
+  vstore4(value, element_x, dst);                                              \
+}
+#endif
+
+#if defined(YCrCb2BGRA_U8_2D) || defined(YCrCb2BGRA_F32_2D) ||                 \
+    defined(YCrCb2RGBA_U8_2D) || defined(YCrCb2RGBA_F32_2D) || defined(SPIR)
+#define Convert3To4_2D(Function, base_type, T, T3, T4)                         \
+__kernel                                                                       \
+void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
+                                      int src_stride, global T* dst,           \
+                                      int dst_stride) {                        \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
+  T3 input_value = vload3(element_x, data);                                    \
+  T4 value = Function ## Compute(input_value);                                 \
+                                                                               \
+  data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
+  vstore4(value, element_x, data);                                             \
+}
+#endif
+
+#if defined(YCrCb2BGRA_U8_1D) || defined(YCrCb2BGRA_U8_2D) || defined(SPIR)
+uchar4 YCrCb2BGRACompute(const uchar3 src) {
+  int y  = src.x;
+  int cr = src.y - YCRCB_UCHAR_DELTA;
+  int cb = src.z - YCRCB_UCHAR_DELTA;
+
+  int4 value;
+  value.x = y + divideUp(cb * kCb2BCoeff, kYCrCbShift);
+  value.y = y + divideUp(cr * kY2GCrCoeff + cb * kY2GCbCoeff, kYCrCbShift);
+  value.z = y + divideUp(cr * kCr2RCoeff, kYCrCbShift);
+  value.w = 255.f;
+
+  uchar4 dst = convert_uchar4_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2BGRA_F32_1D) || defined(YCrCb2BGRA_F32_2D) || defined(SPIR)
+float4 YCrCb2BGRACompute(const float3 src) {
+  float y  = src.x;
+  float cr = src.y - YCRCB_FLOAT_DELTA;
+  float cb = src.z - YCRCB_FLOAT_DELTA;
+
+  float4 dst;
+  dst.x = y + cb * CB2R_FLOAT_COEFF;
+  dst.y = y + cr * Y2G_CR_FLOAT_COEFF + cb * Y2G_CB_FLOAT_COEFF;
+  dst.z = y + cr * CR2R_FLOAT_COEFF;
+  dst.w = 1.0f;
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2RGBA_U8_1D) || defined(YCrCb2RGBA_U8_2D) || defined(SPIR)
+uchar4 YCrCb2RGBACompute(const uchar3 src) {
+  int y  = src.x;
+  int cr = src.y - YCRCB_UCHAR_DELTA;
+  int cb = src.z - YCRCB_UCHAR_DELTA;
+
+  int4 value;
+  value.x = y + divideUp(cr * kCr2RCoeff, kYCrCbShift);
+  value.y = y + divideUp(cr * kY2GCrCoeff + cb * kY2GCbCoeff, kYCrCbShift);
+  value.z = y + divideUp(cb * kCb2BCoeff, kYCrCbShift);
+  value.w = 255.f;
+
+  uchar4 dst = convert_uchar4_sat(value);
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2RGBA_F32_1D) || defined(YCrCb2RGBA_F32_2D) || defined(SPIR)
+float4 YCrCb2RGBACompute(const float3 src) {
+  float y  = src.x;
+  float cr = src.y - YCRCB_FLOAT_DELTA;
+  float cb = src.z - YCRCB_FLOAT_DELTA;
+
+  float4 dst;
+  dst.x = y + cr * CR2R_FLOAT_COEFF;
+  dst.y = y + cr * Y2G_CR_FLOAT_COEFF + cb * Y2G_CB_FLOAT_COEFF;
+  dst.z = y + cb * CB2R_FLOAT_COEFF;
+  dst.w = 1.0f;
+
+  return dst;
+}
+#endif
+
+#if defined(YCrCb2BGRA_U8_1D) || defined(SPIR)
+Convert3To4_1D(YCrCb2BGRA, U8, uchar, uchar3, uchar4)
+#endif
+
+#if defined(YCrCb2BGRA_U8_2D) || defined(SPIR)
+Convert3To4_2D(YCrCb2BGRA, U8, uchar, uchar3, uchar4)
+#endif
+
+#if defined(YCrCb2BGRA_F32_1D) || defined(SPIR)
+Convert3To4_1D(YCrCb2BGRA, F32, float, float3, float4)
+#endif
+
+#if defined(YCrCb2BGRA_F32_2D) || defined(SPIR)
+Convert3To4_2D(YCrCb2BGRA, F32, float, float3, float4)
+#endif
+
+#if defined(YCrCb2RGBA_U8_1D) || defined(SPIR)
+Convert3To4_1D(YCrCb2RGBA, U8, uchar, uchar3, uchar4)
+#endif
+
+#if defined(YCrCb2RGBA_U8_2D) || defined(SPIR)
+Convert3To4_2D(YCrCb2RGBA, U8, uchar, uchar3, uchar4)
+#endif
+
+#if defined(YCrCb2RGBA_F32_1D) || defined(SPIR)
+Convert3To4_1D(YCrCb2RGBA, F32, float, float3, float4)
+#endif
+
+#if defined(YCrCb2RGBA_F32_2D) || defined(SPIR)
+Convert3To4_2D(YCrCb2RGBA, F32, float, float3, float4)
+#endif
