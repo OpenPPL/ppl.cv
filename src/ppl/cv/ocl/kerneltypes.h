@@ -29,4 +29,8 @@ enum BorderType {
     BORDER_TYPE_ISOLATED       = 16
 };
 
+inline int divideUp(int total, int shift) {
+  return (total + ((1 << shift) - 1)) >> shift;
+}
+
 #endif
