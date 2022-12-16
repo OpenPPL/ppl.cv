@@ -33,4 +33,8 @@ inline int divideUp(int total, int shift) {
   return (total + ((1 << shift) - 1)) >> shift;
 }
 
+inline int divideUp1(int total, int shift) {
+  return (total + (1 << (shift - 1))) >> shift;
+}
+
 #endif

@@ -87,7 +87,7 @@ void BM_CvtColor ## Function ## _ppl_ocl(benchmark::State &state) {            \
   clReleaseMemObject(gpu_dst);                                                 \
 }
 
-#define BENCHMARK_OPENCV_X86(Function)                                         \
+#define BENCHMARK_OPENCV_CPU(Function)                                         \
 template <typename T, int src_channels, int dst_channels>                      \
 void BM_CvtColor ## Function ## _opencv_ocl(benchmark::State &state) {         \
   int width  = state.range(0);                                                 \
@@ -106,7 +106,7 @@ void BM_CvtColor ## Function ## _opencv_ocl(benchmark::State &state) {         \
 
 #define BENCHMARK_2FUNCTIONS_DECLARATION(Function)                             \
 BENCHMARK_PPL_CV_OCL(Function)                                                 \
-BENCHMARK_OPENCV_X86(Function)
+BENCHMARK_OPENCV_CPU(Function)
 
 #define RUN_2BENCHMARKS(Function, src_channels, dst_channels, width, height)   \
 BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _opencv_ocl, uchar, src_channels,\
@@ -160,6 +160,73 @@ RUN_OPENCV_TYPE_FUNCTIONS(Function, float, src_channels, dst_channels)         \
 RUN_PPL_CV_TYPE_FUNCTIONS(Function, uchar, src_channels, dst_channels)         \
 RUN_PPL_CV_TYPE_FUNCTIONS(Function, float, src_channels, dst_channels)
 
+/************************ LAB Comparison with OpenCV *************************/
+enum LabFunctions {
+  kBGR2LAB,
+  kRGB2LAB,
+  kLAB2BGR,
+  kLAB2RGB,
+};
+
+#define BENCHMARK_OPENCV_CPU_LAB(Function)                                     \
+template <typename T, int src_channels, int dst_channels>                      \
+void BM_CvtColor ## Function ## _opencv_ocl(benchmark::State &state) {         \
+  int width  = state.range(0);                                                 \
+  int height = state.range(1);                                                 \
+  cv::Mat src;                                                                 \
+  src = createSourceImage(height, width,                                       \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channels));  \
+  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth,               \
+              dst_channels));                                                  \
+                                                                               \
+  LabFunctions ppl_function = k ## Function;                                   \
+  cv::ColorConversionCodes cv_code;                                            \
+  if (ppl_function == kBGR2LAB) {                                              \
+    cv_code = cv::COLOR_BGR2Lab;                                               \
+  }                                                                            \
+  else if (ppl_function == kRGB2LAB) {                                         \
+    cv_code = cv::COLOR_RGB2Lab;                                               \
+  }                                                                            \
+  else if (ppl_function == kLAB2BGR) {                                         \
+    cv_code = cv::COLOR_Lab2BGR;                                               \
+  }                                                                            \
+  else if (ppl_function == kLAB2RGB) {                                         \
+    cv_code = cv::COLOR_Lab2RGB;                                               \
+  }                                                                            \
+  else {                                                                       \
+  }                                                                            \
+                                                                               \
+  for (auto _ : state) {                                                       \
+    cv::cvtColor(src, dst, cv_code);                                           \
+  }                                                                            \
+  state.SetItemsProcessed(state.iterations() * 1);                             \
+}
+
+#define BENCHMARK_LAB_2FUNCTIONS_DECLARATION(Function)                         \
+BENCHMARK_PPL_CV_OCL(Function)                                                 \
+BENCHMARK_OPENCV_CPU_LAB(Function)
+
+#define RUN_LAB_2BENCHMARKS(Function, src_channels, dst_channels, width,       \
+                            height)                                            \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _opencv_ocl, uchar, src_channels,\
+                   dst_channels)->Args({width, height});                       \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _ppl_ocl, uchar, src_channels,   \
+                   dst_channels)->Args({width, height})->UseManualTime()->     \
+                   Iterations(10);                                             \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _opencv_ocl, float, src_channels,\
+                   dst_channels)->Args({width, height});                       \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _ppl_ocl, float, src_channels,   \
+                   dst_channels)->Args({width, height})->UseManualTime()->     \
+                   Iterations(10);
+
+#define RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(Function, src_channels,        \
+                                                dst_channels)                  \
+BENCHMARK_LAB_2FUNCTIONS_DECLARATION(Function)                                 \
+RUN_LAB_2BENCHMARKS(Function, src_channels, dst_channels, 320, 240)            \
+RUN_LAB_2BENCHMARKS(Function, src_channels, dst_channels, 640, 480)            \
+RUN_LAB_2BENCHMARKS(Function, src_channels, dst_channels, 1280, 720)           \
+RUN_LAB_2BENCHMARKS(Function, src_channels, dst_channels, 1920, 1080)
+
 /***************************** No comparison ********************************/
 
 #define BENCHMARK_1FUNCTION_DECLARATION(Function)                              \
@@ -202,11 +269,31 @@ RUN_PPL_CV_TYPE_FUNCTIONS(Function, float, src_channel, dst_channel)
 // RUN_BENCHMARK_COMPARISON_2FUNCTIONS(GRAY2RGBA, c1, c4)
 
 // // BGR/RGB/BGRA/RGBA <-> YCrCb
-RUN_BENCHMARK_COMPARISON_2FUNCTIONS(BGR2YCrCb, c3, c3)
-RUN_BENCHMARK_COMPARISON_2FUNCTIONS(RGB2YCrCb, c3, c3)
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(BGR2YCrCb, c3, c3)
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(RGB2YCrCb, c3, c3)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(BGRA2YCrCb, c4, c3)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(RGBA2YCrCb, c4, c3)
-RUN_BENCHMARK_COMPARISON_2FUNCTIONS(YCrCb2BGR, c3, c3)
-RUN_BENCHMARK_COMPARISON_2FUNCTIONS(YCrCb2RGB, c3, c3)
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(YCrCb2BGR, c3, c3)
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(YCrCb2RGB, c3, c3)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(YCrCb2BGRA, c3, c4)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(YCrCb2RGBA, c3, c4)
+
+// // BGR/RGB/BGRA/RGBA <-> HSV
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(BGR2HSV, c3, c3)
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(RGB2HSV, c3, c3)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(BGRA2HSV, c4, c3)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(RGBA2HSV, c4, c3)
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(HSV2BGR, c3, c3)
+// RUN_BENCHMARK_COMPARISON_2FUNCTIONS(HSV2RGB, c3, c3)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(HSV2BGRA, c3, c4)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(HSV2RGBA, c3, c4)
+
+// // BGR/RGB/BGRA/RGBA <-> LAB
+RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(BGR2LAB, c3, c3)
+RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(RGB2LAB, c3, c3)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(BGRA2LAB, c4, c3)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(RGBA2LAB, c4, c3)
+RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(LAB2BGR, c3, c3)
+RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(LAB2RGB, c3, c3)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(LAB2BGRA, 3, 4)
+// RUN_BENCHMARK_BATCH_1FUNCTIONS(LAB2RGBA, 3, 4)

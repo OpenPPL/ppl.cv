@@ -143,9 +143,9 @@ bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
   return (identity0 && identity1);                                             \
 }
 
-#define UNITTEST_TEST_SUITE(Function, T, src_channel, dst_channel)             \
+#define UNITTEST_TEST_SUITE(Function, T, src_channels, dst_channels)           \
 using PplCvOclCvtColor ## Function ## T =                                      \
-        PplCvOclCvtColor ## Function<T, src_channel, dst_channel>;             \
+        PplCvOclCvtColor ## Function<T, src_channels, dst_channels>;           \
 TEST_P(PplCvOclCvtColor ## Function ## T, Standard) {                          \
   bool identity = this->apply();                                               \
   EXPECT_TRUE(identity);                                                       \
@@ -162,10 +162,291 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclCvtColor ## Function ## T,            \
   }                                                                            \
 );
 
-#define UNITTEST(Function, src_channel, dst_channel)                           \
+#define UNITTEST(Function, src_channels, dst_channels)                         \
 UNITTEST_CLASS_DECLARATION(Function)                                           \
-UNITTEST_TEST_SUITE(Function, uchar, src_channel, dst_channel)                 \
-UNITTEST_TEST_SUITE(Function, float, src_channel, dst_channel)
+UNITTEST_TEST_SUITE(Function, uchar, src_channels, dst_channels)               \
+UNITTEST_TEST_SUITE(Function, float, src_channels, dst_channels)
+
+#define UNITTEST_CLASS_DECLARATION1(Function, float_epsilon)                   \
+template <typename T, int src_channels, int dst_channels>                      \
+class PplCvOclCvtColor ## Function :                                           \
+  public ::testing::TestWithParam<Parameters> {                                \
+ public:                                                                       \
+  PplCvOclCvtColor ## Function() {                                             \
+    const Parameters& parameters = GetParam();                                 \
+    size = std::get<0>(parameters);                                            \
+                                                                               \
+    ppl::common::ocl::createSharedFrameChain(false);                           \
+    context = ppl::common::ocl::getSharedFrameChain()->getContext();           \
+    queue   = ppl::common::ocl::getSharedFrameChain()->getQueue();             \
+  }                                                                            \
+                                                                               \
+  ~PplCvOclCvtColor ## Function() {                                            \
+  }                                                                            \
+                                                                               \
+  bool apply();                                                                \
+                                                                               \
+ private:                                                                      \
+  cv::Size size;                                                               \
+  cl_context context;                                                          \
+  cl_command_queue queue;                                                      \
+};                                                                             \
+                                                                               \
+template <typename T, int src_channels, int dst_channels>                      \
+bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
+  cv::Mat src;                                                                 \
+  src = createSourceImage(size.height, size.width,                             \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channels));  \
+  cv::Mat dst(size.height, size.width,                                         \
+              CV_MAKETYPE(cv::DataType<T>::depth, dst_channels));              \
+  cv::Mat cv_dst(size.height, size.width,                                      \
+                 CV_MAKETYPE(cv::DataType<T>::depth, dst_channels));           \
+                                                                               \
+  int src_bytes = src.rows * src.step;                                         \
+  int dst_bytes = dst.rows * dst.step;                                         \
+  cl_int error_code = 0;                                                       \
+  cl_mem gpu_src = clCreateBuffer(context,                                     \
+                                  CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,   \
+                                  src_bytes, NULL, &error_code);               \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_dst = clCreateBuffer(context,                                     \
+                                  CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY,   \
+                                  dst_bytes, NULL, &error_code);               \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_FALSE, 0, src_bytes,    \
+                                    src.data, 0, NULL, NULL);                  \
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);                               \
+                                                                               \
+  int src_size = size.height * size.width * src_channels * sizeof(T);          \
+  int dst_size = size.height * size.width * dst_channels * sizeof(T);          \
+  cl_mem gpu_input = clCreateBuffer(context,                                   \
+                                    CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,  \
+                                    src_size, NULL, &error_code);              \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_output = clCreateBuffer(context,                                  \
+                                     CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,\
+                                     dst_size, NULL, &error_code);             \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  T* input = (T*)clEnqueueMapBuffer(queue, gpu_input, CL_TRUE, CL_MAP_WRITE,   \
+                                    0, src_size, 0, NULL, NULL, &error_code);  \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  copyMatToArray(src, input);                                                  \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_input, input, 0, NULL, NULL);\
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  cv::cvtColor(src, cv_dst, cv::COLOR_ ## Function);                           \
+                                                                               \
+  ppl::cv::ocl::Function<T>(queue, src.rows, src.cols,                         \
+      src.step / sizeof(T), gpu_src, dst.step / sizeof(T), gpu_dst);           \
+  error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,      \
+                                   dst.data, 0, NULL, NULL);                   \
+  CHECK_ERROR(error_code, clEnqueueReadBuffer);                                \
+                                                                               \
+  ppl::cv::ocl::Function<T>(queue, size.height, size.width,                    \
+      size.width * src_channels, gpu_input, size.width * dst_channels,         \
+      gpu_output);                                                             \
+  T* output = (T*)clEnqueueMapBuffer(queue, gpu_output, CL_TRUE, CL_MAP_READ,  \
+                                     0, dst_size, 0, NULL, NULL, &error_code); \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+                                                                               \
+  float epsilon;                                                               \
+  if (sizeof(T) == 1) {                                                        \
+    epsilon = EPSILON_1F;                                                      \
+  }                                                                            \
+  else {                                                                       \
+    epsilon = float_epsilon;                                                   \
+  }                                                                            \
+  bool identity0 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,\
+      cv_dst.cols, cv_dst.channels(), cv_dst.step, (const T*)dst.data,         \
+      dst.step, epsilon);                                                      \
+  bool identity1 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,\
+      cv_dst.cols, cv_dst.channels(), cv_dst.step, output,                     \
+      size.width * dst_channels * sizeof(T), epsilon);                         \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_output, output, 0, NULL,     \
+                                       NULL);                                  \
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  clReleaseMemObject(gpu_src);                                                 \
+  clReleaseMemObject(gpu_dst);                                                 \
+  clReleaseMemObject(gpu_input);                                               \
+  clReleaseMemObject(gpu_output);                                              \
+                                                                               \
+  return (identity0 && identity1);                                             \
+}
+
+#define UNITTEST1(Function, src_channels, dst_channels, float_epsilon)         \
+UNITTEST_CLASS_DECLARATION1(Function, float_epsilon)                           \
+UNITTEST_TEST_SUITE(Function, uchar, src_channels, dst_channels)               \
+UNITTEST_TEST_SUITE(Function, float, src_channels, dst_channels)
+
+/***************************** LAB unittest ********************************/
+
+enum LabFunctions {
+  kBGR2LAB,
+  kRGB2LAB,
+  kLAB2BGR,
+  kLAB2RGB,
+  kLAB2BGRA,
+  kLAB2RGBA,
+};
+
+#define LAB_UNITTEST_CLASS_DECLARATION(Function)                               \
+template <typename T, int src_channels, int dst_channels>                      \
+class PplCvOclCvtColor ## Function :                                           \
+  public ::testing::TestWithParam<Parameters> {                                \
+ public:                                                                       \
+  PplCvOclCvtColor ## Function() {                                             \
+    const Parameters& parameters = GetParam();                                 \
+    size = std::get<0>(parameters);                                            \
+                                                                               \
+    ppl::common::ocl::createSharedFrameChain(false);                           \
+    context = ppl::common::ocl::getSharedFrameChain()->getContext();           \
+    queue   = ppl::common::ocl::getSharedFrameChain()->getQueue();             \
+  }                                                                            \
+                                                                               \
+  ~PplCvOclCvtColor ## Function() {                                            \
+  }                                                                            \
+                                                                               \
+  bool apply();                                                                \
+                                                                               \
+ private:                                                                      \
+  cv::Size size;                                                               \
+  cl_context context;                                                          \
+  cl_command_queue queue;                                                      \
+};                                                                             \
+                                                                               \
+template <typename T, int src_channels, int dst_channels>                      \
+bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
+  cv::Mat src;                                                                 \
+  LabFunctions ppl_function = k ## Function;                                   \
+  if (ppl_function == kBGR2LAB || ppl_function == kRGB2LAB) {                  \
+    src = createSourceImage(size.height, size.width,                           \
+                            CV_MAKETYPE(cv::DataType<T>::depth, src_channels));\
+  }                                                                            \
+  else {                                                                       \
+    cv::Mat temp0 = createSourceImage(size.height, size.width,                 \
+                                      CV_MAKETYPE(cv::DataType<T>::depth, 3)); \
+    cv::Mat temp1(size.height, size.width,                                     \
+                  CV_MAKETYPE(cv::DataType<T>::depth, 3));                     \
+    cv::cvtColor(temp0, temp1, cv::COLOR_RGB2Lab);                             \
+    src = temp1.clone();                                                       \
+  }                                                                            \
+  cv::Mat dst(size.height, size.width,                                         \
+              CV_MAKETYPE(cv::DataType<T>::depth, dst_channels));              \
+  cv::Mat cv_dst(size.height, size.width,                                      \
+                 CV_MAKETYPE(cv::DataType<T>::depth, dst_channels));           \
+                                                                               \
+  int src_bytes = src.rows * src.step;                                         \
+  int dst_bytes = dst.rows * dst.step;                                         \
+  cl_int error_code = 0;                                                       \
+  cl_mem gpu_src = clCreateBuffer(context,                                     \
+                                  CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,   \
+                                  src_bytes, NULL, &error_code);               \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_dst = clCreateBuffer(context,                                     \
+                                  CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY,   \
+                                  dst_bytes, NULL, &error_code);               \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_FALSE, 0, src_bytes,    \
+                                    src.data, 0, NULL, NULL);                  \
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);                               \
+                                                                               \
+  int src_size = size.height * size.width * src_channels * sizeof(T);          \
+  int dst_size = size.height * size.width * dst_channels * sizeof(T);          \
+  cl_mem gpu_input = clCreateBuffer(context,                                   \
+                                    CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,  \
+                                    src_size, NULL, &error_code);              \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_output = clCreateBuffer(context,                                  \
+                                     CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,\
+                                     dst_size, NULL, &error_code);             \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  T* input = (T*)clEnqueueMapBuffer(queue, gpu_input, CL_TRUE, CL_MAP_WRITE,   \
+                                    0, src_size, 0, NULL, NULL, &error_code);  \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  copyMatToArray(src, input);                                                  \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_input, input, 0, NULL, NULL);\
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  if (ppl_function == kBGR2LAB) {                                              \
+    cv::cvtColor(src, cv_dst, cv::COLOR_BGR2Lab);                              \
+  }                                                                            \
+  else if (ppl_function == kRGB2LAB) {                                         \
+    cv::cvtColor(src, cv_dst, cv::COLOR_RGB2Lab);                              \
+  }                                                                            \
+  else if (ppl_function == kLAB2BGR) {                                         \
+    cv::cvtColor(src, cv_dst, cv::COLOR_Lab2BGR);                              \
+  }                                                                            \
+  else if (ppl_function == kLAB2RGB) {                                         \
+    cv::cvtColor(src, cv_dst, cv::COLOR_Lab2RGB);                              \
+  }                                                                            \
+  else if (ppl_function == kLAB2BGRA) {                                        \
+    cv::Mat temp(size.height, size.width,                                      \
+                CV_MAKETYPE(cv::DataType<T>::depth, (dst_channels - 1)));      \
+    cv::cvtColor(src, temp, cv::COLOR_Lab2BGR);                                \
+    cv::cvtColor(temp, cv_dst, cv::COLOR_BGR2BGRA);                            \
+  }                                                                            \
+  else if (ppl_function == kLAB2RGBA) {                                        \
+    cv::Mat temp(size.height, size.width,                                      \
+                 CV_MAKETYPE(cv::DataType<T>::depth, (dst_channels - 1)));     \
+    cv::cvtColor(src, temp, cv::COLOR_Lab2RGB);                                \
+    cv::cvtColor(temp, cv_dst, cv::COLOR_RGB2RGBA);                            \
+  }                                                                            \
+  else {                                                                       \
+  }                                                                            \
+                                                                               \
+  ppl::cv::ocl::Function<T>(queue, src.rows, src.cols,                         \
+      src.step / sizeof(T), gpu_src, dst.step / sizeof(T), gpu_dst);           \
+  error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,      \
+                                   dst.data, 0, NULL, NULL);                   \
+  CHECK_ERROR(error_code, clEnqueueReadBuffer);                                \
+                                                                               \
+  ppl::cv::ocl::Function<T>(queue, size.height, size.width,                    \
+      size.width * src_channels, gpu_input, size.width * dst_channels,         \
+      gpu_output);                                                             \
+  T* output = (T*)clEnqueueMapBuffer(queue, gpu_output, CL_TRUE, CL_MAP_READ,  \
+                                     0, dst_size, 0, NULL, NULL, &error_code); \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+                                                                               \
+  float epsilon;                                                               \
+  if (sizeof(T) == 1) {                                                        \
+    if (ppl_function == kBGR2LAB || ppl_function == kRGB2LAB) {                \
+      epsilon = EPSILON_1F;                                                    \
+    }                                                                          \
+    else {                                                                     \
+      epsilon = 2.1f;                                                          \
+    }                                                                          \
+  }                                                                            \
+  else {                                                                       \
+    if (ppl_function == kBGR2LAB || ppl_function == kRGB2LAB) {                \
+      epsilon = 0.67f;                                                         \
+    }                                                                          \
+    else {                                                                     \
+      epsilon = 0.0022f;                                                       \
+    }                                                                          \
+  }                                                                            \
+  bool identity0 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,\
+      cv_dst.cols, cv_dst.channels(), cv_dst.step, (const T*)dst.data,         \
+      dst.step, epsilon);                                                      \
+  bool identity1 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,\
+      cv_dst.cols, cv_dst.channels(), cv_dst.step, output,                     \
+      size.width * dst_channels * sizeof(T), epsilon);                         \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_output, output, 0, NULL,     \
+                                       NULL);                                  \
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  clReleaseMemObject(gpu_src);                                                 \
+  clReleaseMemObject(gpu_dst);                                                 \
+  clReleaseMemObject(gpu_input);                                               \
+  clReleaseMemObject(gpu_output);                                              \
+                                                                               \
+  return (identity0 && identity1);                                             \
+}
+
+#define LAB_UNITTEST(Function, src_channels, dst_channels)                     \
+LAB_UNITTEST_CLASS_DECLARATION(Function)                                       \
+UNITTEST_TEST_SUITE(Function, uchar, src_channels, dst_channels)               \
+UNITTEST_TEST_SUITE(Function, float, src_channels, dst_channels)
 
 /**************************** Indirect unittest *****************************/
 
@@ -259,7 +540,7 @@ bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
     epsilon = EPSILON_1F;                                                      \
   }                                                                            \
   else {                                                                       \
-    epsilon = EPSILON_E6;                                                      \
+    epsilon = float_diff;                                                      \
   }                                                                            \
   bool identity0 = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows,\
       cv_dst.cols, cv_dst.channels(), cv_dst.step, (const T*)dst.data,         \
@@ -279,11 +560,11 @@ bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
   return (identity0 && identity1);                                             \
 }
 
-#define INDIRECT_UNITTEST(F1, F2, Function, src_channel, dst_channel,          \
+#define INDIRECT_UNITTEST(F1, F2, Function, src_channels, dst_channels,        \
                           float_diff)                                          \
 INDIRECT_UNITTEST_CLASS_DECLARATION(F1, F2, Function, float_diff)              \
-UNITTEST_TEST_SUITE(Function, uchar, src_channel, dst_channel)                 \
-UNITTEST_TEST_SUITE(Function, float, src_channel, dst_channel)
+UNITTEST_TEST_SUITE(Function, uchar, src_channels, dst_channels)               \
+UNITTEST_TEST_SUITE(Function, float, src_channels, dst_channels)
 
 // // BGR(RBB) <-> BGRA(RGBA)
 // UNITTEST(BGR2BGRA, 3, 4)
@@ -313,12 +594,32 @@ UNITTEST_TEST_SUITE(Function, float, src_channel, dst_channel)
 // UNITTEST(GRAY2BGRA, 1, 4)
 // UNITTEST(GRAY2RGBA, 1, 4)
 
-// BGR/RGB/BGRA/RGBA <-> YCrCb
-UNITTEST(BGR2YCrCb, 3, 3)
-UNITTEST(RGB2YCrCb, 3, 3)
-INDIRECT_UNITTEST(BGRA2BGR, BGR2YCrCb, BGRA2YCrCb, 4, 3, 1e-6)
-INDIRECT_UNITTEST(RGBA2RGB, RGB2YCrCb, RGBA2YCrCb, 4, 3, 1e-6)
-UNITTEST(YCrCb2BGR, 3, 3)
-UNITTEST(YCrCb2RGB, 3, 3)
-INDIRECT_UNITTEST(YCrCb2BGR, BGR2BGRA, YCrCb2BGRA, 3, 4, 1e-6)
-INDIRECT_UNITTEST(YCrCb2RGB, RGB2RGBA, YCrCb2RGBA, 3, 4, 1e-6)
+// // BGR/RGB/BGRA/RGBA <-> YCrCb
+// UNITTEST(BGR2YCrCb, 3, 3)
+// UNITTEST(RGB2YCrCb, 3, 3)
+// INDIRECT_UNITTEST(BGRA2BGR, BGR2YCrCb, BGRA2YCrCb, 4, 3, 1e-6)
+// INDIRECT_UNITTEST(RGBA2RGB, RGB2YCrCb, RGBA2YCrCb, 4, 3, 1e-6)
+// UNITTEST(YCrCb2BGR, 3, 3)
+// UNITTEST(YCrCb2RGB, 3, 3)
+// INDIRECT_UNITTEST(YCrCb2BGR, BGR2BGRA, YCrCb2BGRA, 3, 4, 1e-6)
+// INDIRECT_UNITTEST(YCrCb2RGB, RGB2RGBA, YCrCb2RGBA, 3, 4, 1e-6)
+
+// // // BGR/RGB/BGRA/RGBA <-> HSV
+// UNITTEST1(BGR2HSV, 3, 3, 0.0001)
+// UNITTEST1(RGB2HSV, 3, 3, 0.0001)
+// INDIRECT_UNITTEST(BGRA2BGR, BGR2HSV, BGRA2HSV, 4, 3, 0.001)
+// INDIRECT_UNITTEST(RGBA2RGB, RGB2HSV, RGBA2HSV, 4, 3, 0.001)
+// UNITTEST(HSV2BGR, 3, 3)
+// UNITTEST(HSV2RGB, 3, 3)
+// INDIRECT_UNITTEST(HSV2BGR, BGR2BGRA, HSV2BGRA, 3, 4, 1e-6)
+// INDIRECT_UNITTEST(HSV2RGB, RGB2RGBA, HSV2RGBA, 3, 4, 1e-6)
+
+// // BGR/RGB/BGRA/RGBA <-> LAB
+LAB_UNITTEST(BGR2LAB, 3, 3)
+LAB_UNITTEST(RGB2LAB, 3, 3)
+INDIRECT_UNITTEST(BGRA2BGR, BGR2Lab, BGRA2LAB, 4, 3, 0.67)
+INDIRECT_UNITTEST(RGBA2RGB, RGB2Lab, RGBA2LAB, 4, 3, 0.67)
+LAB_UNITTEST(LAB2BGR, 3, 3)
+LAB_UNITTEST(LAB2RGB, 3, 3)
+LAB_UNITTEST(LAB2BGRA, 3, 4)
+LAB_UNITTEST(LAB2RGBA, 3, 4)

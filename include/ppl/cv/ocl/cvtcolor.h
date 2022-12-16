@@ -1062,6 +1062,9 @@ ppl::common::RetCode RGBA2BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1070,23 +1073,31 @@ ppl::common::RetCode RGBA2BGRA(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 1;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGR2GRAY<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGR2GRAY<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1134,6 +1145,9 @@ ppl::common::RetCode BGR2GRAY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1142,23 +1156,31 @@ ppl::common::RetCode BGR2GRAY(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 1;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGB2GRAY<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGB2GRAY<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1206,6 +1228,9 @@ ppl::common::RetCode RGB2GRAY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1214,23 +1239,31 @@ ppl::common::RetCode RGB2GRAY(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 1;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGRA2GRAY<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGRA2GRAY<float>(queue, height, width, width * src_channels, gpu_input,
+ *                    width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1278,6 +1311,9 @@ ppl::common::RetCode BGRA2GRAY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1286,23 +1322,31 @@ ppl::common::RetCode BGRA2GRAY(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 1;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGBA2GRAY<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGBA2GRAY<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1350,6 +1394,9 @@ ppl::common::RetCode RGBA2GRAY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1358,23 +1405,27 @@ ppl::common::RetCode RGBA2GRAY(cl_command_queue queue,
  *   int src_channels = 1;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   GRAY2BGR<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   GRAY2BGR<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1422,6 +1473,9 @@ ppl::common::RetCode GRAY2BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1430,23 +1484,27 @@ ppl::common::RetCode GRAY2BGR(cl_command_queue queue,
  *   int src_channels = 1;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   GRAY2RGB<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   GRAY2RGB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1494,6 +1552,9 @@ ppl::common::RetCode GRAY2RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1502,23 +1563,31 @@ ppl::common::RetCode GRAY2RGB(cl_command_queue queue,
  *   int src_channels = 1;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   GRAY2BGRA<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   GRAY2BGRA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                    width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1566,6 +1635,9 @@ ppl::common::RetCode GRAY2BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1574,23 +1646,31 @@ ppl::common::RetCode GRAY2BGRA(cl_command_queue queue,
  *   int src_channels = 1;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   GRAY2RGBA<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   GRAY2RGBA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                    width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1640,6 +1720,9 @@ ppl::common::RetCode GRAY2RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1648,23 +1731,31 @@ ppl::common::RetCode GRAY2RGBA(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGR2YCrCb<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGR2YCrCb<float>(queue, height, width, width * src_channels, gpu_input,
+ *                    width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1712,6 +1803,9 @@ ppl::common::RetCode BGR2YCrCb(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1720,23 +1814,31 @@ ppl::common::RetCode BGR2YCrCb(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGB2YCrCb<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGB2YCrCb<float>(queue, height, width, width * src_channels, gpu_input,
+ *                    width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1784,6 +1886,9 @@ ppl::common::RetCode RGB2YCrCb(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1792,23 +1897,31 @@ ppl::common::RetCode RGB2YCrCb(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGRA2YCrCb<float>(stream, height, width, input_pitch / sizeof(float),
- *                     gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGRA2YCrCb<float>(queue, height, width, width * src_channels, gpu_input,
+ *                     width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1856,6 +1969,9 @@ ppl::common::RetCode BGRA2YCrCb(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1864,23 +1980,31 @@ ppl::common::RetCode BGRA2YCrCb(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGBA2YCrCb<float>(stream, height, width, input_pitch / sizeof(float),
- *                     gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGBA2YCrCb<float>(queue, height, width, width * src_channels, gpu_input,
+ *                     width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -1928,6 +2052,9 @@ ppl::common::RetCode RGBA2YCrCb(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -1936,23 +2063,31 @@ ppl::common::RetCode RGBA2YCrCb(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   YCrCb2BGR<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   YCrCb2BGR<float>(queue, height, width, width * src_channels, gpu_input,
+ *                    width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2000,6 +2135,9 @@ ppl::common::RetCode YCrCb2BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2008,23 +2146,26 @@ ppl::common::RetCode YCrCb2BGR(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   YCrCb2RGB<float>(stream, height, width, input_pitch / sizeof(float),
- *                    gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   YCrCb2RGB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                    width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
  *
  *   return 0;
  * }
@@ -2072,6 +2213,9 @@ ppl::common::RetCode YCrCb2RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2080,23 +2224,26 @@ ppl::common::RetCode YCrCb2RGB(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   YCrCb2BGRA<float>(stream, height, width, input_pitch / sizeof(float),
- *                     gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   YCrCb2BGRA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                     width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
  *
  *   return 0;
  * }
@@ -2144,6 +2291,9 @@ ppl::common::RetCode YCrCb2BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2152,23 +2302,31 @@ ppl::common::RetCode YCrCb2BGRA(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   YCrCb2RGBA<float>(stream, height, width, input_pitch / sizeof(float),
- *                     gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   YCrCb2RGBA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                     width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2219,6 +2377,9 @@ ppl::common::RetCode YCrCb2RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2227,23 +2388,31 @@ ppl::common::RetCode YCrCb2RGBA(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGR2HSV<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGR2HSV<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2292,6 +2461,9 @@ ppl::common::RetCode BGR2HSV(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2300,23 +2472,31 @@ ppl::common::RetCode BGR2HSV(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGB2HSV<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGB2HSV<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2365,6 +2545,9 @@ ppl::common::RetCode RGB2HSV(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2373,23 +2556,31 @@ ppl::common::RetCode RGB2HSV(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGRA2HSV<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGRA2HSV<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2438,6 +2629,9 @@ ppl::common::RetCode BGRA2HSV(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2446,23 +2640,31 @@ ppl::common::RetCode BGRA2HSV(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGBA2HSV<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGBA2HSV<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2511,6 +2713,9 @@ ppl::common::RetCode RGBA2HSV(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2519,23 +2724,31 @@ ppl::common::RetCode RGBA2HSV(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   HSV2BGR<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   HSV2BGR<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2584,6 +2797,9 @@ ppl::common::RetCode HSV2BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2592,23 +2808,31 @@ ppl::common::RetCode HSV2BGR(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   HSV2RGB<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   HSV2RGB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2657,6 +2881,9 @@ ppl::common::RetCode HSV2RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2665,23 +2892,31 @@ ppl::common::RetCode HSV2RGB(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   HSV2BGRA<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   HSV2BGRA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2730,6 +2965,9 @@ ppl::common::RetCode HSV2BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2738,23 +2976,31 @@ ppl::common::RetCode HSV2BGRA(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   HSV2RGBA<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   HSV2RGBA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2804,6 +3050,9 @@ ppl::common::RetCode HSV2RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2812,23 +3061,31 @@ ppl::common::RetCode HSV2RGBA(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGR2LAB<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGR2LAB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2876,6 +3133,9 @@ ppl::common::RetCode BGR2LAB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2884,23 +3144,31 @@ ppl::common::RetCode BGR2LAB(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGB2LAB<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGB2LAB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -2948,6 +3216,9 @@ ppl::common::RetCode RGB2LAB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -2956,23 +3227,31 @@ ppl::common::RetCode RGB2LAB(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   BGRA2LAB<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGRA2LAB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3020,6 +3299,9 @@ ppl::common::RetCode BGRA2LAB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3028,23 +3310,31 @@ ppl::common::RetCode BGRA2LAB(cl_command_queue queue,
  *   int src_channels = 4;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   RGBA2LAB<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGBA2LAB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3092,6 +3382,9 @@ ppl::common::RetCode RGBA2LAB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3100,23 +3393,31 @@ ppl::common::RetCode RGBA2LAB(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   LAB2BGR<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   LAB2BGR<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3164,6 +3465,9 @@ ppl::common::RetCode LAB2BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3172,23 +3476,31 @@ ppl::common::RetCode LAB2BGR(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 3;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   LAB2RGB<float>(stream, height, width, input_pitch / sizeof(float),
- *                  gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   LAB2RGB<float>(queue, height, width, width * src_channels, gpu_input,
+ *                  width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3236,6 +3548,9 @@ ppl::common::RetCode LAB2RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3244,23 +3559,31 @@ ppl::common::RetCode LAB2RGB(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   LAB2BGRA<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   LAB2BGRA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3308,6 +3631,9 @@ ppl::common::RetCode LAB2BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3316,23 +3642,31 @@ ppl::common::RetCode LAB2BGRA(cl_command_queue queue,
  *   int src_channels = 3;
  *   int dst_channels = 4;
  *
- *   float* gpu_input;
- *   float* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(float), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(float), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
- *   LAB2RGBA<float>(stream, height, width, input_pitch / sizeof(float),
- *                   gpu_input, output_pitch / sizeof(float), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(float);
+ *   int dst_size = height * width * dst_channels * sizeof(float);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   LAB2RGBA<float>(queue, height, width, width * src_channels, gpu_input,
+ *                   width * dst_channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3382,6 +3716,9 @@ ppl::common::RetCode LAB2RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3406,12 +3743,8 @@ ppl::common::RetCode LAB2RGBA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGR2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -3464,6 +3797,9 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3483,13 +3819,9 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGR2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                   output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -3542,6 +3874,9 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3566,12 +3901,8 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGB2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -3624,6 +3955,9 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3643,13 +3977,9 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGB2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                   output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -3702,6 +4032,9 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3726,12 +4059,8 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGRA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -3784,6 +4113,9 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3803,13 +4135,9 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGRA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -3862,6 +4190,9 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3886,12 +4217,8 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGBA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -3944,6 +4271,9 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -3963,13 +4293,9 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGBA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -4022,6 +4348,9 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4046,12 +4375,8 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -4104,6 +4429,9 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4123,13 +4451,9 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122BGR<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                   output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -4182,6 +4506,9 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4206,12 +4533,8 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122RGB<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -4264,6 +4587,9 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4283,13 +4609,9 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122RGB<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                   output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -4342,6 +4664,9 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4366,12 +4691,8 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122BGRA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -4424,6 +4745,9 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4443,13 +4767,9 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122BGRA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -4502,6 +4822,9 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4526,12 +4849,8 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122RGBA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -4584,6 +4903,9 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4603,13 +4925,9 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122RGBA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -4664,6 +4982,9 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4688,12 +5009,8 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGR2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -4746,6 +5063,9 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4765,13 +5085,9 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGR2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                   output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -4824,6 +5140,9 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4848,12 +5167,8 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGB2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -4906,6 +5221,9 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -4925,13 +5243,9 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGB2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                   output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -4984,6 +5298,9 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5008,12 +5325,8 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGRA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -5066,6 +5379,9 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5085,13 +5401,9 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGRA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -5144,6 +5456,9 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5168,12 +5483,8 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGBA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -5226,6 +5537,9 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5245,13 +5559,9 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGBA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -5304,6 +5614,9 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5328,12 +5641,8 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -5386,6 +5695,9 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5405,13 +5717,9 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212BGR<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                   output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -5464,6 +5772,9 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5488,12 +5799,8 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212RGB<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -5546,6 +5853,9 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5565,13 +5875,9 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212RGB<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                   output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -5624,6 +5930,9 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5648,12 +5957,8 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212BGRA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -5706,6 +6011,9 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5725,13 +6033,9 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212BGRA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -5784,6 +6088,9 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5808,12 +6115,8 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212RGBA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -5866,6 +6169,9 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5885,13 +6191,9 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212RGBA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -5946,6 +6248,9 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -5970,12 +6275,8 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGB2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -6031,6 +6332,9 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6053,14 +6357,10 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output2, &output_pitch2,
  *                   (width >> 1) * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGB2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                   output_pitch1 / sizeof(uchar), gpu_output1,
  *                   output_pitch2 / sizeof(uchar), gpu_output2);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -6116,6 +6416,9 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6140,12 +6443,8 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGR2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -6201,6 +6500,9 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6223,14 +6525,10 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output2, &output_pitch2,
  *                   (width >> 1) * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGR2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                   output_pitch1 / sizeof(uchar), gpu_output1,
  *                   output_pitch2 / sizeof(uchar), gpu_output2);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -6285,6 +6583,9 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6309,12 +6610,8 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGRA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -6370,6 +6667,9 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6392,14 +6692,10 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output2, &output_pitch2,
  *                   (width >> 1) * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGRA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1,
  *                    output_pitch2 / sizeof(uchar), gpu_output2);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -6454,6 +6750,9 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6478,12 +6777,8 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGBA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -6539,6 +6834,9 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6561,14 +6859,10 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output2, &output_pitch2,
  *                   (width >> 1) * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   RGBA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1,
  *                    output_pitch2 / sizeof(uchar), gpu_output2);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output0);
@@ -6624,6 +6918,9 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6648,12 +6945,8 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -6709,6 +7002,9 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6731,14 +7027,10 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202BGR<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                   input_pitch2 / sizeof(uchar), gpu_input2,
  *                   output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -6794,6 +7086,9 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6818,12 +7113,8 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202RGB<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -6879,6 +7170,9 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6901,14 +7195,10 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202RGB<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                   input_pitch2 / sizeof(uchar), gpu_input2,
  *                   output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -6964,6 +7254,9 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -6988,12 +7281,8 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202BGRA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7049,6 +7338,9 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7071,14 +7363,10 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202BGRA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    input_pitch2 / sizeof(uchar), gpu_input2,
  *                    output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -7134,6 +7422,9 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7158,12 +7449,8 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), dst_height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202RGBA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7219,6 +7506,9 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7241,14 +7531,10 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202RGBA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    input_pitch2 / sizeof(uchar), gpu_input2,
  *                    output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -7306,6 +7592,9 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7324,8 +7613,6 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  *
  *   YUV2GRAY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7377,6 +7664,9 @@ ppl::common::RetCode YUV2GRAY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7393,12 +7683,8 @@ ppl::common::RetCode YUV2GRAY(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   BGR2UYVY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7447,6 +7733,9 @@ ppl::common::RetCode BGR2UYVY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7463,12 +7752,8 @@ ppl::common::RetCode BGR2UYVY(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * 2 * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   UYVY2BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7517,6 +7802,9 @@ ppl::common::RetCode UYVY2BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7535,8 +7823,6 @@ ppl::common::RetCode UYVY2BGR(cl_command_queue queue,
  *
  *   UYVY2GRAY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7587,6 +7873,9 @@ ppl::common::RetCode UYVY2GRAY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7603,12 +7892,8 @@ ppl::common::RetCode UYVY2GRAY(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * 2 * sizeof(uchar), height);
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   YUYV2BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7657,6 +7942,9 @@ ppl::common::RetCode YUYV2BGR(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7675,8 +7963,6 @@ ppl::common::RetCode YUYV2BGR(cl_command_queue queue,
  *
  *   YUYV2GRAY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
  *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input);
  *   cudaFree(gpu_output);
@@ -7737,6 +8023,9 @@ ppl::common::RetCode YUYV2GRAY(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7759,15 +8048,11 @@ ppl::common::RetCode YUYV2GRAY(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output2, &output_pitch2,
  *                   (width >> 1) * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV122I420<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1,
  *                    output_pitch2 / sizeof(uchar), gpu_output2);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -7835,6 +8120,9 @@ ppl::common::RetCode NV122I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7855,15 +8143,11 @@ ppl::common::RetCode NV122I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output2, &output_pitch2,
  *                   (width >> 1) * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   NV212I420<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1,
  *                    output_pitch2 / sizeof(uchar), gpu_output2);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -7930,6 +8214,9 @@ ppl::common::RetCode NV212I420(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -7954,15 +8241,11 @@ ppl::common::RetCode NV212I420(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202NV12<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    input_pitch2 / sizeof(uchar), gpu_input2,
  *                    output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
@@ -8028,6 +8311,9 @@ ppl::common::RetCode I4202NV12(cl_command_queue queue,
  * ###Example
  * @code{.cpp}
  * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
  * using namespace ppl::cv::ocl;
  *
  * int main(int argc, char** argv) {
@@ -8052,15 +8338,11 @@ ppl::common::RetCode I4202NV12(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output1, &output_pitch1,
  *                   width * sizeof(uchar), (height >> 1));
  *
- *   cudaStream_t stream;
- *   cudaStreamCreate(&stream);
  *   I4202NV21<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
  *                    input_pitch2 / sizeof(uchar), gpu_input2,
  *                    output_pitch0 / sizeof(uchar), gpu_output0,
  *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *   cudaStreamSynchronize(stream);
- *   cudaStreamDestroy(stream);
  *
  *   cudaFree(gpu_input0);
  *   cudaFree(gpu_input1);
