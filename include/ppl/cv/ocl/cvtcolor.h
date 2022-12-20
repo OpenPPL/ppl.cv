@@ -2357,8 +2357,8 @@ ppl::common::RetCode YCrCb2RGBA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -2441,8 +2441,8 @@ ppl::common::RetCode BGR2HSV(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -2525,8 +2525,8 @@ ppl::common::RetCode RGB2HSV(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -2609,8 +2609,8 @@ ppl::common::RetCode BGRA2HSV(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -2693,8 +2693,8 @@ ppl::common::RetCode RGBA2HSV(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -2777,8 +2777,8 @@ ppl::common::RetCode HSV2BGR(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -2861,8 +2861,8 @@ ppl::common::RetCode HSV2RGB(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -2945,8 +2945,8 @@ ppl::common::RetCode HSV2BGRA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  * @warning 1 All input parameters must be valid, or undefined behaviour may occur.
  *          2 Due to use of the constant memory, this function is not thread safe.
  * @remark The fllowing table show which data type and channels are supported.
@@ -3697,8 +3697,8 @@ ppl::common::RetCode LAB2RGBA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -3735,19 +3735,29 @@ ppl::common::RetCode LAB2RGBA(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGR2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGR2NV12<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3778,8 +3788,8 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -3855,8 +3865,8 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -3893,19 +3903,29 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGB2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGB2NV12<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -3936,8 +3956,8 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4013,8 +4033,8 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4051,19 +4071,29 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGRA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGRA2NV12<uchar>(queue, height, width, width * src_channels,
+ *                    gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4094,8 +4124,8 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4171,8 +4201,8 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4209,19 +4239,29 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGBA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGBA2NV12<uchar>(squeue, height, width, width * src_channels,
+ *                    gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4252,8 +4292,8 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4329,8 +4369,8 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4367,19 +4407,29 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV122BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV122BGR<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4410,8 +4460,8 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4440,16 +4490,21 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  *   int src_channels = 1;
  *   int dst_channels = 3;
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
+ *
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
  *   NV122BGR<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
  *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
@@ -4487,8 +4542,8 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4525,19 +4580,29 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV122RGB<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV122RGB<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4568,8 +4633,8 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4645,8 +4710,8 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4683,19 +4748,29 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV122BGRA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV122BGRA<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4726,8 +4801,8 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4803,8 +4878,8 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4841,19 +4916,29 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV122RGBA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV122RGBA<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4884,8 +4969,8 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -4963,8 +5048,8 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5001,19 +5086,29 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGR2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGR2NV21<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5044,8 +5139,8 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5121,8 +5216,8 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5159,19 +5254,29 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGB2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGB2NV21<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5202,8 +5307,8 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5279,8 +5384,8 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5317,19 +5422,29 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGRA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGRA2NV21<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5360,8 +5475,8 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5437,8 +5552,8 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5475,19 +5590,29 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGBA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGBA2NV21<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5518,8 +5643,8 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outUV          UV-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5595,8 +5720,8 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5633,19 +5758,29 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV212BGR<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5676,8 +5811,8 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5753,8 +5888,8 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5791,19 +5926,29 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212RGB<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV212RGB<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5834,8 +5979,8 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5911,8 +6056,8 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -5949,19 +6094,29 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212BGRA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV212BGRA<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5992,8 +6147,8 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6069,8 +6224,8 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6107,19 +6262,29 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212RGBA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   NV212RGBA<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6150,8 +6315,8 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6229,8 +6394,8 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6267,19 +6432,29 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGB2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGB2I420<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6313,8 +6488,8 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  *                       inWidthStride / 2.
  * @param outV           V-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6397,8 +6572,8 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6435,19 +6610,29 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGR2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGR2I420<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6481,8 +6666,8 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  *                       inWidthStride / 2.
  * @param outV           V-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6565,8 +6750,8 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6602,19 +6787,29 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGRA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   BGRA2I420<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6648,8 +6843,8 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  *                       inWidthStride / 2.
  * @param outV           V-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6732,8 +6927,8 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6769,19 +6964,29 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGBA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   RGBA2I420<uchar>(queue, height, width, width * src_channels,
+ *                    gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6815,8 +7020,8 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  *                       inWidthStride / 2.
  * @param outV           V-channel output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6899,8 +7104,8 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -6937,19 +7142,29 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   I4202BGR<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6983,8 +7198,8 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  *                       than `width * channels`.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7067,8 +7282,8 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7105,19 +7320,29 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202RGB<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   I4202RGB<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7151,8 +7376,8 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  *                       than `width * channels`.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7235,8 +7460,8 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7273,19 +7498,29 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202BGRA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   I4202BGRA<uchar>(queue, height, width, width * src_channels,
+ *                    gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7319,8 +7554,8 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  *                       than `width * channels`.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7403,8 +7638,8 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7441,19 +7676,29 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  *     dst_height = height + (height >> 1);
  *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), src_height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), dst_height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202RGBA<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   I4202RGBA<uchar>(queue, height, width, width * src_channels,
+ *                    gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7487,8 +7732,8 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  *                       than `width * channels`.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7573,8 +7818,8 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 height and width must be even numbers.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7611,11 +7856,13 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   YUV2GRAY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   YUV2GRAY<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7645,8 +7892,8 @@ ppl::common::RetCode YUV2GRAY(cl_command_queue queue,
  *                       inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
- * @note 1 For best performance, a 2D array allocated by cudaMallocPitch() is
- *         recommended.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
  *       2 width must be an even number.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
  * @remark The fllowing table show which data type and channels are supported.
@@ -7683,11 +7930,13 @@ ppl::common::RetCode YUV2GRAY(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * sizeof(uchar), height);
  *
- *   BGR2UYVY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   BGR2UYVY<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7752,11 +8001,13 @@ ppl::common::RetCode BGR2UYVY(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * 2 * sizeof(uchar), height);
  *
- *   UYVY2BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   UYVY2BGR<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7821,11 +8072,13 @@ ppl::common::RetCode UYVY2BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * 2 * dst_channels * sizeof(uchar), height);
  *
- *   UYVY2GRAY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   UYVY2GRAY<uchar>(queue, height, width, width * src_channels,
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7892,11 +8145,13 @@ ppl::common::RetCode UYVY2GRAY(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * dst_channels * 2 * sizeof(uchar), height);
  *
- *   YUYV2BGR<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   YUYV2BGR<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7961,11 +8216,13 @@ ppl::common::RetCode YUYV2BGR(cl_command_queue queue,
  *   cudaMallocPitch(&gpu_output, &output_pitch,
  *                   width * 2 * dst_channels * sizeof(uchar), height);
  *
- *   YUYV2GRAY<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch / sizeof(uchar), gpu_output);
+ *   YUYV2GRAY<uchar>(queue, height, width, width * src_channels,
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }

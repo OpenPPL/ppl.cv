@@ -237,6 +237,264 @@ BENCHMARK_1FUNCTION_DECLARATION(Function)                                      \
 RUN_PPL_CV_TYPE_FUNCTIONS(Function, uchar, src_channel, dst_channel)           \
 RUN_PPL_CV_TYPE_FUNCTIONS(Function, float, src_channel, dst_channel)
 
+/************************ NV12/NV21 with comparison *************************/
+
+enum NVXXFunctions {
+  kNV122BGR,
+  kNV122RGB,
+  kNV122BGRA,
+  kNV122RGBA,
+  kNV212BGR,
+  kNV212RGB,
+  kNV212BGRA,
+  kNV212RGBA,
+};
+
+#define BENCHMARK_PPL_CV_OCL_NVXX(Function)                                    \
+template <typename T, int src_channels, int dst_channels>                      \
+void BM_CvtColor ## Function ## _ppl_ocl(benchmark::State &state) {            \
+  ppl::common::ocl::createSharedFrameChain(false);                             \
+  cl_context context = ppl::common::ocl::getSharedFrameChain()->getContext();  \
+  cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->getQueue();\
+                                                                               \
+  int width  = state.range(0);                                                 \
+  int height = state.range(1);                                                 \
+  int src_height = height;                                                     \
+  int dst_height = height;                                                     \
+  cv::Mat src;                                                                 \
+  if (src_channels == 1) {                                                     \
+    src_height = height + (height >> 1);                                       \
+  }                                                                            \
+  else if (dst_channels == 1) {                                                \
+    dst_height = height + (height >> 1);                                       \
+  }                                                                            \
+  else {                                                                       \
+  }                                                                            \
+  src = createSourceImage(src_height, width,                                   \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channels));  \
+  cv::Mat dst(dst_height, width, CV_MAKETYPE(cv::DataType<T>::depth,           \
+                                             dst_channels));                   \
+                                                                               \
+  int src_bytes = src.rows * src.step;                                         \
+  int dst_bytes = dst.rows * dst.step;                                         \
+  cl_int error_code = 0;                                                       \
+  cl_mem gpu_src = clCreateBuffer(context,                                     \
+                                  CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,   \
+                                  src_bytes, NULL, &error_code);               \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_dst = clCreateBuffer(context,                                     \
+                                  CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY,   \
+                                  dst_bytes, NULL, &error_code);               \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  error_code = clEnqueueWriteBuffer(queue, gpu_src, CL_FALSE, 0, src_bytes,    \
+                                    src.data, 0, NULL, NULL);                  \
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);                               \
+                                                                               \
+  int iterations = 100;                                                        \
+  struct timeval start, end;                                                   \
+                                                                               \
+  /* Warm up the GPU. */                                                       \
+  for (int i = 0; i < iterations; i++) {                                       \
+    ppl::cv::ocl::Function<T>(queue, height, width, src.step / sizeof(T),      \
+                              gpu_src, dst.step / sizeof(T), gpu_dst);         \
+  }                                                                            \
+  clFinish(queue);                                                             \
+                                                                               \
+  for (auto _ : state) {                                                       \
+    gettimeofday(&start, NULL);                                                \
+    for (int i = 0; i < iterations; i++) {                                     \
+      ppl::cv::ocl::Function<T>(queue, height, width, src.step / sizeof(T),    \
+                                gpu_src, dst.step / sizeof(T), gpu_dst);       \
+    }                                                                          \
+    clFinish(queue);                                                           \
+    gettimeofday(&end, NULL);                                                  \
+    int time = ((end.tv_sec * 1000000 + end.tv_usec) -                         \
+                (start.tv_sec * 1000000 + start.tv_usec)) / iterations;        \
+    state.SetIterationTime(time * 1e-6);                                       \
+  }                                                                            \
+  state.SetItemsProcessed(state.iterations() * 1);                             \
+                                                                               \
+  clReleaseMemObject(gpu_src);                                                 \
+  clReleaseMemObject(gpu_dst);                                                 \
+}
+
+#define BENCHMARK_OPENCV_CPU_NVXX(Function)                                    \
+template<typename T, int src_channels, int dst_channels>                       \
+void BM_CvtColor ## Function ## _opencv_cpu_ocl(benchmark::State &state) {     \
+  int width  = state.range(0);                                                 \
+  int height = state.range(1);                                                 \
+  int src_height = height;                                                     \
+  int dst_height = height;                                                     \
+  cv::Mat src;                                                                 \
+  if (src_channels == 1) {                                                     \
+    src_height = height + (height >> 1);                                       \
+  }                                                                            \
+  else {                                                                       \
+    dst_height = height + (height >> 1);                                       \
+  }                                                                            \
+  src = createSourceImage(src_height, width,                                   \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channels));  \
+  cv::Mat dst(dst_height, width, CV_MAKETYPE(cv::DataType<T>::depth,           \
+                                             dst_channels));                   \
+                                                                               \
+                                                                               \
+  NVXXFunctions ppl_function = k ## Function;                                  \
+  cv::ColorConversionCodes cv_code;                                            \
+  if (ppl_function == kNV122BGR) {                                             \
+    cv_code = cv::COLOR_YUV2BGR_NV12;                                          \
+  }                                                                            \
+  else if (ppl_function == kNV122RGB) {                                        \
+    cv_code = cv::COLOR_YUV2RGB_NV12;                                          \
+  }                                                                            \
+  else if (ppl_function == kNV122BGRA) {                                       \
+    cv_code = cv::COLOR_YUV2BGRA_NV12;                                         \
+  }                                                                            \
+  else if (ppl_function == kNV122RGBA) {                                       \
+    cv_code = cv::COLOR_YUV2RGBA_NV12;                                         \
+  }                                                                            \
+  else if (ppl_function == kNV212BGR) {                                        \
+    cv_code = cv::COLOR_YUV2BGR_NV21;                                          \
+  }                                                                            \
+  else if (ppl_function == kNV212RGB) {                                        \
+    cv_code = cv::COLOR_YUV2RGB_NV21;                                          \
+  }                                                                            \
+  else if (ppl_function == kNV212BGRA) {                                       \
+    cv_code = cv::COLOR_YUV2BGRA_NV21;                                         \
+  }                                                                            \
+  else if (ppl_function == kNV212RGBA) {                                       \
+    cv_code = cv::COLOR_YUV2RGBA_NV21;                                         \
+  }                                                                            \
+  else {                                                                       \
+  }                                                                            \
+                                                                               \
+  for (auto _ : state) {                                                       \
+    cv::cvtColor(src, dst, cv_code);                                           \
+  }                                                                            \
+  state.SetItemsProcessed(state.iterations() * 1);                             \
+}
+
+#define BENCHMARK_NVXX_2FUNCTIONS_DECLARATION(Function)                        \
+BENCHMARK_PPL_CV_OCL_NVXX(Function)                                            \
+BENCHMARK_OPENCV_CPU_NVXX(Function)
+
+#define BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, width, \
+                                  height)                                      \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _opencv_cpu_ocl, uchar,          \
+                   src_channels, dst_channels)->Args({width, height});         \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _ppl_ocl, uchar,                 \
+                   src_channels, dst_channels)->Args({width, height})->        \
+                   UseManualTime()->Iterations(10);
+
+#define RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(Function, src_channels,       \
+                                                 dst_channels)                 \
+BENCHMARK_NVXX_2FUNCTIONS_DECLARATION(Function)                                \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 320, 240)      \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 640, 480)      \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 1280, 720)     \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 1920, 1080)
+
+/********************** NV12/NV21 without comparison ************************/
+
+#define BENCHMARK_NVXX_1FUNCTION_DECLARATION(Function)                         \
+BENCHMARK_PPL_CV_OCL_NVXX(Function)
+
+#define BENCHMARK_NVXX_1FUNCTION(Function, src_channels, dst_channels, width,  \
+                                 height)                                       \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _ppl_ocl, uchar, src_channels,   \
+                   dst_channels)->Args({width, height})->UseManualTime()->     \
+                   Iterations(10);
+
+#define RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(Function, src_channels,             \
+                                           dst_channels)                       \
+BENCHMARK_NVXX_1FUNCTION_DECLARATION(Function)                                 \
+BENCHMARK_NVXX_1FUNCTION(Function, src_channels, dst_channels, 320, 240)       \
+BENCHMARK_NVXX_1FUNCTION(Function, src_channels, dst_channels, 640, 480)       \
+BENCHMARK_NVXX_1FUNCTION(Function, src_channels, dst_channels, 1280, 720)      \
+BENCHMARK_NVXX_1FUNCTION(Function, src_channels, dst_channels, 1920, 1080)
+
+/************************ I420 Comparison with OpenCV *************************/
+
+enum I420Functions {
+  kBGR2I420,
+  kRGB2I420,
+  kBGRA2I420,
+  kRGBA2I420,
+  kI4202BGR,
+  kI4202RGB,
+  kI4202BGRA,
+  kI4202RGBA,
+  kYUV2GRAY,
+};
+
+#define BENCHMARK_OPENCV_CPU_I420(Function)                                    \
+template<typename T, int src_channels, int dst_channels>                       \
+void BM_CvtColor ## Function ## _opencv_cpu_ocl(benchmark::State &state) {     \
+  int width  = state.range(0);                                                 \
+  int height = state.range(1);                                                 \
+  int src_height = height;                                                     \
+  int dst_height = height;                                                     \
+  cv::Mat src;                                                                 \
+  if (src_channels == 1) {                                                     \
+    src_height = height + (height >> 1);                                       \
+  }                                                                            \
+  else {                                                                       \
+    dst_height = height + (height >> 1);                                       \
+  }                                                                            \
+  src = createSourceImage(src_height, width,                                   \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channels));  \
+  cv::Mat dst(dst_height, width, CV_MAKETYPE(cv::DataType<T>::depth,           \
+                                             dst_channels));                   \
+                                                                               \
+                                                                               \
+  I420Functions ppl_function = k ## Function;                                  \
+  cv::ColorConversionCodes cv_code;                                            \
+  if (ppl_function == kBGR2I420) {                                             \
+    cv_code = cv::COLOR_BGR2YUV_I420;                                          \
+  }                                                                            \
+  else if (ppl_function == kRGB2I420) {                                        \
+    cv_code = cv::COLOR_RGB2YUV_I420;                                          \
+  }                                                                            \
+  else if (ppl_function == kBGRA2I420) {                                       \
+    cv_code = cv::COLOR_BGRA2YUV_I420;                                         \
+  }                                                                            \
+  else if (ppl_function == kRGBA2I420) {                                       \
+    cv_code = cv::COLOR_RGBA2YUV_I420;                                         \
+  }                                                                            \
+  else if (ppl_function == kI4202BGR) {                                        \
+    cv_code = cv::COLOR_YUV2BGR_I420;                                          \
+  }                                                                            \
+  else if (ppl_function == kI4202RGB) {                                        \
+    cv_code = cv::COLOR_YUV2RGB_I420;                                          \
+  }                                                                            \
+  else if (ppl_function == kI4202BGRA) {                                       \
+    cv_code = cv::COLOR_YUV2BGRA_I420;                                         \
+  }                                                                            \
+  else if (ppl_function == kI4202RGBA) {                                       \
+    cv_code = cv::COLOR_YUV2RGBA_I420;                                         \
+  }                                                                            \
+  else if (ppl_function == kYUV2GRAY) {                                        \
+    cv_code = cv::COLOR_YUV2GRAY_420;                                          \
+  }                                                                            \
+  else {                                                                       \
+  }                                                                            \
+                                                                               \
+  for (auto _ : state) {                                                       \
+    cv::cvtColor(src, dst, cv_code);                                           \
+  }                                                                            \
+  state.SetItemsProcessed(state.iterations() * 1);                             \
+}
+
+#define BENCHMARK_I420_2FUNCTIONS_DECLARATION(Function)                        \
+BENCHMARK_PPL_CV_OCL_NVXX(Function)                                            \
+BENCHMARK_OPENCV_CPU_I420(Function)
+
+#define RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(Function, src_channels,       \
+                                                 dst_channels)                 \
+BENCHMARK_I420_2FUNCTIONS_DECLARATION(Function)                                \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 320, 240)      \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 640, 480)      \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 1280, 720)     \
+BENCHMARK_NVXX_2FUNCTIONS(Function, src_channels, dst_channels, 1920, 1080)
 
 // // BGR(RBB) <-> BGRA(RGBA)
 // RUN_BENCHMARK_COMPARISON_2FUNCTIONS(BGR2BGRA, c3, c4)
@@ -289,11 +547,41 @@ RUN_PPL_CV_TYPE_FUNCTIONS(Function, float, src_channel, dst_channel)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(HSV2RGBA, c3, c4)
 
 // // BGR/RGB/BGRA/RGBA <-> LAB
-RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(BGR2LAB, c3, c3)
-RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(RGB2LAB, c3, c3)
+// RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(BGR2LAB, c3, c3)
+// RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(RGB2LAB, c3, c3)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(BGRA2LAB, c4, c3)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(RGBA2LAB, c4, c3)
-RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(LAB2BGR, c3, c3)
-RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(LAB2RGB, c3, c3)
+// RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(LAB2BGR, c3, c3)
+// RUN_BENCHMARK_LAB_COMPARISON_2FUNCTIONS(LAB2RGB, c3, c3)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(LAB2BGRA, 3, 4)
 // RUN_BENCHMARK_BATCH_1FUNCTIONS(LAB2RGBA, 3, 4)
+
+// // BGR/RGB/BGRA/RGBA <-> NV12
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(BGR2NV12, 3, 1)
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(RGB2NV12, 3, 1)
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(BGRA2NV12, 4, 1)
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(RGBA2NV12, 4, 1)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV122BGR, 1, 3)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV122RGB, 1, 3)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV122BGRA, 1, 4)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV122RGBA, 1, 4)
+
+// // // BGR/RGB/BGRA/RGBA <-> NV21
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(BGR2NV21, 3, 1)
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(RGB2NV21, 3, 1)
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(BGRA2NV21, 4, 1)
+RUN_BENCHMARK_NVXX_BATCH_1FUNCTION(RGBA2NV21, 4, 1)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV212BGR, 1, 3)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV212RGB, 1, 3)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV212BGRA, 1, 4)
+RUN_BENCHMARK_NVXX_COMPARISON_2FUNCTIONS(NV212RGBA, 1, 4)
+
+// BGR/RGB/BGRA/RGBA <-> I420
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(BGR2I420, 3, 1)
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(RGB2I420, 3, 1)
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(BGRA2I420, 4, 1)
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(RGBA2I420, 4, 1)
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(I4202BGR, 1, 3)
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(I4202RGB, 1, 3)
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(I4202BGRA, 1, 4)
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(I4202RGBA, 1, 4)

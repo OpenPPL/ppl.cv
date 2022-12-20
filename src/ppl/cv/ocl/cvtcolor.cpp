@@ -411,6 +411,75 @@ CVT_COLOR_YCrCb_INVOCATION(LAB2RGB, 3, 3);
 CVT_COLOR_YCrCb_INVOCATION(LAB2BGRA, 3, 4);
 CVT_COLOR_YCrCb_INVOCATION(LAB2RGBA, 3, 4);
 
+/********************** BGR/RGB/BGRA/RGBA <-> NV12/21 ***********************/
+
+#define CVT_COLOR_NVXX_INVOCATION(function, src_channels, dst_channels)        \
+RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
+                        cl_mem dst, int dst_stride, cl_command_queue queue) {  \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));          \
+  PPL_ASSERT(dst_stride >= cols * dst_channels * (int)sizeof(uchar));          \
+                                                                               \
+  FrameChain* frame_chain = getSharedFrameChain();                             \
+  frame_chain->setProjectName("cv");                                           \
+  SET_PROGRAM_SOURCE(frame_chain);                                             \
+                                                                               \
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
+  size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
+                                                                               \
+  frame_chain->setCompileOptions("-D " #function "_U8_2D");                    \
+  runOclKernel(frame_chain, #function "U8Kernel", 2, global_size,              \
+               local_size, src, rows, cols, src_stride, dst, dst_stride);      \
+                                                                               \
+  return RC_SUCCESS;                                                           \
+}                                                                              \
+                                                                               \
+template <>                                                                    \
+RetCode function <uchar>(cl_command_queue queue,                               \
+                         int height,                                           \
+                         int width,                                            \
+                         int inWidthStride,                                    \
+                         const cl_mem inData,                                  \
+                         int outWidthStride,                                   \
+                         cl_mem outData) {                                     \
+  RetCode code = function ## _U8(inData, height, width, inWidthStride,         \
+                                 outData, outWidthStride, queue);              \
+                                                                               \
+  return code;                                                                 \
+}
+
+// BGR/RGB/BGRA/RGBA <-> NV12
+CVT_COLOR_NVXX_INVOCATION(BGR2NV12, 3, 1)
+CVT_COLOR_NVXX_INVOCATION(RGB2NV12, 3, 1)
+CVT_COLOR_NVXX_INVOCATION(BGRA2NV12, 4, 1)
+CVT_COLOR_NVXX_INVOCATION(RGBA2NV12, 4, 1)
+CVT_COLOR_NVXX_INVOCATION(NV122BGR, 1, 3)
+CVT_COLOR_NVXX_INVOCATION(NV122RGB, 1, 3)
+CVT_COLOR_NVXX_INVOCATION(NV122BGRA, 1, 4)
+CVT_COLOR_NVXX_INVOCATION(NV122RGBA, 1, 4)
+
+// BGR/RGB/BGRA/RGBA <-> NV21
+CVT_COLOR_NVXX_INVOCATION(BGR2NV21, 3, 1)
+CVT_COLOR_NVXX_INVOCATION(RGB2NV21, 3, 1)
+CVT_COLOR_NVXX_INVOCATION(BGRA2NV21, 4, 1)
+CVT_COLOR_NVXX_INVOCATION(RGBA2NV21, 4, 1)
+CVT_COLOR_NVXX_INVOCATION(NV212BGR, 1, 3)
+CVT_COLOR_NVXX_INVOCATION(NV212RGB, 1, 3)
+CVT_COLOR_NVXX_INVOCATION(NV212BGRA, 1, 4)
+CVT_COLOR_NVXX_INVOCATION(NV212RGBA, 1, 4)
+
+// BGR/RGB/BGRA/RGBA <-> I420
+CVT_COLOR_NVXX_INVOCATION(BGR2I420, 3, 1)
+CVT_COLOR_NVXX_INVOCATION(RGB2I420, 3, 1)
+CVT_COLOR_NVXX_INVOCATION(BGRA2I420, 4, 1)
+CVT_COLOR_NVXX_INVOCATION(RGBA2I420, 4, 1)
+CVT_COLOR_NVXX_INVOCATION(I4202BGR, 1, 3)
+CVT_COLOR_NVXX_INVOCATION(I4202RGB, 1, 3)
+CVT_COLOR_NVXX_INVOCATION(I4202BGRA, 1, 4)
+CVT_COLOR_NVXX_INVOCATION(I4202RGBA, 1, 4)
+
 }  // namespace ocl
 }  // namespace cv
 }  // namespace ppl

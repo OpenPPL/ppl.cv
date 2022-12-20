@@ -3250,3 +3250,827 @@ Convert3To4_1D(LAB2RGBA, F32, float, float3, float4)
 #if defined(LAB2RGBA_F32_2D) || defined(SPIR)
 Convert3To4_2D(LAB2RGBA, F32, float, float3, float4)
 #endif
+
+
+/******************** BGR/RGB/BGRA/RGBA <-> NV12/21/I420 *********************/
+
+// BGR/RGB -> NV12/NV21
+#define NVXX_YR 269484
+#define NVXX_YG 528482
+#define NVXX_YB 102760
+#define NVXX_VR 460324
+#define NVXX_VG -385875
+#define NVXX_VB -74448
+#define NVXX_UR -155188
+#define NVXX_UG -305135
+#define NVXX_UB 460324
+
+// NV12/NV21-> BGR/RGB
+#define NVXX_CY 1220542
+#define NVXX_CUB 2116026
+#define NVXX_CUG -409993
+#define NVXX_CVG -852492
+#define NVXX_CVR 1673527
+#define NVXX_SHIFT 20
+
+enum {
+  kG2NShift = 20,
+  kG2NShift16 = (16 << kG2NShift),
+  kG2NHalfShift = (1 << (kG2NShift - 1)),
+  kG2NShift128  = (128 << kG2NShift),
+};
+
+#if defined(BGR2NV12_U8_2D) || defined(RGB2NV12_U8_2D) ||                      \
+    defined(BGR2NV21_U8_2D) || defined(RGB2NV21_U8_2D) || defined(SPIR)
+#define ConvertToNVXX_2D(Function, base_type)                                  \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar3 input_value = vload3(element_x, data);                                \
+  uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data[element_x] = result.x;                                                  \
+  if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
+    data = (global uchar*)(dst + (rows + (element_y >> 1)) * dst_stride);      \
+    vstore2((uchar2)(result.y, result.z), (element_x >> 1), data);             \
+  }                                                                            \
+}
+#endif
+
+#if defined(BGR2NV12_U8_2D) || defined(SPIR)
+uchar3 BGR2NV12Compute(const uchar3 src, uint row, uint col) {
+  int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UB + src.y * NVXX_UG + src.z * NVXX_UR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VB + src.y * NVXX_VG + src.z * NVXX_VR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(RGB2NV12_U8_2D) || defined(SPIR)
+uchar3 RGB2NV12Compute(const uchar3 src, uint row, uint col) {
+  int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UR + src.y * NVXX_UG + src.z * NVXX_UB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VR + src.y * NVXX_VG + src.z * NVXX_VB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(BGR2NV12_U8_2D) || defined(SPIR)
+ConvertToNVXX_2D(BGR2NV12, U8)
+#endif
+
+#if defined(RGB2NV12_U8_2D) || defined(SPIR)
+ConvertToNVXX_2D(RGB2NV12, U8)
+#endif
+
+#if defined(BGRA2NV12_U8_2D) || defined(RGBA2NV12_U8_2D) ||                    \
+    defined(BGRA2NV21_U8_2D) || defined(RGBA2NV21_U8_2D) || defined(SPIR)
+#define Convert4To3NVXX_2D(Function, base_type)                                \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar4 input_value = vload4(element_x, data);                                \
+  uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data[element_x] = result.x;                                                  \
+  if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
+    data = (global uchar*)(dst + (rows + (element_y >> 1)) * dst_stride);      \
+    vstore2((uchar2)(result.y, result.z), (element_x >> 1), data);             \
+  }                                                                            \
+}
+#endif
+
+#if defined(BGRA2NV12_U8_2D) || defined(SPIR)
+uchar3 BGRA2NV12Compute(const uchar4 src, uint row, uint col) {
+  int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UB + src.y * NVXX_UG + src.z * NVXX_UR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VB + src.y * NVXX_VG + src.z * NVXX_VR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(RGBA2NV12_U8_2D) || defined(SPIR)
+uchar3 RGBA2NV12Compute(const uchar4 src, uint row, uint col) {
+  int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UR + src.y * NVXX_UG + src.z * NVXX_UB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VR + src.y * NVXX_VG + src.z * NVXX_VB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(BGRA2NV12_U8_2D) || defined(SPIR)
+Convert4To3NVXX_2D(BGRA2NV12, U8)
+#endif
+
+#if defined(RGBA2NV12_U8_2D) || defined(SPIR)
+Convert4To3NVXX_2D(RGBA2NV12, U8)
+#endif
+
+
+#if defined(NV122BGR_U8_2D) || defined(NV122RGB_U8_2D) ||                      \
+    defined(NV212BGR_U8_2D) || defined(NV212RGB_U8_2D) || defined(SPIR)
+#define ConvertFromNVXX_2D(Function, base_type)                                \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar3 input_value;                                                          \
+  input_value.x = data[element_x];                                             \
+                                                                               \
+  data = (global uchar*)(src + (rows + (element_y >> 1)) * src_stride);        \
+  uchar2 tmp = vload2((element_x >> 1), data);                                 \
+  input_value.y = tmp.x;                                                       \
+  input_value.z = tmp.y;                                                       \
+  uchar3 result = Function ## Compute(input_value);                            \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  vstore3(result, element_x, data);                                            \
+}
+#endif
+
+#if defined(NV122BGR_U8_2D) || defined(SPIR)
+uchar3 NV122BGRCompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(b, g, r));
+
+  return dst;
+}
+#endif
+
+#if defined(NV122RGB_U8_2D) || defined(SPIR)
+uchar3 NV122RGBCompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+
+  int r = (y + ruv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int b = (y + buv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(r, g, b));
+
+  return dst;
+}
+#endif
+
+#if defined(NV122BGR_U8_2D) || defined(SPIR)
+ConvertFromNVXX_2D(NV122BGR, U8)
+#endif
+
+#if defined(NV122RGB_U8_2D) || defined(SPIR)
+ConvertFromNVXX_2D(NV122RGB, U8)
+#endif
+
+#if defined(NV122BGRA_U8_2D) || defined(NV122RGBA_U8_2D) ||                    \
+    defined(NV212BGRA_U8_2D) || defined(NV212RGBA_U8_2D) || defined(SPIR)
+#define Convert3To4NVXX_2D(Function, base_type)                                \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar3 input_value;                                                          \
+  input_value.x = data[element_x];                                             \
+                                                                               \
+  data = (global uchar*)(src + (rows + (element_y >> 1)) * src_stride);        \
+  uchar2 tmp = vload2((element_x >> 1), data);                                 \
+  input_value.y = tmp.x;                                                       \
+  input_value.z = tmp.y;                                                       \
+  uchar4 result = Function ## Compute(input_value);                            \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  vstore4(result, element_x, data);                                            \
+}
+#endif
+
+#if defined(NV122BGRA_U8_2D) || defined(SPIR)
+uchar4 NV122BGRACompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar4 dst = convert_uchar4_sat((int4)(b, g, r, 255));
+
+  return dst;
+}
+#endif
+
+#if defined(NV122RGBA_U8_2D) || defined(SPIR)
+uchar4 NV122RGBACompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+
+  int r = (y + ruv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int b = (y + buv) >> NVXX_SHIFT;
+  uchar4 dst = convert_uchar4_sat((int4)(r, g, b, 255));
+
+  return dst;
+}
+#endif
+
+#if defined(NV122BGRA_U8_2D) || defined(SPIR)
+Convert3To4NVXX_2D(NV122BGRA, U8)
+#endif
+
+#if defined(NV122RGBA_U8_2D) || defined(SPIR)
+Convert3To4NVXX_2D(NV122RGBA, U8)
+#endif
+
+
+#if defined(BGR2NV21_U8_2D) || defined(SPIR)
+uchar3 BGR2NV21Compute(const uchar3 src, uint row, uint col) {
+  int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UB + src.y * NVXX_UG + src.z * NVXX_UR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VB + src.y * NVXX_VG + src.z * NVXX_VR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, v, u));
+
+  return dst;
+}
+#endif
+
+#if defined(RGB2NV21_U8_2D) || defined(SPIR)
+uchar3 RGB2NV21Compute(const uchar3 src, uint row, uint col) {
+  int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UR + src.y * NVXX_UG + src.z * NVXX_UB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VR + src.y * NVXX_VG + src.z * NVXX_VB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, v, u));
+
+  return dst;
+}
+#endif
+
+#if defined(BGR2NV21_U8_2D) || defined(SPIR)
+ConvertToNVXX_2D(BGR2NV21, U8)
+#endif
+
+#if defined(RGB2NV21_U8_2D) || defined(SPIR)
+ConvertToNVXX_2D(RGB2NV21, U8)
+#endif
+
+#if defined(BGRA2NV21_U8_2D) || defined(SPIR)
+uchar3 BGRA2NV21Compute(const uchar4 src, uint row, uint col) {
+  int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UB + src.y * NVXX_UG + src.z * NVXX_UR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VB + src.y * NVXX_VG + src.z * NVXX_VR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, v, u));
+
+  return dst;
+}
+#endif
+
+#if defined(RGBA2NV21_U8_2D) || defined(SPIR)
+uchar3 RGBA2NV21Compute(const uchar4 src, uint row, uint col) {
+  int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UR + src.y * NVXX_UG + src.z * NVXX_UB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VR + src.y * NVXX_VG + src.z * NVXX_VB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, v, u));
+
+  return dst;
+}
+#endif
+
+#if defined(BGRA2NV21_U8_2D) || defined(SPIR)
+Convert4To3NVXX_2D(BGRA2NV21, U8)
+#endif
+
+#if defined(RGBA2NV21_U8_2D) || defined(SPIR)
+Convert4To3NVXX_2D(RGBA2NV21, U8)
+#endif
+
+#if defined(NV212BGR_U8_2D) || defined(SPIR)
+uchar3 NV212BGRCompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int v = src.y - 128;
+  int u = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(b, g, r));
+
+  return dst;
+}
+#endif
+
+#if defined(NV212RGB_U8_2D) || defined(SPIR)
+uchar3 NV212RGBCompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int v = src.y - 128;
+  int u = src.z - 128;
+
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+
+  int r = (y + ruv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int b = (y + buv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(r, g, b));
+
+  return dst;
+}
+#endif
+
+#if defined(NV212BGR_U8_2D) || defined(SPIR)
+ConvertFromNVXX_2D(NV212BGR, U8)
+#endif
+
+#if defined(NV212RGB_U8_2D) || defined(SPIR)
+ConvertFromNVXX_2D(NV212RGB, U8)
+#endif
+
+#if defined(NV212BGRA_U8_2D) || defined(SPIR)
+uchar4 NV212BGRACompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int v = src.y - 128;
+  int u = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar4 dst = convert_uchar4_sat((int4)(b, g, r, 255));
+
+  return dst;
+}
+#endif
+
+#if defined(NV212RGBA_U8_2D) || defined(SPIR)
+uchar4 NV212RGBACompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int v = src.y - 128;
+  int u = src.z - 128;
+
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+
+  int r = (y + ruv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int b = (y + buv) >> NVXX_SHIFT;
+  uchar4 dst = convert_uchar4_sat((int4)(r, g, b, 255));
+
+  return dst;
+}
+#endif
+
+#if defined(NV212BGRA_U8_2D) || defined(SPIR)
+Convert3To4NVXX_2D(NV212BGRA, U8)
+#endif
+
+#if defined(NV212RGBA_U8_2D) || defined(SPIR)
+Convert3To4NVXX_2D(NV212RGBA, U8)
+#endif
+
+
+#if defined(BGR2I420_U8_2D) || defined(RGB2I420_U8_2D) || defined(SPIR)
+#define ConvertToI420_2D(Function, base_type)                                  \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar3 input_value = vload3(element_x, data);                                \
+  uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data[element_x] = result.x;                                                  \
+  if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
+    int half_cols = cols >> 1;                                                 \
+    if (((element_y >> 1) + 1) & 1) {                                          \
+      data = (global uchar*)dst + (rows + (element_y >> 2)) * dst_stride;      \
+      data[element_x >> 1] = result.y;                                         \
+      data += (rows >> 2) * dst_stride;                                        \
+      data[element_x >> 1] = result.z;                                         \
+    } else {                                                                   \
+      data = (global uchar*)dst + (rows + (element_y >> 2)) * dst_stride;      \
+      data[(element_x >> 1) + half_cols] = result.y;                           \
+      data += (rows >> 2) * dst_stride;                                        \
+      data[(element_x >> 1) + half_cols] = result.z;                           \
+    }                                                                          \
+  }                                                                            \
+}
+#endif
+
+#if defined(BGR2I420_U8_2D) || defined(SPIR)
+uchar3 BGR2I420Compute(const uchar3 src, uint row, uint col) {
+  int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UB + src.y * NVXX_UG + src.z * NVXX_UR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VB + src.y * NVXX_VG + src.z * NVXX_VR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(RGB2I420_U8_2D) || defined(SPIR)
+uchar3 RGB2I420Compute(const uchar3 src, uint row, uint col) {
+  int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UR + src.y * NVXX_UG + src.z * NVXX_UB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VR + src.y * NVXX_VG + src.z * NVXX_VB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(BGR2I420_U8_2D) || defined(SPIR)
+ConvertToI420_2D(BGR2I420, U8)
+#endif
+
+#if defined(RGB2I420_U8_2D) || defined(SPIR)
+ConvertToI420_2D(RGB2I420, U8)
+#endif
+
+#if defined(BGRA2I420_U8_2D) || defined(RGBA2I420_U8_2D) || defined(SPIR)
+#define Convert4To3I420_2D(Function, base_type)                                \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar4 input_value = vload4(element_x, data);                                \
+  uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data[element_x] = result.x;                                                  \
+  if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
+    int half_cols = cols >> 1;                                                 \
+    if (((element_y >> 1) + 1) & 1) {                                          \
+      data = (global uchar*)dst + (rows + (element_y >> 2)) * dst_stride;      \
+      data[element_x >> 1] = result.y;                                         \
+      data += (rows >> 2) * dst_stride;                                        \
+      data[element_x >> 1] = result.z;                                         \
+    } else {                                                                   \
+      data = (global uchar*)dst + (rows + (element_y >> 2)) * dst_stride;      \
+      data[(element_x >> 1) + half_cols] = result.y;                           \
+      data += (rows >> 2) * dst_stride;                                        \
+      data[(element_x >> 1) + half_cols] = result.z;                           \
+    }                                                                          \
+  }                                                                            \
+}
+#endif
+
+#if defined(BGRA2I420_U8_2D) || defined(SPIR)
+uchar3 BGRA2I420Compute(const uchar4 src, uint row, uint col) {
+  int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UB + src.y * NVXX_UG + src.z * NVXX_UR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VB + src.y * NVXX_VG + src.z * NVXX_VR +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(RGBA2I420_U8_2D) || defined(SPIR)
+uchar3 RGBA2I420Compute(const uchar4 src, uint row, uint col) {
+  int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
+           kG2NHalfShift + kG2NShift16) >> kG2NShift;
+  int u, v;
+
+  // Interpolate every 2 rows and 2 columns.
+  if (((row + 1) & 1) && ((col + 1) & 1)) {
+    u = (src.x * NVXX_UR + src.y * NVXX_UG + src.z * NVXX_UB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+    v = (src.x * NVXX_VR + src.y * NVXX_VG + src.z * NVXX_VB +
+         kG2NHalfShift + kG2NShift128) >> kG2NShift;
+  }
+  uchar3 dst = convert_uchar3_sat((int3)(y, u, v));
+
+  return dst;
+}
+#endif
+
+#if defined(BGRA2I420_U8_2D) || defined(SPIR)
+Convert4To3I420_2D(BGRA2I420, U8)
+#endif
+
+#if defined(RGBA2I420_U8_2D) || defined(SPIR)
+Convert4To3I420_2D(RGBA2I420, U8)
+#endif
+
+#if defined(I4202BGR_U8_2D) || defined(I4202RGB_U8_2D) || defined(SPIR)
+#define ConvertFromI420_2D(Function, base_type)                                \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar3 input_value;                                                          \
+  input_value.x = data[element_x];                                             \
+                                                                               \
+  int uv_index = element_x >> 1;                                               \
+  if ((element_y >> 1) & 1) {                                                  \
+    uv_index += (cols >> 1);                                                   \
+  }                                                                            \
+  data = (global uchar*)(src + (rows + (element_y >> 2)) * src_stride);        \
+  input_value.y = data[uv_index];                                              \
+  data += (rows >> 2) * src_stride;                                            \
+  input_value.z = data[uv_index];                                              \
+  uchar3 result = Function ## Compute(input_value);                            \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  vstore3(result, element_x, data);                                            \
+}
+#endif
+
+#if defined(I4202BGR_U8_2D) || defined(SPIR)
+uchar3 I4202BGRCompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(b, g, r));
+
+  return dst;
+}
+#endif
+
+#if defined(I4202RGB_U8_2D) || defined(SPIR)
+uchar3 I4202RGBCompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+
+  int r = (y + ruv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int b = (y + buv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(r, g, b));
+
+  return dst;
+}
+#endif
+
+#if defined(I4202BGR_U8_2D) || defined(SPIR)
+ConvertFromI420_2D(I4202BGR, U8)
+#endif
+
+#if defined(I4202RGB_U8_2D) || defined(SPIR)
+ConvertFromI420_2D(I4202RGB, U8)
+#endif
+
+#if defined(I4202BGRA_U8_2D) || defined(I4202RGBA_U8_2D) || defined(SPIR)
+#define Convert3To4I420_2D(Function, base_type)                                \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  if (element_y >= rows || element_x >= cols) {                                \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar3 input_value;                                                          \
+  input_value.x = data[element_x];                                             \
+                                                                               \
+  int uv_index = element_x >> 1;                                               \
+  if ((element_y >> 1) & 1) {                                                  \
+    uv_index += (cols >> 1);                                                   \
+  }                                                                            \
+  data = (global uchar*)(src + (rows + (element_y >> 2)) * src_stride);        \
+  input_value.y = data[uv_index];                                              \
+  data += (rows >> 2) * src_stride;                                            \
+  input_value.z = data[uv_index];                                              \
+  uchar4 result = Function ## Compute(input_value);                            \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  vstore4(result, element_x, data);                                            \
+}
+#endif
+
+#if defined(I4202BGRA_U8_2D) || defined(SPIR)
+uchar4 I4202BGRACompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar4 dst = convert_uchar4_sat((int4)(b, g, r, 255));
+
+  return dst;
+}
+#endif
+
+#if defined(I4202RGBA_U8_2D) || defined(SPIR)
+uchar4 I4202RGBACompute(const uchar3 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.z - 128;
+
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+
+  int r = (y + ruv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int b = (y + buv) >> NVXX_SHIFT;
+  uchar4 dst = convert_uchar4_sat((int4)(r, g, b, 255));
+
+  return dst;
+}
+#endif
+
+#if defined(I4202BGRA_U8_2D) || defined(SPIR)
+Convert3To4I420_2D(I4202BGRA, U8)
+#endif
+
+#if defined(I4202RGBA_U8_2D) || defined(SPIR)
+Convert3To4I420_2D(I4202RGBA, U8)
+#endif
