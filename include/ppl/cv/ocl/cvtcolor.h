@@ -3774,7 +3774,8 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert BGR images to NV12 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -3817,25 +3818,40 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 3;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGR2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                   output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int y_size = height * width * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   BGR2NV12<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                   width, gpu_y, width, gpu_uv);
+ *
+ *   free(input);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
  *
  *   return 0;
  * }
@@ -3854,7 +3870,8 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert RGB images to NV12 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -3942,7 +3959,8 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert RGB images to NV12 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -3985,25 +4003,40 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 3;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGB2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                   output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int y_size = height * width * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   RGB2NV12<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                   width, gpu_y, width, gpu_uv);
+ *
+ *   free(input);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
  *
  *   return 0;
  * }
@@ -4022,7 +4055,8 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert BGRA images to NV12 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4110,7 +4144,8 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert BGRA images to NV12 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4153,25 +4188,40 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 4;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGRA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int y_size = height * width * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   BGRA2NV12<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                   width, gpu_y, width, gpu_uv);
+ *
+ *   free(input);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
  *
  *   return 0;
  * }
@@ -4190,7 +4240,8 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert RGBA images to NV12 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4278,7 +4329,8 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert RGBA images to NV12 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4321,25 +4373,40 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 4;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGBA2NV12<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int y_size = height * width * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   RGBA2NV12<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                    width, gpu_y, width, gpu_uv);
+ *
+ *   free(input);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
  *
  *   return 0;
  * }
@@ -4358,7 +4425,8 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4446,17 +4514,17 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -4489,30 +4557,42 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 3;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
  *   createSharedFrameChain(false);
  *   cl_context context = getSharedFrameChain()->getContext();
  *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
  *   cl_int error_code = 0;
- *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
  *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
- *   float* input = (float*)malloc(src_size);
+ *   float* input = (float*)malloc(y_size);
  *   float* output = (float*)malloc(dst_size);
- *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
- *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
  *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
  *                                      NULL, &error_code);
- *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
- *                                     src_size, input, 0, NULL, NULL);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   NV122BGR<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                   output_pitch / sizeof(uchar), gpu_output);
+ *   NV122BGR<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                   width * dst_channels, gpu_output);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4531,7 +4611,8 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to RGB images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4619,17 +4700,17 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to RGB images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -4662,25 +4743,42 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 3;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV122RGB<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                   output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   NV122RGB<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                   width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4699,7 +4797,8 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to BGRA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4765,7 +4864,7 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   NV122BGRA<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
  *   free(input);
  *   free(output);
@@ -4787,17 +4886,17 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to BGRA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -4830,25 +4929,42 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 4;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV122BGRA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   NV122BGRA<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                    width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -4867,7 +4983,8 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to RGBA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -4933,7 +5050,7 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   NV122RGBA<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
  *   free(input);
  *   free(output);
@@ -4955,17 +5072,17 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
 
 /**
  * @brief Convert NV12 images to RGBA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -4998,25 +5115,42 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 4;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV122RGBA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   NV122RGBA<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                    width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5037,7 +5171,8 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
 
 /**
  * @brief Convert BGR images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5125,7 +5260,8 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert BGR images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5168,25 +5304,40 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 3;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGR2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                   output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int y_size = height * width * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   BGR2NV21<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                   width, gpu_y, width, gpu_uv);
+ *
+ *   free(input);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
  *
  *   return 0;
  * }
@@ -5205,7 +5356,8 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert RGB images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5293,7 +5445,8 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert RGB images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5336,25 +5489,40 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 3;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGB2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                   output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int y_size = height * width * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   RGB2NV21<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                   width, gpu_y, width, gpu_uv);
+ *
+ *   free(input);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
  *
  *   return 0;
  * }
@@ -5373,7 +5541,8 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert BGRA images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5439,7 +5608,7 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   BGRA2NV21<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
  *   free(input);
  *   free(output);
@@ -5461,7 +5630,8 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert BGRA images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5504,25 +5674,42 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 4;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGRA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   BGRA2NV21<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                    width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5541,7 +5728,8 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert RGBA images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5607,7 +5795,7 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   RGBA2NV21<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
  *   free(input);
  *   free(output);
@@ -5629,7 +5817,8 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert RGBA images to NV21 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5672,25 +5861,42 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 4;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch, output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGBA2NV21<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
+ *   RGBA2NV21<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                    width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5709,7 +5915,8 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5797,17 +6004,17 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -5840,25 +6047,42 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 3;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212BGR<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                   output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   NV212BGR<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                   width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -5877,7 +6101,8 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to RGB images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -5965,17 +6190,17 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to RGB images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -6008,25 +6233,42 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 3;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212RGB<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                   output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   NV212RGB<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                   width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6045,7 +6287,8 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to BGRA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -6111,7 +6354,7 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   NV212BGRA<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
  *   free(input);
  *   free(output);
@@ -6133,17 +6376,17 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to BGRA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -6176,25 +6419,42 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 4;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212BGRA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   NV212BGRA<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                    width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6213,7 +6473,8 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to RGBA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -6279,7 +6540,7 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   NV212RGBA<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
  *   free(input);
  *   free(output);
@@ -6301,17 +6562,17 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to RGBA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
+ * @param inYStride      input image's Y-channel width stride, which is not less
+ *                       than `width * channels`.
  * @param inY            Y-channel input image data.
  * @param inUVStride     input image's UV-channel width stride, similar to
  *                       inYStride.
- * @param inUV           UV-channel input image data..
+ * @param inUV           UV-channel input image data.
  * @param outWidthStride width stride of output image, similar to inWidthStride.
  * @param outData        output image data.
  * @return The execution status, succeeds or fails with an error code.
@@ -6344,25 +6605,42 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 4;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   NV212RGBA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int y_size = height * width * src_channels * sizeof(uchar);
+ *   int uv_size = height * width / 2 * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(y_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_READ_ONLY, y_size,
+ *                                 NULL, &error_code);
+ *   cl_mem gpu_uv = clCreateBuffer(context, CL_MEM_READ_ONLY, uv_size,
+ *                                  NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     y_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output);
+ *   NV212RGBA<uchar>(queue, height, width, width, gpu_y, width, gpu_uv,
+ *                    width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_uv);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -6382,186 +6660,9 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
 // BGR/RGB/BGRA/RGBA <-> I420
 
 /**
- * @brief Convert RGB images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
- * @param queue          opencl command queue.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
- * @param inWidthStride  input image's width stride, which is not less
- *                       than `width * channels`.
- * @param inData         input image data.
- * @param outWidthStride the width stride of output image, similar to
- *                       inWidthStride.
- * @param outData        output image data.
- * @return The execution status, succeeds or fails with an error code.
- * @note For best performance, rows of input&output aligned with 64 bits are
- *       recommended.
- *       2 height and width must be even numbers.
- * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @remark The fllowing table show which data type and channels are supported.
- * <table>
- * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>3<td>1
- * </table>
- * <table>
- * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
- * <tr><td>Project       <td>ppl.cv
- * </table>
- * @since ppl.cv-v1.0.0
- * ###Example
- * @code{.cpp}
- * #include "ppl/cv/ocl/cvtcolor.h"
- * #include "ppl/common/oclcommon.h"
- *
- * using namespace ppl::common::ocl;
- * using namespace ppl::cv::ocl;
- *
- * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
- *   int src_channels = 3;
- *   int dst_channels = 1;
- *   int src_height = height;
- *   int dst_height = height;
- *   if (src_channels == 1) {
- *     src_height = height + (height >> 1);
- *   }
- *   else {
- *     dst_height = height + (height >> 1);
- *   }
- *
- *   createSharedFrameChain(false);
- *   cl_context context = getSharedFrameChain()->getContext();
- *   cl_command_queue queue = getSharedFrameChain()->getQueue();
- *
- *   cl_int error_code = 0;
- *   int src_size = src_height * width * src_channels * sizeof(uchar);
- *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
- *   float* input = (float*)malloc(src_size);
- *   float* output = (float*)malloc(dst_size);
- *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
- *                                     NULL, &error_code);
- *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
- *                                      NULL, &error_code);
- *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
- *                                     src_size, input, 0, NULL, NULL);
- *
- *   RGB2I420<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
- *
- *   free(input);
- *   free(output);
- *   clReleaseMemObject(gpu_input);
- *   clReleaseMemObject(gpu_output);
- *
- *   return 0;
- * }
- * @endcode
- */
-template <typename T>
-ppl::common::RetCode RGB2I420(cl_command_queue queue,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const cl_mem inData,
-                              int outWidthStride,
-                              cl_mem outData);
-
-/**
- * @brief Convert RGB images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
- * @param queue          opencl command queue.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
- * @param inWidthStride  input image's width stride, which is not less
- *                       than `width * channels`.
- * @param inData         input image data.
- * @param outYStride     Y-channel width stride of output image, similar to
- *                       inWidthStride.
- * @param outY           Y-channel output image data.
- * @param outUStride     U-channel width stride of output image, similar to
- *                       inWidthStride / 2.
- * @param outU           U-channel output image data.
- * @param outVStride     V-channel width stride of output image, similar to
- *                       inWidthStride / 2.
- * @param outV           V-channel output image data.
- * @return The execution status, succeeds or fails with an error code.
- * @note For best performance, rows of input&output aligned with 64 bits are
- *       recommended.
- *       2 height and width must be even numbers.
- * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @remark The fllowing table show which data type and channels are supported.
- * <table>
- * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>3<td>1
- * </table>
- * <table>
- * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
- * <tr><td>Project       <td>ppl.cv
- * </table>
- * @since ppl.cv-v1.0.0
- * ###Example
- * @code{.cpp}
- * #include "ppl/cv/ocl/cvtcolor.h"
- * #include "ppl/common/oclcommon.h"
- *
- * using namespace ppl::common::ocl;
- * using namespace ppl::cv::ocl;
- *
- * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
- *   int src_channels = 3;
- *   int dst_channels = 1;
- *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   uchar* gpu_output2;
- *   size_t input_pitch, output_pitch0, output_pitch1, output_pitch2;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output2, &output_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *
- *   RGB2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                   output_pitch1 / sizeof(uchar), gpu_output1,
- *                   output_pitch2 / sizeof(uchar), gpu_output2);
- *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
- *   cudaFree(gpu_output2);
- *
- *   return 0;
- * }
- * @endcode
- */
-template <typename T>
-ppl::common::RetCode RGB2I420(cl_command_queue queue,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const cl_mem inData,
-                              int outYStride,
-                              cl_mem outY,
-                              int outUStride,
-                              cl_mem outU,
-                              int outVStride,
-                              cl_mem outV);
-
-/**
  * @brief Convert BGR images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -6649,7 +6750,8 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
 
 /**
  * @brief Convert BGR images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -6695,30 +6797,45 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 3;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   uchar* gpu_output2;
- *   size_t input_pitch, output_pitch0, output_pitch1, output_pitch2;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output2, &output_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGR2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                   gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                   output_pitch1 / sizeof(uchar), gpu_output1,
- *                   output_pitch2 / sizeof(uchar), gpu_output2);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = height * width * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
- *   cudaFree(gpu_output2);
+ *   BGR2I420<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                   width, gpu_y, width / 2, gpu_u, width / 2, gpu_v);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
  *
  *   return 0;
  * }
@@ -6738,8 +6855,204 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
                               cl_mem outV);
 
 /**
+ * @brief Convert RGB images to I420 images.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
+ * @param queue          opencl command queue.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
+ * @param inWidthStride  input image's width stride, which is not less
+ *                       than `width * channels`.
+ * @param inData         input image data.
+ * @param outWidthStride the width stride of output image, similar to
+ *                       inWidthStride.
+ * @param outData        output image data.
+ * @return The execution status, succeeds or fails with an error code.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
+ *       2 height and width must be even numbers.
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The fllowing table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
+ * <tr><td>Project       <td>ppl.cv
+ * </table>
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
+ * using namespace ppl::cv::ocl;
+ *
+ * int main(int argc, char** argv) {
+ *   int width  = 640;
+ *   int height = 480;
+ *   int src_channels = 3;
+ *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
+ *
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
+ *
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = dst_height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
+ *
+ *   RGB2I420<uchar>(queue, height, width, width * src_channels,
+ *                   gpu_input, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_output);
+ *
+ *   return 0;
+ * }
+ * @endcode
+ */
+template <typename T>
+ppl::common::RetCode RGB2I420(cl_command_queue queue,
+                              int height,
+                              int width,
+                              int inWidthStride,
+                              const cl_mem inData,
+                              int outWidthStride,
+                              cl_mem outData);
+
+/**
+ * @brief Convert RGB images to I420 images.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
+ * @param queue          opencl command queue.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
+ * @param inWidthStride  input image's width stride, which is not less
+ *                       than `width * channels`.
+ * @param inData         input image data.
+ * @param outYStride     Y-channel width stride of output image, similar to
+ *                       inWidthStride.
+ * @param outY           Y-channel output image data.
+ * @param outUStride     U-channel width stride of output image, similar to
+ *                       inWidthStride / 2.
+ * @param outU           U-channel output image data.
+ * @param outVStride     V-channel width stride of output image, similar to
+ *                       inWidthStride / 2.
+ * @param outV           V-channel output image data.
+ * @return The execution status, succeeds or fails with an error code.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
+ *       2 height and width must be even numbers.
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The fllowing table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
+ * <tr><td>Project       <td>ppl.cv
+ * </table>
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include "ppl/cv/ocl/cvtcolor.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
+ * using namespace ppl::cv::ocl;
+ *
+ * int main(int argc, char** argv) {
+ *   int width  = 640;
+ *   int height = 480;
+ *   int src_channels = 3;
+ *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
+ *
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
+ *
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
+ *
+ *   RGB2I420<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                   width, gpu_y, width / 2, gpu_u, width / 2, gpu_v);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
+ *
+ *   return 0;
+ * }
+ * @endcode
+ */
+template <typename T>
+ppl::common::RetCode RGB2I420(cl_command_queue queue,
+                              int height,
+                              int width,
+                              int inWidthStride,
+                              const cl_mem inData,
+                              int outYStride,
+                              cl_mem outY,
+                              int outUStride,
+                              cl_mem outU,
+                              int outVStride,
+                              cl_mem outV);
+
+/**
  * @brief Convert BGRA images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -6804,7 +7117,7 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   BGRA2I420<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
+ *                    gpu_input, width * dst_channels, gpu_output);
  *
  *   free(input);
  *   free(output);
@@ -6826,7 +7139,8 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
 
 /**
  * @brief Convert BGRA images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -6872,30 +7186,45 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 4;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   uchar* gpu_output2;
- *   size_t input_pitch, output_pitch0, output_pitch1, output_pitch2;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output2, &output_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   BGRA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1,
- *                    output_pitch2 / sizeof(uchar), gpu_output2);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
- *   cudaFree(gpu_output2);
+ *   BGRA2I420<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                    width, gpu_y, width / 2, gpu_u, width / 2, gpu_v);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
  *
  *   return 0;
  * }
@@ -6916,7 +7245,8 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
 
 /**
  * @brief Convert RGBA images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7001,9 +7331,11 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
                                int outWidthStride,
                                cl_mem outData);
 
+
 /**
  * @brief Convert RGBA images to I420 images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7027,7 +7359,7 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
  * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>4<td>1
+ * <tr><td>uint8_t(uchar)<td>3<td>1
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
@@ -7049,30 +7381,45 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 4;
  *   int dst_channels = 1;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   uchar* gpu_output2;
- *   size_t input_pitch, output_pitch0, output_pitch1, output_pitch2;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output2, &output_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   RGBA2I420<uchar>(stream, height, width, input_pitch / sizeof(uchar),
- *                    gpu_input, output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1,
- *                    output_pitch2 / sizeof(uchar), gpu_output2);
+ *   cl_int error_code = 0;
+ *   int src_size = src_height * width * src_channels * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
- *   cudaFree(gpu_output2);
+ *   RGBA2I420<uchar>(queue, height, width, width * src_channels, gpu_input,
+ *                    width, gpu_y, width / 2, gpu_u, width / 2, gpu_v);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
  *
  *   return 0;
  * }
@@ -7093,7 +7440,8 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7181,18 +7529,19 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      Y-channel width stride of input image, it is `width`
- *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
- *                       for 2D cudaMallocPitch() allocated data.
+ * @param inYStride      Y-channel width stride of input image, which is not less
+ *                       than `width`.
  * @param inY            Y-channel input image data.
- * @param inUStride      U-channel width stride of input image, it is `width / 2` for cudaMalloc() allocated data, usually
- *                       no less than `width / 2` for 2D cudaMallocPitch() allocated data.
+ * @param inUStride      U-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inU            U-channel input image data.
- * @param inVStride      U-channel width stride of input image, similar to inUStride.
+ * @param inVStride      V-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inV            V-channel input image data.
  * @param outWidthStride output image's width stride, which is not less
  *                       than `width * channels`.
@@ -7227,30 +7576,45 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 3;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_input2;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, input_pitch2, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_input2, &input_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202BGR<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                   input_pitch2 / sizeof(uchar), gpu_input2,
- *                   output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_READ_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_input2);
- *   cudaFree(gpu_output);
+ *   I4202BGR<uchar>(queue, height, width, width, gpu_y, width / 2, gpu_u,
+ *                   width / 2, gpu_v, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7271,7 +7635,8 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to RGB images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7359,18 +7724,19 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to RGB images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      Y-channel width stride of input image, it is `width`
- *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
- *                       for 2D cudaMallocPitch() allocated data.
+ * @param inYStride      Y-channel width stride of input image, which is not less
+ *                       than `width`.
  * @param inY            Y-channel input image data.
- * @param inUStride      U-channel width stride of input image, it is `width / 2` for cudaMalloc() allocated data, usually
- *                       no less than `width / 2` for 2D cudaMallocPitch() allocated data.
+ * @param inUStride      U-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inU            U-channel input image data.
- * @param inVStride      U-channel width stride of input image, similar to inUStride.
+ * @param inVStride      V-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inV            V-channel input image data.
  * @param outWidthStride output image's width stride, which is not less
  *                       than `width * channels`.
@@ -7405,30 +7771,43 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 3;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_input2;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, input_pitch2, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_input2, &input_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202RGB<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                   gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                   input_pitch2 / sizeof(uchar), gpu_input2,
- *                   output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_READ_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_input2);
- *   cudaFree(gpu_output);
+ *   I4202RGB<uchar>(queue, height, width, width, gpu_y, width / 2, gpu_u,
+ *                   width / 2, gpu_v, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7449,7 +7828,8 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to BGRA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7537,18 +7917,19 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to BGRA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      Y-channel width stride of input image, it is `width`
- *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
- *                       for 2D cudaMallocPitch() allocated data.
+ * @param inYStride      Y-channel width stride of input image, which is not less
+ *                       than `width`.
  * @param inY            Y-channel input image data.
- * @param inUStride      U-channel width stride of input image, it is `width / 2` for cudaMalloc() allocated data, usually
- *                       no less than `width / 2` for 2D cudaMallocPitch() allocated data.
+ * @param inUStride      U-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inU            U-channel input image data.
- * @param inVStride      U-channel width stride of input image, similar to inUStride.
+ * @param inVStride      V-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inV            V-channel input image data.
  * @param outWidthStride output image's width stride, which is not less
  *                       than `width * channels`.
@@ -7583,30 +7964,45 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 4;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_input2;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, input_pitch2, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_input2, &input_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202BGRA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    input_pitch2 / sizeof(uchar), gpu_input2,
- *                    output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_READ_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_input2);
- *   cudaFree(gpu_output);
+ *   I4202BGRA<uchar>(queue, height, width, width, gpu_y, width / 2, gpu_u,
+ *                    width / 2, gpu_v, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7627,7 +8023,8 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to RGBA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7715,18 +8112,19 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to RGBA images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
- * @param inYStride      Y-channel width stride of input image, it is `width`
- *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
- *                       for 2D cudaMallocPitch() allocated data.
+ * @param inYStride      Y-channel width stride of input image, which is not less
+ *                       than `width`.
  * @param inY            Y-channel input image data.
- * @param inUStride      U-channel width stride of input image, it is `width / 2` for cudaMalloc() allocated data, usually
- *                       no less than `width / 2` for 2D cudaMallocPitch() allocated data.
+ * @param inUStride      U-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inU            U-channel input image data.
- * @param inVStride      U-channel width stride of input image, similar to inUStride.
+ * @param inVStride      V-channel width stride of input image, similar to
+ *                       inYStride / 2.
  * @param inV            V-channel input image data.
  * @param outWidthStride output image's width stride, which is not less
  *                       than `width * channels`.
@@ -7761,30 +8159,45 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  *   int height = 480;
  *   int src_channels = 1;
  *   int dst_channels = 4;
+ *   int src_height = height;
+ *   int dst_height = height;
+ *   if (src_channels == 1) {
+ *     src_height = height + (height >> 1);
+ *   }
+ *   else {
+ *     dst_height = height + (height >> 1);
+ *   }
  *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_input2;
- *   uchar* gpu_output;
- *   size_t input_pitch0, input_pitch1, input_pitch2, output_pitch;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_input2, &input_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
  *
- *   I4202RGBA<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    input_pitch2 / sizeof(uchar), gpu_input2,
- *                    output_pitch / sizeof(uchar), gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   int uv_size = height * width / 4 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, src_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_u = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_v = clCreateBuffer(context, CL_MEM_WRITE_ONLY, uv_size, NULL,
+ *                                 &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_READ_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_y, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_input2);
- *   cudaFree(gpu_output);
+ *   I4202RGBA<uchar>(queue, height, width, width, gpu_y, width / 2, gpu_u,
+ *                    width / 2, gpu_v, width * dst_channels, gpu_output);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_y);
+ *   clReleaseMemObject(gpu_u);
+ *   clReleaseMemObject(gpu_v);
+ *   clReleaseMemObject(gpu_output);
  *
  *   return 0;
  * }
@@ -7807,7 +8220,8 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
 
 /**
  * @brief Convert YUV images to GRAY images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7881,7 +8295,8 @@ ppl::common::RetCode YUV2GRAY(cl_command_queue queue,
 
 /**
  * @brief Convert BGR images to UYVY images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -7953,7 +8368,8 @@ ppl::common::RetCode BGR2UYVY(cl_command_queue queue,
 
 /**
  * @brief Convert UYVY images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -8024,7 +8440,8 @@ ppl::common::RetCode UYVY2BGR(cl_command_queue queue,
 
 /**
  * @brief Convert UYVY images to GRAY images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -8097,7 +8514,8 @@ ppl::common::RetCode UYVY2GRAY(cl_command_queue queue,
 
 /**
  * @brief Convert YUYV images to BGR images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -8168,7 +8586,8 @@ ppl::common::RetCode YUYV2BGR(cl_command_queue queue,
 
 /**
  * @brief Convert YUYV images to GRAY images.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -8241,7 +8660,8 @@ ppl::common::RetCode YUYV2GRAY(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to I420 images,format: YYYYUVUVUVUV -> YYYYUUUUVVVV.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -8338,7 +8758,8 @@ ppl::common::RetCode NV122I420(cl_command_queue queue,
 
 /**
  * @brief Convert NV21 images to I420 images,format: YYYYVUVUVUVU -> YYYYUUUUVVVV.
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -8433,7 +8854,8 @@ ppl::common::RetCode NV212I420(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to NV12 images,format: YYYYUUUUVVVV -> YYYYUVUVUVUV
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.
@@ -8530,7 +8952,8 @@ ppl::common::RetCode I4202NV12(cl_command_queue queue,
 
 /**
  * @brief Convert I420 images to NV21 images,format: YYYYUUUUVVVV -> YYYYVUVUVUVU
- * @tparam T The data type, used for both input image and output image, currently only uint8_t(uchar) is supported.
+ * @tparam T The data type, used for both input image and output image,
+ *         currently only uint8_t(uchar) is supported.
  * @param queue          opencl command queue.
  * @param height         input&output image's height.
  * @param width          input&output image's width.

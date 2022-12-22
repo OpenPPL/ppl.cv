@@ -708,6 +708,159 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclCvtColor ## Function ## T,            \
 NVXX_PPL_UNITTEST_CLASS_DECLARATION(Function)                                  \
 UNITTEST_NVXX_TEST_SUITE(Function, uchar, src_channels, dst_channels)
 
+/************** Discrete NVXX's comparison with ppl.cv.x86/arm ***************/
+
+#define DISCRETE_NVXX_PPL_UNITTEST_CLASS_DECLARATION(Function)                 \
+template <typename T, int src_channels, int dst_channels>                      \
+class PplCvOclCvtColorDescrete ## Function :                                   \
+  public ::testing::TestWithParam<Parameters> {                                \
+ public:                                                                       \
+  PplCvOclCvtColorDescrete ## Function() {                                     \
+    const Parameters& parameters = GetParam();                                 \
+    size = std::get<0>(parameters);                                            \
+                                                                               \
+    ppl::common::ocl::createSharedFrameChain(false);                           \
+    context = ppl::common::ocl::getSharedFrameChain()->getContext();           \
+    queue   = ppl::common::ocl::getSharedFrameChain()->getQueue();             \
+  }                                                                            \
+                                                                               \
+  ~PplCvOclCvtColorDescrete ## Function() {                                    \
+  }                                                                            \
+                                                                               \
+  bool apply();                                                                \
+                                                                               \
+ private:                                                                      \
+  cv::Size size;                                                               \
+  cl_context context;                                                          \
+  cl_command_queue queue;                                                      \
+};                                                                             \
+                                                                               \
+template <typename T, int src_channels, int dst_channels>                      \
+bool PplCvOclCvtColorDescrete ## Function<T, src_channels,                     \
+                                          dst_channels>::apply() {             \
+  int width  = size.width;                                                     \
+  int height = size.height;                                                    \
+  int src_height = height;                                                     \
+  int dst_height = height;                                                     \
+  cv::Mat src;                                                                 \
+  if (src_channels == 1) {                                                     \
+    src_height = height + (height >> 1);                                       \
+  }                                                                            \
+  else {                                                                       \
+    dst_height = height + (height >> 1);                                       \
+  }                                                                            \
+  src = createSourceImage(src_height, width,                                   \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channels));  \
+  cv::Mat cpu_dst(dst_height, width,                                           \
+                  CV_MAKETYPE(cv::DataType<T>::depth, dst_channels));          \
+                                                                               \
+  int src_size = src_height * width * src_channels * sizeof(T);                \
+  int dst_size = dst_height * width * dst_channels * sizeof(T);                \
+  int uv_size  = (height >> 1) * width * sizeof(T);                            \
+  cl_int error_code = 0;                                                       \
+  cl_mem gpu_input = clCreateBuffer(context,                                   \
+                                    CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,  \
+                                    src_size, NULL, &error_code);              \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_output = clCreateBuffer(context,                                  \
+                                     CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,\
+                                     dst_size, NULL, &error_code);             \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  T* input = (T*)clEnqueueMapBuffer(queue, gpu_input, CL_TRUE, CL_MAP_WRITE,   \
+                                    0, src_size, 0, NULL, NULL, &error_code);  \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  copyMatToArray(src, input);                                                  \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_input, input, 0, NULL, NULL);\
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+  cl_mem gpu_uv = clCreateBuffer(context,                                      \
+                                 CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,    \
+                                 uv_size, NULL, &error_code);                  \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  if (src_channels == 1) {                                                     \
+    input = (T*)clEnqueueMapBuffer(queue, gpu_uv, CL_TRUE, CL_MAP_WRITE,       \
+                                   0, uv_size, 0, NULL, NULL, &error_code);    \
+    CHECK_ERROR(error_code, clEnqueueMapBuffer);                               \
+    cv::Mat uv((height >> 1), width, CV_MAKETYPE(cv::DataType<T>::depth, 1),   \
+                src.data + height * src.step, src.step);                       \
+    copyMatToArray(uv, input);                                                 \
+    error_code = clEnqueueUnmapMemObject(queue, gpu_uv, input, 0, NULL, NULL); \
+  }                                                                            \
+                                                                               \
+  if (src_channels == 1) {                                                     \
+    Function<T>(height, width, src.step / sizeof(T), src.data,                 \
+                src.step / sizeof(T), src.data + height * src.step,            \
+                cpu_dst.step / sizeof(T), cpu_dst.data);                       \
+    ppl::cv::ocl::Function<T>(queue, height, width, width, gpu_input, width,   \
+                              gpu_uv, width * dst_channels, gpu_output);       \
+  }                                                                            \
+  else {                                                                       \
+    Function<T>(height, width, src.step / sizeof(T), src.data,                 \
+                cpu_dst.step / sizeof(T), cpu_dst.data,                        \
+                cpu_dst.step / sizeof(T), cpu_dst.data +                       \
+                height * cpu_dst.step);                                        \
+    ppl::cv::ocl::Function<T>(queue, height, width, width * src_channels,      \
+                              gpu_input, width, gpu_output, width, gpu_uv);    \
+  }                                                                            \
+                                                                               \
+  float epsilon;                                                               \
+  if (src_channels == 1) {                                                     \
+    epsilon = EPSILON_2F;                                                      \
+  }                                                                            \
+  else {                                                                       \
+    epsilon = EPSILON_1F;                                                      \
+  }                                                                            \
+  T* output = (T*)clEnqueueMapBuffer(queue, gpu_output, CL_TRUE, CL_MAP_READ,  \
+                                     0, dst_size, 0, NULL, NULL, &error_code); \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  bool identity0 = checkMatricesIdentity<T>((const T*)cpu_dst.data, height,    \
+      width, cpu_dst.channels(), cpu_dst.step, output,                         \
+      size.width * dst_channels * sizeof(T), epsilon);                         \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_output, output, 0, NULL,     \
+                                       NULL);                                  \
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  bool identity1 = true;                                                       \
+  if (dst_channels == 1) {                                                     \
+    T* uv1 = (T*)clEnqueueMapBuffer(queue, gpu_uv, CL_TRUE, CL_MAP_READ, 0,    \
+                                    uv_size, 0, NULL, NULL, &error_code);      \
+    identity1 = checkMatricesIdentity<T>((const T*)cpu_dst.data +              \
+        height * cpu_dst.step, (height >> 1), width, cpu_dst.channels(),       \
+        cpu_dst.step, uv1, size.width * dst_channels * sizeof(T), epsilon);    \
+    error_code = clEnqueueUnmapMemObject(queue, gpu_uv, uv1, 0, NULL, NULL);   \
+    CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                          \
+  }                                                                            \
+                                                                               \
+  clReleaseMemObject(gpu_input);                                               \
+  clReleaseMemObject(gpu_output);                                              \
+  clReleaseMemObject(gpu_uv);                                                  \
+                                                                               \
+  return (identity0 && identity1);                                             \
+}
+
+#define UNITTEST_DESCRETE_NVXX_TEST_SUITE(Function, T, src_channels,           \
+                                          dst_channels)                        \
+using PplCvOclCvtColorDescrete ## Function ## T =                              \
+        PplCvOclCvtColorDescrete ## Function<T, src_channels, dst_channels>;   \
+TEST_P(PplCvOclCvtColorDescrete ## Function ## T, Standard) {                  \
+  bool identity = this->apply();                                               \
+  EXPECT_TRUE(identity);                                                       \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclCvtColorDescrete ## Function ## T,    \
+  ::testing::Values(cv::Size{320, 240}, cv::Size{322, 240},                    \
+                    cv::Size{640, 480}, cv::Size{644, 480},                    \
+                    cv::Size{1280, 720}, cv::Size{1296, 720},                  \
+                    cv::Size{1920, 1080}, cv::Size{1978, 1080}),               \
+  [](const testing::TestParamInfo<                                             \
+      PplCvOclCvtColorDescrete ## Function ## T::ParamType>& info) {           \
+    return convertToString(info.param);                                        \
+  }                                                                            \
+);
+
+#define DISCRETE_NVXX_PPL_UNITTEST(Function, src_channels, dst_channels)       \
+DISCRETE_NVXX_PPL_UNITTEST_CLASS_DECLARATION(Function)                         \
+UNITTEST_DESCRETE_NVXX_TEST_SUITE(Function, uchar, src_channels, dst_channels)
+
 /***************************** NV12 unittest ********************************/
 
 enum NV12Functions {
@@ -1133,6 +1286,154 @@ bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
 UNITTEST_I420_CLASS_DECLARATION(Function)                                      \
 UNITTEST_NVXX_TEST_SUITE(Function, uchar, src_channel, dst_channel)
 
+/************** Discrete I420's comparison with ppl.cv.x86/arm ***************/
+
+#define DISCRETE_I420_PPL_UNITTEST_CLASS_DECLARATION(Function)                 \
+template <typename T, int src_channels, int dst_channels>                      \
+class PplCvOclCvtColorDescrete ## Function :                                   \
+  public ::testing::TestWithParam<Parameters> {                                \
+ public:                                                                       \
+  PplCvOclCvtColorDescrete ## Function() {                                     \
+    const Parameters& parameters = GetParam();                                 \
+    size = std::get<0>(parameters);                                            \
+                                                                               \
+    ppl::common::ocl::createSharedFrameChain(false);                           \
+    context = ppl::common::ocl::getSharedFrameChain()->getContext();           \
+    queue   = ppl::common::ocl::getSharedFrameChain()->getQueue();             \
+  }                                                                            \
+                                                                               \
+  ~PplCvOclCvtColorDescrete ## Function() {                                    \
+  }                                                                            \
+                                                                               \
+  bool apply();                                                                \
+                                                                               \
+ private:                                                                      \
+  cv::Size size;                                                               \
+  cl_context context;                                                          \
+  cl_command_queue queue;                                                      \
+};                                                                             \
+                                                                               \
+template <typename T, int src_channels, int dst_channels>                      \
+bool PplCvOclCvtColorDescrete ## Function<T, src_channels,                     \
+                                          dst_channels>::apply() {             \
+  int width  = size.width;                                                     \
+  int height = size.height;                                                    \
+  int src_height = height;                                                     \
+  int dst_height = height;                                                     \
+  cv::Mat src;                                                                 \
+  if (src_channels == 1) {                                                     \
+    src_height = height + (height >> 1);                                       \
+  }                                                                            \
+  else {                                                                       \
+    dst_height = height + (height >> 1);                                       \
+  }                                                                            \
+  src = createSourceImage(src_height, width,                                   \
+                          CV_MAKETYPE(cv::DataType<T>::depth, src_channels));  \
+                                                                               \
+  int src_size = src_height * width * src_channels * sizeof(T);                \
+  int dst_size = dst_height * width * dst_channels * sizeof(T);                \
+  int uv_size  = (height >> 1) * (width >> 1) * sizeof(T);                     \
+  T* input  = (T*)malloc(src_size);                                            \
+  T* output = (T*)malloc(dst_size);                                            \
+  T* output_cpu = (T*)malloc(dst_size);                                        \
+  copyMatToArray(src, input);                                                  \
+  cl_int error_code = 0;                                                       \
+  cl_mem gpu_input = clCreateBuffer(context,                                   \
+                                    CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,  \
+                                    src_size, NULL, &error_code);              \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_output = clCreateBuffer(context,                                  \
+                                     CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,\
+                                     dst_size, NULL, &error_code);             \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  T* map = (T*)clEnqueueMapBuffer(queue, gpu_input, CL_TRUE, CL_MAP_WRITE,     \
+                                  0, src_size, 0, NULL, NULL, &error_code);    \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  copyMatToArray(src, map);                                                    \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_input, map, 0, NULL, NULL);  \
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+  cl_mem gpu_u = clCreateBuffer(context,                                       \
+                                CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,     \
+                                uv_size, NULL, &error_code);                   \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_v = clCreateBuffer(context,                                       \
+                                CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,     \
+                                uv_size, NULL, &error_code);                   \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  if (src_channels == 1) {                                                     \
+    map = (T*)clEnqueueMapBuffer(queue, gpu_u, CL_TRUE, CL_MAP_WRITE, 0,       \
+                                 uv_size, 0, NULL, NULL, &error_code);         \
+    CHECK_ERROR(error_code, clEnqueueMapBuffer);                               \
+    memcpy(map, input + height * width * sizeof(T), uv_size);                  \
+    error_code = clEnqueueUnmapMemObject(queue, gpu_u, map, 0, NULL, NULL);    \
+    map = (T*)clEnqueueMapBuffer(queue, gpu_v, CL_TRUE, CL_MAP_WRITE, 0,       \
+                                 uv_size, 0, NULL, NULL, &error_code);         \
+    CHECK_ERROR(error_code, clEnqueueMapBuffer);                               \
+    memcpy(map, input + height * 5 / 4 * width * sizeof(T), uv_size);          \
+    error_code = clEnqueueUnmapMemObject(queue, gpu_v, map, 0, NULL, NULL);    \
+  }                                                                            \
+                                                                               \
+  if (src_channels == 1) {                                                     \
+    Function<T>(height, width, width, input, width / 2,                        \
+        input + height * width * sizeof(T), width / 2,                         \
+        input + height * 5 / 4 * width * sizeof(T), width * dst_channels,      \
+        output_cpu);                                                           \
+    ppl::cv::ocl::Function<T>(queue, height, width, width, gpu_input,          \
+                              width / 2, gpu_u, width / 2, gpu_v,              \
+                              width * dst_channels, gpu_output);               \
+  }                                                                            \
+  else {                                                                       \
+    Function<T>(height, width, width * src_channels, input, width, output_cpu, \
+        width / 2, output_cpu + height * width * sizeof(T), width / 2,         \
+        output_cpu + height * 5 / 4 * width * sizeof(T));                      \
+    ppl::cv::ocl::Function<T>(queue, height, width, width * src_channels,      \
+                              gpu_input, width, gpu_output, width / 2, gpu_u,  \
+                              width / 2, gpu_v);                               \
+  }                                                                            \
+                                                                               \
+  map = (T*)clEnqueueMapBuffer(queue, gpu_output, CL_TRUE, CL_MAP_READ, 0,     \
+                               dst_size, 0, NULL, NULL, &error_code);          \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  bool identity0 = checkMatricesIdentity<T>(output_cpu, height, width,         \
+      dst_channels, width * dst_channels * sizeof(T), map,                     \
+      width * dst_channels * sizeof(T), EPSILON_3F);                           \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_output, map, 0, NULL, NULL); \
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  bool identity1 = true;                                                       \
+  bool identity2 = true;                                                       \
+  if (dst_channels == 1) {                                                     \
+    T* uv = (T*)clEnqueueMapBuffer(queue, gpu_u, CL_TRUE, CL_MAP_READ, 0,      \
+                                   uv_size, 0, NULL, NULL, &error_code);       \
+    identity1 = checkMatricesIdentity<T>(output_cpu +                          \
+        height * width * sizeof(T), (height >> 1), (width >> 1), 1, width / 2, \
+        uv, width / 2 * sizeof(T), EPSILON_3F);                                \
+    error_code = clEnqueueUnmapMemObject(queue, gpu_u, uv, 0, NULL, NULL);     \
+    CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                          \
+    uv = (T*)clEnqueueMapBuffer(queue, gpu_v, CL_TRUE, CL_MAP_READ, 0, uv_size,\
+                                0, NULL, NULL, &error_code);                   \
+    identity2 = checkMatricesIdentity<T>(output_cpu +                          \
+        height * 5 / 4 * width * sizeof(T), (height >> 1), (width >> 1), 1,    \
+        width / 2, uv, width / 2 * sizeof(T), EPSILON_3F);                     \
+    error_code = clEnqueueUnmapMemObject(queue, gpu_v, uv, 0, NULL, NULL);     \
+    CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                          \
+  }                                                                            \
+                                                                               \
+  free(input);                                                                 \
+  free(output);                                                                \
+  free(output_cpu);                                                            \
+  clReleaseMemObject(gpu_input);                                               \
+  clReleaseMemObject(gpu_output);                                              \
+  clReleaseMemObject(gpu_u);                                                   \
+  clReleaseMemObject(gpu_v);                                                   \
+                                                                               \
+  return (identity0 && identity1 && identity2);                                                           \
+}
+
+#define DISCRETE_I420_PPL_UNITTEST(Function, src_channels, dst_channels)       \
+DISCRETE_I420_PPL_UNITTEST_CLASS_DECLARATION(Function)                         \
+UNITTEST_DESCRETE_NVXX_TEST_SUITE(Function, uchar, src_channels, dst_channels)
+
 // // BGR(RBB) <-> BGRA(RGBA)
 // UNITTEST(BGR2BGRA, 3, 4)
 // UNITTEST(RGB2RGBA, 3, 4)
@@ -1191,7 +1492,7 @@ UNITTEST_NVXX_TEST_SUITE(Function, uchar, src_channel, dst_channel)
 // LAB_UNITTEST(LAB2BGRA, 3, 4)
 // LAB_UNITTEST(LAB2RGBA, 3, 4)
 
-// BGR/RGB/BGRA/RGBA <-> NV12, epsilon: 1.1f
+// BGR/RGB/BGRA/RGBA <-> NV12
 NVXX_PPL_UNITTEST(BGR2NV12, 3, 1)
 NVXX_PPL_UNITTEST(RGB2NV12, 3, 1)
 NVXX_PPL_UNITTEST(BGRA2NV12, 4, 1)
@@ -1200,6 +1501,15 @@ NV12_UNITTEST(NV122BGR, 1, 3)
 NV12_UNITTEST(NV122RGB, 1, 3)
 NV12_UNITTEST(NV122BGRA, 1, 4)
 NV12_UNITTEST(NV122RGBA, 1, 4)
+
+DISCRETE_NVXX_PPL_UNITTEST(BGR2NV12, 3, 1)
+DISCRETE_NVXX_PPL_UNITTEST(RGB2NV12, 3, 1)
+DISCRETE_NVXX_PPL_UNITTEST(BGRA2NV12, 4, 1)
+DISCRETE_NVXX_PPL_UNITTEST(RGBA2NV12, 4, 1)
+DISCRETE_NVXX_PPL_UNITTEST(NV122BGR, 1, 3)
+DISCRETE_NVXX_PPL_UNITTEST(NV122RGB, 1, 3)
+DISCRETE_NVXX_PPL_UNITTEST(NV122BGRA, 1, 4)
+DISCRETE_NVXX_PPL_UNITTEST(NV122RGBA, 1, 4)
 
 // BGR/RGB/BGRA/RGBA <-> NV21, epsilon: 1.1f
 NVXX_PPL_UNITTEST(BGR2NV21, 3, 1)
@@ -1211,6 +1521,15 @@ NV21_UNITTEST(NV212RGB, 1, 3)
 NV21_UNITTEST(NV212BGRA, 1, 4)
 NV21_UNITTEST(NV212RGBA, 1, 4)
 
+DISCRETE_NVXX_PPL_UNITTEST(BGR2NV21, 3, 1)
+DISCRETE_NVXX_PPL_UNITTEST(RGB2NV21, 3, 1)
+DISCRETE_NVXX_PPL_UNITTEST(BGRA2NV21, 4, 1)
+DISCRETE_NVXX_PPL_UNITTEST(RGBA2NV21, 4, 1)
+DISCRETE_NVXX_PPL_UNITTEST(NV212BGR, 1, 3)
+DISCRETE_NVXX_PPL_UNITTEST(NV212RGB, 1, 3)
+DISCRETE_NVXX_PPL_UNITTEST(NV212BGRA, 1, 4)
+DISCRETE_NVXX_PPL_UNITTEST(NV212RGBA, 1, 4)
+
 // BGR/RGB/BGRA/RGBA <-> I420, epsilon: 1.1f
 I420_UNITTEST(BGR2I420, 3, 1)
 I420_UNITTEST(RGB2I420, 3, 1)
@@ -1220,3 +1539,12 @@ I420_UNITTEST(I4202BGR, 1, 3)
 I420_UNITTEST(I4202RGB, 1, 3)
 I420_UNITTEST(I4202BGRA, 1, 4)
 I420_UNITTEST(I4202RGBA, 1, 4)
+
+DISCRETE_I420_PPL_UNITTEST(BGR2I420, 3, 1)
+DISCRETE_I420_PPL_UNITTEST(RGB2I420, 3, 1)
+DISCRETE_I420_PPL_UNITTEST(BGRA2I420, 4, 1)
+DISCRETE_I420_PPL_UNITTEST(RGBA2I420, 4, 1)
+DISCRETE_I420_PPL_UNITTEST(I4202BGR, 1, 3)
+DISCRETE_I420_PPL_UNITTEST(I4202RGB, 1, 3)
+DISCRETE_I420_PPL_UNITTEST(I4202BGRA, 1, 4)
+DISCRETE_I420_PPL_UNITTEST(I4202RGBA, 1, 4)

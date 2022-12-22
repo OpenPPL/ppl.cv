@@ -419,6 +419,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
   PPL_ASSERT(src != nullptr);                                                  \
   PPL_ASSERT(dst != nullptr);                                                  \
   PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
   PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));          \
   PPL_ASSERT(dst_stride >= cols * dst_channels * (int)sizeof(uchar));          \
                                                                                \
@@ -430,7 +431,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
                                                                                \
   frame_chain->setCompileOptions("-D " #function "_U8_2D");                    \
-  runOclKernel(frame_chain, #function "U8Kernel", 2, global_size,              \
+  runOclKernel(frame_chain, #function "U8Kernel0", 2, global_size,             \
                local_size, src, rows, cols, src_stride, dst, dst_stride);      \
                                                                                \
   return RC_SUCCESS;                                                           \
@@ -450,6 +451,195 @@ RetCode function <uchar>(cl_command_queue queue,                               \
   return code;                                                                 \
 }
 
+#define CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(function, src_channels)          \
+RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
+                        cl_mem dst_y, int dst_y_stride, cl_mem dst_uv,         \
+                        int dst_uv_stride, cl_command_queue queue) {           \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst_y != nullptr);                                                \
+  PPL_ASSERT(dst_uv != nullptr);                                               \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));          \
+  PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(dst_uv_stride >= cols * (int)sizeof(uchar));                      \
+                                                                               \
+  FrameChain* frame_chain = getSharedFrameChain();                             \
+  frame_chain->setProjectName("cv");                                           \
+  SET_PROGRAM_SOURCE(frame_chain);                                             \
+                                                                               \
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
+  size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
+                                                                               \
+  frame_chain->setCompileOptions("-D " #function "_DISCRETE_U8_2D");           \
+  runOclKernel(frame_chain, #function "U8Kernel1", 2, global_size,             \
+               local_size, src, rows, cols, src_stride, dst_y, dst_y_stride,   \
+               dst_uv, dst_uv_stride);                                         \
+                                                                               \
+  return RC_SUCCESS;                                                           \
+}                                                                              \
+                                                                               \
+template <>                                                                    \
+RetCode function <uchar>(cl_command_queue queue,                               \
+                         int height,                                           \
+                         int width,                                            \
+                         int inWidthStride,                                    \
+                         const cl_mem inData,                                  \
+                         int outYStride,                                       \
+                         cl_mem outY,                                          \
+                         int outUVStride,                                      \
+                         cl_mem outUV) {                                       \
+  RetCode code = function ## _U8(inData, height, width, inWidthStride, outY,   \
+                                 outYStride, outUV, outUVStride, queue);       \
+                                                                               \
+  return code;                                                                 \
+}
+
+#define CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(function, dst_channels)        \
+RetCode function ## _U8(const cl_mem src_y, int rows, int cols,                \
+                        int src_y_stride, const cl_mem src_uv,                 \
+                        int src_uv_stride, cl_mem dst, int dst_stride,         \
+                        cl_command_queue queue) {                              \
+  PPL_ASSERT(src_y != nullptr);                                                \
+  PPL_ASSERT(src_uv != nullptr);                                               \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(src_uv_stride >= cols * (int)sizeof(uchar));                      \
+  PPL_ASSERT(dst_stride >= cols * dst_channels * (int)sizeof(uchar));          \
+                                                                               \
+  FrameChain* frame_chain = getSharedFrameChain();                             \
+  frame_chain->setProjectName("cv");                                           \
+  SET_PROGRAM_SOURCE(frame_chain);                                             \
+                                                                               \
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
+  size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
+                                                                               \
+  frame_chain->setCompileOptions("-D " #function "_DISCRETE_U8_2D");           \
+  runOclKernel(frame_chain, #function "U8Kernel1", 2, global_size,             \
+               local_size, src_y, rows, cols, src_y_stride, src_uv,            \
+               src_uv_stride, dst, dst_stride);                                \
+                                                                               \
+  return RC_SUCCESS;                                                           \
+}                                                                              \
+                                                                               \
+template <>                                                                    \
+RetCode function <uchar>(cl_command_queue queue,                               \
+                         int height,                                           \
+                         int width,                                            \
+                         int inYStride,                                        \
+                         const cl_mem inY,                                     \
+                         int inUVStride,                                       \
+                         const cl_mem inUV,                                    \
+                         int outWidthStride,                                   \
+                         cl_mem outData) {                                     \
+  RetCode code = function ## _U8(inY, height, width, inYStride, inUV,          \
+                                 inUVStride, outData, outWidthStride, queue);  \
+                                                                               \
+  return code;                                                                 \
+}
+
+#define CVT_COLOR_TO_DISCRETE_I420_INVOCATION(function, src_channels)          \
+RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
+                        cl_mem dst_y, int dst_y_stride, cl_mem dst_u,          \
+                        int dst_u_stride, cl_mem dst_v, int dst_v_stride,      \
+                        cl_command_queue queue) {                              \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst_y != nullptr);                                                \
+  PPL_ASSERT(dst_u != nullptr);                                                \
+  PPL_ASSERT(dst_v != nullptr);                                                \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));          \
+  PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(dst_u_stride >= cols / 2 * (int)sizeof(uchar));                   \
+  PPL_ASSERT(dst_v_stride >= cols / 2 * (int)sizeof(uchar));                   \
+                                                                               \
+  FrameChain* frame_chain = getSharedFrameChain();                             \
+  frame_chain->setProjectName("cv");                                           \
+  SET_PROGRAM_SOURCE(frame_chain);                                             \
+                                                                               \
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
+  size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
+                                                                               \
+  frame_chain->setCompileOptions("-D " #function "_DISCRETE_U8_2D");           \
+  runOclKernel(frame_chain, #function "U8Kernel1", 2, global_size,             \
+               local_size, src, rows, cols, src_stride, dst_y, dst_y_stride,   \
+               dst_u, dst_u_stride, dst_v, dst_v_stride);                      \
+                                                                               \
+  return RC_SUCCESS;                                                           \
+}                                                                              \
+                                                                               \
+template <>                                                                    \
+RetCode function <uchar>(cl_command_queue queue,                               \
+                         int height,                                           \
+                         int width,                                            \
+                         int inWidthStride,                                    \
+                         const cl_mem inData,                                  \
+                         int outYStride,                                       \
+                         cl_mem outY,                                          \
+                         int outUStride,                                       \
+                         cl_mem outU,                                          \
+                         int outVStride,                                       \
+                         cl_mem outV) {                                        \
+  RetCode code = function ## _U8(inData, height, width, inWidthStride, outY,   \
+                                 outYStride, outU, outUStride, outV,           \
+                                 outVStride, queue);                           \
+                                                                               \
+  return code;                                                                 \
+}
+
+#define CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(function, dst_channels)        \
+RetCode function ## _U8(const cl_mem src_y, int rows, int cols,                \
+                        int src_y_stride, const cl_mem src_u, int src_u_stride,\
+                        const cl_mem src_v, int src_v_stride, cl_mem dst,      \
+                        int dst_stride, cl_command_queue queue) {              \
+  PPL_ASSERT(src_y != nullptr);                                                \
+  PPL_ASSERT(src_u != nullptr);                                                \
+  PPL_ASSERT(src_v != nullptr);                                                \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));                       \
+  PPL_ASSERT(src_u_stride >= cols / 2 * (int)sizeof(uchar));                   \
+  PPL_ASSERT(src_v_stride >= cols / 2 * (int)sizeof(uchar));                   \
+  PPL_ASSERT(dst_stride >= cols * dst_channels * (int)sizeof(uchar));          \
+                                                                               \
+  FrameChain* frame_chain = getSharedFrameChain();                             \
+  frame_chain->setProjectName("cv");                                           \
+  SET_PROGRAM_SOURCE(frame_chain);                                             \
+                                                                               \
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
+  size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
+                                                                               \
+  frame_chain->setCompileOptions("-D " #function "_DISCRETE_U8_2D");           \
+  runOclKernel(frame_chain, #function "U8Kernel1", 2, global_size,             \
+               local_size, src_y, rows, cols, src_y_stride, src_u,             \
+               src_u_stride, src_v, src_v_stride, dst, dst_stride);            \
+                                                                               \
+  return RC_SUCCESS;                                                           \
+}                                                                              \
+                                                                               \
+template <>                                                                    \
+RetCode function <uchar>(cl_command_queue queue,                               \
+                         int height,                                           \
+                         int width,                                            \
+                         int inYStride,                                        \
+                         const cl_mem inY,                                     \
+                         int inUStride,                                        \
+                         const cl_mem inU,                                     \
+                         int inVStride,                                        \
+                         const cl_mem inV,                                     \
+                         int outWidthStride,                                   \
+                         cl_mem outData) {                                     \
+  RetCode code = function ## _U8(inY, height, width, inYStride, inU, inUStride,\
+                                 inV, inVStride, outData, outWidthStride,      \
+                                 queue);                                       \
+                                                                               \
+  return code;                                                                 \
+}
+
 // BGR/RGB/BGRA/RGBA <-> NV12
 CVT_COLOR_NVXX_INVOCATION(BGR2NV12, 3, 1)
 CVT_COLOR_NVXX_INVOCATION(RGB2NV12, 3, 1)
@@ -459,6 +649,15 @@ CVT_COLOR_NVXX_INVOCATION(NV122BGR, 1, 3)
 CVT_COLOR_NVXX_INVOCATION(NV122RGB, 1, 3)
 CVT_COLOR_NVXX_INVOCATION(NV122BGRA, 1, 4)
 CVT_COLOR_NVXX_INVOCATION(NV122RGBA, 1, 4)
+
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(BGR2NV12, 3)
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(RGB2NV12, 3)
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(BGRA2NV12, 4)
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(RGBA2NV12, 4)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV122BGR, 3)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV122RGB, 3)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV122BGRA, 4)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV122RGBA, 4)
 
 // BGR/RGB/BGRA/RGBA <-> NV21
 CVT_COLOR_NVXX_INVOCATION(BGR2NV21, 3, 1)
@@ -470,6 +669,15 @@ CVT_COLOR_NVXX_INVOCATION(NV212RGB, 1, 3)
 CVT_COLOR_NVXX_INVOCATION(NV212BGRA, 1, 4)
 CVT_COLOR_NVXX_INVOCATION(NV212RGBA, 1, 4)
 
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(BGR2NV21, 3)
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(RGB2NV21, 3)
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(BGRA2NV21, 4)
+CVT_COLOR_TO_DISCRETE_NVXX_INVOCATION(RGBA2NV21, 4)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV212BGR, 3)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV212RGB, 3)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV212BGRA, 4)
+CVT_COLOR_FROM_DISCRETE_NVXX_INVOCATION(NV212RGBA, 4)
+
 // BGR/RGB/BGRA/RGBA <-> I420
 CVT_COLOR_NVXX_INVOCATION(BGR2I420, 3, 1)
 CVT_COLOR_NVXX_INVOCATION(RGB2I420, 3, 1)
@@ -479,6 +687,15 @@ CVT_COLOR_NVXX_INVOCATION(I4202BGR, 1, 3)
 CVT_COLOR_NVXX_INVOCATION(I4202RGB, 1, 3)
 CVT_COLOR_NVXX_INVOCATION(I4202BGRA, 1, 4)
 CVT_COLOR_NVXX_INVOCATION(I4202RGBA, 1, 4)
+
+CVT_COLOR_TO_DISCRETE_I420_INVOCATION(BGR2I420, 3)
+CVT_COLOR_TO_DISCRETE_I420_INVOCATION(RGB2I420, 3)
+CVT_COLOR_TO_DISCRETE_I420_INVOCATION(BGRA2I420, 4)
+CVT_COLOR_TO_DISCRETE_I420_INVOCATION(RGBA2I420, 4)
+CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202BGR, 3)
+CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202RGB, 3)
+CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202BGRA, 4)
+CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202RGBA, 4)
 
 }  // namespace ocl
 }  // namespace cv

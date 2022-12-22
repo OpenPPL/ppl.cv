@@ -29,4 +29,3 @@ eval $cmd
 cmake --build . -j 8 --config Release --target install
 
       # -DPPLCV_OPENCL_LIBRARIES='/opt/toolchains/android-toolchain-aarch64/lib64/OpenCL/mali/t860/libGLES_mali.so'"
-      # -DPPLCV_OPENCL_LIBRARIES='/opt/toolchains/android-toolchain-aarch64/lib64/OpenCL/mali/libOpenCL.so'"
