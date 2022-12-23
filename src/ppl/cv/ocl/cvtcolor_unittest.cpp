@@ -1282,9 +1282,9 @@ bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
   return (identity0 && identity1);                                             \
 }
 
-#define I420_UNITTEST(Function, src_channel, dst_channel)                      \
+#define I420_UNITTEST(Function, src_channels, dst_channels)                    \
 UNITTEST_I420_CLASS_DECLARATION(Function)                                      \
-UNITTEST_NVXX_TEST_SUITE(Function, uchar, src_channel, dst_channel)
+UNITTEST_NVXX_TEST_SUITE(Function, uchar, src_channels, dst_channels)
 
 /************** Discrete I420's comparison with ppl.cv.x86/arm ***************/
 
@@ -1434,6 +1434,108 @@ bool PplCvOclCvtColorDescrete ## Function<T, src_channels,                     \
 DISCRETE_I420_PPL_UNITTEST_CLASS_DECLARATION(Function)                         \
 UNITTEST_DESCRETE_NVXX_TEST_SUITE(Function, uchar, src_channels, dst_channels)
 
+
+/***************************** YUV422 unittest ********************************/
+
+enum YUV422Functions {
+  kUYVY2BGR,
+  kUYVY2GRAY,
+  kYUYV2BGR,
+  kYUYV2GRAY,
+};
+
+#define UNITTEST_FROM_YUV422_CLASS_DECLARATION(Function)                       \
+template <typename T, int src_channels, int dst_channels>                      \
+class PplCvOclCvtColor ## Function :                                           \
+  public ::testing::TestWithParam<Parameters> {                                \
+ public:                                                                       \
+  PplCvOclCvtColor ## Function() {                                             \
+    const Parameters& parameters = GetParam();                                 \
+    size = std::get<0>(parameters);                                            \
+                                                                               \
+    ppl::common::ocl::createSharedFrameChain(false);                           \
+    context = ppl::common::ocl::getSharedFrameChain()->getContext();           \
+    queue   = ppl::common::ocl::getSharedFrameChain()->getQueue();             \
+  }                                                                            \
+                                                                               \
+  ~PplCvOclCvtColor ## Function() {                                            \
+  }                                                                            \
+                                                                               \
+  bool apply();                                                                \
+                                                                               \
+ private:                                                                      \
+  cv::Size size;                                                               \
+  cl_context context;                                                          \
+  cl_command_queue queue;                                                      \
+};                                                                             \
+                                                                               \
+template <typename T, int src_channels, int dst_channels>                      \
+bool PplCvOclCvtColor ## Function<T, src_channels, dst_channels>::apply() {    \
+  int width  = size.width;                                                     \
+  int height = size.height;                                                    \
+  cv::Mat src = createSourceImage(height, width,                               \
+                  CV_MAKETYPE(cv::DataType<T>::depth, src_channels), 16, 235); \
+  cv::Mat cv_dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth,            \
+                 dst_channels));                                               \
+                                                                               \
+  int src_size = height * width * src_channels * sizeof(T);                    \
+  int dst_size = height * width * dst_channels * sizeof(T);                    \
+  cl_int error_code = 0;                                                       \
+  cl_mem gpu_input = clCreateBuffer(context,                                   \
+                                    CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,  \
+                                    src_size, NULL, &error_code);              \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  cl_mem gpu_output = clCreateBuffer(context,                                  \
+                                     CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,\
+                                     dst_size, NULL, &error_code);             \
+  CHECK_ERROR(error_code, clCreateBuffer);                                     \
+  T* input = (T*)clEnqueueMapBuffer(queue, gpu_input, CL_TRUE, CL_MAP_WRITE,   \
+                                    0, src_size, 0, NULL, NULL, &error_code);  \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  copyMatToArray(src, input);                                                  \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_input, input, 0, NULL, NULL);\
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  YUV422Functions ppl_function = k ## Function;                                \
+  if (ppl_function == kUYVY2BGR) {                                             \
+    cv::cvtColor(src, cv_dst, cv::COLOR_YUV2BGR_UYVY);                         \
+  }                                                                            \
+  else if (ppl_function == kUYVY2GRAY) {                                       \
+    cv::cvtColor(src, cv_dst, cv::COLOR_YUV2GRAY_UYVY);                        \
+  }                                                                            \
+  else if (ppl_function == kYUYV2BGR) {                                        \
+    cv::cvtColor(src, cv_dst, cv::COLOR_YUV2BGR_YUYV);                         \
+  }                                                                            \
+  else if (ppl_function == kYUYV2GRAY) {                                       \
+    cv::cvtColor(src, cv_dst, cv::COLOR_YUV2GRAY_YUYV);                        \
+  }                                                                            \
+  else {                                                                       \
+  }                                                                            \
+                                                                               \
+  ppl::cv::ocl::Function<T>(queue, size.height, size.width,                    \
+      size.width * src_channels, gpu_input, size.width * dst_channels,         \
+      gpu_output);                                                             \
+                                                                               \
+  T* output = (T*)clEnqueueMapBuffer(queue, gpu_output, CL_TRUE, CL_MAP_READ,  \
+                                     0, dst_size, 0, NULL, NULL, &error_code); \
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);                                 \
+  bool identity = checkMatricesIdentity<T>((const T*)cv_dst.data, cv_dst.rows, \
+      cv_dst.cols, cv_dst.channels(), cv_dst.step, output,                     \
+      size.width * dst_channels * sizeof(T), EPSILON_1F);                      \
+  error_code = clEnqueueUnmapMemObject(queue, gpu_output, output, 0, NULL,     \
+                                       NULL);                                  \
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);                            \
+                                                                               \
+  clReleaseMemObject(gpu_input);                                               \
+  clReleaseMemObject(gpu_output);                                              \
+                                                                               \
+  return (identity);                                                           \
+}
+
+#define FROM_YUV422_UNITTEST(Function, src_channels, dst_channels)             \
+UNITTEST_FROM_YUV422_CLASS_DECLARATION(Function)                               \
+UNITTEST_NVXX_TEST_SUITE(Function, uchar, src_channels, dst_channels)
+
 // // BGR(RBB) <-> BGRA(RGBA)
 // UNITTEST(BGR2BGRA, 3, 4)
 // UNITTEST(RGB2RGBA, 3, 4)
@@ -1530,7 +1632,7 @@ DISCRETE_NVXX_PPL_UNITTEST(NV212RGB, 1, 3)
 DISCRETE_NVXX_PPL_UNITTEST(NV212BGRA, 1, 4)
 DISCRETE_NVXX_PPL_UNITTEST(NV212RGBA, 1, 4)
 
-// BGR/RGB/BGRA/RGBA <-> I420, epsilon: 1.1f
+// BGR/RGB/BGRA/RGBA <-> I420
 I420_UNITTEST(BGR2I420, 3, 1)
 I420_UNITTEST(RGB2I420, 3, 1)
 I420_UNITTEST(BGRA2I420, 4, 1)
@@ -1548,3 +1650,13 @@ DISCRETE_I420_PPL_UNITTEST(I4202BGR, 1, 3)
 DISCRETE_I420_PPL_UNITTEST(I4202RGB, 1, 3)
 DISCRETE_I420_PPL_UNITTEST(I4202BGRA, 1, 4)
 DISCRETE_I420_PPL_UNITTEST(I4202RGBA, 1, 4)
+
+I420_UNITTEST(YUV2GRAY, 1, 1)
+
+// BGR <-> UYVY
+FROM_YUV422_UNITTEST(UYVY2BGR, 2, 3)
+FROM_YUV422_UNITTEST(UYVY2GRAY, 2, 1)
+
+// BGR <-> YUYV, epsilon: 1.1f
+FROM_YUV422_UNITTEST(YUYV2BGR, 2, 3)
+FROM_YUV422_UNITTEST(YUYV2GRAY, 2, 1)

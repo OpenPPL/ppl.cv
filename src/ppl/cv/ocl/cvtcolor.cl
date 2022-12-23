@@ -4430,3 +4430,192 @@ Convert3To4DISCRETE_I420_2D(I4202BGRA, U8)
 #if defined(I4202RGBA_DISCRETE_U8_2D) || defined(SPIR)
 Convert3To4DISCRETE_I420_2D(I4202RGBA, U8)
 #endif
+
+/***************************** YUV2 -> GRAY ******************************/
+
+#if defined(YUV2GRAY_U8_2D) || defined(SPIR)
+__kernel
+void YUV2GRAYU8Kernel(global const uchar* src, int rows, int cols,
+                      int src_stride, global uchar* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  int index_x = element_x << 2;
+  if (element_y >= rows || index_x >= cols) {
+    return;
+  }
+
+  global uchar* input = (global uchar*)(src + element_y * src_stride);
+  global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+  if (index_x < cols - 3) {
+    uchar4 value = vload4(element_x, input);
+    vstore4(value, element_x, output);
+  }
+  else {
+    uchar value0, value1, value2, value3;
+    value0 = input[index_x];
+    if (index_x < cols - 1) {
+      value1 = input[index_x + 1];
+    }
+    if (index_x < cols - 2) {
+      value2 = input[index_x + 2];
+    }
+
+    output[index_x] = value0;
+    if (index_x < cols - 1) {
+      output[index_x + 1] = value1;
+    }
+    if (index_x < cols - 2) {
+      output[index_x + 2] = value2;
+    }
+  }
+}
+#endif
+
+/************************** BGR/GRAY <-> UYVY/YUYV ***************************/
+
+#if defined(UYVY2BGR_U8_2D) || defined(YUYV2BGR_U8_2D) || defined(SPIR)
+#define ConvertFROM_YUV422_2D(Function, base_type)                             \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  int index_x = element_x << 1;                                                \
+  if (element_y >= rows || index_x >= cols) {                                  \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar4 input_value = vload4(element_x, data);                                \
+  uchar3 result0 = Function ## Compute0(input_value);                          \
+  uchar3 result1 = Function ## Compute1(input_value);                          \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  vstore3(result0, index_x, data);                                             \
+  vstore3(result1, index_x + 1, data);                                         \
+}
+#endif
+
+#if defined(UYVY2BGR_U8_2D) || defined(SPIR)
+uchar3 UYVY2BGRCompute0(const uchar4 src) {
+  int y = max(0, (src.y - 16)) * NVXX_CY;
+  int u = src.x - 128;
+  int v = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(b, g, r));
+
+  return dst;
+}
+
+uchar3 UYVY2BGRCompute1(const uchar4 src) {
+  int y = max(0, (src.w - 16)) * NVXX_CY;
+  int u = src.x - 128;
+  int v = src.z - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(b, g, r));
+
+  return dst;
+}
+
+ConvertFROM_YUV422_2D(UYVY2BGR, U8)
+#endif
+
+#if defined(YUYV2BGR_U8_2D) || defined(SPIR)
+uchar3 YUYV2BGRCompute0(const uchar4 src) {
+  int y = max(0, (src.x - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.w - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(b, g, r));
+
+  return dst;
+}
+
+uchar3 YUYV2BGRCompute1(const uchar4 src) {
+  int y = max(0, (src.z - 16)) * NVXX_CY;
+  int u = src.y - 128;
+  int v = src.w - 128;
+
+  int buv = (1 << (NVXX_SHIFT - 1)) + NVXX_CUB * u;
+  int guv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVG * v + NVXX_CUG * u;
+  int ruv = (1 << (NVXX_SHIFT - 1)) + NVXX_CVR * v;
+
+  int b = (y + buv) >> NVXX_SHIFT;
+  int g = (y + guv) >> NVXX_SHIFT;
+  int r = (y + ruv) >> NVXX_SHIFT;
+  uchar3 dst = convert_uchar3_sat((int3)(b, g, r));
+
+  return dst;
+}
+
+ConvertFROM_YUV422_2D(YUYV2BGR, U8)
+#endif
+
+#if defined(UYVY2GRAY_U8_2D) || defined(YUYV2GRAY_U8_2D) || defined(SPIR)
+#define ConvertFROM_YUV422_2D(Function, base_type)                             \
+__kernel                                                                       \
+void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
+                                     int cols, int src_stride,                 \
+                                     global uchar* dst, int dst_stride) {      \
+  int element_x = get_global_id(0);                                            \
+  int element_y = get_global_id(1);                                            \
+  int index_x = element_x << 1;                                                \
+  if (element_y >= rows || index_x >= cols) {                                  \
+    return;                                                                    \
+  }                                                                            \
+                                                                               \
+  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  uchar2 input_value0 = vload2(index_x, data);                                 \
+  uchar2 input_value1 = vload2(index_x + 1, data);                             \
+  uchar2 result = Function ## Compute(input_value0, input_value1);             \
+                                                                               \
+  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  vstore2(result, element_x, data);                                            \
+}
+#endif
+
+#if defined(UYVY2GRAY_U8_2D) || defined(SPIR)
+uchar2 UYVY2GRAYCompute(const uchar2 src0, const uchar2 src1) {
+  uchar2 dst;
+  dst.x = src0.y;
+  dst.y = src1.y;
+
+  return dst;
+}
+
+ConvertFROM_YUV422_2D(UYVY2GRAY, U8)
+#endif
+
+#if defined(YUYV2GRAY_U8_2D) || defined(SPIR)
+uchar2 YUYV2GRAYCompute(const uchar2 src0, const uchar2 src1) {
+  uchar2 dst;
+  dst.x = src0.x;
+  dst.y = src1.x;
+
+  return dst;
+}
+
+ConvertFROM_YUV422_2D(YUYV2GRAY, U8)
+#endif

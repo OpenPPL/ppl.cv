@@ -419,7 +419,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
   PPL_ASSERT(src != nullptr);                                                  \
   PPL_ASSERT(dst != nullptr);                                                  \
   PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
-  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT((rows & 0x1) == 0 && (cols & 0x1) == 0);                          \
   PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));          \
   PPL_ASSERT(dst_stride >= cols * dst_channels * (int)sizeof(uchar));          \
                                                                                \
@@ -459,7 +459,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
   PPL_ASSERT(dst_y != nullptr);                                                \
   PPL_ASSERT(dst_uv != nullptr);                                               \
   PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
-  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT((rows & 0x1) == 0 && (cols & 0x1) == 0);                          \
   PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));          \
   PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));                       \
   PPL_ASSERT(dst_uv_stride >= cols * (int)sizeof(uchar));                      \
@@ -504,7 +504,7 @@ RetCode function ## _U8(const cl_mem src_y, int rows, int cols,                \
   PPL_ASSERT(src_uv != nullptr);                                               \
   PPL_ASSERT(dst != nullptr);                                                  \
   PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
-  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT((rows & 0x1) == 0 && (cols & 0x1) == 0);                          \
   PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));                       \
   PPL_ASSERT(src_uv_stride >= cols * (int)sizeof(uchar));                      \
   PPL_ASSERT(dst_stride >= cols * dst_channels * (int)sizeof(uchar));          \
@@ -550,7 +550,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
   PPL_ASSERT(dst_u != nullptr);                                                \
   PPL_ASSERT(dst_v != nullptr);                                                \
   PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
-  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT((rows & 0x1) == 0 && (cols & 0x1) == 0);                          \
   PPL_ASSERT(src_stride >= cols * src_channels * (int)sizeof(uchar));          \
   PPL_ASSERT(dst_y_stride >= cols * (int)sizeof(uchar));                       \
   PPL_ASSERT(dst_u_stride >= cols / 2 * (int)sizeof(uchar));                   \
@@ -600,7 +600,7 @@ RetCode function ## _U8(const cl_mem src_y, int rows, int cols,                \
   PPL_ASSERT(src_v != nullptr);                                                \
   PPL_ASSERT(dst != nullptr);                                                  \
   PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
-  PPL_ASSERT(rows % 1 == 0 && cols % 1 == 0);                                  \
+  PPL_ASSERT((rows & 0x1) == 0 && (cols & 0x1) == 0);                          \
   PPL_ASSERT(src_y_stride >= cols * (int)sizeof(uchar));                       \
   PPL_ASSERT(src_u_stride >= cols / 2 * (int)sizeof(uchar));                   \
   PPL_ASSERT(src_v_stride >= cols / 2 * (int)sizeof(uchar));                   \
@@ -696,6 +696,133 @@ CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202BGR, 3)
 CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202RGB, 3)
 CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202BGRA, 4)
 CVT_COLOR_FROM_DISCRETE_I420_INVOCATION(I4202RGBA, 4)
+
+/***************************** YUV2 -> GRAY ******************************/
+
+RetCode YUV2GRAY_U8(const cl_mem src, int rows, int cols, int src_stride,
+                    cl_mem dst, int dst_stride, cl_command_queue queue) {
+  PPL_ASSERT(src != nullptr);
+  PPL_ASSERT(dst != nullptr);
+  PPL_ASSERT(rows >= 1 && cols >= 1);
+  PPL_ASSERT((rows & 0x1) == 0 && (cols & 0x1) == 0);
+  PPL_ASSERT(src_stride >= cols * (int)sizeof(uchar));
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(uchar));
+
+  FrameChain* frame_chain = getSharedFrameChain();
+  frame_chain->setProjectName("cv");
+  SET_PROGRAM_SOURCE(frame_chain);
+
+  int columns = divideUp(cols, 4, 2);
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+  size_t global_size[] = {(size_t)columns, (size_t)rows};
+
+  frame_chain->setCompileOptions("-D YUV2GRAY_U8_2D");
+  runOclKernel(frame_chain, "YUV2GRAYU8Kernel", 2, global_size,
+               local_size, src, rows, cols, src_stride, dst, dst_stride);
+
+  return RC_SUCCESS;
+}
+
+template <>
+RetCode YUV2GRAY<uchar>(cl_command_queue queue,
+                        int height,
+                        int width,
+                        int inWidthStride,
+                        const cl_mem inData,
+                        int outWidthStride,
+                        cl_mem outData) {
+  RetCode code = YUV2GRAY_U8(inData, height, width, inWidthStride, outData,
+                             outWidthStride, queue);
+
+  return code;
+}
+
+/************************ BGR/GRAY <-> UYVY/YUYV *************************/
+
+#define CVT_COLOR_FROM_YUV422_INVOCATION(function, src_channels, dst_channels) \
+RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
+                        cl_mem dst, int dst_stride, cl_command_queue queue) {  \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT((cols & 0x1) == 0);                                               \
+  PPL_ASSERT(src_stride >= cols / 2 * src_channels * (int)sizeof(uchar));      \
+  PPL_ASSERT(dst_stride >= cols * dst_channels * (int)sizeof(uchar));          \
+                                                                               \
+  FrameChain* frame_chain = getSharedFrameChain();                             \
+  frame_chain->setProjectName("cv");                                           \
+  SET_PROGRAM_SOURCE(frame_chain);                                             \
+                                                                               \
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
+  size_t global_size[] = {(size_t)divideUp(cols, 2, 1), (size_t)rows};         \
+                                                                               \
+  frame_chain->setCompileOptions("-D " #function "_U8_2D");                    \
+  runOclKernel(frame_chain, #function "U8Kernel", 2, global_size,              \
+               local_size, src, rows, cols, src_stride, dst, dst_stride);      \
+                                                                               \
+  return RC_SUCCESS;                                                           \
+}                                                                              \
+                                                                               \
+template <>                                                                    \
+RetCode function <uchar>(cl_command_queue queue,                               \
+                         int height,                                           \
+                         int width,                                            \
+                         int inWidthStride,                                    \
+                         const cl_mem inData,                                  \
+                         int outWidthStride,                                   \
+                         cl_mem outData) {                                     \
+  RetCode code = function ## _U8(inData, height, width, inWidthStride,         \
+                                 outData, outWidthStride, queue);              \
+                                                                               \
+  return code;                                                                 \
+}
+
+#define CVT_COLOR_YUV422_TO_GRAY_INVOCATION(function)                          \
+RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
+                        cl_mem dst, int dst_stride, cl_command_queue queue) {  \
+  PPL_ASSERT(src != nullptr);                                                  \
+  PPL_ASSERT(dst != nullptr);                                                  \
+  PPL_ASSERT(rows >= 1 && cols >= 1);                                          \
+  PPL_ASSERT((cols & 0x1) == 0);                                               \
+  PPL_ASSERT(src_stride >= cols / 2 * (int)sizeof(uchar));                     \
+  PPL_ASSERT(dst_stride >= cols * (int)sizeof(uchar));                         \
+                                                                               \
+  FrameChain* frame_chain = getSharedFrameChain();                             \
+  frame_chain->setProjectName("cv");                                           \
+  SET_PROGRAM_SOURCE(frame_chain);                                             \
+                                                                               \
+  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
+  size_t global_size[] = {(size_t)divideUp(cols, 2, 1), (size_t)rows};         \
+                                                                               \
+  frame_chain->setCompileOptions("-D " #function "_U8_2D");                    \
+  runOclKernel(frame_chain, #function "U8Kernel", 2, global_size,              \
+               local_size, src, rows, cols, src_stride, dst, dst_stride);      \
+                                                                               \
+  return RC_SUCCESS;                                                           \
+}                                                                              \
+                                                                               \
+template <>                                                                    \
+RetCode function <uchar>(cl_command_queue queue,                               \
+                         int height,                                           \
+                         int width,                                            \
+                         int inWidthStride,                                    \
+                         const cl_mem inData,                                  \
+                         int outWidthStride,                                   \
+                         cl_mem outData) {                                     \
+  RetCode code = function ## _U8(inData, height, width, inWidthStride,         \
+                                 outData, outWidthStride, queue);              \
+                                                                               \
+  return code;                                                                 \
+}
+
+// BGR/GRAY <-> UYVY
+CVT_COLOR_FROM_YUV422_INVOCATION(UYVY2BGR, 4, 3)
+CVT_COLOR_YUV422_TO_GRAY_INVOCATION(UYVY2GRAY)
+
+// BGR/GRAY <-> YUYV
+CVT_COLOR_FROM_YUV422_INVOCATION(YUYV2BGR, 4, 3)
+CVT_COLOR_YUV422_TO_GRAY_INVOCATION(YUYV2GRAY)
+
 
 }  // namespace ocl
 }  // namespace cv

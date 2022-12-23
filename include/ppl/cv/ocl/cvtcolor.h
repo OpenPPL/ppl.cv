@@ -8262,13 +8262,21 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  *   int src_channels = 1;
  *   int dst_channels = 1;
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height * 3 / 2);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
+ *
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
  *   YUV2GRAY<uchar>(queue, height, width, width * src_channels,
  *                   gpu_input, width * dst_channels, gpu_output);
@@ -8292,79 +8300,6 @@ ppl::common::RetCode YUV2GRAY(cl_command_queue queue,
                               cl_mem outData);
 
 // BGR/GRAY <-> UYVY
-
-/**
- * @brief Convert BGR images to UYVY images.
- * @tparam T The data type, used for both input image and output image,
- *         currently only uint8_t(uchar) is supported.
- * @param queue          opencl command queue.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
- * @param inWidthStride  input image's width stride, which is not less
- *                       than `width * channels`.
- * @param inData         input image data.
- * @param outWidthStride the width stride of output image, similar to
- *                       inWidthStride.
- * @param outData        output image data.
- * @return The execution status, succeeds or fails with an error code.
- * @note For best performance, rows of input&output aligned with 64 bits are
- *       recommended.
- *       2 width must be an even number.
- * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @remark The fllowing table show which data type and channels are supported.
- * <table>
- * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>3<td>2
- * </table>
- * <table>
- * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
- * <tr><td>Project       <td>ppl.cv
- * </table>
- * @since ppl.cv-v1.0.0
- * ###Example
- * @code{.cpp}
- * #include "ppl/cv/ocl/cvtcolor.h"
- * #include "ppl/common/oclcommon.h"
- *
- * using namespace ppl::common::ocl;
- * using namespace ppl::cv::ocl;
- *
- * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
- *   int src_channels = 3;
- *   int dst_channels = 2;
- *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * sizeof(uchar), height);
- *
- *   BGR2UYVY<uchar>(queue, height, width, width * src_channels,
- *                   gpu_input, width * dst_channels, gpu_output);
- *
- *   free(input);
- *   free(output);
- *   clReleaseMemObject(gpu_input);
- *   clReleaseMemObject(gpu_output);
- *
- *   return 0;
- * }
- * @endcode
- */
-template <typename T>
-ppl::common::RetCode BGR2UYVY(cl_command_queue queue,
-                              int height,
-                              int width,
-                              int inWidthStride,
-                              const cl_mem inData,
-                              int outWidthStride,
-                              cl_mem outData);
 
 /**
  * @brief Convert UYVY images to BGR images.
@@ -8409,13 +8344,17 @@ ppl::common::RetCode BGR2UYVY(cl_command_queue queue,
  *   int src_channels = 2;
  *   int dst_channels = 3;
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * 2 * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * 2 * sizeof(uchar), height);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * 2 * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
  *   UYVY2BGR<uchar>(queue, height, width, width * src_channels,
  *                   gpu_input, width * dst_channels, gpu_output);
@@ -8481,13 +8420,17 @@ ppl::common::RetCode UYVY2BGR(cl_command_queue queue,
  *   int src_channels = 2;
  *   int dst_channels = 1;
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * 2 * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * 2 * dst_channels * sizeof(uchar), height);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * 2 * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
  *   UYVY2GRAY<uchar>(queue, height, width, width * src_channels,
  *                    gpu_input, width * dst_channels, gpu_output);
@@ -8555,13 +8498,17 @@ ppl::common::RetCode UYVY2GRAY(cl_command_queue queue,
  *   int src_channels = 2;
  *   int dst_channels = 3;
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * 2 * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * dst_channels * 2 * sizeof(uchar), height);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * 2 * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
  *   YUYV2BGR<uchar>(queue, height, width, width * src_channels,
  *                   gpu_input, width * dst_channels, gpu_output);
@@ -8627,16 +8574,17 @@ ppl::common::RetCode YUYV2BGR(cl_command_queue queue,
  *   int src_channels = 2;
  *   int dst_channels = 1;
  *
- *   uchar* gpu_input;
- *   uchar* gpu_output;
- *   size_t input_pitch, output_pitch;
- *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * src_channels * 2 * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * 2 * dst_channels * sizeof(uchar), height);
- *
- *   YUYV2GRAY<uchar>(queue, height, width, width * src_channels,
- *                    gpu_input, width * dst_channels, gpu_output);
+ *   cl_int error_code = 0;
+ *   int src_size = height * width * src_channels * 2 * sizeof(uchar);
+ *   int dst_size = height * width * dst_channels * 2 * sizeof(uchar);
+ *   float* input = (float*)malloc(src_size);
+ *   float* output = (float*)malloc(dst_size);
+ *   cl_mem gpu_input = clCreateBuffer(context, CL_MEM_READ_ONLY, src_size,
+ *                                     NULL, &error_code);
+ *   cl_mem gpu_output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, dst_size,
+ *                                      NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
+ *                                     src_size, input, 0, NULL, NULL);
  *
  *   free(input);
  *   free(output);
@@ -8741,7 +8689,7 @@ ppl::common::RetCode YUYV2GRAY(cl_command_queue queue,
  * }
  * @endcode
  */
-template <typename T>
+/* template <typename T>
 ppl::common::RetCode NV122I420(cl_command_queue queue,
                                int height,
                                int width,
@@ -8754,7 +8702,7 @@ ppl::common::RetCode NV122I420(cl_command_queue queue,
                                int outUStride,
                                cl_mem outU,
                                int outVStride,
-                               cl_mem outV);
+                               cl_mem outV); */
 
 /**
  * @brief Convert NV21 images to I420 images,format: YYYYVUVUVUVU -> YYYYUUUUVVVV.
@@ -8837,7 +8785,7 @@ ppl::common::RetCode NV122I420(cl_command_queue queue,
  * }
  * @endcode
  */
-template <typename T>
+/* template <typename T>
 ppl::common::RetCode NV212I420(cl_command_queue queue,
                                int height,
                                int width,
@@ -8850,7 +8798,7 @@ ppl::common::RetCode NV212I420(cl_command_queue queue,
                                int outUStride,
                                cl_mem outU,
                                int outVStride,
-                               cl_mem outV);
+                               cl_mem outV); */
 
 /**
  * @brief Convert I420 images to NV12 images,format: YYYYUUUUVVVV -> YYYYUVUVUVUV
@@ -8935,7 +8883,7 @@ ppl::common::RetCode NV212I420(cl_command_queue queue,
  * }
  * @endcode
  */
-template <typename T>
+/* template <typename T>
 ppl::common::RetCode I4202NV12(cl_command_queue queue,
                                int height,
                                int width,
@@ -8948,7 +8896,7 @@ ppl::common::RetCode I4202NV12(cl_command_queue queue,
                                int outYStride,
                                cl_mem outY,
                                int outUVStride,
-                               cl_mem outUV);
+                               cl_mem outUV); */
 
 /**
  * @brief Convert I420 images to NV21 images,format: YYYYUUUUVVVV -> YYYYVUVUVUVU
@@ -9033,7 +8981,7 @@ ppl::common::RetCode I4202NV12(cl_command_queue queue,
  * }
  * @endcode
  */
-template <typename T>
+/* template <typename T>
 ppl::common::RetCode I4202NV21(cl_command_queue queue,
                                int height,
                                int width,
@@ -9046,7 +8994,7 @@ ppl::common::RetCode I4202NV21(cl_command_queue queue,
                                int outYStride,
                                cl_mem outY,
                                int outUVStride,
-                               cl_mem outUV);
+                               cl_mem outUV); */
 
 }  // namespace ocl
 }  // namespace cv

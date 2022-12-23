@@ -750,6 +750,68 @@ BENCHMARK_DESCRETE_NVXX_1FUNCTION(Function, src_channels, dst_channels, 1280,  \
 BENCHMARK_DESCRETE_NVXX_1FUNCTION(Function, src_channels, dst_channels, 1920,  \
                                   1080)
 
+/************************ YUV422 with comparison *************************/
+
+enum YUV422Functions {
+  kUYVY2BGR,
+  kUYVY2GRAY,
+  kYUYV2BGR,
+  kYUYV2GRAY,
+};
+
+#define BENCHMARK_OPENCV_CPU_YUV422(Function)                                  \
+template<typename T, int src_channels, int dst_channels>                       \
+void BM_CvtColor ## Function ## _opencv_cpu_ocl(benchmark::State &state) {     \
+  int width  = state.range(0);                                                 \
+  int height = state.range(1);                                                 \
+  cv::Mat src = createSourceImage(height, width,                               \
+                  CV_MAKETYPE(cv::DataType<T>::depth, src_channels), 16, 235); \
+  cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth,               \
+              dst_channels));                                                  \
+                                                                               \
+  YUV422Functions ppl_function = k ## Function;                                \
+  cv::ColorConversionCodes cv_code;                                            \
+  if (ppl_function == kUYVY2BGR) {                                             \
+    cv_code = cv::COLOR_YUV2BGR_UYVY;                                          \
+  }                                                                            \
+  else if (ppl_function == kUYVY2GRAY) {                                       \
+    cv_code = cv::COLOR_YUV2GRAY_UYVY;                                         \
+  }                                                                            \
+  else if (ppl_function == kYUYV2BGR) {                                        \
+    cv_code = cv::COLOR_YUV2BGR_YUYV;                                          \
+  }                                                                            \
+  else if (ppl_function == kYUYV2GRAY) {                                       \
+    cv_code = cv::COLOR_YUV2GRAY_YUYV;                                         \
+  }                                                                            \
+  else {                                                                       \
+  }                                                                            \
+                                                                               \
+  for (auto _ : state) {                                                       \
+    cv::cvtColor(src, dst, cv_code);                                           \
+  }                                                                            \
+  state.SetItemsProcessed(state.iterations() * 1);                             \
+}
+
+#define BENCHMARK_YUV422_2FUNCTIONS_DECLARATION(Function)                      \
+BENCHMARK_PPL_CV_OCL(Function)                                                 \
+BENCHMARK_OPENCV_CPU_YUV422(Function)
+
+#define BENCHMARK_YUV422_2FUNCTIONS(Function, src_channels, dst_channels,      \
+                                    width, height)                             \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _opencv_cpu_ocl, uchar,          \
+                   src_channels, dst_channels)->Args({width, height});         \
+BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _ppl_ocl, uchar,                 \
+                   src_channels, dst_channels)->Args({width, height})->        \
+                   UseManualTime()->Iterations(10);
+
+#define RUN_BENCHMARK_YUV422_COMPARISON_2FUNCTIONS(Function, src_channels,     \
+                                                   dst_channels)               \
+BENCHMARK_YUV422_2FUNCTIONS_DECLARATION(Function)                              \
+BENCHMARK_YUV422_2FUNCTIONS(Function, src_channels, dst_channels, 320, 240)    \
+BENCHMARK_YUV422_2FUNCTIONS(Function, src_channels, dst_channels, 640, 480)    \
+BENCHMARK_YUV422_2FUNCTIONS(Function, src_channels, dst_channels, 1280, 720)   \
+BENCHMARK_YUV422_2FUNCTIONS(Function, src_channels, dst_channels, 1920, 1080)
+
 // // BGR(RBB) <-> BGRA(RGBA)
 // RUN_BENCHMARK_COMPARISON_2FUNCTIONS(BGR2BGRA, c3, c4)
 // RUN_BENCHMARK_COMPARISON_2FUNCTIONS(RGB2RGBA, c3, c4)
@@ -866,3 +928,14 @@ BENCHMARK_DESCRETE_NVXX_1FUNCTION(Function, src_channels, dst_channels, 1920,  \
 // RUN_BENCHMARK_DESCRETE_I420_BATCH_1FUNCTION(I4202RGB, 1, 3)
 // RUN_BENCHMARK_DESCRETE_I420_BATCH_1FUNCTION(I4202BGRA, 1, 4)
 // RUN_BENCHMARK_DESCRETE_I420_BATCH_1FUNCTION(I4202RGBA, 1, 4)
+
+// YUV2GRAY
+RUN_BENCHMARK_I420_COMPARISON_2FUNCTIONS(YUV2GRAY, 1, 1)
+
+// BGR/GRAY <-> UYVY
+RUN_BENCHMARK_YUV422_COMPARISON_2FUNCTIONS(UYVY2BGR, 2, 3)
+RUN_BENCHMARK_YUV422_COMPARISON_2FUNCTIONS(UYVY2GRAY, 2, 1)
+
+// BGR/GRAY <-> YUYV
+RUN_BENCHMARK_YUV422_COMPARISON_2FUNCTIONS(YUYV2BGR, 2, 3)
+RUN_BENCHMARK_YUV422_COMPARISON_2FUNCTIONS(YUYV2GRAY, 2, 1)
