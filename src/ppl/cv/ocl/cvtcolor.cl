@@ -463,28 +463,6 @@ enum Bgr2GrayCoefficients {
   kRgbShift = 15,
 };
 
-/* #if defined(BGR2GRAY_U8_1D) || defined(BGR2GRAY_F32_1D) ||                     \
-    defined(RGB2GRAY_U8_1D) || defined(RGB2GRAY_F32_1D) || defined(SPIR)
-#define BGR2GRAYTYPE_1D(Function, base_type, T, T3)                 \
-__kernel                                                                       \
-void Function ## base_type ## Kernel0(global const T* src, int cols,           \
-                                      global T* dst) {                         \
-  int element_x = get_global_id(0);                                            \
-  int index_x = element_x << 1;                                            \
-  if (index_x >= cols) {                                                     \
-    return;                                                                    \
-  }                                                                            \
-                                                                               \
-  T3 input_value0 = vload3(index_x, src);                                     \
-  T3 input_value1 = vload3(index_x + 1, src);                                     \
-  T value0 = Function ## Compute(input_value0);                                  \
-  T value1 = Function ## Compute(input_value1);                                  \
-                                                                               \
-  dst[index_x] = value0;                                              \
-  dst[index_x + 1] = value1;                                              \
-}
-#endif */
-
 #if defined(BGR2GRAY_U8_1D) || defined(BGR2GRAY_F32_1D) ||                     \
     defined(RGB2GRAY_U8_1D) || defined(RGB2GRAY_F32_1D) || defined(SPIR)
 #define BGR2GRAYTYPE_1D(Function, base_type, T, T3)                            \
@@ -601,28 +579,6 @@ BGR2GRAYTYPE_1D(RGB2GRAY, F32, float, float3)
 BGR2GRAYTYPE_2D(RGB2GRAY, F32, float, float3)
 #endif
 
-/* #if defined(BGRA2GRAY_U8_1D) || defined(BGRA2GRAY_F32_1D) ||                   \
-    defined(RGBA2GRAY_U8_1D) || defined(RGBA2GRAY_F32_1D) || defined(SPIR)
-#define BGRA2GRAYTYPE_1D(Function, base_type, T, T4)                           \
-__kernel                                                                       \
-void Function ## base_type ## Kernel0(global const T* src, int cols,           \
-                                      global T* dst) {                         \
-  int element_x = get_global_id(0);                                            \
-  int index_x = element_x << 1;                                            \
-  if (index_x >= cols) {                                                     \
-    return;                                                                    \
-  }                                                                            \
-                                                                               \
-  T4 input_value0 = vload4(index_x, src);                                     \
-  T4 input_value1 = vload4(index_x + 1, src);                                     \
-  T value0 = Function ## Compute(input_value0);                                  \
-  T value1 = Function ## Compute(input_value1);                                  \
-                                                                               \
-  dst[index_x] = value0;                                              \
-  dst[index_x + 1] = value1;                                              \
-}
-#endif */
-
 #if defined(BGRA2GRAY_U8_1D) || defined(BGRA2GRAY_F32_1D) ||                   \
     defined(RGBA2GRAY_U8_1D) || defined(RGBA2GRAY_F32_1D) || defined(SPIR)
 #define BGRA2GRAYTYPE_1D(Function, base_type, T, T4)                           \
@@ -738,28 +694,6 @@ BGRA2GRAYTYPE_1D(RGBA2GRAY, F32, float, float4)
 #if defined(RGBA2GRAY_F32_2D) || defined(SPIR)
 BGRA2GRAYTYPE_2D(RGBA2GRAY, F32, float, float4)
 #endif
-
-/* #if defined(GRAY2BGR_U8_1D) || defined(GRAY2BGR_F32_1D) ||                   \
-    defined(GRAY2RGB_U8_1D) || defined(GRAY2RGB_F32_1D) || defined(SPIR)
-#define GRAY2BGRTYPE_1D(Function, base_type, T, T3)                           \
-__kernel                                                                       \
-void Function ## base_type ## Kernel0(global const T* src, int cols,           \
-                                      global T* dst) {                         \
-  int element_x = get_global_id(0);                                            \
-  int index_x = element_x << 1;                                            \
-  if (index_x >= cols) {                                                     \
-    return;                                                                    \
-  }                                                                            \
-                                                                               \
-  T input_value0 = src[index_x];                                     \
-  T input_value1 = src[index_x + 1];                                     \
-  T3 value0 = Function ## Compute(input_value0);                                  \
-  T3 value1 = Function ## Compute(input_value1);                                  \
-                                                                               \
-  vstore3(value0, index_x, dst);                                              \
-  vstore3(value1, index_x + 1, dst);                                              \
-}
-#endif */
 
 #if defined(GRAY2BGR_U8_1D) || defined(GRAY2BGR_F32_1D) ||                     \
     defined(GRAY2RGB_U8_1D) || defined(GRAY2RGB_F32_1D) || defined(SPIR)
@@ -1889,8 +1823,8 @@ uchar3 HSV2BGRCompute(const uchar3 src) {
   float v = src.z;
 
   float b, g, r;
-  float hscale = 0.03333333f;  /* 6.f / 180; */
-  float div_norm = 0.003921569f;  /* 1.0f / 255; */
+  float hscale = 0.03333333f;  // 6.f / 180;
+  float div_norm = 0.003921569f;  // 1.0f / 255;
   s *= div_norm;
   v *= div_norm;
   if (s == 0) {
@@ -1962,7 +1896,7 @@ uchar3 HSV2BGRCompute(const uchar3 src) {
 
 #if defined(HSV2BGR_F32_1D) || defined(HSV2BGR_F32_2D) || defined(SPIR)
 float3 HSV2BGRCompute(const float3 src) {
-  float _1_60 = 0.016666667f;  /* 1.f / 60.f; */
+  float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
   float h = src.x * _1_60;
@@ -2007,8 +1941,8 @@ uchar3 HSV2RGBCompute(const uchar3 src) {
   float v = src.z;
 
   float r, g, b;
-  float hscale = 0.03333333f;  /* 6.f / 180; */
-  float div_norm = 0.003921569f;  /* 1.0f / 255; */
+  float hscale = 0.03333333f;  // 6.f / 180;
+  float div_norm = 0.003921569f;  // 1.0f / 255;
   s *= div_norm;
   v *= div_norm;
   if (s == 0) {
@@ -2080,7 +2014,7 @@ uchar3 HSV2RGBCompute(const uchar3 src) {
 
 #if defined(HSV2RGB_F32_1D) || defined(HSV2RGB_F32_2D) || defined(SPIR)
 float3 HSV2RGBCompute(const float3 src) {
-  float _1_60 = 0.016666667f;  /* 1.f / 60.f; */
+  float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
   float h = src.x * _1_60;
@@ -2158,8 +2092,8 @@ uchar4 HSV2BGRACompute(const uchar3 src) {
   float v = src.z;
 
   float b, g, r;
-  float hscale = 0.03333333f;  /* 6.f / 180; */
-  float div_norm = 0.003921569f;  /* 1.0f / 255; */
+  float hscale = 0.03333333f;  // 6.f / 180;
+  float div_norm = 0.003921569f;  // 1.0f / 255;
   s *= div_norm;
   v *= div_norm;
   if (s == 0) {
@@ -2231,7 +2165,7 @@ uchar4 HSV2BGRACompute(const uchar3 src) {
 
 #if defined(HSV2BGRA_F32_1D) || defined(HSV2BGRA_F32_2D) || defined(SPIR)
 float4 HSV2BGRACompute(const float3 src) {
-  float _1_60 = 0.016666667f;  /* 1.f / 60.f; */
+  float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
   float h = src.x * _1_60;
@@ -2277,8 +2211,8 @@ uchar4 HSV2RGBACompute(const uchar3 src) {
   float v = src.z;
 
   float r, g, b;
-  float hscale = 0.03333333f;  /* 6.f / 180; */
-  float div_norm = 0.003921569f;  /* 1.0f / 255; */
+  float hscale = 0.03333333f;  // 6.f / 180;
+  float div_norm = 0.003921569f;  // 1.0f / 255;
   s *= div_norm;
   v *= div_norm;
   if (s == 0) {
@@ -2350,7 +2284,7 @@ uchar4 HSV2RGBACompute(const uchar3 src) {
 
 #if defined(HSV2RGBA_F32_1D) || defined(HSV2RGBA_F32_2D) || defined(SPIR)
 float4 HSV2RGBACompute(const float3 src) {
-  float _1_60 = 0.016666667f;  /* 1.f / 60.f; */
+  float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
   float h = src.x * _1_60;
@@ -2444,8 +2378,8 @@ int labCbrt_b(int i) {
 
 #if defined(BGR2LAB_U8_1D) || defined(BGR2LAB_U8_2D) || defined(SPIR)
 uchar3 BGR2LABCompute(const uchar3 src) {
-  int Lscale = 296;  /* (116 * 255 + 50) / 100; */
-  int Lshift = -1336935;  /* -((16 * 255 * (1 << kLabShift2) + 50) / 100); */
+  int Lscale = 296;  // (116 * 255 + 50) / 100;
+  int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
   int B = gamma(src.x / 255.f);
   int G = gamma(src.y / 255.f);
@@ -2507,8 +2441,8 @@ float3 BGR2LABCompute(float3 src) {
 
 #if defined(RGB2LAB_U8_1D) || defined(RGB2LAB_U8_2D) || defined(SPIR)
 uchar3 RGB2LABCompute(const uchar3 src) {
-  int Lscale = 296;  /* (116 * 255 + 50) / 100; */
-  int Lshift = -1336935;  /* -((16 * 255 * (1 << kLabShift2) + 50) / 100); */
+  int Lscale = 296;  // (116 * 255 + 50) / 100;
+  int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
   int B = gamma(src.z / 255.f);
   int G = gamma(src.y / 255.f);
@@ -2603,8 +2537,8 @@ Convert3To3_2D(RGB2LAB, F32, float, float3)
 
 #if defined(BGRA2LAB_U8_1D) || defined(BGRA2LAB_U8_2D) || defined(SPIR)
 uchar3 BGRA2LABCompute(const uchar4 src) {
-  int Lscale = 296;  /* (116 * 255 + 50) / 100; */
-  int Lshift = -1336935;  /* -((16 * 255 * (1 << kLabShift2) + 50) / 100); */
+  int Lscale = 296;  // (116 * 255 + 50) / 100;
+  int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
   int B = gamma(src.x / 255.f);
   int G = gamma(src.y / 255.f);
@@ -2666,8 +2600,8 @@ float3 BGRA2LABCompute(float4 src) {
 
 #if defined(RGBA2LAB_U8_1D) || defined(RGBA2LAB_U8_2D) || defined(SPIR)
 uchar3 RGBA2LABCompute(const uchar4 src) {
-  int Lscale = 296;  /* (116 * 255 + 50) / 100; */
-  int Lshift = -1336935;  /* -((16 * 255 * (1 << kLabShift2) + 50) / 100); */
+  int Lscale = 296;  // (116 * 255 + 50) / 100;
+  int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
   int B = gamma(src.z / 255.f);
   int G = gamma(src.y / 255.f);
@@ -3250,7 +3184,6 @@ Convert3To4_1D(LAB2RGBA, F32, float, float3, float4)
 #if defined(LAB2RGBA_F32_2D) || defined(SPIR)
 Convert3To4_2D(LAB2RGBA, F32, float, float3, float4)
 #endif
-
 
 /*********************** BGR/RGB/BGRA/RGBA <-> NV12 ************************/
 

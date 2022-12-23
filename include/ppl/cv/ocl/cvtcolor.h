@@ -1339,7 +1339,7 @@ ppl::common::RetCode BGRA2GRAY(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   RGBA2GRAY<float>(queue, height, width, width * src_channels, gpu_input,
- *                   width * dst_channels, gpu_output);
+ *                    width * dst_channels, gpu_output);
  *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
  *                                    output, 0, NULL, NULL);
  *
@@ -4216,7 +4216,7 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  *                                     src_size, input, 0, NULL, NULL);
  *
  *   BGRA2NV12<uchar>(queue, height, width, width * src_channels, gpu_input,
- *                   width, gpu_y, width, gpu_uv);
+ *                    width, gpu_y, width, gpu_uv);
  *
  *   free(input);
  *   clReleaseMemObject(gpu_input);
@@ -7330,7 +7330,6 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
                                const cl_mem inData,
                                int outWidthStride,
                                cl_mem outData);
-
 
 /**
  * @brief Convert RGBA images to I420 images.
