@@ -102,7 +102,7 @@ void flipU8Kernel1(global const uchar* src, int rows, int cols, int src_stride,
     y = rows - element_y - 1;
   }
   global uchar* data = (global uchar*)((global uchar*)src + y * src_stride);
-  uchar3 value = value = vload3(x, data);
+  uchar3 value = vload3(x, data);
 
   data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
   vstore3(value, element_x, data);
@@ -133,7 +133,7 @@ void flipU8Kernel2(global const uchar* src, int rows, int cols, int src_stride,
     y = rows - element_y - 1;
   }
   global uchar* data = (global uchar*)((global uchar*)src + y * src_stride);
-  uchar4 value = value = vload4(x, data);
+  uchar4 value = vload4(x, data);
 
   data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
   vstore4(value, element_x, data);
@@ -195,7 +195,7 @@ void flipF32Kernel1(global const float* src, int rows, int cols, int src_stride,
     y = rows - element_y - 1;
   }
   global float* data = (global float*)((global uchar*)src + y * src_stride);
-  float3 value = value = vload3(x, data);
+  float3 value = vload3(x, data);
 
   data = (global float*)((global uchar*)dst + element_y * dst_stride);
   vstore3(value, element_x, data);
@@ -226,7 +226,7 @@ void flipF32Kernel2(global const float* src, int rows, int cols, int src_stride,
     y = rows - element_y - 1;
   }
   global float* data = (global float*)((global uchar*)src + y * src_stride);
-  float4 value = value = vload4(x, data);
+  float4 value = vload4(x, data);
 
   data = (global float*)((global uchar*)dst + element_y * dst_stride);
   vstore4(value, element_x, data);

@@ -121,7 +121,7 @@ bool PplCvCudaDilateTest<T, channels>::apply() {
 
   cv::Size kSize(ksize, ksize);
   cv::Mat kernel0 = cv::getStructuringElement(cv::MORPH_RECT, kSize);
-  cv::Mat kernel1  = cv::getStructuringElement(cv::MORPH_ELLIPSE, kSize);
+  cv::Mat kernel1 = cv::getStructuringElement(cv::MORPH_ELLIPSE, kSize);
   uchar* mask = (uchar*)malloc(ksize * ksize * sizeof(uchar));
   int index = 0;
   for (int i = 0; i < ksize; i++) {
