@@ -342,7 +342,7 @@ void dilate2DF32Kernel0(global const float* src, int rows, int cols,
   }
 
   float target;
-  float result = 0.f;
+  float result = FLT_MIN;
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y * src_stride);
   for (int i = bottom_y; i <= top_y; i++) {
@@ -397,7 +397,7 @@ void dilate2DF32Kernel1(global const float* src, int rows, int cols,
   }
 
   float3 target;
-  float3 result = (float3)(0.f, 0.f, 0.f);
+  float3 result = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y * src_stride);
   for (int i = bottom_y; i <= top_y; i++) {
@@ -453,7 +453,7 @@ void dilate2DF32Kernel2(global const float* src, int rows, int cols,
   }
 
   float4 target;
-  float4 result = (float4)(0.f, 0.f, 0.f, 0.f);
+  float4 result = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y * src_stride);
   for (int i = bottom_y; i <= top_y; i++) {
@@ -1232,10 +1232,10 @@ void dilateRowF32Kernel0(global const float* src, int rows, int cols,
 
   int index = bottom_x0;
   float target;
-  float result0 = 0.f;
-  float result1 = 0.f;
-  float result2 = 0.f;
-  float result3 = 0.f;
+  float result0 = FLT_MIN;
+  float result1 = FLT_MIN;
+  float result2 = FLT_MIN;
+  float result3 = FLT_MIN;
   global float* data = (global float*)((global uchar*)src +
                                        element_y * src_stride);
   while (index <= top_x3) {
@@ -1347,10 +1347,10 @@ void dilateColF32Kernel0(global const float* src, int rows, int cols,
 
   int index = bottom_y0;
   float target;
-  float result0 = 0.f;
-  float result1 = 0.f;
-  float result2 = 0.f;
-  float result3 = 0.f;
+  float result0 = FLT_MIN;
+  float result1 = FLT_MIN;
+  float result2 = FLT_MIN;
+  float result3 = FLT_MIN;
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y0 * src_stride);
   while (index <= top_y3) {
@@ -1471,10 +1471,10 @@ void dilateRowF32Kernel1(global const float* src, int rows, int cols,
 
   int index = bottom_x0;
   float3 target;
-  float3 result0 = (float3)(0.f, 0.f, 0.f);
-  float3 result1 = (float3)(0.f, 0.f, 0.f);
-  float3 result2 = (float3)(0.f, 0.f, 0.f);
-  float3 result3 = (float3)(0.f, 0.f, 0.f);
+  float3 result0 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
+  float3 result1 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
+  float3 result2 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
+  float3 result3 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
   global float* data = (global float*)((global uchar*)src +
                                        element_y * src_stride);
   while (index <= top_x3) {
@@ -1587,10 +1587,10 @@ void dilateColF32Kernel1(global const float* src, int rows, int cols,
 
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y0 * src_stride);
-  float3 result0 = (float3)(0.f, 0.f, 0.f);
-  float3 result1 = (float3)(0.f, 0.f, 0.f);
-  float3 result2 = (float3)(0.f, 0.f, 0.f);
-  float3 result3 = (float3)(0.f, 0.f, 0.f);
+  float3 result0 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
+  float3 result1 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
+  float3 result2 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
+  float3 result3 = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
 
   float3 target;
   int index = bottom_y0;
@@ -1713,10 +1713,10 @@ void dilateRowF32Kernel2(global const float* src, int rows, int cols,
 
   int index = bottom_x0;
   float4 target;
-  float4 result0 = (float4)(0.f, 0.f, 0.f, 0.f);
-  float4 result1 = (float4)(0.f, 0.f, 0.f, 0.f);
-  float4 result2 = (float4)(0.f, 0.f, 0.f, 0.f);
-  float4 result3 = (float4)(0.f, 0.f, 0.f, 0.f);
+  float4 result0 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
+  float4 result1 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
+  float4 result2 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
+  float4 result3 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
   global float* data = (global float*)((global uchar*)src +
                                        element_y * src_stride);
   while (index <= top_x3) {
@@ -1830,10 +1830,10 @@ void dilateColF32Kernel2(global const float* src, int rows, int cols,
 
   int index = bottom_y0;
   float4 target;
-  float4 result0 = (float4)(0.f, 0.f, 0.f, 0.f);
-  float4 result1 = (float4)(0.f, 0.f, 0.f, 0.f);
-  float4 result2 = (float4)(0.f, 0.f, 0.f, 0.f);
-  float4 result3 = (float4)(0.f, 0.f, 0.f, 0.f);
+  float4 result0 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
+  float4 result1 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
+  float4 result2 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
+  float4 result3 = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y0 * src_stride);
   while (index <= top_y3) {
@@ -2220,7 +2220,7 @@ void dilate2DF32Kernel3(global const float* src, int rows, int cols,
   int index;
   int kernel_bottom_start = kernel_bottom_y * kernel_x + kernel_bottom_x;
   float target;
-  float result = 0.f;
+  float result = FLT_MIN;
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y * src_stride);
   for (int i = bottom_y; i <= top_y; i++) {
@@ -2306,7 +2306,7 @@ void dilate2DF32Kernel4(global const float* src, int rows, int cols,
   int index;
   int kernel_bottom_start = kernel_bottom_y * kernel_x + kernel_bottom_x;
   float3 target;
-  float3 result = (float3)(0.f, 0.f, 0.f);
+  float3 result = (float3)(FLT_MIN, FLT_MIN, FLT_MIN);
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y * src_stride);
   for (int i = bottom_y; i <= top_y; i++) {
@@ -2393,7 +2393,7 @@ void dilate2DF32Kernel5(global const float* src, int rows, int cols,
   int index;
   int kernel_bottom_start = kernel_bottom_y * kernel_x + kernel_bottom_x;
   float4 target;
-  float4 result = (float4)(0.f, 0.f, 0.f, 0.f);
+  float4 result = (float4)(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
   global float* data = (global float*)((global uchar*)src +
                                        bottom_y * src_stride);
   for (int i = bottom_y; i <= top_y; i++) {

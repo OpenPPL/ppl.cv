@@ -26,29 +26,6 @@
 #include "ppl/common/ocl/oclcommon.h"
 #include "utility/infrastructure.h"
 
-// template <typename T>
-// void showMatrix(cv::Mat& src)
-// {
-//   int rows = src.rows;
-//   int cols = src.cols;
-//   int channels = src.channels();
-
-//   std::cout << "Matrix: " << rows << ", " << cols << ", " << channels
-//             << std::endl;
-//   std::cout << "data: " << std::endl;
-//   for (int i = 0; i < rows; i++) {
-//     const T* data = src.ptr<const T>(i);
-//     for (int j = 0; j < cols; j++)  {
-//       for (int cn = 0; cn < channels; cn++) {
-//         std::cout << (float)data[cn] << ", ";
-//       }
-//       data += channels;
-//     }
-//     std::cout << std::endl;
-//   }
-//   std::cout << std::endl << std::endl;
-// }
-
 enum Functions {
   kFullyMaskedDilate,
   kPartiallyMaskedDilate,
@@ -135,8 +112,6 @@ bool PplCvOclDilateTest<T, channels>::apply() {
   cv::Mat cv_dst(size.height, size.width,
                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  // showMatrix<T>(src); // debug
-
   int src_bytes = src.rows * src.step;
   int dst_bytes = dst.rows * dst.step;
   cl_int error_code = 0;
@@ -179,7 +154,6 @@ bool PplCvOclDilateTest<T, channels>::apply() {
       mask[index++] = data[j];
     }
   }
-  // showMatrix<uchar>(kernel1);  // debug
 
   cv::BorderTypes cv_border = cv::BORDER_DEFAULT;
   if (border_type == ppl::cv::BORDER_DEFAULT) {
@@ -276,7 +250,7 @@ bool PplCvOclDilateTest<T, channels>::apply() {
   return (identity0 && identity1);
 }
 
-/* #define UNITTEST(T, channels)                                                  \
+#define UNITTEST(T, channels)                                                  \
 using PplCvOclDilateTest ## T ## channels = PplCvOclDilateTest<T, channels>;   \
 TEST_P(PplCvOclDilateTest ## T ## channels, Standard) {                        \
   bool identity = this->apply();                                               \
@@ -287,28 +261,6 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclDilateTest ## T ## channels,          \
   ::testing::Combine(                                                          \
     ::testing::Values(kFullyMaskedDilate, kPartiallyMaskedDilate,              \
                       kFullyMaskedErode, kPartiallyMaskedErode),               \
-    ::testing::Values(ppl::cv::BORDER_DEFAULT, ppl::cv::BORDER_CONSTANT),      \
-    ::testing::Values(1, 3, 5, 7, 11, 15),                                     \
-    ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
-                      cv::Size{1283, 720}, cv::Size{1976, 1080},               \
-                      cv::Size{320, 240}, cv::Size{640, 480},                  \
-                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
-  [](const testing::TestParamInfo<                                             \
-      PplCvOclDilateTest ## T ## channels::ParamType>& info) {                 \
-    return convertToStringDilate(info.param);                                  \
-  }                                                                            \
-); */
-
-#define UNITTEST(T, channels)                                                  \
-using PplCvOclDilateTest ## T ## channels = PplCvOclDilateTest<T, channels>;   \
-TEST_P(PplCvOclDilateTest ## T ## channels, Standard) {                        \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
-}                                                                              \
-                                                                               \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclDilateTest ## T ## channels,          \
-  ::testing::Combine(                                                          \
-    ::testing::Values(kFullyMaskedErode, kPartiallyMaskedErode),               \
     ::testing::Values(ppl::cv::BORDER_DEFAULT, ppl::cv::BORDER_CONSTANT),      \
     ::testing::Values(1, 3, 5, 7, 11, 15),                                     \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
