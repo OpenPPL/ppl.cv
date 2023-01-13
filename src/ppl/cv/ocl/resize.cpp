@@ -198,8 +198,8 @@ RetCode resizeF32(const cl_mem src, int src_rows, int src_cols, int channels,
 
 template <>
 RetCode Resize<uchar, 1>(cl_command_queue queue,
-                         int height,
-                         int width,
+                         int inHeight,
+                         int inWidth,
                          int inWidthStride,
                          const cl_mem inData,
                          int outHeight,
@@ -207,7 +207,7 @@ RetCode Resize<uchar, 1>(cl_command_queue queue,
                          int outWidthStride,
                          cl_mem outData,
                          InterpolationType interpolation) {
-  RetCode code = resizeU8(inData, height, width, 1, inWidthStride, outData,
+  RetCode code = resizeU8(inData, inHeight, inWidth, 1, inWidthStride, outData,
                           outHeight, outWidth, outWidthStride, interpolation,
                           queue);
 
@@ -216,8 +216,8 @@ RetCode Resize<uchar, 1>(cl_command_queue queue,
 
 template <>
 RetCode Resize<uchar, 3>(cl_command_queue queue,
-                         int height,
-                         int width,
+                         int inHeight,
+                         int inWidth,
                          int inWidthStride,
                          const cl_mem inData,
                          int outHeight,
@@ -225,7 +225,7 @@ RetCode Resize<uchar, 3>(cl_command_queue queue,
                          int outWidthStride,
                          cl_mem outData,
                          InterpolationType interpolation) {
-  RetCode code = resizeU8(inData, height, width, 3, inWidthStride, outData,
+  RetCode code = resizeU8(inData, inHeight, inWidth, 3, inWidthStride, outData,
                           outHeight, outWidth, outWidthStride, interpolation,
                           queue);
 
@@ -234,8 +234,8 @@ RetCode Resize<uchar, 3>(cl_command_queue queue,
 
 template <>
 RetCode Resize<uchar, 4>(cl_command_queue queue,
-                         int height,
-                         int width,
+                         int inHeight,
+                         int inWidth,
                          int inWidthStride,
                          const cl_mem inData,
                          int outHeight,
@@ -243,7 +243,7 @@ RetCode Resize<uchar, 4>(cl_command_queue queue,
                          int outWidthStride,
                          cl_mem outData,
                          InterpolationType interpolation) {
-  RetCode code = resizeU8(inData, height, width, 4, inWidthStride, outData,
+  RetCode code = resizeU8(inData, inHeight, inWidth, 4, inWidthStride, outData,
                           outHeight, outWidth, outWidthStride, interpolation,
                           queue);
 
@@ -252,8 +252,8 @@ RetCode Resize<uchar, 4>(cl_command_queue queue,
 
 template <>
 RetCode Resize<float, 1>(cl_command_queue queue,
-                         int height,
-                         int width,
+                         int inHeight,
+                         int inWidth,
                          int inWidthStride,
                          const cl_mem inData,
                          int outHeight,
@@ -261,7 +261,7 @@ RetCode Resize<float, 1>(cl_command_queue queue,
                          int outWidthStride,
                          cl_mem outData,
                          InterpolationType interpolation) {
-  RetCode code = resizeF32(inData, height, width, 1, inWidthStride, outData,
+  RetCode code = resizeF32(inData, inHeight, inWidth, 1, inWidthStride, outData,
                            outHeight, outWidth, outWidthStride, interpolation,
                            queue);
 
@@ -270,8 +270,8 @@ RetCode Resize<float, 1>(cl_command_queue queue,
 
 template <>
 RetCode Resize<float, 3>(cl_command_queue queue,
-                         int height,
-                         int width,
+                         int inHeight,
+                         int inWidth,
                          int inWidthStride,
                          const cl_mem inData,
                          int outHeight,
@@ -279,7 +279,7 @@ RetCode Resize<float, 3>(cl_command_queue queue,
                          int outWidthStride,
                          cl_mem outData,
                          InterpolationType interpolation) {
-  RetCode code = resizeF32(inData, height, width, 3, inWidthStride, outData,
+  RetCode code = resizeF32(inData, inHeight, inWidth, 3, inWidthStride, outData,
                            outHeight, outWidth, outWidthStride, interpolation,
                            queue);
 
@@ -288,8 +288,8 @@ RetCode Resize<float, 3>(cl_command_queue queue,
 
 template <>
 RetCode Resize<float, 4>(cl_command_queue queue,
-                         int height,
-                         int width,
+                         int inHeight,
+                         int inWidth,
                          int inWidthStride,
                          const cl_mem inData,
                          int outHeight,
@@ -297,7 +297,7 @@ RetCode Resize<float, 4>(cl_command_queue queue,
                          int outWidthStride,
                          cl_mem outData,
                          InterpolationType interpolation) {
-  RetCode code = resizeF32(inData, height, width, 4, inWidthStride, outData,
+  RetCode code = resizeF32(inData, inHeight, inWidth, 4, inWidthStride, outData,
                            outHeight, outWidth, outWidthStride, interpolation,
                            queue);
 

@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef _ST_HPC_PPL_CV_OCL_RESIZE_H_
-#define _ST_HPC_PPL_CV_OCL_RESIZE_H_
+#ifndef _ST_HPC_PPL_CV_OCL_WARPAFFINE_H_
+#define _ST_HPC_PPL_CV_OCL_WARPAFFINE_H_
 
 #include "CL/cl.h"
 
@@ -27,8 +27,8 @@ namespace cv {
 namespace ocl {
 
 /**
- * @brief Scale the image.
- * @tparam T The data type of input and output image, currently only
+ * @brief Applies an affine transformation to an image.
+ * @tparam T The data type of input image and output image, currently only
  *         uint8_t(uchar) and float are supported.
  * @tparam channels The number of channels of input image, 1, 3 and 4 are
  *         supported.
@@ -43,13 +43,17 @@ namespace ocl {
  * @param outWidthStride  the width stride of output image, similar to
  *                        inWidthStride.
  * @param outData         output image data.
- * @param interpolation   Interpolation method. INTERPOLATION_LINEAR,
- *                        INTERPOLATION_NEAREST_POINT and INTERPOLATION_AREA
- *                        are supported.
+ * @param affineMatrix    2 x 3 transformation matrix.
+ * @param interpolation   Interpolation method. INTERPOLATION_LINEAR and
+ *                        INTERPOLATION_NEAREST_POINT are supported.
+ * @param borderType      ways to deal with border. BORDER_CONSTANT,
+ *                        BORDER_REPLICATE and BORDER_TRANSPARENT are supported.
+ * @param borderValue     value used in case of a constant border; by default,
+ *                        it is 0.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @note 1 For best performance, rows of input&output aligned with 64 bits are
- *         recommended.
+ * @note It is aligned to the standard formula, which is more accurate than its
+ *       counterpart in opencv.
  * @remark The fllowing table show which data type and channels are supported.
  * <table>
  * <tr><th>Data type(T)<th>channels
@@ -63,13 +67,13 @@ namespace ocl {
  * <table>
  * <caption align="left">Requirements</caption>
  * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/resize.h"
+ * <tr><td>Header files  <td> #include "ppl/cv/ocl/warpaffine.h"
  * <tr><td>Project       <td> ppl.cv
  * </table>
  * @since ppl.cv-v1.0.0
  * ###Example
  * @code{.cpp}
- * #include "ppl/cv/ocl/resize.h"
+ * #include "ppl/cv/ocl/warpaffine.h"
  * #include "ppl/common/oclcommon.h"
  *
  * using namespace ppl::common::ocl;
@@ -80,7 +84,8 @@ namespace ocl {
  *   int src_height = 240;
  *   int dst_width  = 640;
  *   int dst_height = 480;
- *   int channels = 3;
+ *   int channels   = 3;
+ *   float affine_matrix[6] = {0.f, 0.f, 1.f, 0.f, 0.f, 1.f};
  *
  *   createSharedFrameChain(false);
  *   cl_context context = getSharedFrameChain()->getContext();
@@ -98,9 +103,10 @@ namespace ocl {
  *   error_code = clEnqueueWriteBuffer(queue, gpu_input, CL_FALSE, 0,
  *                                     src_size, input, 0, NULL, NULL);
  *
- *   Resize<float, 3>(queue, src_height, src_width, src_width * channels,
- *                    gpu_input, dst_height, dst_width,  dst_width * channels,
- *                    gpu_output);
+ *   WarpAffine<float, 3>(queue, src_height, src_width, src_width * channels,
+ *       gpu_input, dst_height, dst_width,  dst_width * channels, gpu_output,
+ *       affine_matrix, ppl::cv::INTERPOLATION_LINEAR, ppl::cv::BORDER_CONSTANT,
+ *       0);
  *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, dst_size,
  *                                    output, 0, NULL, NULL);
  *
@@ -114,20 +120,22 @@ namespace ocl {
  * @endcode
  */
 template <typename T, int channels>
-ppl::common::RetCode
-Resize(cl_command_queue queue,
-       int inHeight,
-       int inWidth,
-       int inWidthStride,
-       const cl_mem inData,
-       int outHeight,
-       int outWidth,
-       int outWidthStride,
-       cl_mem outData,
-       InterpolationType interpolation = INTERPOLATION_LINEAR);
+ppl::common::RetCode WarpAffine(cl_command_queue queue,
+                                int inHeight,
+                                int inWidth,
+                                int inWidthStride,
+                                const cl_mem inData,
+                                int outHeight,
+                                int outWidth,
+                                int outWidthStride,
+                                cl_mem outData,
+                                const float* affineMatrix,
+                                InterpolationType interpolation,
+                                BorderType borderType = BORDER_CONSTANT,
+                                T borderValue = 0);
 
 }  // namespace ocl
 }  // namespace cv
 }  // namespace ppl
 
-#endif  // _ST_HPC_PPL_CV_OCL_RESIZE_H_
+#endif  // _ST_HPC_PPL_CV_OCL_WARPAFFINE_H_
