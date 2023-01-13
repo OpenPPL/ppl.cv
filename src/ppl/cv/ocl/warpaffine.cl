@@ -82,8 +82,10 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       global uchar* input = (global uchar*)(src + src_y0 * src_stride);
       uchar3 src_value0 = flag0 ? vload3(src_x0, input) : border_value1;
       uchar3 src_value1 = flag1 ? vload3(src_x1, input) : border_value1;
-      float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * convert_float3(src_value0);
-      float3 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * convert_float3(src_value1);
+      float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) *
+                      convert_float3(src_value0);
+      float3 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) *
+                      convert_float3(src_value1);
       float3 sum = (float3)(0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
@@ -91,8 +93,10 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       input = (global uchar*)(src + src_y1 * src_stride);
       src_value0 = flag2 ? vload3(src_x0, input) : border_value1;
       src_value1 = flag3 ? vload3(src_x1, input) : border_value1;
-      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * convert_float3(src_value0);
-      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * convert_float3(src_value1);
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) *
+               convert_float3(src_value0);
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) *
+               convert_float3(src_value1);
       sum += value0;
       sum += value1;
 
@@ -106,8 +110,10 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       global uchar* input = (global uchar*)(src + src_y0 * src_stride);
       uchar4 src_value0 = flag0 ? vload4(src_x0, input) : border_value1;
       uchar4 src_value1 = flag1 ? vload4(src_x1, input) : border_value1;
-      float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * convert_float4(src_value0);
-      float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * convert_float4(src_value1);
+      float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) *
+                      convert_float4(src_value0);
+      float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) *
+                      convert_float4(src_value1);
       float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
@@ -115,8 +121,10 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       input = (global uchar*)(src + src_y1 * src_stride);
       src_value0 = flag2 ? vload4(src_x0, input) : border_value1;
       src_value1 = flag3 ? vload4(src_x1, input) : border_value1;
-      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * convert_float4(src_value0);
-      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * convert_float4(src_value1);
+      value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) *
+               convert_float4(src_value0);
+      value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) *
+               convert_float4(src_value1);
       sum += value0;
       sum += value1;
 
@@ -244,7 +252,8 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
     }
 
     if (channels == 1) {
-      global float* input = (global float*)((global uchar*)src + src_y0 * src_stride);
+      global float* input = (global float*)((global uchar*)src +
+                                            src_y0 * src_stride);
       float src_value0 = flag0 ? input[src_x0] : border_value;
       float src_value1 = flag1 ? input[src_x1] : border_value;
       float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
@@ -261,12 +270,14 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst + element_y * dst_stride);
+      global float* output = (global float*)((global uchar*)dst +
+                                             element_y * dst_stride);
       output[element_x] = sum;
     }
     else if (channels == 3) {
       float3 border_value1 = (float3)(border_value, border_value, border_value);
-      global float* input = (global float*)((global uchar*)src + src_y0 * src_stride);
+      global float* input = (global float*)((global uchar*)src +
+                                            src_y0 * src_stride);
       float3 src_value0 = flag0 ? vload3(src_x0, input) : border_value1;
       float3 src_value1 = flag1 ? vload3(src_x1, input) : border_value1;
       float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
@@ -283,13 +294,15 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst + element_y * dst_stride);
+      global float* output = (global float*)((global uchar*)dst +
+                                             element_y * dst_stride);
       vstore3(sum, element_x, output);
     }
     else {
       float4 border_value1 = (float4)(border_value, border_value, border_value,
                                       border_value);
-      global float* input = (global float*)((global uchar*)src + src_y0 * src_stride);
+      global float* input = (global float*)((global uchar*)src +
+                                            src_y0 * src_stride);
       float4 src_value0 = flag0 ? vload4(src_x0, input) : border_value1;
       float4 src_value1 = flag1 ? vload4(src_x1, input) : border_value1;
       float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
@@ -306,7 +319,8 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst + element_y * dst_stride);
+      global float* output = (global float*)((global uchar*)dst +
+                                             element_y * dst_stride);
       vstore4(sum, element_x, output);
     }
   }
@@ -322,7 +336,8 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
     src_y1 = clamp(src_y1, 0, src_rows - 1);
 
     if (channels == 1) {
-      global float* input = (global float*)((global uchar*)src + src_y0 * src_stride);
+      global float* input = (global float*)((global uchar*)src +
+                                            src_y0 * src_stride);
       float src_value0 = input[src_x0];
       float src_value1 = input[src_x1];
       float value0 = diff_x1 * diff_y1 * src_value0;
@@ -339,11 +354,13 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst + element_y * dst_stride);
+      global float* output = (global float*)((global uchar*)dst +
+                                             element_y * dst_stride);
       output[element_x] = sum;
     }
     else if (channels == 3) {
-      global float* input = (global float*)((global uchar*)src + src_y0 * src_stride);
+      global float* input = (global float*)((global uchar*)src +
+                                            src_y0 * src_stride);
       float3 src_value0 = vload3(src_x0, input);
       float3 src_value1 = vload3(src_x1, input);
       float3 value0 = diff_x1 * diff_y1 * src_value0;
@@ -360,11 +377,13 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst + element_y * dst_stride);
+      global float* output = (global float*)((global uchar*)dst +
+                                             element_y * dst_stride);
       vstore3(sum, element_x, output);
     }
     else {
-      global float* input = (global float*)((global uchar*)src + src_y0 * src_stride);
+      global float* input = (global float*)((global uchar*)src +
+                                            src_y0 * src_stride);
       float4 src_value0 = vload4(src_x0, input);
       float4 src_value1 = vload4(src_x1, input);
       float4 value0 = diff_x1 * diff_y1 * src_value0;
@@ -381,7 +400,8 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst + element_y * dst_stride);
+      global float* output = (global float*)((global uchar*)dst +
+                                             element_y * dst_stride);
       vstore4(sum, element_x, output);
     }
   }
