@@ -1,6 +1,11 @@
 hpcc_populate_dep(googletest)
 
-add_executable(pplcv_unittest ${PPLCV_UNITTEST_SRC})
+if(PPLCV_USE_OPENCL)
+    add_executable(pplcv_unittest ${PPLCV_UNITTEST_SRC}
+                   src/ppl/cv/ocl/utility/infrastructure.cpp)
+else()
+    add_executable(pplcv_unittest ${PPLCV_UNITTEST_SRC})
+endif()
 
 if(PPLCV_USE_X86)
     target_compile_definitions(pplcv_unittest PRIVATE PPLCV_UNITTEST_OPENCV)

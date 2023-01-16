@@ -287,12 +287,12 @@ void resizeLinearKernel(const float* src, int src_rows, int src_cols,
     float_x = 0;
   }
 
-  int int_y1 = INCREASE(int_y0,src_rows);
+  int int_y1 = INCREASE(int_y0, src_rows);
   float buf_y[2];
   buf_y[0] = 1.f - float_y;
   buf_y[1] = 1.f - buf_y[0];
 
-  int int_x1 = INCREASE(int_x0,src_cols);
+  int int_x1 = INCREASE(int_x0, src_cols);
   float buf_x[2];
   buf_x[0] = 1.f - float_x;
   buf_x[1] = 1.f - buf_x[0];
@@ -377,7 +377,7 @@ void resizeNearestPointKernel(const T* src, int src_rows, int src_cols,
   int int_x = element_x * col_scale;
   int_x = min(int_x, src_cols - 1);
 
-  Tn* input  = (Tn*)(src + int_y* src_stride);
+  Tn* input  = (Tn*)(src + int_y * src_stride);
   Tn* output = (Tn*)(dst + element_y * dst_stride);
   output[element_x] = input[int_x];
 }
@@ -532,7 +532,7 @@ void resizeAreaC1Kernel1(const T* src, int src_rows, int src_cols, int channels,
   input = (T*)(src + int_y0 * src_stride);
   for (int dy = int_y0; dy < int_y1; ++dy) {
     if (int_x0 - float_x0 > 1e-3) {
-      sum = sum + input[int_x0 - 1] * ((int_x0 - float_x0));
+      sum = sum + input[int_x0 - 1] * (int_x0 - float_x0);
     }
 
     for (int dx = int_x0; dx < int_x1; ++dx) {
@@ -540,7 +540,7 @@ void resizeAreaC1Kernel1(const T* src, int src_rows, int src_cols, int channels,
     }
 
     if (float_x1 - int_x1 > 1e-3) {
-      sum = sum + input[int_x1] * ((float_x1 - int_x1));
+      sum = sum + input[int_x1] * (float_x1 - int_x1);
     }
     input += src_stride;
   }
@@ -886,7 +886,7 @@ void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
 
     uchar3* output = (uchar3*)((uchar*)dst + element_y * dst_stride);
     output[element_x] = bilinearSample(values, buf_x[0], buf_x[1],
-                                            buf_y[0], buf_y[1]);
+                                       buf_y[0], buf_y[1]);
   }
   else {
     uchar4* input0 = (uchar4*)((uchar*)src + int_y0 * src_stride);
@@ -900,7 +900,7 @@ void resizeAreaKernel2(const uchar* src, int src_rows, int src_cols,
 
     uchar4* output = (uchar4*)((uchar*)dst + element_y * dst_stride);
     output[element_x] = bilinearSample(values, buf_x[0], buf_x[1],
-                                            buf_y[0], buf_y[1]);
+                                       buf_y[0], buf_y[1]);
   }
 }
 

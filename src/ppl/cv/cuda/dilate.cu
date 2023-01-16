@@ -178,7 +178,7 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(uchar));
   PPL_ASSERT(kernel_y > 0 && kernel_y < rows);
   PPL_ASSERT(kernel_x > 0 && kernel_x < cols);
-  PPL_ASSERT(kernel_y & 1 == 1 && kernel_x & 1 == 1);
+  PPL_ASSERT((kernel_y & 1) == 1 && (kernel_x & 1) == 1);
   PPL_ASSERT(border_type == BORDER_CONSTANT ||
              border_type == BORDER_REPLICATE ||
              border_type == BORDER_REFLECT ||
@@ -456,6 +456,7 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
   PPL_ASSERT(dst_stride >= cols * channels * (int)sizeof(float));
   PPL_ASSERT(kernel_y > 0 && kernel_y < rows);
   PPL_ASSERT(kernel_x > 0 && kernel_x < cols);
+  PPL_ASSERT((kernel_y & 1) == 1 && (kernel_x & 1) == 1);
   PPL_ASSERT(border_type == BORDER_CONSTANT ||
              border_type == BORDER_REPLICATE ||
              border_type == BORDER_REFLECT ||

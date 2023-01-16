@@ -272,7 +272,7 @@ RetCode add(const uchar* src0, int rows, int cols, int channels,
                                            src1_stride, dst, dst_stride);
   }
   else if (src0_stride == columns && src1_stride == columns &&
-           dst_stride == columns ) {
+           dst_stride == columns) {
     columns *= rows;
     cols = divideUp(columns, 4, 2);
     block.x = 256;

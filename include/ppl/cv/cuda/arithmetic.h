@@ -123,7 +123,7 @@ ppl::common::RetCode Add(cudaStream_t stream,
  *                       channels` for cudaMalloc() allocated data, `pitch /
  *                       sizeof(T)` for 2D cudaMallocPitch() allocated data.
  * @param inData0        first input image data.
- *  @param alpha          weight of the first image elements.
+ *  @param alpha         weight of the first image elements.
  * @param inWidthStride1 second input image's width stride, similar to
  *                       inWidthStride0.
  * @param inData1        second input image data.

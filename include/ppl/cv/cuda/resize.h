@@ -45,7 +45,7 @@ namespace cuda {
  *                         inWidthStride.
  * @param outData          output image data.
  * @param interpolation    Interpolation method. INTERPOLATION_LINEAR,
- *                         INTERPOLATION_NEAREST_POINT and INTERPOLATION_AREA 
+ *                         INTERPOLATION_NEAREST_POINT and INTERPOLATION_AREA
  *                         are supported.
  * @return The execution status, succeeds or fails with an error code.
  * @warning All input parameters must be valid, or undefined behaviour may occur.
@@ -82,9 +82,9 @@ namespace cuda {
  *   float* gpu_output;
  *   size_t input_pitch, output_pitch;
  *   cudaMallocPitch(&gpu_input, &input_pitch,
- *                   width * channels * sizeof(float), height);
+ *                   src_width * channels * sizeof(float), src_height);
  *   cudaMallocPitch(&gpu_output, &output_pitch,
- *                   width * channels * sizeof(float), height);
+ *                   dst_width * channels * sizeof(float), dst_height);
  *
  *   cudaStream_t stream;
  *   cudaStreamCreate(&stream);

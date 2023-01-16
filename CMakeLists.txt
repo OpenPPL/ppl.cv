@@ -17,6 +17,8 @@ endif()
 option(PPLCV_USE_X86_64 "" OFF)
 option(PPLCV_USE_AARCH64 "" OFF)
 option(PPLCV_USE_CUDA "" OFF)
+option(PPLCV_USE_RISCV64 "" OFF)
+option(PPLCV_USE_OPENCL "" OFF)
 
 # deprecated options
 if(HPCC_USE_X86_64 AND NOT PPLCV_USE_X86_64)
@@ -75,17 +77,30 @@ if(PPLCV_USE_RISCV64)
     include(cmake/riscv.cmake)
 endif()
 
+if(PPLCV_USE_OPENCL)
+    include(cmake/ocl.cmake)
+endif()
+
 hpcc_populate_dep(pplcommon)
 
 list(FILTER PPLCV_SRC EXCLUDE REGEX "(.*)_unittest\\.cpp$")
 list(FILTER PPLCV_SRC EXCLUDE REGEX "(.*)_benchmark\\.cpp$")
 
 add_library(pplcv_static STATIC ${PPLCV_SRC})
-target_include_directories(pplcv_static PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
-    ${PPLCV_INCLUDE_DIRECTORIES})
+if(PPLCV_USE_OPENCL)
+    target_include_directories(pplcv_static PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${PPLCV_INCLUDE_DIRECTORIES})
+else()
+    target_include_directories(pplcv_static PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
+        ${PPLCV_INCLUDE_DIRECTORIES})
+endif()
 target_link_libraries(pplcv_static PUBLIC pplcommon_static ${PPLCV_LINK_LIBRARIES})
 target_compile_definitions(pplcv_static PUBLIC
     ${PPLCV_COMPILE_DEFINITIONS}

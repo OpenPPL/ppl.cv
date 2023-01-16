@@ -48,15 +48,6 @@ namespace cuda {
 #define Y2G_CB_FLOAT_COEFF -0.344f
 
 // BGR/RGB -> NV12/NV21
-#define NVXX_YR 38
-#define NVXX_YG 74
-#define NVXX_YB 16
-#define NVXX_VR 67
-#define NVXX_VG -55
-#define NVXX_VB -12
-#define NVXX_UR -22
-#define NVXX_UG -43
-#define NVXX_UB 65
 #define NVXX1_YR 269484
 #define NVXX1_YG 528482
 #define NVXX1_YB 102760
@@ -68,10 +59,6 @@ namespace cuda {
 #define NVXX1_UB 460324
 
 // NV12/NV21-> BGR/RGB
-#define NVXX_RV 86
-#define NVXX_BU 110
-#define NVXX_GV -44
-#define NVXX_GU -24
 #define NVXX1_CY 1220542
 #define NVXX1_CUB 2116026
 #define NVXX1_CUG -409993

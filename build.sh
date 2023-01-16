@@ -5,6 +5,7 @@ x86_64_build_dir="${workdir}/x86-64-build"
 cuda_build_dir="${workdir}/cuda-build"
 aarch64_build_dir="${workdir}/aarch64-build"
 riscv_build_dir="${workdir}/riscv-build"
+ocl_build_dir="${workdir}/ocl-build"
 
 if [[ `uname` == "Linux" ]]; then
     processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
@@ -72,7 +73,29 @@ function BuildRiscv() {
     cd ${riscv_build_dir}
     cmd="cmake $options ${extra_options} -DPPLCV_USE_RISCV64=ON -DPPLCOMMON_ENABLE_PYTHON_API=OFF .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
-    eval "$cmd"      
+    eval "$cmd"
+}
+
+function BuildOcl() {
+    parameters=($options)
+    length=${#parameters[*]}
+    if [ $length -eq 4 ]; then
+        ocl_build_dir="${workdir}/x86_ocl-build"
+        mkdir ${ocl_build_dir}
+        cd ${ocl_build_dir}
+        cmd="cmake -DCMAKE_BUILD_TYPE=Release -DPPLCV_USE_X86_64=ON -DPPLCV_USE_OPENCL=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install -DWITH_CUDA=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF ${parameters[1]} ${parameters[2]} ${parameters[3]} .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
+    elif [ $length -eq 7 ]; then
+        ocl_build_dir="${workdir}/aarch64_ocl-build"
+        mkdir ${ocl_build_dir}
+        cd ${ocl_build_dir}
+        cmd="cmake -DCMAKE_BUILD_TYPE=Release -DPPLCV_USE_AARCH64=ON -DPPLCV_USE_OPENCL=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install -DWITH_CUDA=OFF ${parameters[1]} ${parameters[2]} ${parameters[3]} ${parameters[4]} -DANDROID_ABI=arm64-v8a  -DANDROID_NATIVE_API_LEVEL=android-18 -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF ${parameters[5]} ${parameters[6]} .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
+    else
+        echo "unsupported opencl configuration."
+        exit 1
+    fi
+
+    echo "cmd -> $cmd"
+    eval "$cmd"
 }
 
 declare -A engine2func=(
@@ -80,6 +103,7 @@ declare -A engine2func=(
     ["x86_64"]=BuildX86_64
     ["aarch64"]=BuildAarch64
     ["riscv"]=BuildRiscv
+    ["ocl"]=BuildOcl
 )
 
 # --------------------------------------------------------------------------- #

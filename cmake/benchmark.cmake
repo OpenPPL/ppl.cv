@@ -1,9 +1,14 @@
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
 hpcc_populate_dep(benchmark)
 
-add_executable(pplcv_benchmark
-    ${PPLCV_BENCHMARK_SRC}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/cv/benchmark_main.cc)
+if(PPLCV_USE_OPENCL)
+    add_executable(pplcv_benchmark src/ppl/cv/ocl/utility/infrastructure.cpp
+                   ${PPLCV_BENCHMARK_SRC}
+                   ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/cv/benchmark_main.cc)
+else()
+    add_executable(pplcv_benchmark ${PPLCV_BENCHMARK_SRC}
+                   ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/cv/benchmark_main.cc)
+endif()
 
 if(PPLCV_USE_X86)
     target_compile_definitions(pplcv_benchmark PRIVATE PPLCV_BENCHMARK_OPENCV)
