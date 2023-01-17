@@ -79,16 +79,16 @@ function BuildRiscv() {
 function BuildOcl() {
     parameters=($options)
     length=${#parameters[*]}
-    if [ $length -eq 4 ]; then
+    if [[ $length -eq 4 || $length -eq 6 ]] ; then
         ocl_build_dir="${workdir}/x86_ocl-build"
         mkdir ${ocl_build_dir}
         cd ${ocl_build_dir}
-        cmd="cmake -DCMAKE_BUILD_TYPE=Release -DPPLCV_USE_X86_64=ON -DPPLCV_USE_OPENCL=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install -DWITH_CUDA=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF ${parameters[1]} ${parameters[2]} ${parameters[3]} .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
-    elif [ $length -eq 7 ]; then
+        cmd="cmake -DCMAKE_BUILD_TYPE=Release -DPPLCV_USE_X86_64=ON -DPPLCV_USE_OPENCL=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install -DWITH_CUDA=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF ${parameters[1]} ${parameters[2]} ${parameters[3]} ${parameters[4]} ${parameters[5]} .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
+    elif [[ $length -eq 7 || $length -eq 9 ]]; then
         ocl_build_dir="${workdir}/aarch64_ocl-build"
         mkdir ${ocl_build_dir}
         cd ${ocl_build_dir}
-        cmd="cmake -DCMAKE_BUILD_TYPE=Release -DPPLCV_USE_AARCH64=ON -DPPLCV_USE_OPENCL=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install -DWITH_CUDA=OFF ${parameters[1]} ${parameters[2]} ${parameters[3]} ${parameters[4]} -DANDROID_ABI=arm64-v8a  -DANDROID_NATIVE_API_LEVEL=android-18 -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF ${parameters[5]} ${parameters[6]} .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
+        cmd="cmake -DCMAKE_BUILD_TYPE=Release -DPPLCV_USE_AARCH64=ON -DPPLCV_USE_OPENCL=ON -DCMAKE_INSTALL_PREFIX=${ocl_build_dir}/install -DWITH_CUDA=OFF ${parameters[1]} ${parameters[2]} ${parameters[3]} ${parameters[4]} -DANDROID_ABI=arm64-v8a  -DANDROID_NATIVE_API_LEVEL=android-18 -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF ${parameters[5]} ${parameters[6]} ${parameters[7]} ${parameters[8]} .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     else
         echo "unsupported opencl configuration."
         exit 1
