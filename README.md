@@ -37,6 +37,7 @@ then open `html/index.html` in your web browser.
 ### Documents
 * [CUDA Platform Guide](docs/cuda_usage.md)
 * [RISCV Platform Guide](docs/riscv_usage.md)
+* [OpenCL Platform Guide](docs/ocl_usage.md)
 * [CUDA Memory Pool](docs/cuda_memory_pool.md)
 
 ### Contact Us
