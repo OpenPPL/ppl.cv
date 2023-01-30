@@ -3226,14 +3226,14 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value = vload3(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
-    data = (global uchar*)(dst + (rows + (element_y >> 1)) * dst_stride);      \
+    data = dst + (rows + (element_y >> 1)) * dst_stride;                       \
     vstore2((uchar2)(result.y, result.z), (element_x >> 1), data);             \
   }                                                                            \
 }
@@ -3298,14 +3298,14 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar4 input_value = vload4(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
-    data = (global uchar*)(dst + (rows + (element_y >> 1)) * dst_stride);      \
+    data = dst + (rows + (element_y >> 1)) * dst_stride;                       \
     vstore2((uchar2)(result.y, result.z), (element_x >> 1), data);             \
   }                                                                            \
 }
@@ -3372,17 +3372,17 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
-  data = (global uchar*)(src + (rows + (element_y >> 1)) * src_stride);        \
+  data = src + (rows + (element_y >> 1)) * src_stride;                         \
   uchar2 tmp = vload2((element_x >> 1), data);                                 \
   input_value.y = tmp.x;                                                       \
   input_value.z = tmp.y;                                                       \
   uchar3 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore3(result, element_x, data);                                            \
 }
 #endif
@@ -3446,17 +3446,17 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
-  data = (global uchar*)(src + (rows + (element_y >> 1)) * src_stride);        \
+  data = src + (rows + (element_y >> 1)) * src_stride;                         \
   uchar2 tmp = vload2((element_x >> 1), data);                                 \
   input_value.y = tmp.x;                                                       \
   input_value.z = tmp.y;                                                       \
   uchar4 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore4(result, element_x, data);                                            \
 }
 #endif
@@ -3526,14 +3526,14 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value = vload3(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst_y + element_y * dst_y_stride);                    \
+  data = dst_y + element_y * dst_y_stride;                                     \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
-    data = (global uchar*)(dst_uv + (element_y >> 1) * dst_uv_stride);         \
+    data = dst_uv + (element_y >> 1) * dst_uv_stride;                          \
     vstore2((uchar2)(result.y, result.z), (element_x >> 1), data);             \
   }                                                                            \
 }
@@ -3563,14 +3563,14 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar4 input_value = vload4(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst_y + element_y * dst_y_stride);                    \
+  data = dst_y + element_y * dst_y_stride;                                     \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
-    data = (global uchar*)(dst_uv + (element_y >> 1) * dst_uv_stride);         \
+    data = dst_uv + (element_y >> 1) * dst_uv_stride;                          \
     vstore2((uchar2)(result.y, result.z), (element_x >> 1), data);             \
   }                                                                            \
 }
@@ -3600,17 +3600,17 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src_y + element_y * src_y_stride);      \
+  global uchar* data = src_y + element_y * src_y_stride;                       \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
-  data = (global uchar*)(src_uv + (element_y >> 1) * src_uv_stride);           \
+  data = src_uv + (element_y >> 1) * src_uv_stride;                            \
   uchar2 tmp = vload2((element_x >> 1), data);                                 \
   input_value.y = tmp.x;                                                       \
   input_value.z = tmp.y;                                                       \
   uchar3 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore3(result, element_x, data);                                            \
 }
 #endif
@@ -3639,17 +3639,17 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src_y + element_y * src_y_stride);      \
+  global uchar* data = src_y + element_y * src_y_stride;                       \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
-  data = (global uchar*)(src_uv + (element_y >> 1) * src_uv_stride);           \
+  data = src_uv + (element_y >> 1) * src_uv_stride;                            \
   uchar2 tmp = vload2((element_x >> 1), data);                                 \
   input_value.y = tmp.x;                                                       \
   input_value.z = tmp.y;                                                       \
   uchar4 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore4(result, element_x, data);                                            \
 }
 #endif
@@ -3899,11 +3899,11 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value = vload3(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
     int half_cols = cols >> 1;                                                 \
@@ -3980,11 +3980,11 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar4 input_value = vload4(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
     int half_cols = cols >> 1;                                                 \
@@ -4063,7 +4063,7 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
@@ -4071,13 +4071,13 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
   if ((element_y >> 1) & 1) {                                                  \
     uv_index += (cols >> 1);                                                   \
   }                                                                            \
-  data = (global uchar*)(src + (rows + (element_y >> 2)) * src_stride);        \
+  data = src + (rows + (element_y >> 2)) * src_stride;                         \
   input_value.y = data[uv_index];                                              \
   data += (rows >> 2) * src_stride;                                            \
   input_value.z = data[uv_index];                                              \
   uchar3 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore3(result, element_x, data);                                            \
 }
 #endif
@@ -4140,7 +4140,7 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
@@ -4148,13 +4148,13 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
   if ((element_y >> 1) & 1) {                                                  \
     uv_index += (cols >> 1);                                                   \
   }                                                                            \
-  data = (global uchar*)(src + (rows + (element_y >> 2)) * src_stride);        \
+  data = src + (rows + (element_y >> 2)) * src_stride;                         \
   input_value.y = data[uv_index];                                              \
   data += (rows >> 2) * src_stride;                                            \
   input_value.z = data[uv_index];                                              \
   uchar4 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore4(result, element_x, data);                                            \
 }
 #endif
@@ -4223,16 +4223,16 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar3 input_value = vload3(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst_y + element_y * dst_y_stride);                    \
+  data = dst_y + element_y * dst_y_stride;                                     \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
-    data = (global uchar*)(dst_u + (element_y >> 1) * dst_u_stride);           \
+    data = dst_u + (element_y >> 1) * dst_u_stride;                            \
     data[element_x >> 1] = result.y;                                           \
-    data = (global uchar*)(dst_v + (element_y >> 1) * dst_v_stride);           \
+    data = dst_v + (element_y >> 1) * dst_v_stride;                            \
     data[element_x >> 1] = result.z;                                           \
   }                                                                            \
 }
@@ -4261,16 +4261,16 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar4 input_value = vload4(element_x, data);                                \
   uchar3 result = Function ## Compute(input_value, element_y, element_x);      \
                                                                                \
-  data = (global uchar*)(dst_y + element_y * dst_y_stride);                    \
+  data = dst_y + element_y * dst_y_stride;                                     \
   data[element_x] = result.x;                                                  \
   if (((element_x + 1) & 1) && ((element_y + 1) & 1)) {                        \
-    data = (global uchar*)(dst_u + (element_y >> 1) * dst_u_stride);           \
+    data = dst_u + (element_y >> 1) * dst_u_stride;                            \
     data[element_x >> 1] = result.y;                                           \
-    data = (global uchar*)(dst_v + (element_y >> 1) * dst_v_stride);           \
+    data = dst_v + (element_y >> 1) * dst_v_stride;                            \
     data[element_x >> 1] = result.z;                                           \
   }                                                                            \
 }
@@ -4301,17 +4301,17 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src_y + element_y * src_y_stride);      \
+  global uchar* data = src_y + element_y * src_y_stride;                       \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
-  data = (global uchar*)(src_u + (element_y >> 1) * src_u_stride);             \
+  data = src_u + (element_y >> 1) * src_u_stride;                              \
   input_value.y = data[element_x >> 1];                                        \
-  data = (global uchar*)(src_v + (element_y >> 1) * src_v_stride);             \
+  data = src_v + (element_y >> 1) * src_v_stride;                              \
   input_value.z = data[element_x >> 1];                                        \
   uchar3 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore3(result, element_x, data);                                            \
 }
 #endif
@@ -4341,17 +4341,17 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src_y + element_y * src_y_stride);      \
+  global uchar* data = src_y + element_y * src_y_stride;                       \
   uchar3 input_value;                                                          \
   input_value.x = data[element_x];                                             \
                                                                                \
-  data = (global uchar*)(src_u + (element_y >> 1) * src_u_stride);             \
+  data = src_u + (element_y >> 1) * src_u_stride;                              \
   input_value.y = data[element_x >> 1];                                        \
-  data = (global uchar*)(src_v + (element_y >> 1) * src_v_stride);             \
+  data = src_v + (element_y >> 1) * src_v_stride;                              \
   input_value.z = data[element_x >> 1];                                        \
   uchar4 result = Function ## Compute(input_value);                            \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore4(result, element_x, data);                                            \
 }
 #endif
@@ -4377,8 +4377,8 @@ void YUV2GRAYU8Kernel(global const uchar* src, int rows, int cols,
     return;
   }
 
-  global uchar* input = (global uchar*)(src + element_y * src_stride);
-  global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+  global uchar* input = src + element_y * src_stride;
+  global uchar* output = dst + element_y * dst_stride;
   if (index_x < cols - 3) {
     uchar4 value = vload4(element_x, input);
     vstore4(value, element_x, output);
@@ -4419,12 +4419,12 @@ void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar4 input_value = vload4(element_x, data);                                \
   uchar3 result0 = Function ## Compute0(input_value);                          \
   uchar3 result1 = Function ## Compute1(input_value);                          \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore3(result0, index_x, data);                                             \
   vstore3(result1, index_x + 1, data);                                         \
 }
@@ -4519,12 +4519,12 @@ void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
     return;                                                                    \
   }                                                                            \
                                                                                \
-  global uchar* data = (global uchar*)(src + element_y * src_stride);          \
+  global uchar* data = src + element_y * src_stride;                           \
   uchar2 input_value0 = vload2(index_x, data);                                 \
   uchar2 input_value1 = vload2(index_x + 1, data);                             \
   uchar2 result = Function ## Compute(input_value0, input_value1);             \
                                                                                \
-  data = (global uchar*)(dst + element_y * dst_stride);                        \
+  data = dst + element_y * dst_stride;                                         \
   vstore2(result, element_x, data);                                            \
 }
 #endif
