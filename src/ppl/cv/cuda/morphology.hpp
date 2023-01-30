@@ -116,7 +116,7 @@ T0 morphColDevice0(const T1* src, int stride, int element_x, int bottom_y,
 template <typename T0, typename T1, typename Morphology>
 __global__
 void morphRowKernel0(const T1* src, int rows, int cols, int src_stride,
-                     int diameter_x, T1* dst, int dst_stride,
+                     int radius_x, T1* dst, int dst_stride,
                      Morphology morphology_swap) {
   int element_x, element_y;
   if (sizeof(T1) == 1) {
@@ -131,8 +131,8 @@ void morphRowKernel0(const T1* src, int rows, int cols, int src_stride,
     return;
   }
 
-  int bottom_x = element_x - diameter_x;
-  int top_x    = element_x + diameter_x;
+  int bottom_x = element_x - radius_x;
+  int top_x    = element_x + radius_x;
   if (bottom_x < 0) {
     bottom_x = 0;
   }
@@ -155,7 +155,7 @@ template <typename Morphology>
 __global__
 void morphRowU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
                          int src_stride, int left_threads, int aligned_columns,
-                         int diameter_x, uchar* dst, int dst_stride,
+                         int radius_x, uchar* dst, int dst_stride,
                          Morphology morphology_swap) {
   int thread_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
   int thread_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
@@ -171,8 +171,8 @@ void morphRowU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
     element_x = thread_x - aligned_columns + (aligned_columns << 2);
   }
 
-  int bottom_x = element_x - diameter_x;
-  int top_x    = element_x + diameter_x;
+  int bottom_x = element_x - radius_x;
+  int top_x    = element_x + radius_x;
 
   if (thread_x < aligned_columns) {
     uchar4 result;
@@ -205,7 +205,7 @@ void morphRowU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
 template <typename T0, typename T1, typename Morphology>
 __global__
 void morphColKernel0(const T1* src, int rows, int cols, int src_stride,
-                     int diameter_x, int diameter_y, T1* dst, int dst_stride,
+                     int radius_x, int radius_y, T1* dst, int dst_stride,
                      BorderType border_type, const T1 border_value,
                      Morphology morphology_swap) {
   int element_x, element_y;
@@ -222,10 +222,10 @@ void morphColKernel0(const T1* src, int rows, int cols, int src_stride,
   }
 
   bool constant_border = false;
-  int bottom_x = element_x - diameter_x;
-  int bottom_y = element_y - diameter_y;
-  int top_x    = element_x + diameter_x;
-  int top_y    = element_y + diameter_y;
+  int bottom_x = element_x - radius_x;
+  int bottom_y = element_y - radius_y;
+  int top_x    = element_x + radius_x;
+  int top_y    = element_y + radius_y;
   if (bottom_x < 0) {
     constant_border = true;
   }
@@ -459,7 +459,7 @@ uchar4 morphU8C1MiddleDevice1(const uchar* src, int stride, const uchar* kernel,
 template <typename T0, typename T1, typename Morphology>
 __global__
 void morph2DKernel0(const T1* src, int rows, int cols, int src_stride,
-                    int diameter_x, int diameter_y, T1* dst, int dst_stride,
+                    int radius_x, int radius_y, T1* dst, int dst_stride,
                     BorderType border_type, const T1 border_value,
                     Morphology morphology_swap) {
   int element_x, element_y;
@@ -476,10 +476,10 @@ void morph2DKernel0(const T1* src, int rows, int cols, int src_stride,
   }
 
   bool constant_border = false;
-  int bottom_x = element_x - diameter_x;
-  int bottom_y = element_y - diameter_y;
-  int top_x    = element_x + diameter_x;
-  int top_y    = element_y + diameter_y;
+  int bottom_x = element_x - radius_x;
+  int bottom_y = element_y - radius_y;
+  int top_x    = element_x + radius_x;
+  int top_y    = element_y + radius_y;
   if (bottom_x < 0) {
     bottom_x = 0;
     constant_border = true;
@@ -515,9 +515,9 @@ template <typename Morphology>
 __global__
 void morph2DU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
                         int src_stride, int left_threads, int aligned_columns,
-                        int diameter_x, int diameter_y, uchar* dst,
-                        int dst_stride, BorderType border_type,
-                        const uchar border_value, Morphology morphology_swap) {
+                        int radius_x, int radius_y, uchar* dst, int dst_stride,
+                        BorderType border_type, const uchar border_value,
+                        Morphology morphology_swap) {
   int thread_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
   int thread_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (thread_x >= columns || thread_y >= rows) {
@@ -536,10 +536,10 @@ void morph2DU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
   bool constant_border1 = false;
   bool constant_border2 = false;
   bool constant_border3 = false;
-  int bottom_x = element_x - diameter_x;
-  int bottom_y = thread_y - diameter_y;
-  int top_x    = element_x + diameter_x;
-  int top_y    = thread_y + diameter_y;
+  int bottom_x = element_x - radius_x;
+  int bottom_y = thread_y - radius_y;
+  int top_x    = element_x + radius_x;
+  int top_y    = thread_y + radius_y;
   if (bottom_x + 1 < 0) {
     constant_border1 = true;
   }
@@ -622,7 +622,7 @@ void morph2DU8C1Kernel0(const uchar* src, int rows, int cols, int columns,
 template <typename T0, typename T1, typename Morphology>
 __global__
 void morph2DKernel1(const T1* src, int rows, int cols, int src_stride,
-                    const uchar* kernel, int diameter_x, int diameter_y,
+                    const uchar* kernel, int radius_x, int radius_y,
                     int kernel_x, int kernel_y, T1* dst, int dst_stride,
                     BorderType border_type, const T1 border_value,
                     Morphology morphology_swap) {
@@ -652,10 +652,10 @@ void morph2DKernel1(const T1* src, int rows, int cols, int src_stride,
     return;
   }
 
-  int bottom_x = element_x - diameter_x;
-  int bottom_y = element_y - diameter_y;
-  int top_x    = element_x + diameter_x;
-  int top_y    = element_y + diameter_y;
+  int bottom_x = element_x - radius_x;
+  int bottom_y = element_y - radius_y;
+  int top_x    = element_x + radius_x;
+  int top_y    = element_y + radius_y;
 
   bool constant_border = false;
   if (border_type == BORDER_CONSTANT) {
@@ -684,11 +684,11 @@ void morph2DKernel1(const T1* src, int rows, int cols, int src_stride,
   int kernel_bottom_x = 0, kernel_bottom_y = 0;
   if (bottom_x < 0) {
     bottom_x  = 0;
-    kernel_bottom_x = diameter_x - element_x;
+    kernel_bottom_x = radius_x - element_x;
   }
   if (bottom_y < 0) {
     bottom_y  = 0;
-    kernel_bottom_y = diameter_y - element_y;
+    kernel_bottom_y = radius_y - element_y;
   }
   if (top_x >= cols) {
     top_x = cols - 1;
@@ -724,7 +724,7 @@ template <typename Morphology>
 __global__
 void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
                         int src_stride, const uchar* kernel, int left_threads,
-                        int aligned_columns, int diameter_x, int diameter_y,
+                        int aligned_columns, int radius_x, int radius_y,
                         int kernel_x, int kernel_y, uchar* dst, int dst_stride,
                         BorderType border_type, const uchar border_value,
                         Morphology morphology_swap) {
@@ -755,10 +755,10 @@ void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
     element_x = thread_x - aligned_columns + (aligned_columns << 2);
   }
 
-  int bottom_x = element_x - diameter_x;
-  int bottom_y = thread_y - diameter_y;
-  int top_x    = element_x + diameter_x;
-  int top_y    = thread_y + diameter_y;
+  int bottom_x = element_x - radius_x;
+  int bottom_y = thread_y - radius_y;
+  int top_x    = element_x + radius_x;
+  int top_y    = thread_y + radius_y;
 
   bool constant_border0 = false;
   bool constant_border1 = false;
@@ -833,7 +833,7 @@ void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
   }
   if (bottom_y < 0) {
     bottom_y = 0;
-    kernel_bottom_y = diameter_y - thread_y;
+    kernel_bottom_y = radius_y - thread_y;
     constant_border0 = true;
     constant_border1 = true;
     constant_border2 = true;
