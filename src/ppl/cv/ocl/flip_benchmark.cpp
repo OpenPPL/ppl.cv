@@ -147,7 +147,7 @@ RUN_BENCHMARK(c1, -1)
 RUN_BENCHMARK(c3, -1)
 RUN_BENCHMARK(c4, -1)
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(type, flip_code)                             \
+#define RUN_OPENCV_FUNCTIONS(type, flip_code)                                  \
 BENCHMARK_TEMPLATE(BM_Flip_opencv_ocl, type, c1, flip_code)->                  \
                    Args({320, 240});                                           \
 BENCHMARK_TEMPLATE(BM_Flip_opencv_ocl, type, c3, flip_code)->                  \
@@ -173,7 +173,7 @@ BENCHMARK_TEMPLATE(BM_Flip_opencv_ocl, type, c3, flip_code)->                  \
 BENCHMARK_TEMPLATE(BM_Flip_opencv_ocl, type, c4, flip_code)->                  \
                    Args({1920, 1080});
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, flip_code)                             \
+#define RUN_PPL_CV_FUNCTIONS(type, flip_code)                                  \
 BENCHMARK_TEMPLATE(BM_Flip_ppl_ocl, type, c1, flip_code)->                     \
                    Args({320, 240})->UseManualTime()->Iterations(10);          \
 BENCHMARK_TEMPLATE(BM_Flip_ppl_ocl, type, c3, flip_code)->                     \
@@ -199,16 +199,16 @@ BENCHMARK_TEMPLATE(BM_Flip_ppl_ocl, type, c3, flip_code)->                     \
 BENCHMARK_TEMPLATE(BM_Flip_ppl_ocl, type, c4, flip_code)->                     \
                    Args({1920, 1080})->UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, 0)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, 1)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, -1)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, 0)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, 1)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, -1)
+// RUN_OPENCV_FUNCTIONS(uchar, 0)
+// RUN_OPENCV_FUNCTIONS(uchar, 1)
+// RUN_OPENCV_FUNCTIONS(uchar, -1)
+// RUN_OPENCV_FUNCTIONS(float, 0)
+// RUN_OPENCV_FUNCTIONS(float, 1)
+// RUN_OPENCV_FUNCTIONS(float, -1)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 0)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, 1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, -1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, 0)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, 1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, -1)
+// RUN_PPL_CV_FUNCTIONS(uchar, 0)
+// RUN_PPL_CV_FUNCTIONS(uchar, 1)
+// RUN_PPL_CV_FUNCTIONS(uchar, -1)
+// RUN_PPL_CV_FUNCTIONS(float, 0)
+// RUN_PPL_CV_FUNCTIONS(float, 1)
+// RUN_PPL_CV_FUNCTIONS(float, -1)

@@ -192,7 +192,7 @@ RUN_BENCHMARK(c1, 16, 16, ppl::cv::BORDER_REFLECT_101)
 RUN_BENCHMARK(c3, 16, 16, ppl::cv::BORDER_REFLECT_101)
 RUN_BENCHMARK(c4, 16, 16, ppl::cv::BORDER_REFLECT_101)
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(channels, top, left, border_type)            \
+#define RUN_OPENCV_FUNCTIONS(channels, top, left, border_type)                 \
 BENCHMARK_TEMPLATE(BM_CopyMakeBorder_opencv_ocl, uchar, channels, top,         \
                    left, border_type)->Args({320, 240});                       \
 BENCHMARK_TEMPLATE(BM_CopyMakeBorder_opencv_ocl, uchar, channels, top,         \
@@ -210,7 +210,7 @@ BENCHMARK_TEMPLATE(BM_CopyMakeBorder_opencv_ocl, float, channels, top,         \
 BENCHMARK_TEMPLATE(BM_CopyMakeBorder_opencv_ocl, float, channels, top,         \
                    left, border_type)->Args({1920, 1080});
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(channels, top, left, border_type)            \
+#define RUN_PPL_CV_FUNCTIONS(channels, top, left, border_type)                 \
 BENCHMARK_TEMPLATE(BM_CopyMakeBorder_ppl_ocl, uchar, channels, top, left,      \
                    border_type)->Args({320, 240})->UseManualTime()->           \
                    Iterations(10);                                             \
@@ -236,42 +236,42 @@ BENCHMARK_TEMPLATE(BM_CopyMakeBorder_ppl_ocl, float, channels, top, left,      \
                    border_type)->Args({1920, 1080})->UseManualTime()->         \
                    Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_CONSTANT)
 
-// RUN_OPENCV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REPLICATE)
+// RUN_OPENCV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REPLICATE)
+// RUN_OPENCV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REPLICATE)
+// RUN_OPENCV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REPLICATE)
 
-// RUN_OPENCV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT)
+// RUN_OPENCV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT)
+// RUN_OPENCV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT)
+// RUN_OPENCV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT)
 
-// RUN_OPENCV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_WRAP)
-// RUN_OPENCV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_WRAP)
-// RUN_OPENCV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_WRAP)
+// RUN_OPENCV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_WRAP)
+// RUN_OPENCV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_WRAP)
+// RUN_OPENCV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_WRAP)
 
-// RUN_OPENCV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT_101)
-// RUN_OPENCV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT_101)
-// RUN_OPENCV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT_101)
+// RUN_OPENCV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT_101)
+// RUN_OPENCV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT_101)
+// RUN_OPENCV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT_101)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_CONSTANT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_CONSTANT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_CONSTANT)
+// RUN_PPL_CV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_CONSTANT)
+// RUN_PPL_CV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_CONSTANT)
+// RUN_PPL_CV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_CONSTANT)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REPLICATE)
+// RUN_PPL_CV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REPLICATE)
+// RUN_PPL_CV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REPLICATE)
+// RUN_PPL_CV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REPLICATE)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT)
+// RUN_PPL_CV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT)
+// RUN_PPL_CV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT)
+// RUN_PPL_CV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_WRAP)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_WRAP)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_WRAP)
+// RUN_PPL_CV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_WRAP)
+// RUN_PPL_CV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_WRAP)
+// RUN_PPL_CV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_WRAP)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT_101)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT_101)
-// RUN_PPL_CV_TYPE_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT_101)
+// RUN_PPL_CV_FUNCTIONS(c1, 16, 16, ppl::cv::BORDER_REFLECT_101)
+// RUN_PPL_CV_FUNCTIONS(c3, 16, 16, ppl::cv::BORDER_REFLECT_101)
+// RUN_PPL_CV_FUNCTIONS(c4, 16, 16, ppl::cv::BORDER_REFLECT_101)

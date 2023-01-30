@@ -311,7 +311,7 @@ RUN_BENCHMARK(c1, kDIV1, 1920, 1080)
 RUN_BENCHMARK(c3, kDIV1, 1920, 1080)
 RUN_BENCHMARK(c4, kDIV1, 1920, 1080)
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(type, function)                              \
+#define RUN_OPENCV_FUNCTIONS(type, function)                                   \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c1, function)->Args({320, 240}); \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c3, function)->Args({320, 240}); \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c4, function)->Args({320, 240}); \
@@ -325,7 +325,7 @@ BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c3, function)->                  \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c4, function)->                  \
                    Args({1920, 1080});
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, function)                              \
+#define RUN_PPL_CV_FUNCTIONS(type, function)                                   \
 BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, type, c1, function)->Args({320, 240})->   \
                    UseManualTime()->Iterations(10);                            \
 BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, type, c3, function)->Args({320, 240})->   \
@@ -345,32 +345,32 @@ BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, type, c3, function)->Args({1920, 1080})-> \
 BENCHMARK_TEMPLATE(BM_Arith_ppl_ocl, type, c4, function)->Args({1920, 1080})-> \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kADD)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, kADD)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, kADDWEITHTED)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kSUBTRACT)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, kSUBTRACT)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMUL0)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, kMUL0)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kMUL1)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, kMUL1)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kDIV0)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, kDIV0)
-// RUN_OPENCV_TYPE_FUNCTIONS(uchar, kDIV1)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, kDIV1)
+// RUN_OPENCV_FUNCTIONS(uchar, kADD)
+// RUN_OPENCV_FUNCTIONS(float, kADD)
+// RUN_OPENCV_FUNCTIONS(uchar, kADDWEITHTED)
+// RUN_OPENCV_FUNCTIONS(float, kADDWEITHTED)
+// RUN_OPENCV_FUNCTIONS(uchar, kSUBTRACT)
+// RUN_OPENCV_FUNCTIONS(float, kSUBTRACT)
+// RUN_OPENCV_FUNCTIONS(uchar, kMUL0)
+// RUN_OPENCV_FUNCTIONS(float, kMUL0)
+// RUN_OPENCV_FUNCTIONS(uchar, kMUL1)
+// RUN_OPENCV_FUNCTIONS(float, kMUL1)
+// RUN_OPENCV_FUNCTIONS(uchar, kDIV0)
+// RUN_OPENCV_FUNCTIONS(float, kDIV0)
+// RUN_OPENCV_FUNCTIONS(uchar, kDIV1)
+// RUN_OPENCV_FUNCTIONS(float, kDIV1)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADD)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kADD)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kADDWEITHTED)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kADDWEITHTED)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kSUBTRACT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kSUBTRACT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMUL0)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kMUL0)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kMUL1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kMUL1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kDIV0)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kDIV0)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uchar, kDIV1)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, kDIV1)
+// RUN_PPL_CV_FUNCTIONS(uchar, kADD)
+// RUN_PPL_CV_FUNCTIONS(float, kADD)
+// RUN_PPL_CV_FUNCTIONS(uchar, kADDWEITHTED)
+// RUN_PPL_CV_FUNCTIONS(float, kADDWEITHTED)
+// RUN_PPL_CV_FUNCTIONS(uchar, kSUBTRACT)
+// RUN_PPL_CV_FUNCTIONS(float, kSUBTRACT)
+// RUN_PPL_CV_FUNCTIONS(uchar, kMUL0)
+// RUN_PPL_CV_FUNCTIONS(float, kMUL0)
+// RUN_PPL_CV_FUNCTIONS(uchar, kMUL1)
+// RUN_PPL_CV_FUNCTIONS(float, kMUL1)
+// RUN_PPL_CV_FUNCTIONS(uchar, kDIV0)
+// RUN_PPL_CV_FUNCTIONS(float, kDIV0)
+// RUN_PPL_CV_FUNCTIONS(uchar, kDIV1)
+// RUN_PPL_CV_FUNCTIONS(float, kDIV1)

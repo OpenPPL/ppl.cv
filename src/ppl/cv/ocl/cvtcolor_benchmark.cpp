@@ -200,7 +200,7 @@ RUN_LAB_2BENCHMARKS(Function, src_channels, dst_channels, 1920, 1080)
 #define BENCHMARK_1FUNCTION_DECLARATION(Function)                              \
 BENCHMARK_PPL_CV_OCL(Function)
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(Function, type, src_channels, dst_channels)  \
+#define RUN_PPL_CV_FUNCTIONS(Function, type, src_channels, dst_channels)       \
 BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _ppl_ocl, type, src_channels,    \
                    dst_channels)->Args({320, 240})->UseManualTime()->          \
                    Iterations(10);                                             \
@@ -216,8 +216,8 @@ BENCHMARK_TEMPLATE(BM_CvtColor ## Function ## _ppl_ocl, type, src_channels,    \
 
 #define RUN_BENCHMARK_BATCH_1FUNCTIONS(Function, src_channel, dst_channel)     \
 BENCHMARK_1FUNCTION_DECLARATION(Function)                                      \
-RUN_PPL_CV_TYPE_FUNCTIONS(Function, uchar, src_channel, dst_channel)           \
-RUN_PPL_CV_TYPE_FUNCTIONS(Function, float, src_channel, dst_channel)
+RUN_PPL_CV_FUNCTIONS(Function, uchar, src_channel, dst_channel)                \
+RUN_PPL_CV_FUNCTIONS(Function, float, src_channel, dst_channel)
 
 /************************ NV12/NV21 with comparison *************************/
 

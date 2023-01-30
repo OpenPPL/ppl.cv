@@ -188,7 +188,7 @@ RUN_BENCHMARK(c3, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
 RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 320, 240)
 RUN_BENCHMARK(c4, ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480, 1280, 960)
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(inter_type, border_type)                     \
+#define RUN_OPENCV_FUNCTIONS(inter_type, border_type)                          \
 BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_ocl, uchar, c1, inter_type,            \
                    border_type)->Args({640, 480, 320, 240});                   \
 BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_ocl, uchar, c1, inter_type,            \
@@ -214,7 +214,7 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_ocl, float, c4, inter_type,            \
 BENCHMARK_TEMPLATE(BM_WarpAffine_opencv_ocl, float, c4, inter_type,            \
                    border_type)->Args({640, 480, 1280, 960});
 
-#define RUN_PPL_TYPE_FUNCTIONS(inter_type, border_type)                        \
+#define RUN_PPL_FUNCTIONS(inter_type, border_type)                             \
 BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_ocl, uchar, c1,  inter_type,              \
                    border_type)->Args({640, 480, 320, 240})->                  \
                    UseManualTime()->Iterations(10);                            \
@@ -252,28 +252,28 @@ BENCHMARK_TEMPLATE(BM_WarpAffine_ppl_ocl, float, c4,  inter_type,              \
                    border_type)->Args({640, 480, 1280, 960})->                 \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
-//                           ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
-//                           ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
-//                           ppl::cv::BORDER_TRANSPARENT)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
-//                           ppl::cv::BORDER_CONSTANT)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
-//                           ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
-//                           ppl::cv::BORDER_TRANSPARENT)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                      ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                      ppl::cv::BORDER_REPLICATE)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                      ppl::cv::BORDER_TRANSPARENT)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                      ppl::cv::BORDER_CONSTANT)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                      ppl::cv::BORDER_REPLICATE)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                      ppl::cv::BORDER_TRANSPARENT)
 
-// RUN_PPL_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
-//                        ppl::cv::BORDER_CONSTANT)
-// RUN_PPL_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
-//                        ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
-//                        ppl::cv::BORDER_TRANSPARENT)
-// RUN_PPL_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
-//                        ppl::cv::BORDER_CONSTANT)
-// RUN_PPL_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
-//                        ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
-//                        ppl::cv::BORDER_TRANSPARENT)
+// RUN_PPL_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                   ppl::cv::BORDER_CONSTANT)
+// RUN_PPL_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                   ppl::cv::BORDER_REPLICATE)
+// RUN_PPL_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR,
+//                   ppl::cv::BORDER_TRANSPARENT)
+// RUN_PPL_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                   ppl::cv::BORDER_CONSTANT)
+// RUN_PPL_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                   ppl::cv::BORDER_REPLICATE)
+// RUN_PPL_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT,
+//                   ppl::cv::BORDER_TRANSPARENT)

@@ -166,8 +166,8 @@ RUN_BENCHMARK(ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
 RUN_BENCHMARK(ppl::cv::INTERPOLATION_AREA, 1280, 960, 640, 480)
 RUN_BENCHMARK(ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(inter_type, src_width, src_height, dst_width,\
-                                  dst_height)                                  \
+#define RUN_OPENCV_FUNCTIONS(inter_type, src_width, src_height, dst_width,     \
+                             dst_height)                                       \
 BENCHMARK_TEMPLATE(BM_Resize_opencv_ocl, uchar, c1, inter_type)->              \
                    Args({src_width, src_height, dst_width, dst_height});       \
 BENCHMARK_TEMPLATE(BM_Resize_opencv_ocl, uchar, c3, inter_type)->              \
@@ -181,8 +181,8 @@ BENCHMARK_TEMPLATE(BM_Resize_opencv_ocl, float, c3, inter_type)->              \
 BENCHMARK_TEMPLATE(BM_Resize_opencv_ocl, float, c4, inter_type)->              \
                    Args({src_width, src_height, dst_width, dst_height});
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(inter_type, src_width, src_height, dst_width,\
-                                  dst_height)                                  \
+#define RUN_PPL_CV_FUNCTIONS(inter_type, src_width, src_height, dst_width,     \
+                             dst_height)                                       \
 BENCHMARK_TEMPLATE(BM_Resize_ppl_ocl, uchar, c1, inter_type)->                 \
                    Args({src_width, src_height, dst_width, dst_height})->      \
                    UseManualTime()->Iterations(10);                            \
@@ -202,40 +202,40 @@ BENCHMARK_TEMPLATE(BM_Resize_ppl_ocl, float, c4, inter_type)->                 \
                    Args({src_width, src_height, dst_width, dst_height})->      \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 320, 240, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 1280, 960, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 320, 240, 640, 480)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 1280, 960, 640, 480)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
 
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 320, 240,
-//                           640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
-//                           1280, 960)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 1280, 960,
-//                           640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
-//                           320, 240)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 320, 240,
+//                      640, 480)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
+//                      1280, 960)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 1280, 960,
+//                      640, 480)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
+//                      320, 240)
 
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 320, 240, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 1280, 960, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 320, 240, 640, 480)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 1280, 960, 640, 480)
+// RUN_OPENCV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 320, 240, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 1280, 960, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 320, 240, 640, 480)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 1280, 960)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 1280, 960, 640, 480)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_LINEAR, 640, 480, 320, 240)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 320, 240,
-//                           640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
-//                           1280, 960)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 1280, 960,
-//                           640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
-//                           320, 240)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 320, 240,
+//                      640, 480)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
+//                      1280, 960)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 1280, 960,
+//                      640, 480)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_NEAREST_POINT, 640, 480,
+//                      320, 240)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 320, 240, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 1280, 960, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 320, 240, 640, 480)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 1280, 960)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 1280, 960, 640, 480)
+// RUN_PPL_CV_FUNCTIONS(ppl::cv::INTERPOLATION_AREA, 640, 480, 320, 240)

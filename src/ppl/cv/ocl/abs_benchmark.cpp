@@ -118,12 +118,12 @@ RUN_BENCHMARK(c1, 1920, 1080)
 RUN_BENCHMARK(c3, 1920, 1080)
 RUN_BENCHMARK(c4, 1920, 1080)
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(type, width, height)                         \
+#define RUN_OPENCV_FUNCTIONS(type, width, height)                              \
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c1)->Args({width, height});        \
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c3)->Args({width, height});        \
 BENCHMARK_TEMPLATE(BM_Abs_opencv_ocl, type, c4)->Args({width, height});
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, width, height)                         \
+#define RUN_PPL_CV_FUNCTIONS(type, width, height)                              \
 BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c1)->Args({width, height})->          \
                    UseManualTime()->Iterations(10);                            \
 BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c3)->Args({width, height})->          \
@@ -131,12 +131,12 @@ BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c3)->Args({width, height})->          \
 BENCHMARK_TEMPLATE(BM_Abs_ppl_ocl, type, c4)->Args({width, height})->          \
                    UseManualTime()->Iterations(10);
 
-// RUN_OPENCV_TYPE_FUNCTIONS(schar, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(schar, 1920, 1080)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, 640, 480)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, 1920, 1080)
+// RUN_OPENCV_FUNCTIONS(schar, 640, 480)
+// RUN_OPENCV_FUNCTIONS(schar, 1920, 1080)
+// RUN_OPENCV_FUNCTIONS(float, 640, 480)
+// RUN_OPENCV_FUNCTIONS(float, 1920, 1080)
 
-// RUN_PPL_CV_TYPE_FUNCTIONS(schar, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(schar, 1920, 1080)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, 640, 480)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, 1920, 1080)
+// RUN_PPL_CV_FUNCTIONS(schar, 640, 480)
+// RUN_PPL_CV_FUNCTIONS(schar, 1920, 1080)
+// RUN_PPL_CV_FUNCTIONS(float, 640, 480)
+// RUN_PPL_CV_FUNCTIONS(float, 1920, 1080)
