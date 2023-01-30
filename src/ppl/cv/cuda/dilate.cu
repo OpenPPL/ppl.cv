@@ -197,8 +197,8 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
     return RC_SUCCESS;
   }
 
-  int diameter_x = kernel_x >> 1;
-  int diameter_y = kernel_y >> 1;
+  int radius_x = kernel_x >> 1;
+  int radius_y = kernel_y >> 1;
 
   dim3 block, grid;
   block.x = kBlockDimX0;
@@ -224,9 +224,9 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
     size_t pitch;
 
     if (channels == 1) {
-      int left_threads = divideUp(diameter_x, 4, 2);
+      int left_threads = divideUp(radius_x, 4, 2);
       int remainders = cols & 3;
-      remainders = remainders > diameter_x ? remainders : diameter_x;
+      remainders = remainders > radius_x ? remainders : radius_x;
       int aligned_columns = (cols - remainders) >> 2;
       int right_threads = cols - (aligned_columns << 2);
       int columns = aligned_columns + right_threads;
@@ -257,10 +257,10 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
 
           morphRowU8C1Kernel0<MaxSwap><<<grid0, block0, 0, stream>>>(src, rows,
               cols, columns, src_stride, left_threads, aligned_columns,
-              diameter_x, buffer, pitch, morphology_swap);
+              radius_x, buffer, pitch, morphology_swap);
           morphColKernel0<uchar, uchar, MaxSwap><<<grid, block, 0, stream>>>(
-              buffer, rows, cols, pitch, diameter_x, diameter_y, dst,
-              dst_stride, border_type, border_value, morphology_swap);
+              buffer, rows, cols, pitch, radius_x, radius_y, dst, dst_stride,
+              border_type, border_value, morphology_swap);
 
           if (memoryPoolUsed()) {
             pplCudaFree(buffer_block);
@@ -272,13 +272,13 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
         else {
           morph2DU8C1Kernel0<MaxSwap><<<grid0, block0, 0, stream>>>(src, rows,
               cols, columns, src_stride, left_threads, aligned_columns,
-              diameter_x, diameter_y, dst, dst_stride, border_type,
-              border_value, morphology_swap);
+              radius_x, radius_y, dst, dst_stride, border_type, border_value,
+              morphology_swap);
         }
       }
       else {
         morph2DKernel0<uchar, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, diameter_y, dst, dst_stride,
+            rows, cols, src_stride, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
       }
     }
@@ -301,9 +301,9 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
         }
 
         morphRowKernel0<uchar3, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
+            rows, cols, src_stride, radius_x, buffer, pitch, morphology_swap);
         morphColKernel0<uchar3, uchar, MaxSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
+            buffer, rows, cols, pitch, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
 
         if (memoryPoolUsed()) {
@@ -315,7 +315,7 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
       }
       else {
         morph2DKernel0<uchar3, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, diameter_y, dst, dst_stride,
+            rows, cols, src_stride, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
       }
     }
@@ -338,9 +338,9 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
         }
 
         morphRowKernel0<uchar4, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
+            rows, cols, src_stride, radius_x, buffer, pitch, morphology_swap);
         morphColKernel0<uchar4, uchar, MaxSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
+            buffer, rows, cols, pitch, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
 
         if (memoryPoolUsed()) {
@@ -352,7 +352,7 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
       }
       else {
         morph2DKernel0<uchar4, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, diameter_y, dst, dst_stride,
+            rows, cols, src_stride, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
       }
     }
@@ -387,9 +387,9 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
     }
 
     if (channels == 1) {
-      int left_threads = divideUp(diameter_x, 4, 2);
+      int left_threads = divideUp(radius_x, 4, 2);
       int remainders = cols & 3;
-      remainders = remainders > diameter_x ? remainders : diameter_x;
+      remainders = remainders > radius_x ? remainders : radius_x;
       int aligned_columns = (cols - remainders) >> 2;
       int right_threads = cols - (aligned_columns << 2);
       int columns = aligned_columns + right_threads;
@@ -403,27 +403,25 @@ RetCode dilate(const uchar* src, int rows, int cols, int channels,
 
         morph2DU8C1Kernel1<MaxSwap><<<grid0, block0, 0, stream>>>(src, rows,
             cols, columns, src_stride, mask, left_threads, aligned_columns,
-            diameter_x, diameter_y, kernel_x, kernel_y, dst, dst_stride,
+            radius_x, radius_y, kernel_x, kernel_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
       }
       else {
         morph2DKernel1<uchar, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,
+            rows, cols, src_stride, mask, radius_x, radius_y, kernel_x,
             kernel_y, dst, dst_stride, border_type, border_value,
             morphology_swap);
       }
     }
     else if (channels == 3) {
       morph2DKernel1<uchar3, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-          rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,
-          kernel_y, dst, dst_stride, border_type, border_value,
-          morphology_swap);
+          rows, cols, src_stride, mask, radius_x, radius_y, kernel_x, kernel_y,
+          dst, dst_stride, border_type, border_value, morphology_swap);
     }
     else {
       morph2DKernel1<uchar4, uchar, MaxSwap><<<grid, block, 0, stream>>>(src,
-          rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,
-          kernel_y, dst, dst_stride, border_type, border_value,
-          morphology_swap);
+          rows, cols, src_stride, mask, radius_x, radius_y, kernel_x, kernel_y,
+          dst, dst_stride, border_type, border_value, morphology_swap);
     }
 
     if (memoryPoolUsed()) {
@@ -475,8 +473,8 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
     return RC_SUCCESS;
   }
 
-  int diameter_x = kernel_x >> 1;
-  int diameter_y = kernel_y >> 1;
+  int radius_x = kernel_x >> 1;
+  int radius_y = kernel_y >> 1;
 
   dim3 block, grid;
   block.x = kBlockDimX1;
@@ -520,9 +518,9 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
         }
 
         morphRowKernel0<float, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
+            rows, cols, src_stride, radius_x, buffer, pitch, morphology_swap);
         morphColKernel0<float, float, MaxSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
+            buffer, rows, cols, pitch, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
 
         if (memoryPoolUsed()) {
@@ -534,7 +532,7 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
       }
       else {
         morph2DKernel0<float, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, diameter_y, dst, dst_stride,
+            rows, cols, src_stride, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
       }
     }
@@ -557,9 +555,9 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
         }
 
         morphRowKernel0<float3, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
+            rows, cols, src_stride, radius_x, buffer, pitch, morphology_swap);
         morphColKernel0<float3, float, MaxSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
+            buffer, rows, cols, pitch, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
 
         if (memoryPoolUsed()) {
@@ -571,7 +569,7 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
       }
       else {
         morph2DKernel0<float3, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, diameter_y, dst, dst_stride,
+            rows, cols, src_stride, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
       }
     }
@@ -594,9 +592,9 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
         }
 
         morphRowKernel0<float4, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, buffer, pitch, morphology_swap);
+            rows, cols, src_stride, radius_x, buffer, pitch, morphology_swap);
         morphColKernel0<float4, float, MaxSwap><<<grid, block, 0, stream>>>(
-            buffer, rows, cols, pitch, diameter_x, diameter_y, dst, dst_stride,
+            buffer, rows, cols, pitch, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
 
         if (memoryPoolUsed()) {
@@ -608,7 +606,7 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
       }
       else {
         morph2DKernel0<float4, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-            rows, cols, src_stride, diameter_x, diameter_y, dst, dst_stride,
+            rows, cols, src_stride, radius_x, radius_y, dst, dst_stride,
             border_type, border_value, morphology_swap);
       }
     }
@@ -644,21 +642,18 @@ RetCode dilate(const float* src, int rows, int cols, int channels,
 
     if (channels == 1) {
       morph2DKernel1<float, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-          rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,
-          kernel_y, dst, dst_stride, border_type, border_value,
-          morphology_swap);
+          rows, cols, src_stride, mask, radius_x, radius_y, kernel_x, kernel_y,
+          dst, dst_stride, border_type, border_value, morphology_swap);
     }
     else if (channels == 3) {
       morph2DKernel1<float3, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-          rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,
-          kernel_y, dst, dst_stride, border_type, border_value,
-          morphology_swap);
+          rows, cols, src_stride, mask, radius_x, radius_y, kernel_x, kernel_y,
+          dst, dst_stride, border_type, border_value, morphology_swap);
     }
     else {
       morph2DKernel1<float4, float, MaxSwap><<<grid, block, 0, stream>>>(src,
-          rows, cols, src_stride, mask, diameter_x, diameter_y, kernel_x,
-          kernel_y, dst, dst_stride, border_type, border_value,
-          morphology_swap);
+          rows, cols, src_stride, mask, radius_x, radius_y, kernel_x, kernel_y,
+          dst, dst_stride, border_type, border_value, morphology_swap);
     }
 
     if (memoryPoolUsed()) {
