@@ -805,46 +805,13 @@ void morph2DU8C1Kernel1(const uchar* src, int rows, int cols, int columns,
     }
   }
 
-  if (bottom_x + 1 < 0) {
-    constant_border1 = true;
-  }
-  if (bottom_x + 2 < 0) {
-    constant_border2 = true;
-  }
-  if (bottom_x + 3 < 0) {
-    constant_border3 = true;
-  }
-  if (top_x + 1 >= cols) {
-    constant_border1 = true;
-  }
-  if (top_x + 2 >= cols) {
-    constant_border2 = true;
-  }
-  if (top_x + 3 >= cols) {
-    constant_border3 = true;
-  }
-
   int kernel_bottom_y = 0;
-  if (bottom_x < 0) {
-    constant_border0 = true;
-  }
-  if (top_x >= cols) {
-    constant_border0 = true;
-  }
   if (bottom_y < 0) {
     bottom_y = 0;
     kernel_bottom_y = radius_y - thread_y;
-    constant_border0 = true;
-    constant_border1 = true;
-    constant_border2 = true;
-    constant_border3 = true;
   }
   if (top_y >= rows) {
     top_y = rows - 1;
-    constant_border0 = true;
-    constant_border1 = true;
-    constant_border2 = true;
-    constant_border3 = true;
   }
 
   if (thread_x < aligned_columns) {
