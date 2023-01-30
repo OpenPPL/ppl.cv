@@ -83,7 +83,7 @@ void resizeLinearU8Kernel(global const uchar* src, int src_rows, int src_cols,
     sum += value0 + value1;
     uchar result = convert_uchar((sum + (1 << (CAST_BITS - 1))) >> CAST_BITS);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     output[element_x] = result;
   }
   else if (channels == 3) {
@@ -105,7 +105,7 @@ void resizeLinearU8Kernel(global const uchar* src, int src_rows, int src_cols,
     sum += value1;
     uchar3 result = convert_uchar3((sum + (1 << (CAST_BITS - 1))) >> CAST_BITS);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     vstore3(result, element_x, output);
   }
   else {  // channels == 4
@@ -127,7 +127,7 @@ void resizeLinearU8Kernel(global const uchar* src, int src_rows, int src_cols,
     sum += value1;
     uchar4 result = convert_uchar4((sum + (1 << (CAST_BITS - 1))) >> CAST_BITS);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     vstore4(result, element_x, output);
   }
 }
@@ -259,23 +259,23 @@ void resizeNPU8Kernel(global const uchar* src, int src_rows, int src_cols,
   int int_x = element_x * col_scale;
   int_x = min(int_x, src_cols - 1);
 
-  global uchar* data = (global uchar*)(src + int_y * src_stride);
+  global uchar* data = src + int_y * src_stride;
   if (channels == 1) {
     uchar value = data[int_x];
 
-    data = (global uchar*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     data[element_x] = value;
   }
   else if (channels == 3) {
     uchar3 value = vload3(int_x, data);
 
-    data = (global uchar*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore3(value, element_x, data);
   }
   else {  // channels == 4
     uchar4 value = vload4(int_x, data);
 
-    data = (global uchar*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore4(value, element_x, data);
   }
 }
@@ -343,7 +343,7 @@ void resizeAreaU8Kernel0(global const uchar* src, int src_rows, int src_cols,
   global uchar* data;
   if (channels == 1) {
     float sum = 0.f;
-    data = (global uchar*)(src + y_start * src_stride);
+    data = src + y_start * src_stride;
     for (int i = y_start; i < y_end; ++i) {
       for (int j = x_start; j < x_end; ++j) {
         sum += data[j];
@@ -352,12 +352,12 @@ void resizeAreaU8Kernel0(global const uchar* src, int src_rows, int src_cols,
     }
     sum /= area;
 
-    data = (global uchar*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     data[element_x] = convert_uchar_sat(sum);
   }
   else if (channels == 3) {
     float3 sum = (float3)(0.f, 0.f, 0.f);
-    data = (global uchar*)(src + y_start * src_stride);
+    data = src + y_start * src_stride;
     for (int i = y_start; i < y_end; ++i) {
       for (int j = x_start; j < x_end; ++j) {
         sum += convert_float3(vload3(j, data));
@@ -367,12 +367,12 @@ void resizeAreaU8Kernel0(global const uchar* src, int src_rows, int src_cols,
     sum /= area;
     uchar3 result = convert_uchar3_sat(sum);
 
-    data = (global uchar*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore3(result, element_x, data);
   }
   else {  // channels == 4
     float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
-    data = (global uchar*)(src + y_start * src_stride);
+    data = src + y_start * src_stride;
     for (int i = y_start; i < y_end; ++i) {
       for (int j = x_start; j < x_end; ++j) {
         sum += convert_float4(vload4(j, data));
@@ -382,7 +382,7 @@ void resizeAreaU8Kernel0(global const uchar* src, int src_rows, int src_cols,
     sum /= area;
     uchar4 result = convert_uchar4_sat(sum);
 
-    data = (global uchar*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore4(result, element_x, data);
   }
 }
@@ -411,7 +411,7 @@ void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
   global float* data;
   if (channels == 1) {
     float sum = 0.f;
-    data = (global uchar*)(src + y_start * src_stride);
+    data = src + y_start * src_stride;
     for (int i = y_start; i < y_end; ++i) {
       for (int j = x_start; j < x_end; ++j) {
         sum += data[j];
@@ -425,7 +425,7 @@ void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
   }
   else if (channels == 3) {
     float3 sum = (float3)(0.f, 0.f, 0.f);
-    data = (global uchar*)(src + y_start * src_stride);
+    data = src + y_start * src_stride;
     for (int i = y_start; i < y_end; ++i) {
       for (int j = x_start; j < x_end; ++j) {
         sum += vload3(j, data);
@@ -439,7 +439,7 @@ void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
   }
   else {  // channels == 4
     float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
-    data = (global uchar*)(src + y_start * src_stride);
+    data = src + y_start * src_stride;
     for (int i = y_start; i < y_end; ++i) {
       for (int j = x_start; j < x_end; ++j) {
         sum += vload4(j, data);
@@ -486,7 +486,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = (global uchar*)(src + (int_y0 - 1) * src_stride);
+      input = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
         sum += coeff0 * coeff1 * input[int_x0 - 1];
       }
@@ -500,7 +500,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
       }
     }
 
-    input = (global uchar*)(src + int_y0 * src_stride);
+    input = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
         sum += coeff1 * input[int_x0 - 1];
@@ -532,7 +532,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     }
     sum = sum / area;
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     output[element_x] = convert_uchar_sat(sum);
   }
   else if (channels == 3) {
@@ -546,7 +546,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = (global uchar*)(src + (int_y0 - 1) * src_stride);
+      input = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
         value = coeff0 * coeff1 * convert_float3(vload3(int_x0 - 1, input));
         sum += value;
@@ -564,7 +564,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
       }
     }
 
-    input = (global uchar*)(src + int_y0 * src_stride);
+    input = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
         value = coeff1 * convert_float3(vload3(int_x0 - 1, input));
@@ -579,7 +579,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
         value = (float_x1 - int_x1) * convert_float3(vload3(int_x1, input));
         sum += value;
       }
-      input = (global uchar*)(input + src_stride);
+      input += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
@@ -603,7 +603,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     sum /= area;
     uchar3 result = convert_uchar3_sat(sum);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     vstore3(result, element_x, output);
   }
   else {  // channels == 4
@@ -617,7 +617,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = (global uchar*)(src + (int_y0 - 1) * src_stride);
+      input = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
         value = coeff0 * coeff1 * convert_float4(vload4(int_x0 - 1, input));
         sum += value;
@@ -635,7 +635,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
       }
     }
 
-    input = (global uchar*)(src + int_y0 * src_stride);
+    input = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
         value = coeff1 * convert_float4(vload4(int_x0 - 1, input));
@@ -650,7 +650,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
         value = (float_x1 - int_x1) * convert_float4(vload4(int_x1, input));
         sum += value;
       }
-      input = (global uchar*)(input + src_stride);
+      input += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
@@ -674,7 +674,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     sum /= area;
     uchar4 result = convert_uchar4_sat(sum);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     vstore4(result, element_x, output);
   }
 }
@@ -965,7 +965,7 @@ void resizeAreaU8Kernel2(global const uchar* src, int src_rows, int src_cols,
     sum += value0 + value1;
     uchar result = convert_uchar((sum + (1 << (CAST_BITS - 1))) >> CAST_BITS);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     output[element_x] = result;
   }
   else if (channels == 3) {
@@ -987,7 +987,7 @@ void resizeAreaU8Kernel2(global const uchar* src, int src_rows, int src_cols,
     sum += value1;
     uchar3 result = convert_uchar3((sum + (1 << (CAST_BITS - 1))) >> CAST_BITS);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     vstore3(result, element_x, output);
   }
   else {  // channels == 4
@@ -1009,7 +1009,7 @@ void resizeAreaU8Kernel2(global const uchar* src, int src_rows, int src_cols,
     sum += value1;
     uchar4 result = convert_uchar4((sum + (1 << (CAST_BITS - 1))) >> CAST_BITS);
 
-    global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+    global uchar* output = dst + element_y * dst_stride;
     vstore4(result, element_x, output);
   }
 }

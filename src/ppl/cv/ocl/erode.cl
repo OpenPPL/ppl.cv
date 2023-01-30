@@ -94,8 +94,7 @@ void erode2DU8Kernel0(global const uchar* src, int rows, int cols,
 
   uchar4 target;
   uchar4 result = (uchar4)(255, 255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y * src_stride);
+  global uchar* data = src + bottom_y * src_stride;
   int index;
   for (int i = bottom_y; i <= top_y; i++) {
     index = bottom_x0;
@@ -157,7 +156,7 @@ void erode2DU8Kernel0(global const uchar* src, int rows, int cols,
       }
       index++;
     }
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
   }
 
   if (border_type == BORDER_CONSTANT) {
@@ -178,7 +177,7 @@ void erode2DU8Kernel0(global const uchar* src, int rows, int cols,
     }
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   if (index_x < cols - 3) {
     vstore4(result, element_x, data);
   }
@@ -230,14 +229,13 @@ void erode2DU8Kernel1(global const uchar* src, int rows, int cols,
 
   uchar3 target;
   uchar3 result = (uchar3)(255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y * src_stride);
+  global uchar* data = src + bottom_y * src_stride;
   for (int i = bottom_y; i <= top_y; i++) {
     for (int j = bottom_x; j <= top_x; j++) {
       target = vload3(j, data);
       result = min(result, target);
     }
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
   }
 
   if (border_type == BORDER_CONSTANT && constant_border) {
@@ -245,7 +243,7 @@ void erode2DU8Kernel1(global const uchar* src, int rows, int cols,
     result = min(result, borders);
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore3(result, element_x, data);
 }
 #endif
@@ -286,14 +284,13 @@ void erode2DU8Kernel2(global const uchar* src, int rows, int cols,
 
   uchar4 target;
   uchar4 result = (uchar4)(255, 255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y * src_stride);
+  global uchar* data = src + bottom_y * src_stride;
   for (int i = bottom_y; i <= top_y; i++) {
     for (int j = bottom_x; j <= top_x; j++) {
       target = vload4(j, data);
       result = min(result, target);
     }
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
   }
 
   if (border_type == BORDER_CONSTANT && constant_border) {
@@ -302,7 +299,7 @@ void erode2DU8Kernel2(global const uchar* src, int rows, int cols,
     result = min(result, borders);
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore4(result, element_x, data);
 }
 #endif
@@ -538,8 +535,7 @@ void erodeRowU8Kernel0(global const uchar* src, int rows, int cols,
   int index = bottom_x0;
   uchar4 target;
   uchar4 result = (uchar4)(255, 255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                        element_y * src_stride);
+  global uchar* data = src + element_y * src_stride;
   while (index <= top_x3) {
     target = vload4(0, data + index);
     if (index >= bottom_x0 && index <= top_x0) {
@@ -617,7 +613,7 @@ void erodeRowU8Kernel0(global const uchar* src, int rows, int cols,
     }
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   if (index_x < cols - 3) {
     vstore4(result, element_x, data);
   }
@@ -658,12 +654,11 @@ void erodeColU8Kernel0(global const uchar* src, int rows, int cols,
 
   uchar4 target;
   uchar4 result = (uchar4)(255, 255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y * src_stride);
+  global uchar* data = src + bottom_y * src_stride;
   for (int i = bottom_y; i <= top_y; i++) {
     target = vload4(element_x, data);
     result = min(result, target);
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
   }
 
   if (border_type == BORDER_CONSTANT && constant_border) {
@@ -672,7 +667,7 @@ void erodeColU8Kernel0(global const uchar* src, int rows, int cols,
     result = min(result, borders);
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   if (index_x < cols - 3) {
     vstore4(result, element_x, data);
   }
@@ -752,8 +747,7 @@ void erodeRowU8Kernel1(global const uchar* src, int rows, int cols,
   uchar3 result1 = (uchar3)(255, 255, 255);
   uchar3 result2 = (uchar3)(255, 255, 255);
   uchar3 result3 = (uchar3)(255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       element_y * src_stride);
+  global uchar* data = src + element_y * src_stride;
   while (index <= top_x3) {
     target = vload3(index, data);
     if (index >= bottom_x0 && index <= top_x0) {
@@ -787,7 +781,7 @@ void erodeRowU8Kernel1(global const uchar* src, int rows, int cols,
     }
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   if (index_x < cols - 3) {
     vstore3(result0, index_x, data);
     vstore3(result1, index_x + 1, data);
@@ -868,8 +862,7 @@ void erodeColU8Kernel1(global const uchar* src, int rows, int cols,
   uchar3 result1 = (uchar3)(255, 255, 255);
   uchar3 result2 = (uchar3)(255, 255, 255);
   uchar3 result3 = (uchar3)(255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y0 * src_stride);
+  global uchar* data = src + bottom_y0 * src_stride;
   while (index <= top_y3) {
     target = vload3(element_x, data);
     if (index >= bottom_y0 && index <= top_y0) {
@@ -885,7 +878,7 @@ void erodeColU8Kernel1(global const uchar* src, int rows, int cols,
       result3 = min(result3, target);
     }
     index++;
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
   }
 
   if (border_type == BORDER_CONSTANT) {
@@ -905,24 +898,24 @@ void erodeColU8Kernel1(global const uchar* src, int rows, int cols,
   }
 
   if (index_y < rows - 3) {
-    data = (global uchar*)((global uchar*)dst + index_y * dst_stride);
+    data = dst + index_y * dst_stride;
     vstore3(result0, element_x, data);
-    data = (global uchar*)((global uchar*)data + dst_stride);
+    data +=dst_stride;
     vstore3(result1, element_x, data);
-    data = (global uchar*)((global uchar*)data + dst_stride);
+    data +=dst_stride;
     vstore3(result2, element_x, data);
-    data = (global uchar*)((global uchar*)data + dst_stride);
+    data +=dst_stride;
     vstore3(result3, element_x, data);
   }
   else {
-    data = (global uchar*)((global uchar*)dst + index_y * dst_stride);
+    data = dst + index_y * dst_stride;
     vstore3(result0, element_x, data);
     if (index_y < rows - 1) {
-      data = (global uchar*)((global uchar*)data + dst_stride);
+      data +=dst_stride;
       vstore3(result1, element_x, data);
     }
     if ((index_y < rows - 2)) {
-      data = (global uchar*)((global uchar*)data + dst_stride);
+      data +=dst_stride;
       vstore3(result2, element_x, data);
     }
   }
@@ -993,8 +986,7 @@ void erodeRowU8Kernel2(global const uchar* src, int rows, int cols,
   uchar4 result1 = (uchar4)(255, 255, 255, 255);
   uchar4 result2 = (uchar4)(255, 255, 255, 255);
   uchar4 result3 = (uchar4)(255, 255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       element_y * src_stride);
+  global uchar* data = src + element_y * src_stride;
   while (index <= top_x3) {
     target = vload4(index, data);
     if (index >= bottom_x0 && index <= top_x0) {
@@ -1029,7 +1021,7 @@ void erodeRowU8Kernel2(global const uchar* src, int rows, int cols,
     }
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   if (index_x < cols - 3) {
     vstore4(result0, index_x, data);
     vstore4(result1, index_x + 1, data);
@@ -1110,8 +1102,7 @@ void erodeColU8Kernel2(global const uchar* src, int rows, int cols,
   uchar4 result1 = (uchar4)(255, 255, 255, 255);
   uchar4 result2 = (uchar4)(255, 255, 255, 255);
   uchar4 result3 = (uchar4)(255, 255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y0 * src_stride);
+  global uchar* data = src + bottom_y0 * src_stride;
   while (index <= top_y3) {
     target = vload4(element_x, data);
     if (index >= bottom_y0 && index <= top_y0) {
@@ -1127,7 +1118,7 @@ void erodeColU8Kernel2(global const uchar* src, int rows, int cols,
       result3 = min(result3, target);
     }
     index++;
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
   }
 
   if (border_type == BORDER_CONSTANT) {
@@ -1148,24 +1139,24 @@ void erodeColU8Kernel2(global const uchar* src, int rows, int cols,
   }
 
   if (index_y < rows - 3) {
-    data = (global uchar*)((global uchar*)dst + index_y * dst_stride);
+    data = dst + index_y * dst_stride;
     vstore4(result0, element_x, data);
-    data = (global uchar*)((global uchar*)data + dst_stride);
+    data +=dst_stride;
     vstore4(result1, element_x, data);
-    data = (global uchar*)((global uchar*)data + dst_stride);
+    data +=dst_stride;
     vstore4(result2, element_x, data);
-    data = (global uchar*)((global uchar*)data + dst_stride);
+    data +=dst_stride;
     vstore4(result3, element_x, data);
   }
   else {
-    data = (global uchar*)((global uchar*)dst + index_y * dst_stride);
+    data = dst + index_y * dst_stride;
     vstore4(result0, element_x, data);
     if (index_y < rows - 1) {
-      data = (global uchar*)((global uchar*)data + dst_stride);
+      data +=dst_stride;
       vstore4(result1, element_x, data);
     }
     if ((index_y < rows - 2)) {
-      data = (global uchar*)((global uchar*)data + dst_stride);
+      data +=dst_stride;
       vstore4(result2, element_x, data);
     }
   }
@@ -1960,8 +1951,7 @@ void erode2DU8Kernel3(global const uchar* src, int rows, int cols,
   int kernel_bottom_start = kernel_bottom_y * kernel_x + kernel_bottom_x;
   uchar target;
   uchar result = 255;
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y * src_stride);
+  global uchar* data = src + bottom_y * src_stride;
   for (int i = bottom_y; i <= top_y; i++) {
     index = kernel_bottom_start;
     for (int j = bottom_x; j <= top_x; j++) {
@@ -1971,7 +1961,7 @@ void erode2DU8Kernel3(global const uchar* src, int rows, int cols,
       }
       index++;
     }
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
     kernel_bottom_start += kernel_x;
   }
 
@@ -1979,7 +1969,7 @@ void erode2DU8Kernel3(global const uchar* src, int rows, int cols,
     result = min(result, border_value);
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   data[element_x] = result;
 }
 #endif
@@ -2046,8 +2036,7 @@ void erode2DU8Kernel4(global const uchar* src, int rows, int cols,
   int kernel_bottom_start = kernel_bottom_y * kernel_x + kernel_bottom_x;
   uchar3 target;
   uchar3 result = (uchar3)(255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y * src_stride);
+  global uchar* data = src + bottom_y * src_stride;
   for (int i = bottom_y; i <= top_y; i++) {
     index = kernel_bottom_start;
     for (int j = bottom_x; j <= top_x; j++) {
@@ -2057,7 +2046,7 @@ void erode2DU8Kernel4(global const uchar* src, int rows, int cols,
       }
       index++;
     }
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
     kernel_bottom_start += kernel_x;
   }
 
@@ -2066,7 +2055,7 @@ void erode2DU8Kernel4(global const uchar* src, int rows, int cols,
     result = min(result, borders);
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore3(result, element_x, data);
 }
 #endif
@@ -2133,8 +2122,7 @@ void erode2DU8Kernel5(global const uchar* src, int rows, int cols,
   int kernel_bottom_start = kernel_bottom_y * kernel_x + kernel_bottom_x;
   uchar4 target;
   uchar4 result = (uchar4)(255, 255, 255, 255);
-  global uchar* data = (global uchar*)((global uchar*)src +
-                                       bottom_y * src_stride);
+  global uchar* data = src + bottom_y * src_stride;
   for (int i = bottom_y; i <= top_y; i++) {
     index = kernel_bottom_start;
     for (int j = bottom_x; j <= top_x; j++) {
@@ -2144,7 +2132,7 @@ void erode2DU8Kernel5(global const uchar* src, int rows, int cols,
       }
       index++;
     }
-    data = (global uchar*)((global uchar*)data + src_stride);
+    data +=src_stride;
     kernel_bottom_start += kernel_x;
   }
 
@@ -2154,7 +2142,7 @@ void erode2DU8Kernel5(global const uchar* src, int rows, int cols,
     result = min(result, borders);
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore4(result, element_x, data);
 }
 #endif

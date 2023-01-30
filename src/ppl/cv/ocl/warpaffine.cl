@@ -57,7 +57,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
     }
 
     if (channels == 1) {
-      global uchar* input = (global uchar*)(src + src_y0 * src_stride);
+      global uchar* input = src + src_y0 * src_stride;
       uchar src_value0 = flag0 ? input[src_x0] : border_value;
       uchar src_value1 = flag1 ? input[src_x1] : border_value;
       float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
@@ -66,7 +66,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = (global uchar*)(src + src_y1 * src_stride);
+      input = src + src_y1 * src_stride;
       src_value0 = flag2 ? input[src_x0] : border_value;
       src_value1 = flag3 ? input[src_x1] : border_value;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
@@ -74,12 +74,12 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+      global uchar* output = dst + element_y * dst_stride;
       output[element_x] = convert_uchar_sat(sum);
     }
     else if (channels == 3) {
       uchar3 border_value1 = (uchar3)(border_value, border_value, border_value);
-      global uchar* input = (global uchar*)(src + src_y0 * src_stride);
+      global uchar* input = src + src_y0 * src_stride;
       uchar3 src_value0 = flag0 ? vload3(src_x0, input) : border_value1;
       uchar3 src_value1 = flag1 ? vload3(src_x1, input) : border_value1;
       float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) *
@@ -90,7 +90,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = (global uchar*)(src + src_y1 * src_stride);
+      input = src + src_y1 * src_stride;
       src_value0 = flag2 ? vload3(src_x0, input) : border_value1;
       src_value1 = flag3 ? vload3(src_x1, input) : border_value1;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) *
@@ -100,14 +100,14 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+      global uchar* output = dst + element_y * dst_stride;
       uchar3 result = convert_uchar3_sat(sum);
       vstore3(result, element_x, output);
     }
     else {
       uchar4 border_value1 = (uchar4)(border_value, border_value, border_value,
                                       border_value);
-      global uchar* input = (global uchar*)(src + src_y0 * src_stride);
+      global uchar* input = src + src_y0 * src_stride;
       uchar4 src_value0 = flag0 ? vload4(src_x0, input) : border_value1;
       uchar4 src_value1 = flag1 ? vload4(src_x1, input) : border_value1;
       float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) *
@@ -118,7 +118,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = (global uchar*)(src + src_y1 * src_stride);
+      input = src + src_y1 * src_stride;
       src_value0 = flag2 ? vload4(src_x0, input) : border_value1;
       src_value1 = flag3 ? vload4(src_x1, input) : border_value1;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) *
@@ -128,7 +128,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+      global uchar* output = dst + element_y * dst_stride;
       uchar4 result = convert_uchar4_sat(sum);
       vstore4(result, element_x, output);
     }
@@ -145,7 +145,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
     src_y1 = clamp(src_y1, 0, src_rows - 1);
 
     if (channels == 1) {
-      global uchar* input = (global uchar*)(src + src_y0 * src_stride);
+      global uchar* input = src + src_y0 * src_stride;
       uchar src_value0 = input[src_x0];
       uchar src_value1 = input[src_x1];
       float value0 = diff_x1 * diff_y1 * src_value0;
@@ -154,7 +154,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = (global uchar*)(src + src_y1 * src_stride);
+      input = src + src_y1 * src_stride;
       src_value0 = input[src_x0];
       src_value1 = input[src_x1];
       value0 = diff_x1 * diff_y0 * src_value0;
@@ -162,11 +162,11 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+      global uchar* output = dst + element_y * dst_stride;
       output[element_x] = convert_uchar_sat(sum);
     }
     else if (channels == 3) {
-      global uchar* input = (global uchar*)(src + src_y0 * src_stride);
+      global uchar* input = src + src_y0 * src_stride;
       uchar3 src_value0 = vload3(src_x0, input);
       uchar3 src_value1 = vload3(src_x1, input);
       float3 value0 = diff_x1 * diff_y1 * convert_float3(src_value0);
@@ -175,7 +175,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = (global uchar*)(src + src_y1 * src_stride);
+      input = src + src_y1 * src_stride;
       src_value0 = vload3(src_x0, input);
       src_value1 = vload3(src_x1, input);
       value0 = diff_x1 * diff_y0 * convert_float3(src_value0);
@@ -183,12 +183,12 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+      global uchar* output = dst + element_y * dst_stride;
       uchar3 result = convert_uchar3_sat(sum);
       vstore3(result, element_x, output);
     }
     else {
-      global uchar* input = (global uchar*)(src + src_y0 * src_stride);
+      global uchar* input = src + src_y0 * src_stride;
       uchar4 src_value0 = vload4(src_x0, input);
       uchar4 src_value1 = vload4(src_x1, input);
       float4 value0 = diff_x1 * diff_y1 * convert_float4(src_value0);
@@ -197,7 +197,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = (global uchar*)(src + src_y1 * src_stride);
+      input = src + src_y1 * src_stride;
       src_value0 = vload4(src_x0, input);
       src_value1 = vload4(src_x1, input);
       value0 = diff_x1 * diff_y0 * convert_float4(src_value0);
@@ -205,7 +205,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = (global uchar*)(dst + element_y * dst_stride);
+      global uchar* output = dst + element_y * dst_stride;
       uchar4 result = convert_uchar4_sat(sum);
       vstore4(result, element_x, output);
     }
@@ -440,28 +440,28 @@ void warpaffineNPU8Kernel(global const uchar* src, int src_rows, int src_cols,
 
   if (border_type == BORDER_CONSTANT) {
     if (src_x >= 0 && src_x < src_cols && src_y >= 0 && src_y < src_rows) {
-      global uchar* data = (global uchar*)(src + src_y * src_stride);
+      global uchar* data = src + src_y * src_stride;
       if (channels == 1) {
         uchar value = data[src_x];
 
-        data = (global uchar*)(dst + element_y * dst_stride);
+        data = dst + element_y * dst_stride;
         data[element_x] = value;
       }
       else if (channels == 3) {
         uchar3 value = vload3(src_x, data);
 
-        data = (global uchar*)(dst + element_y * dst_stride);
+        data = dst + element_y * dst_stride;
         vstore3(value, element_x, data);
       }
       else {  // channels == 4
         uchar4 value = vload4(src_x, data);
 
-        data = (global uchar*)(dst + element_y * dst_stride);
+        data = dst + element_y * dst_stride;
         vstore4(value, element_x, data);
       }
     }
     else {
-      global uchar* data = (global uchar*)(dst + element_y * dst_stride);
+      global uchar* data = dst + element_y * dst_stride;
       if (channels == 1) {
         data[element_x] = border_value;
       }
@@ -480,45 +480,45 @@ void warpaffineNPU8Kernel(global const uchar* src, int src_rows, int src_cols,
     src_x = clamp(src_x, 0, src_cols - 1);
     src_y = clamp(src_y, 0, src_rows - 1);
 
-    global uchar* data = (global uchar*)(src + src_y * src_stride);
+    global uchar* data = src + src_y * src_stride;
     if (channels == 1) {
       uchar value = data[src_x];
 
-      data = (global uchar*)(dst + element_y * dst_stride);
+      data = dst + element_y * dst_stride;
       data[element_x] = value;
     }
     else if (channels == 3) {
       uchar3 value = vload3(src_x, data);
 
-      data = (global uchar*)(dst + element_y * dst_stride);
+      data = dst + element_y * dst_stride;
       vstore3(value, element_x, data);
     }
     else {  // channels == 4
       uchar4 value = vload4(src_x, data);
 
-      data = (global uchar*)(dst + element_y * dst_stride);
+      data = dst + element_y * dst_stride;
       vstore4(value, element_x, data);
     }
   }
   else if (border_type == BORDER_TRANSPARENT) {
     if (src_x >= 0 && src_x < src_cols && src_y >= 0 && src_y < src_rows) {
-      global uchar* data = (global uchar*)(src + src_y * src_stride);
+      global uchar* data = src + src_y * src_stride;
       if (channels == 1) {
         uchar value = data[src_x];
 
-        data = (global uchar*)(dst + element_y * dst_stride);
+        data = dst + element_y * dst_stride;
         data[element_x] = value;
       }
       else if (channels == 3) {
         uchar3 value = vload3(src_x, data);
 
-        data = (global uchar*)(dst + element_y * dst_stride);
+        data = dst + element_y * dst_stride;
         vstore3(value, element_x, data);
       }
       else {  // channels == 4
         uchar4 value = vload4(src_x, data);
 
-        data = (global uchar*)(dst + element_y * dst_stride);
+        data = dst + element_y * dst_stride;
         vstore4(value, element_x, data);
       }
     }

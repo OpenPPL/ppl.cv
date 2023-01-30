@@ -78,7 +78,7 @@ void copyMakeBorderU8Kernel0(global const uchar* src, int rows, int cols,
   }
 
   uchar4 value;
-  global uchar* data = (global uchar*)((global uchar*)src + src_y * src_stride);
+  global uchar* data = src + src_y * src_stride;
   if (border_type != BORDER_CONSTANT) {
     if (src_x0 + 3 == src_x3) {
       value = vload4(0, data + src_x0);
@@ -130,7 +130,7 @@ void copyMakeBorderU8Kernel0(global const uchar* src, int rows, int cols,
     }
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   cols += (left << 1);
   if (index_x < cols - 3) {
     vstore4(value, element_x, data);
@@ -191,7 +191,7 @@ void copyMakeBorderU8Kernel1(global const uchar* src, int rows, int cols,
   }
 
   uchar3 value;
-  global uchar* data = (global uchar*)((global uchar*)src + src_y * src_stride);
+  global uchar* data = src + src_y * src_stride;
   if (border_type != BORDER_CONSTANT) {
     value = vload3(src_x, data);
   }
@@ -204,7 +204,7 @@ void copyMakeBorderU8Kernel1(global const uchar* src, int rows, int cols,
     }
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore3(value, element_x, data);
 }
 #endif
@@ -253,7 +253,7 @@ void copyMakeBorderU8Kernel2(global const uchar* src, int rows, int cols,
   }
 
   uchar4 value;
-  global uchar* data = (global uchar*)((global uchar*)src + src_y * src_stride);
+  global uchar* data = src + src_y * src_stride;
   if (border_type != BORDER_CONSTANT) {
     value = vload4(src_x, data);
   }
@@ -266,7 +266,7 @@ void copyMakeBorderU8Kernel2(global const uchar* src, int rows, int cols,
     }
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore4(value, element_x, data);
 }
 #endif

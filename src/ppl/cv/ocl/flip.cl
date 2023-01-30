@@ -32,7 +32,7 @@ void flipU8Kernel0(global const uchar* src, int rows, int cols, int src_stride,
     x0 = element_x;
     y = rows - element_y - 1;
 
-    data = (global uchar*)((global uchar*)src + y * src_stride);
+    data = src + y * src_stride;
     value = vload4(x0, data);
   }
   else if (flip_code > 0) {
@@ -42,7 +42,7 @@ void flipU8Kernel0(global const uchar* src, int rows, int cols, int src_stride,
     x3 = x0 - 3;
     y = element_y;
 
-    data = (global uchar*)((global uchar*)src + y * src_stride);
+    data = src + y * src_stride;
     value.x = data[x0];
     value.y = data[x1];
     value.z = data[x2];
@@ -55,14 +55,14 @@ void flipU8Kernel0(global const uchar* src, int rows, int cols, int src_stride,
     x3 = x0 - 3;
     y = rows - element_y - 1;
 
-    data = (global uchar*)((global uchar*)src + y * src_stride);
+    data = src + y * src_stride;
     value.x = data[x0];
     value.y = data[x1];
     value.z = data[x2];
     value.w = data[x3];
   }
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   if (index_x < cols - 3) {
     vstore4(value, element_x, data);
   }
@@ -101,10 +101,10 @@ void flipU8Kernel1(global const uchar* src, int rows, int cols, int src_stride,
     x = cols - element_x - 1;
     y = rows - element_y - 1;
   }
-  global uchar* data = (global uchar*)((global uchar*)src + y * src_stride);
+  global uchar* data = src + y * src_stride;
   uchar3 value = vload3(x, data);
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore3(value, element_x, data);
 }
 #endif
@@ -132,10 +132,10 @@ void flipU8Kernel2(global const uchar* src, int rows, int cols, int src_stride,
     x = cols - element_x - 1;
     y = rows - element_y - 1;
   }
-  global uchar* data = (global uchar*)((global uchar*)src + y * src_stride);
+  global uchar* data = src + y * src_stride;
   uchar4 value = vload4(x, data);
 
-  data = (global uchar*)((global uchar*)dst + element_y * dst_stride);
+  data = dst + element_y * dst_stride;
   vstore4(value, element_x, data);
 }
 #endif
