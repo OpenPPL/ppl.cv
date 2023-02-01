@@ -57,6 +57,9 @@ RetCode erode(const cl_mem src, int rows, int cols, int channels,
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0, rows * src_stride,
                                        0, NULL, NULL);
       CHECK_ERROR(error_code, clEnqueueCopyBuffer);
+      if (error_code != CL_SUCCESS) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -105,6 +108,9 @@ RetCode erode(const cl_mem src, int rows, int cols, int channels,
       cl_mem buffer = clCreateBuffer(context, CL_MEM_READ_WRITE,
                                      rows * src_stride, NULL, &error_code);
       CHECK_ERROR(error_code, clCreateBuffer);
+      if (error_code != CL_SUCCESS) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
 
       size_t global_size1[] = {(size_t)divideUp(cols, 4, 2), (size_t)rows};
       size_t global_size2[] = {(size_t)cols, (size_t)divideUp(rows, 4, 2)};
@@ -145,11 +151,18 @@ RetCode erode(const cl_mem src, int rows, int cols, int channels,
     cl_mem mask = clCreateBuffer(context, CL_MEM_READ_ONLY, size, NULL,
                                  &error_code);
     CHECK_ERROR(error_code, clCreateBuffer);
+    if (error_code != CL_SUCCESS) {
+      return RC_DEVICE_MEMORY_ERROR;
+    }
     cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->
                              getQueue();
     error_code = clEnqueueWriteBuffer(queue, mask, CL_FALSE, 0, size,
                                       kernel, 0, NULL, NULL);
     CHECK_ERROR(error_code, clEnqueueWriteBuffer);
+    if (error_code != CL_SUCCESS) {
+      clReleaseMemObject(mask);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
 
     if (channels == 1) {
       frame_chain->setCompileOptions("-D ERODE_PARTIALLY_MASKED_2D_U8C1");
@@ -208,6 +221,9 @@ RetCode erode(const cl_mem src, int rows, int cols, int channels,
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0, rows * src_stride,
                                        0, NULL, NULL);
       CHECK_ERROR(error_code, clEnqueueCopyBuffer);
+      if (error_code != CL_SUCCESS) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
     }
     return RC_SUCCESS;
   }
@@ -255,6 +271,9 @@ RetCode erode(const cl_mem src, int rows, int cols, int channels,
       cl_mem buffer = clCreateBuffer(context, CL_MEM_READ_WRITE,
                                      rows * src_stride, NULL, &error_code);
       CHECK_ERROR(error_code, clCreateBuffer);
+      if (error_code != CL_SUCCESS) {
+        return RC_DEVICE_MEMORY_ERROR;
+      }
 
       size_t global_size1[] = {(size_t)divideUp(cols, 4, 2), (size_t)rows};
       size_t global_size2[] = {(size_t)cols, (size_t)divideUp(rows, 4, 2)};
@@ -295,11 +314,18 @@ RetCode erode(const cl_mem src, int rows, int cols, int channels,
     cl_mem mask = clCreateBuffer(context, CL_MEM_READ_ONLY, size, NULL,
                                  &error_code);
     CHECK_ERROR(error_code, clCreateBuffer);
+    if (error_code != CL_SUCCESS) {
+      return RC_DEVICE_MEMORY_ERROR;
+    }
     cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->
                              getQueue();
     error_code = clEnqueueWriteBuffer(queue, mask, CL_FALSE, 0, size,
                                       kernel, 0, NULL, NULL);
     CHECK_ERROR(error_code, clEnqueueWriteBuffer);
+    if (error_code != CL_SUCCESS) {
+      clReleaseMemObject(mask);
+      return RC_DEVICE_MEMORY_ERROR;
+    }
 
     if (channels == 1) {
       frame_chain->setCompileOptions("-D ERODE_PARTIALLY_MASKED_2D_F32C1");
