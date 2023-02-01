@@ -56,11 +56,7 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
     if (src != dst) {
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0, rows * src_stride,
                                        0, NULL, NULL);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clEnqueueCopyBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clEnqueueCopyBuffer);
     }
     return RC_SUCCESS;
   }
@@ -108,11 +104,7 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
       cl_context context = frame_chain->getContext();
       cl_mem buffer = clCreateBuffer(context, CL_MEM_READ_WRITE,
                                      rows * src_stride, NULL, &error_code);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clCreateBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clCreateBuffer);
 
       size_t global_size1[] = {(size_t)divideUp(cols, 4, 2), (size_t)rows};
       size_t global_size2[] = {(size_t)cols, (size_t)divideUp(rows, 4, 2)};
@@ -152,20 +144,12 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
     cl_context context = frame_chain->getContext();
     cl_mem mask = clCreateBuffer(context, CL_MEM_READ_ONLY, size, NULL,
                                  &error_code);
-    if (error_code != CL_SUCCESS) {
-      LOG(ERROR) << "Call clCreateBuffer() failed with code: "
-                 << error_code;
-      return RC_DEVICE_MEMORY_ERROR;
-    }
+    CHECK_ERROR(error_code, clCreateBuffer);
     cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->
                              getQueue();
     error_code = clEnqueueWriteBuffer(queue, mask, CL_FALSE, 0, size,
                                       kernel, 0, NULL, NULL);
-    if (error_code != CL_SUCCESS) {
-      LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: "
-                 << error_code;
-      return RC_DEVICE_MEMORY_ERROR;
-    }
+    CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
     if (channels == 1) {
       frame_chain->setCompileOptions("-D DILATE_PARTIALLY_MASKED_2D_U8C1");
@@ -223,11 +207,7 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
     if (src != dst) {
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0, rows * src_stride,
                                        0, NULL, NULL);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clEnqueueCopyBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clEnqueueCopyBuffer);
     }
     return RC_SUCCESS;
   }
@@ -274,11 +254,7 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
       cl_context context = frame_chain->getContext();
       cl_mem buffer = clCreateBuffer(context, CL_MEM_READ_WRITE,
                                      rows * src_stride, NULL, &error_code);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clCreateBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clCreateBuffer);
 
       size_t global_size1[] = {(size_t)divideUp(cols, 4, 2), (size_t)rows};
       size_t global_size2[] = {(size_t)cols, (size_t)divideUp(rows, 4, 2)};
@@ -318,20 +294,12 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
     cl_context context = frame_chain->getContext();
     cl_mem mask = clCreateBuffer(context, CL_MEM_READ_ONLY, size, NULL,
                                  &error_code);
-    if (error_code != CL_SUCCESS) {
-      LOG(ERROR) << "Call clCreateBuffer() failed with code: "
-                 << error_code;
-      return RC_DEVICE_MEMORY_ERROR;
-    }
+    CHECK_ERROR(error_code, clCreateBuffer);
     cl_command_queue queue = ppl::common::ocl::getSharedFrameChain()->
                              getQueue();
     error_code = clEnqueueWriteBuffer(queue, mask, CL_FALSE, 0, size,
                                       kernel, 0, NULL, NULL);
-    if (error_code != CL_SUCCESS) {
-      LOG(ERROR) << "Call clEnqueueWriteBuffer() failed with code: "
-                 << error_code;
-      return RC_DEVICE_MEMORY_ERROR;
-    }
+    CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
     if (channels == 1) {
       frame_chain->setCompileOptions("-D DILATE_PARTIALLY_MASKED_2D_F32C1");

@@ -194,7 +194,7 @@ void resizeLinearF32Kernel(global const float* src, int src_rows, int src_cols,
     value1 = buf_y[1] * buf_x[1] * src1;
     sum += value0 + value1;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
+    global float* output = dst + element_y * dst_stride;
     output[element_x] = sum;
   }
   else if (channels == 3) {
@@ -215,7 +215,7 @@ void resizeLinearF32Kernel(global const float* src, int src_rows, int src_cols,
     sum += value0;
     sum += value1;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
+    global float* output = dst + element_y * dst_stride;
     vstore3(sum, element_x, output);
   }
   else {  // channels == 4
@@ -236,7 +236,7 @@ void resizeLinearF32Kernel(global const float* src, int src_rows, int src_cols,
     sum += value0;
     sum += value1;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
+    global float* output = dst + element_y * dst_stride;
     vstore4(sum, element_x, output);
   }
 }
@@ -298,23 +298,23 @@ void resizeNPF32Kernel(global const float* src, int src_rows, int src_cols,
   int int_x = element_x * col_scale;
   int_x = min(int_x, src_cols - 1);
 
-  global float* data = (global float*)(src + int_y * src_stride);
+  global float* data = src + int_y * src_stride;
   if (channels == 1) {
     float value = data[int_x];
 
-    data = (global float*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     data[element_x] = value;
   }
   else if (channels == 3) {
     float3 value = vload3(int_x, data);
 
-    data = (global float*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore3(value, element_x, data);
   }
   else {  // channels == 4
     float4 value = vload4(int_x, data);
 
-    data = (global float*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore4(value, element_x, data);
   }
 }
@@ -420,7 +420,7 @@ void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
     }
     sum /= area;
 
-    data = (global float*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     data[element_x] = sum;
   }
   else if (channels == 3) {
@@ -434,7 +434,7 @@ void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
     }
     sum /= area;
 
-    data = (global float*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore3(sum, element_x, data);
   }
   else {  // channels == 4
@@ -448,7 +448,7 @@ void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
     }
     sum /= area;
 
-    data = (global float*)(dst + element_y * dst_stride);
+    data = dst + element_y * dst_stride;
     vstore4(sum, element_x, data);
   }
 }
@@ -477,7 +477,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
   int int_x1 = floor(float_x1);
 
   if (channels == 1) {
-    global uchar* input;
+    global uchar* data;
     float coeff0, coeff1;
     float sum = 0.f;
     float area = fmin(col_scale, src_cols - float_x0) *
@@ -486,57 +486,57 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = src + (int_y0 - 1) * src_stride;
+      data = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
-        sum += coeff0 * coeff1 * input[int_x0 - 1];
+        sum += coeff0 * coeff1 * data[int_x0 - 1];
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += coeff0 * input[dx];
+        sum += coeff0 * data[dx];
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        sum += coeff0 * (float_x1 - int_x1) * input[int_x1];
+        sum += coeff0 * (float_x1 - int_x1) * data[int_x1];
       }
     }
 
-    input = src + int_y0 * src_stride;
+    data = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
-        sum += coeff1 * input[int_x0 - 1];
+        sum += coeff1 * data[int_x0 - 1];
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += input[dx];
+        sum += data[dx];
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        sum += (float_x1 - int_x1) * input[int_x1];
+        sum += (float_x1 - int_x1) * data[int_x1];
       }
-      input += src_stride;
+      data += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
     if (coeff0 > 1e-3) {
       if (coeff1 > 1e-3) {
-        sum += coeff0 * coeff1 * input[int_x0 - 1];
+        sum += coeff0 * coeff1 * data[int_x0 - 1];
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += coeff0 * input[dx];
+        sum += coeff0 * data[dx];
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        sum += coeff0 * (float_x1 - int_x1) * input[int_x1];
+        sum += coeff0 * (float_x1 - int_x1) * data[int_x1];
       }
     }
     sum = sum / area;
 
-    global uchar* output = dst + element_y * dst_stride;
-    output[element_x] = convert_uchar_sat(sum);
+    data = dst + element_y * dst_stride;
+    data[element_x] = convert_uchar_sat(sum);
   }
   else if (channels == 3) {
-    global uchar* input;
+    global uchar* data;
     float coeff0, coeff1;
     float3 value;
     float3 sum = (float3)(0.f, 0.f, 0.f);
@@ -546,68 +546,68 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = src + (int_y0 - 1) * src_stride;
+      data = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * convert_float3(vload3(int_x0 - 1, input));
+        value = coeff0 * coeff1 * convert_float3(vload3(int_x0 - 1, data));
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * convert_float3(vload3(dx, input));
+        value = coeff0 * convert_float3(vload3(dx, data));
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
         value = coeff0 * (float_x1 - int_x1) *
-                convert_float3(vload3(int_x1, input));
+                convert_float3(vload3(int_x1, data));
         sum += value;
       }
     }
 
-    input = src + int_y0 * src_stride;
+    data = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
-        value = coeff1 * convert_float3(vload3(int_x0 - 1, input));
+        value = coeff1 * convert_float3(vload3(int_x0 - 1, data));
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += convert_float3(vload3(dx, input));
+        sum += convert_float3(vload3(dx, data));
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = (float_x1 - int_x1) * convert_float3(vload3(int_x1, input));
+        value = (float_x1 - int_x1) * convert_float3(vload3(int_x1, data));
         sum += value;
       }
-      input += src_stride;
+      data += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
     if (coeff0 > 1e-3) {
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * convert_float3(vload3(int_x0 - 1, input));
+        value = coeff0 * coeff1 * convert_float3(vload3(int_x0 - 1, data));
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * convert_float3(vload3(dx, input));
+        value = coeff0 * convert_float3(vload3(dx, data));
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
         value = coeff0 * (float_x1 - int_x1) *
-                convert_float3(vload3(int_x1, input));
+                convert_float3(vload3(int_x1, data));
         sum += value;
       }
     }
     sum /= area;
     uchar3 result = convert_uchar3_sat(sum);
 
-    global uchar* output = dst + element_y * dst_stride;
-    vstore3(result, element_x, output);
+    data = dst + element_y * dst_stride;
+    vstore3(result, element_x, data);
   }
   else {  // channels == 4
-    global uchar* input;
+    global uchar* data;
     float coeff0, coeff1;
     float4 value;
     float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
@@ -617,65 +617,65 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = src + (int_y0 - 1) * src_stride;
+      data = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * convert_float4(vload4(int_x0 - 1, input));
+        value = coeff0 * coeff1 * convert_float4(vload4(int_x0 - 1, data));
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * convert_float4(vload4(dx, input));
+        value = coeff0 * convert_float4(vload4(dx, data));
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
         value = coeff0 * (float_x1 - int_x1) *
-                convert_float4(vload4(int_x1, input));
+                convert_float4(vload4(int_x1, data));
         sum += value;
       }
     }
 
-    input = src + int_y0 * src_stride;
+    data = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
-        value = coeff1 * convert_float4(vload4(int_x0 - 1, input));
+        value = coeff1 * convert_float4(vload4(int_x0 - 1, data));
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += convert_float4(vload4(dx, input));
+        sum += convert_float4(vload4(dx, data));
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = (float_x1 - int_x1) * convert_float4(vload4(int_x1, input));
+        value = (float_x1 - int_x1) * convert_float4(vload4(int_x1, data));
         sum += value;
       }
-      input += src_stride;
+      data += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
     if (coeff0 > 1e-3) {
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * convert_float4(vload4(int_x0 - 1, input));
+        value = coeff0 * coeff1 * convert_float4(vload4(int_x0 - 1, data));
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * convert_float4(vload4(dx, input));
+        value = coeff0 * convert_float4(vload4(dx, data));
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
         value = coeff0 * (float_x1 - int_x1) *
-                convert_float4(vload4(int_x1, input));
+                convert_float4(vload4(int_x1, data));
         sum += value;
       }
     }
     sum /= area;
     uchar4 result = convert_uchar4_sat(sum);
 
-    global uchar* output = dst + element_y * dst_stride;
-    vstore4(result, element_x, output);
+    data = dst + element_y * dst_stride;
+    vstore4(result, element_x, data);
   }
 }
 #endif
@@ -703,7 +703,7 @@ void resizeAreaF32Kernel1(global const float* src, int src_rows, int src_cols,
   int int_x1 = floor(float_x1);
 
   if (channels == 1) {
-    global float* input;
+    global float* data;
     float coeff0, coeff1;
     float sum = 0.f;
     float area = fmin(col_scale, src_cols - float_x0) *
@@ -712,57 +712,57 @@ void resizeAreaF32Kernel1(global const float* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = (global float*)(src + (int_y0 - 1) * src_stride);
+      data = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
-        sum += coeff0 * coeff1 * input[int_x0 - 1];
+        sum += coeff0 * coeff1 * data[int_x0 - 1];
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += coeff0 * input[dx];
+        sum += coeff0 * data[dx];
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        sum += coeff0 * (float_x1 - int_x1) * input[int_x1];
+        sum += coeff0 * (float_x1 - int_x1) * data[int_x1];
       }
     }
 
-    input = (global float*)(src + int_y0 * src_stride);
+    data = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
-        sum += coeff1 * input[int_x0 - 1];
+        sum += coeff1 * data[int_x0 - 1];
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += input[dx];
+        sum += data[dx];
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        sum += (float_x1 - int_x1) * input[int_x1];
+        sum += (float_x1 - int_x1) * data[int_x1];
       }
-      input += src_stride;
+      data += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
     if (coeff0 > 1e-3) {
       if (coeff1 > 1e-3) {
-        sum += coeff0 * coeff1 * input[int_x0 - 1];
+        sum += coeff0 * coeff1 * data[int_x0 - 1];
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += coeff0 * input[dx];
+        sum += coeff0 * data[dx];
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        sum += coeff0 * (float_x1 - int_x1) * input[int_x1];
+        sum += coeff0 * (float_x1 - int_x1) * data[int_x1];
       }
     }
     sum = sum / area;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
-    output[element_x] = sum;
+    data = dst + element_y * dst_stride;
+    data[element_x] = sum;
   }
   else if (channels == 3) {
-    global float* input;
+    global float* data;
     float coeff0, coeff1;
     float3 value;
     float3 sum = (float3)(0.f, 0.f, 0.f);
@@ -772,65 +772,65 @@ void resizeAreaF32Kernel1(global const float* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = (global float*)(src + (int_y0 - 1) * src_stride);
+      data = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * vload3(int_x0 - 1, input);
+        value = coeff0 * coeff1 * vload3(int_x0 - 1, data);
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * vload3(dx, input);
+        value = coeff0 * vload3(dx, data);
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = coeff0 * (float_x1 - int_x1) * vload3(int_x1, input);
+        value = coeff0 * (float_x1 - int_x1) * vload3(int_x1, data);
         sum += value;
       }
     }
 
-    input = (global float*)(src + int_y0 * src_stride);
+    data = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
-        value = coeff1 * vload3(int_x0 - 1, input);
+        value = coeff1 * vload3(int_x0 - 1, data);
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += vload3(dx, input);
+        sum += vload3(dx, data);
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = (float_x1 - int_x1) * vload3(int_x1, input);
+        value = (float_x1 - int_x1) * vload3(int_x1, data);
         sum += value;
       }
-      input = (global float*)(input + src_stride);
+      data += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
     if (coeff0 > 1e-3) {
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * vload3(int_x0 - 1, input);
+        value = coeff0 * coeff1 * vload3(int_x0 - 1, data);
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * vload3(dx, input);
+        value = coeff0 * vload3(dx, data);
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = coeff0 * (float_x1 - int_x1) * vload3(int_x1, input);
+        value = coeff0 * (float_x1 - int_x1) * vload3(int_x1, data);
         sum += value;
       }
     }
     sum /= area;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
-    vstore3(sum, element_x, output);
+    data = dst + element_y * dst_stride;
+    vstore3(sum, element_x, data);
   }
   else {  // channels == 4
-    global float* input;
+    global float* data;
     float coeff0, coeff1;
     float4 value;
     float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
@@ -840,62 +840,62 @@ void resizeAreaF32Kernel1(global const float* src, int src_rows, int src_cols,
     coeff0 = int_y0 - float_y0;
     coeff1 = int_x0 - float_x0;
     if (coeff0 > 1e-3) {
-      input = (global float*)(src + (int_y0 - 1) * src_stride);
+      data = src + (int_y0 - 1) * src_stride;
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * vload4(int_x0 - 1, input);
+        value = coeff0 * coeff1 * vload4(int_x0 - 1, data);
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * vload4(dx, input);
+        value = coeff0 * vload4(dx, data);
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = coeff0 * (float_x1 - int_x1) * vload4(int_x1, input);
+        value = coeff0 * (float_x1 - int_x1) * vload4(int_x1, data);
         sum += value;
       }
     }
 
-    input = (global float*)(src + int_y0 * src_stride);
+    data = src + int_y0 * src_stride;
     for (int dy = int_y0; dy < int_y1; ++dy) {
       if (coeff1 > 1e-3) {
-        value = coeff1 * vload4(int_x0 - 1, input);
+        value = coeff1 * vload4(int_x0 - 1, data);
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        sum += vload4(dx, input);
+        sum += vload4(dx, data);
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = (float_x1 - int_x1) * vload4(int_x1, input);
+        value = (float_x1 - int_x1) * vload4(int_x1, data);
         sum += value;
       }
-      input = (global float*)(input + src_stride);
+      data += src_stride;
     }
 
     coeff0 = float_y1 - int_y1;
     if (coeff0 > 1e-3) {
       if (coeff1 > 1e-3) {
-        value = coeff0 * coeff1 * vload4(int_x0 - 1, input);
+        value = coeff0 * coeff1 * vload4(int_x0 - 1, data);
         sum += value;
       }
 
       for (int dx = int_x0; dx < int_x1; ++dx) {
-        value = coeff0 * vload4(dx, input);
+        value = coeff0 * vload4(dx, data);
         sum += value;
       }
 
       if (float_x1 - int_x1 > 1e-3) {
-        value = coeff0 * (float_x1 - int_x1) * vload4(int_x1, input);
+        value = coeff0 * (float_x1 - int_x1) * vload4(int_x1, data);
         sum += value;
       }
     }
     sum /= area;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
-    vstore4(sum, element_x, output);
+    data = dst + element_y * dst_stride;
+    vstore4(sum, element_x, data);
   }
 }
 #endif
@@ -1077,7 +1077,7 @@ void resizeAreaF32Kernel2(global const float* src, int src_rows, int src_cols,
     value1 = buf_y[1] * buf_x[1] * src1;
     sum += value0 + value1;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
+    global float* output = dst + element_y * dst_stride;
     output[element_x] = sum;
   }
   else if (channels == 3) {
@@ -1098,7 +1098,7 @@ void resizeAreaF32Kernel2(global const float* src, int src_rows, int src_cols,
     sum += value0;
     sum += value1;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
+    global float* output = dst + element_y * dst_stride;
     vstore3(sum, element_x, output);
   }
   else {  // channels == 4
@@ -1119,7 +1119,7 @@ void resizeAreaF32Kernel2(global const float* src, int src_rows, int src_cols,
     sum += value0;
     sum += value1;
 
-    global float* output = (global float*)(dst + element_y * dst_stride);
+    global float* output = dst + element_y * dst_stride;
     vstore4(sum, element_x, output);
   }
 }
