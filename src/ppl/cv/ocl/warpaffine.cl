@@ -57,31 +57,31 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
     }
 
     if (channels == 1) {
-      global uchar* input = src + src_y0 * src_stride;
-      uchar src_value0 = flag0 ? input[src_x0] : border_value;
-      uchar src_value1 = flag1 ? input[src_x1] : border_value;
+      global uchar* data = src + src_y0 * src_stride;
+      uchar src_value0 = flag0 ? data[src_x0] : border_value;
+      uchar src_value1 = flag1 ? data[src_x1] : border_value;
       float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
       float value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float sum = 0.f;
       sum += value0;
       sum += value1;
 
-      input = src + src_y1 * src_stride;
-      src_value0 = flag2 ? input[src_x0] : border_value;
-      src_value1 = flag3 ? input[src_x1] : border_value;
+      data = src + src_y1 * src_stride;
+      src_value0 = flag2 ? data[src_x0] : border_value;
+      src_value1 = flag3 ? data[src_x1] : border_value;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
       value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
-      global uchar* output = dst + element_y * dst_stride;
-      output[element_x] = convert_uchar_sat(sum);
+      data = dst + element_y * dst_stride;
+      data[element_x] = convert_uchar_sat(sum);
     }
     else if (channels == 3) {
       uchar3 border_value1 = (uchar3)(border_value, border_value, border_value);
-      global uchar* input = src + src_y0 * src_stride;
-      uchar3 src_value0 = flag0 ? vload3(src_x0, input) : border_value1;
-      uchar3 src_value1 = flag1 ? vload3(src_x1, input) : border_value1;
+      global uchar* data = src + src_y0 * src_stride;
+      uchar3 src_value0 = flag0 ? vload3(src_x0, data) : border_value1;
+      uchar3 src_value1 = flag1 ? vload3(src_x1, data) : border_value1;
       float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) *
                       convert_float3(src_value0);
       float3 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) *
@@ -90,9 +90,9 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = src + src_y1 * src_stride;
-      src_value0 = flag2 ? vload3(src_x0, input) : border_value1;
-      src_value1 = flag3 ? vload3(src_x1, input) : border_value1;
+      data = src + src_y1 * src_stride;
+      src_value0 = flag2 ? vload3(src_x0, data) : border_value1;
+      src_value1 = flag3 ? vload3(src_x1, data) : border_value1;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) *
                convert_float3(src_value0);
       value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) *
@@ -100,16 +100,16 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = dst + element_y * dst_stride;
+      data = dst + element_y * dst_stride;
       uchar3 result = convert_uchar3_sat(sum);
-      vstore3(result, element_x, output);
+      vstore3(result, element_x, data);
     }
     else {
       uchar4 border_value1 = (uchar4)(border_value, border_value, border_value,
                                       border_value);
-      global uchar* input = src + src_y0 * src_stride;
-      uchar4 src_value0 = flag0 ? vload4(src_x0, input) : border_value1;
-      uchar4 src_value1 = flag1 ? vload4(src_x1, input) : border_value1;
+      global uchar* data = src + src_y0 * src_stride;
+      uchar4 src_value0 = flag0 ? vload4(src_x0, data) : border_value1;
+      uchar4 src_value1 = flag1 ? vload4(src_x1, data) : border_value1;
       float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) *
                       convert_float4(src_value0);
       float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) *
@@ -118,9 +118,9 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      input = src + src_y1 * src_stride;
-      src_value0 = flag2 ? vload4(src_x0, input) : border_value1;
-      src_value1 = flag3 ? vload4(src_x1, input) : border_value1;
+      data = src + src_y1 * src_stride;
+      src_value0 = flag2 ? vload4(src_x0, data) : border_value1;
+      src_value1 = flag3 ? vload4(src_x1, data) : border_value1;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) *
                convert_float4(src_value0);
       value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) *
@@ -128,9 +128,9 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
       sum += value0;
       sum += value1;
 
-      global uchar* output = dst + element_y * dst_stride;
+      data = dst + element_y * dst_stride;
       uchar4 result = convert_uchar4_sat(sum);
-      vstore4(result, element_x, output);
+      vstore4(result, element_x, data);
     }
   }
   else if (border_type == BORDER_REPLICATE) {
@@ -145,69 +145,69 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
     src_y1 = clamp(src_y1, 0, src_rows - 1);
 
     if (channels == 1) {
-      global uchar* input = src + src_y0 * src_stride;
-      uchar src_value0 = input[src_x0];
-      uchar src_value1 = input[src_x1];
+      global uchar* data = src + src_y0 * src_stride;
+      uchar src_value0 = data[src_x0];
+      uchar src_value1 = data[src_x1];
       float value0 = diff_x1 * diff_y1 * src_value0;
       float value1 = diff_x0 * diff_y1 * src_value1;
       float sum = 0.f;
       sum += value0;
       sum += value1;
 
-      input = src + src_y1 * src_stride;
-      src_value0 = input[src_x0];
-      src_value1 = input[src_x1];
+      data = src + src_y1 * src_stride;
+      src_value0 = data[src_x0];
+      src_value1 = data[src_x1];
       value0 = diff_x1 * diff_y0 * src_value0;
       value1 = diff_x0 * diff_y0 * src_value1;
       sum += value0;
       sum += value1;
 
-      global uchar* output = dst + element_y * dst_stride;
-      output[element_x] = convert_uchar_sat(sum);
+      data = dst + element_y * dst_stride;
+      data[element_x] = convert_uchar_sat(sum);
     }
     else if (channels == 3) {
-      global uchar* input = src + src_y0 * src_stride;
-      uchar3 src_value0 = vload3(src_x0, input);
-      uchar3 src_value1 = vload3(src_x1, input);
+      global uchar* data = src + src_y0 * src_stride;
+      uchar3 src_value0 = vload3(src_x0, data);
+      uchar3 src_value1 = vload3(src_x1, data);
       float3 value0 = diff_x1 * diff_y1 * convert_float3(src_value0);
       float3 value1 = diff_x0 * diff_y1 * convert_float3(src_value1);
       float3 sum = (float3)(0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
 
-      input = src + src_y1 * src_stride;
-      src_value0 = vload3(src_x0, input);
-      src_value1 = vload3(src_x1, input);
+      data = src + src_y1 * src_stride;
+      src_value0 = vload3(src_x0, data);
+      src_value1 = vload3(src_x1, data);
       value0 = diff_x1 * diff_y0 * convert_float3(src_value0);
       value1 = diff_x0 * diff_y0 * convert_float3(src_value1);
       sum += value0;
       sum += value1;
 
-      global uchar* output = dst + element_y * dst_stride;
+      data = dst + element_y * dst_stride;
       uchar3 result = convert_uchar3_sat(sum);
-      vstore3(result, element_x, output);
+      vstore3(result, element_x, data);
     }
     else {
-      global uchar* input = src + src_y0 * src_stride;
-      uchar4 src_value0 = vload4(src_x0, input);
-      uchar4 src_value1 = vload4(src_x1, input);
+      global uchar* data = src + src_y0 * src_stride;
+      uchar4 src_value0 = vload4(src_x0, data);
+      uchar4 src_value1 = vload4(src_x1, data);
       float4 value0 = diff_x1 * diff_y1 * convert_float4(src_value0);
       float4 value1 = diff_x0 * diff_y1 * convert_float4(src_value1);
       float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
 
-      input = src + src_y1 * src_stride;
-      src_value0 = vload4(src_x0, input);
-      src_value1 = vload4(src_x1, input);
+      data = src + src_y1 * src_stride;
+      src_value0 = vload4(src_x0, data);
+      src_value1 = vload4(src_x1, data);
       value0 = diff_x1 * diff_y0 * convert_float4(src_value0);
       value1 = diff_x0 * diff_y0 * convert_float4(src_value1);
       sum += value0;
       sum += value1;
 
-      global uchar* output = dst + element_y * dst_stride;
+      data = dst + element_y * dst_stride;
       uchar4 result = convert_uchar4_sat(sum);
-      vstore4(result, element_x, output);
+      vstore4(result, element_x, data);
     }
   }
   else {
@@ -252,76 +252,73 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
     }
 
     if (channels == 1) {
-      global float* input = (global float*)((global uchar*)src +
+      global float* data = (global float*)((global uchar*)src +
                                             src_y0 * src_stride);
-      float src_value0 = flag0 ? input[src_x0] : border_value;
-      float src_value1 = flag1 ? input[src_x1] : border_value;
+      float src_value0 = flag0 ? data[src_x0] : border_value;
+      float src_value1 = flag1 ? data[src_x1] : border_value;
       float value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
       float value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float sum = 0.f;
       sum += value0;
       sum += value1;
 
-      input = (global float*)((global uchar*)src + src_y1 * src_stride);
-      src_value0 = flag2 ? input[src_x0] : border_value;
-      src_value1 = flag3 ? input[src_x1] : border_value;
+      data = (global float*)((global uchar*)src + src_y1 * src_stride);
+      src_value0 = flag2 ? data[src_x0] : border_value;
+      src_value1 = flag3 ? data[src_x1] : border_value;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
       value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst +
-                                             element_y * dst_stride);
-      output[element_x] = sum;
+      data = (global float*)((global uchar*)dst + element_y * dst_stride);
+      data[element_x] = sum;
     }
     else if (channels == 3) {
       float3 border_value1 = (float3)(border_value, border_value, border_value);
-      global float* input = (global float*)((global uchar*)src +
+      global float* data = (global float*)((global uchar*)src +
                                             src_y0 * src_stride);
-      float3 src_value0 = flag0 ? vload3(src_x0, input) : border_value1;
-      float3 src_value1 = flag1 ? vload3(src_x1, input) : border_value1;
+      float3 src_value0 = flag0 ? vload3(src_x0, data) : border_value1;
+      float3 src_value1 = flag1 ? vload3(src_x1, data) : border_value1;
       float3 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
       float3 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float3 sum = (float3)(0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
 
-      input = (global float*)((global uchar*)src + src_y1 * src_stride);
-      src_value0 = flag2 ? vload3(src_x0, input) : border_value1;
-      src_value1 = flag3 ? vload3(src_x1, input) : border_value1;
+      data = (global float*)((global uchar*)src + src_y1 * src_stride);
+      src_value0 = flag2 ? vload3(src_x0, data) : border_value1;
+      src_value1 = flag3 ? vload3(src_x1, data) : border_value1;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
       value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst +
-                                             element_y * dst_stride);
-      vstore3(sum, element_x, output);
+      data = (global float*)((global uchar*)dst + element_y * dst_stride);
+      vstore3(sum, element_x, data);
     }
     else {
       float4 border_value1 = (float4)(border_value, border_value, border_value,
                                       border_value);
-      global float* input = (global float*)((global uchar*)src +
+      global float* data = (global float*)((global uchar*)src +
                                             src_y0 * src_stride);
-      float4 src_value0 = flag0 ? vload4(src_x0, input) : border_value1;
-      float4 src_value1 = flag1 ? vload4(src_x1, input) : border_value1;
+      float4 src_value0 = flag0 ? vload4(src_x0, data) : border_value1;
+      float4 src_value1 = flag1 ? vload4(src_x1, data) : border_value1;
       float4 value0 = (src_x1 - src_xy.x) * (src_y1 - src_xy.y) * src_value0;
       float4 value1 = (src_xy.x - src_x0) * (src_y1 - src_xy.y) * src_value1;
       float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
 
-      input = (global float*)((global uchar*)src + src_y1 * src_stride);
-      src_value0 = flag2 ? vload4(src_x0, input) : border_value1;
-      src_value1 = flag3 ? vload4(src_x1, input) : border_value1;
+      data = (global float*)((global uchar*)src + src_y1 * src_stride);
+      src_value0 = flag2 ? vload4(src_x0, data) : border_value1;
+      src_value1 = flag3 ? vload4(src_x1, data) : border_value1;
       value0 = (src_x1 - src_xy.x) * (src_xy.y - src_y0) * src_value0;
       value1 = (src_xy.x - src_x0) * (src_xy.y - src_y0) * src_value1;
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst +
-                                             element_y * dst_stride);
-      vstore4(sum, element_x, output);
+      data = (global float*)((global uchar*)dst + element_y * dst_stride);
+      vstore4(sum, element_x, data);
     }
   }
   else if (border_type == BORDER_REPLICATE) {
@@ -336,73 +333,70 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
     src_y1 = clamp(src_y1, 0, src_rows - 1);
 
     if (channels == 1) {
-      global float* input = (global float*)((global uchar*)src +
+      global float* data = (global float*)((global uchar*)src +
                                             src_y0 * src_stride);
-      float src_value0 = input[src_x0];
-      float src_value1 = input[src_x1];
+      float src_value0 = data[src_x0];
+      float src_value1 = data[src_x1];
       float value0 = diff_x1 * diff_y1 * src_value0;
       float value1 = diff_x0 * diff_y1 * src_value1;
       float sum = 0.f;
       sum += value0;
       sum += value1;
 
-      input = (global float*)((global uchar*)src + src_y1 * src_stride);
-      src_value0 = input[src_x0];
-      src_value1 = input[src_x1];
+      data = (global float*)((global uchar*)src + src_y1 * src_stride);
+      src_value0 = data[src_x0];
+      src_value1 = data[src_x1];
       value0 = diff_x1 * diff_y0 * src_value0;
       value1 = diff_x0 * diff_y0 * src_value1;
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst +
-                                             element_y * dst_stride);
-      output[element_x] = sum;
+      data = (global float*)((global uchar*)dst + element_y * dst_stride);
+      data[element_x] = sum;
     }
     else if (channels == 3) {
-      global float* input = (global float*)((global uchar*)src +
+      global float* data = (global float*)((global uchar*)src +
                                             src_y0 * src_stride);
-      float3 src_value0 = vload3(src_x0, input);
-      float3 src_value1 = vload3(src_x1, input);
+      float3 src_value0 = vload3(src_x0, data);
+      float3 src_value1 = vload3(src_x1, data);
       float3 value0 = diff_x1 * diff_y1 * src_value0;
       float3 value1 = diff_x0 * diff_y1 * src_value1;
       float3 sum = (float3)(0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
 
-      input = (global float*)((global uchar*)src + src_y1 * src_stride);
-      src_value0 = vload3(src_x0, input);
-      src_value1 = vload3(src_x1, input);
+      data = (global float*)((global uchar*)src + src_y1 * src_stride);
+      src_value0 = vload3(src_x0, data);
+      src_value1 = vload3(src_x1, data);
       value0 = diff_x1 * diff_y0 * src_value0;
       value1 = diff_x0 * diff_y0 * src_value1;
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst +
-                                             element_y * dst_stride);
-      vstore3(sum, element_x, output);
+      data = (global float*)((global uchar*)dst + element_y * dst_stride);
+      vstore3(sum, element_x, data);
     }
     else {
-      global float* input = (global float*)((global uchar*)src +
+      global float* data = (global float*)((global uchar*)src +
                                             src_y0 * src_stride);
-      float4 src_value0 = vload4(src_x0, input);
-      float4 src_value1 = vload4(src_x1, input);
+      float4 src_value0 = vload4(src_x0, data);
+      float4 src_value1 = vload4(src_x1, data);
       float4 value0 = diff_x1 * diff_y1 * src_value0;
       float4 value1 = diff_x0 * diff_y1 * src_value1;
       float4 sum = (float4)(0.f, 0.f, 0.f, 0.f);
       sum += value0;
       sum += value1;
 
-      input = (global float*)((global uchar*)src + src_y1 * src_stride);
-      src_value0 = vload4(src_x0, input);
-      src_value1 = vload4(src_x1, input);
+      data = (global float*)((global uchar*)src + src_y1 * src_stride);
+      src_value0 = vload4(src_x0, data);
+      src_value1 = vload4(src_x1, data);
       value0 = diff_x1 * diff_y0 * src_value0;
       value1 = diff_x0 * diff_y0 * src_value1;
       sum += value0;
       sum += value1;
 
-      global float* output = (global float*)((global uchar*)dst +
-                                             element_y * dst_stride);
-      vstore4(sum, element_x, output);
+      data = (global float*)((global uchar*)dst + element_y * dst_stride);
+      vstore4(sum, element_x, data);
     }
   }
   else {

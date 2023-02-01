@@ -49,8 +49,8 @@ RetCode absU8(const cl_mem src, int rows, int cols, int channels,
 
   if ((src_stride & 3) == 0 && (dst_stride & 3) == 0) {
     frame_chain->setCompileOptions("-D U8 -D U8ALIGNED");
-    runOclKernel(frame_chain, "absU8Kernel0", 2, global_size, local_size,
-                 src, rows, cols, src_stride, dst, dst_stride);
+    runOclKernel(frame_chain, "absU8Kernel0", 2, global_size, local_size, src,
+                 rows, cols, src_stride, dst, dst_stride);
   }
   else if (src_stride == columns && dst_stride == columns) {
     columns *= rows;

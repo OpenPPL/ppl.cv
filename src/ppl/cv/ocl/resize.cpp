@@ -54,11 +54,7 @@ RetCode resizeU8(const cl_mem src, int src_rows, int src_cols, int channels,
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0,
                                        src_rows * src_stride * sizeof(uchar), 0,
                                        NULL, NULL);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clEnqueueCopyBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clEnqueueCopyBuffer);
     }
     return RC_SUCCESS;
   }
@@ -138,11 +134,7 @@ RetCode resizeF32(const cl_mem src, int src_rows, int src_cols, int channels,
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0,
                                        src_rows * src_stride * sizeof(float), 0,
                                        NULL, NULL);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clEnqueueCopyBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clEnqueueCopyBuffer);
     }
     return RC_SUCCESS;
   }

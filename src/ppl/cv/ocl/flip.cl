@@ -29,24 +29,38 @@ void flipU8Kernel0(global const uchar* src, int rows, int cols, int src_stride,
   global uchar* data;
   uchar4 value;
   if (flip_code == 0) {
-    x0 = element_x;
     y = rows - element_y - 1;
 
     data = src + y * src_stride;
-    value = vload4(x0, data);
+    value = vload4(element_x, data);
   }
   else if (flip_code > 0) {
     x0 = cols - index_x - 1;
     x1 = x0 - 1;
     x2 = x0 - 2;
     x3 = x0 - 3;
-    y = element_y;
 
-    data = src + y * src_stride;
-    value.x = data[x0];
-    value.y = data[x1];
-    value.z = data[x2];
-    value.w = data[x3];
+    data = src + element_y * src_stride;
+    if (x3 >= 0) {
+      data += x3;
+      uchar4 temp_value = vload4(0, data);
+      value.x = temp_value.w;
+      value.y = temp_value.z;
+      value.z = temp_value.y;
+      value.w = temp_value.x;
+    }
+    else {
+      value.x = data[x0];
+      if (x1 >= 0) {
+        value.y = data[x1];
+      }
+      if (x2 >= 0) {
+        value.z = data[x2];
+      }
+      if (x3 >= 0) {
+        value.w = data[x3];
+      }
+    }
   }
   else {
     x0 = cols - index_x - 1;
@@ -56,14 +70,30 @@ void flipU8Kernel0(global const uchar* src, int rows, int cols, int src_stride,
     y = rows - element_y - 1;
 
     data = src + y * src_stride;
-    value.x = data[x0];
-    value.y = data[x1];
-    value.z = data[x2];
-    value.w = data[x3];
+    if (x3 >= 0) {
+      data += x3;
+      uchar4 temp_value = vload4(0, data);
+      value.x = temp_value.w;
+      value.y = temp_value.z;
+      value.z = temp_value.y;
+      value.w = temp_value.x;
+    }
+    else {
+      value.x = data[x0];
+      if (x1 >= 0) {
+        value.y = data[x1];
+      }
+      if (x2 >= 0) {
+        value.z = data[x2];
+      }
+      if (x3 >= 0) {
+        value.w = data[x3];
+      }
+    }
   }
 
   data = dst + element_y * dst_stride;
-  if (index_x < cols - 3) {
+  if (index_x < dst_stride - 3) {
     vstore4(value, element_x, data);
   }
   else {

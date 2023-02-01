@@ -61,11 +61,7 @@ RetCode copyMakeBorder(const cl_mem src, int rows, int cols, int channels,
     if (src != dst) {
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0, rows * src_stride,
                                        0, NULL, NULL);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clEnqueueCopyBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clEnqueueCopyBuffer);
     }
     return RC_SUCCESS;
   }
@@ -130,11 +126,7 @@ RetCode copyMakeBorder(const cl_mem src, int rows, int cols, int channels,
     if (src != dst) {
       error_code = clEnqueueCopyBuffer(queue, src, dst, 0, 0, rows * src_stride,
                                        0, NULL, NULL);
-      if (error_code != CL_SUCCESS) {
-        LOG(ERROR) << "Call clEnqueueCopyBuffer() failed with code: "
-                   << error_code;
-        return RC_DEVICE_MEMORY_ERROR;
-      }
+      CHECK_ERROR(error_code, clEnqueueCopyBuffer);
     }
     return RC_SUCCESS;
   }
