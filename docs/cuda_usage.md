@@ -1,12 +1,18 @@
 ## CUDA Platform Guide
 
-### 1. Building commands on linux
+### Prerequisites
 
-If you just want ppl.cv binary libary to link, then run the following command in the root directory of ppl.cv.
+* CUDA toolkit 7.0+
+* gcc/g++ 4.9+
+* cmake 3.14+
+
+### Building commands on linux
+
+If you just want *ppl.cv* binary libary to link, then run the following command in the root directory of *ppl.cv*.
 
 `$ ./build.sh cuda`
 
-This builds the ppl.cv static library, and packages the header files, the binary library and other relevant files together for usage. The generated directories and files look something like this:
+This builds the *ppl.cv* static library, and packages the header files, the binary library and other relevant files together for usage. The generated directories and files look something like this:
 
 ```
 ppl.cv/cuda-build/install/
@@ -20,11 +26,11 @@ ppl.cv/cuda-build/install/
   share/
 ```
 
-If what you want to build includes not only the static library but also the executable unit test and benchmark, then run the following command in the root directory of ppl.cv.
+If what you want to build includes not only the static library but also the executable unit test and benchmark, then run the following command in the root directory of *ppl.cv*.
 
 `$ ./build.sh cuda -DPPLCV_USE_X86_64=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
 
-Besides the static library, the executable program files of ppl.cv unittest and benchmark will be generated and the location looks like this:
+Besides the static library, the executable program files of *ppl.cv* unittest and benchmark will be generated and the location looks like this:
 
 ```
 ppl.cv/cuda-build/bin/
@@ -32,10 +38,9 @@ ppl.cv/cuda-build/bin/
   pplcv_unittest
 ```
 
+### Building commands on windows
 
-### 2. Building commands on windows
-
-Similar to compiling and linking on linux, script and commands to invoke Microsoft Visual Studio are used to build ppl.cv. For now, "Visual Studio 2015" and "Visual Studio 2019" are supported and tested. If you just want ppl.cv binary libary to link, then run the following command in the root directory of ppl.cv.
+Similar to compiling and linking on linux, script and commands to invoke Microsoft Visual Studio are used to build *ppl.cv*. For now, "Visual Studio 2015" and "Visual Studio 2019" are supported and tested. If you just want *ppl.cv* binary libary to link, then run the following command in the root directory of *ppl.cv*.
 
 `$ ./build.bat -G "Visual Studio 14 2015 Win64" -DPPLCV_USE_CUDA=ON`
 
@@ -55,7 +60,7 @@ ppl.cv/cuda-build/install/
   x64/
 ```
 
-If what you want to build includes not only the static library but also the executable unit test and benchmark, then run the following command in the root directory of ppl.cv.
+If what you want to build includes not only the static library but also the executable unit test and benchmark, then run the following command in the root directory of *ppl.cv*.
 
 `$ ./build.bat -G "Visual Studio 14 2015 Win64" -DPPLCV_USE_X86_64=ON -DPPLCV_USE_CUDA=ON -DPPLCV_BUILD_TESTS=ON -DPPLCV_BUILD_BENCHMARK=ON`
 
@@ -70,10 +75,9 @@ ppl.cv/cuda-build/bin/Release/
   ...
 ```
 
+### How to run unittest
 
-### 3. How to run unittest
-
-The executable unittest includes unit tests for all functions on all platforms, which check the consistency between the implementation in ppl.cv and that in opencv of functions. Our unittest is based on GoogleTest, and use regular expression to identify function unit tests. To run all the unit tests of all function in ppl.cv.cuda, the following commands is needed:
+The executable unittest includes unit tests for all functions on all platforms, which check the consistency between the implementation in *ppl.cv* and that in opencv of functions. Our unittest is based on GoogleTest, and use regular expression to identify function unit tests. To run all the unit tests of all function in *ppl.cv.cuda*, the following commands is needed:
 
 `$ ./pplcv_unittest --gtest_filter=*PplCvCuda*`
 
@@ -85,10 +89,9 @@ The output of a unit test case is formatted with the arguments passed to its fun
 
 ![Output snippet of GaussianBlur unittest](./gaussianblur_unittest.png)
 
+### How to run benchmark
 
-### 4. How to run benchmark
-
-The executable benchmark exhibits performance of all ppl.cv functions on all platforms, also shows performance comparison between the implementation in ppl.cv and that in opencv x86 and opencv cuda. Our benchmark is based on Google Benchmark, and use regular expression to identify functions. To run all benchmarks of all function in ppl.cv.cuda, the following commands is needed:
+The executable benchmark exhibits performance of all *ppl.cv* functions on all platforms, also shows performance comparison between the implementation in *ppl.cv* and that in opencv x86 and opencv cuda. Our benchmark is based on Google Benchmark, and use regular expression to identify functions. To run all benchmarks of all function in *ppl.cv.cuda*, the following commands is needed:
 
 `$ ./pplcv_benchmark --benchmark_filter="BM_.+cuda"`
 
@@ -100,10 +103,9 @@ The output of a benchmark is also formatted with the arguments passed to its fun
 
 ![Output snippet of GaussianBlur benchmark](./gaussianblur_benchmark.png)
 
+### Library customization and tailoring
 
-### 5. Library customization and tailoring
-
-ppl.cv targets small volume and flexibility. Each function normally has four files, including a *.h file for function declaration and document, a *.cu file for function implementation, a *_unittest.cpp file for unit test and a *_benchmark.cpp file for performance exhibition. Besides very limited invocation between functions, there is not dependency between functions. In 'ppl/cv/src/ppl/cv/cuda/utility' folder, function utility, cuda memory pool, unit test infrastructure and performance benchmark infrastructure are defined for each function. In order to create a customized cuda cv library from ppl.cv.cuda, the utility files and the files of needed functions are just needed to be kept.
+*ppl.cv* targets small volume and flexibility. Each function normally has four files, including a xxx.h file for function declaration and document, a xxx.cu file for function implementation, a xxx_unittest.cpp file for unit test and a xxx_benchmark.cpp file for performance exhibition. Besides very limited invocation between functions, there is not dependency between functions. In 'ppl/cv/src/ppl/cv/cuda/utility' folder, function utility, cuda memory pool, unit test infrastructure and performance benchmark infrastructure are defined for each function. In order to create a customized cuda cv library from *ppl.cv.cuda*, the utility files and the files of needed functions are just needed to be kept.
 
 For example, a customization library, which only has Adaptivethreshold(), has the following files.
 
@@ -121,3 +123,14 @@ ppl/cv/
   ...
 
 ```
+
+### How to add a function
+
+There are some conventions made by the cmake building system of *ppl.cv* that should be abided by when a new function is added. There are at least four files for a function definition as listed below where their file names have a common prefix(xxx).
+
+* include/ppl/cv/cuda/xxx.h: A prototype declaration and a brief introduction of the interface and usage example should be given here.
+* src/ppl/cv/cuda/xxx.cu: All things about implementation, including macros, kernel definitions, device function definitions, thread configuration, kernel invocation and host functions definitions, should be located here.
+* src/ppl/cv/cuda/xxx_unittest.cpp: An unittest based on *GoogleTest* covering thorough parameter combination in usage cases should be provided here to compare the outputs with its counterpart in *OpenCV* for consistency.
+* src/ppl/cv/cuda/xxx_benchmark.cpp: A benchmark based on *Google Benchmark* covering common usage cases should be provided here to compare performance with its counterpart in *OpenCV* to validate the implemented optimization.
+
+Some common infrastructure in *ppl.cv* can facilitate development. Firstly, some enumerations for image processing algorithm are given in `include/ppl/cv/types.h`, and can be used in the interface and implementation of a function. Secondly, error checking, type definitiond, enumeration of thread configuration and commonly used device functions are provided in `src/ppl/cv/cuda/utility/utility.hpp` and can be used in function implementation. Thirdly, [CUDA Memory Pool](docs/cuda_memory_pool.md) is provided for memory allocation and freeing as a utility component, and can be used to cut down memory management cost in function implementation when needed. Fourthly, infrastructures for creating different input images and checking consistency in unittest/benchmark are provided in `src/ppl/cv/cuda/utility/infrastructure.hpp`, and can be used in writing a unittest/benchmark.
