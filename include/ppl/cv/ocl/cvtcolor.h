@@ -52,7 +52,7 @@ namespace ocl {
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -135,7 +135,7 @@ ppl::common::RetCode BGR2BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -218,7 +218,7 @@ ppl::common::RetCode RGB2RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -301,7 +301,7 @@ ppl::common::RetCode BGRA2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -384,7 +384,7 @@ ppl::common::RetCode RGBA2RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -467,7 +467,7 @@ ppl::common::RetCode BGR2RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -550,7 +550,7 @@ ppl::common::RetCode RGB2BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -633,7 +633,7 @@ ppl::common::RetCode RGBA2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -718,7 +718,7 @@ ppl::common::RetCode BGRA2RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -801,7 +801,7 @@ ppl::common::RetCode BGR2RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -886,7 +886,7 @@ ppl::common::RetCode RGB2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -969,7 +969,7 @@ ppl::common::RetCode BGRA2RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1054,7 +1054,7 @@ ppl::common::RetCode RGBA2BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1137,7 +1137,7 @@ ppl::common::RetCode BGR2GRAY(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1220,7 +1220,7 @@ ppl::common::RetCode RGB2GRAY(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1303,7 +1303,7 @@ ppl::common::RetCode BGRA2GRAY(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1386,7 +1386,7 @@ ppl::common::RetCode RGBA2GRAY(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1465,7 +1465,7 @@ ppl::common::RetCode GRAY2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1544,7 +1544,7 @@ ppl::common::RetCode GRAY2RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1627,7 +1627,7 @@ ppl::common::RetCode GRAY2BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1712,7 +1712,7 @@ ppl::common::RetCode GRAY2RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1795,7 +1795,7 @@ ppl::common::RetCode BGR2YCrCb(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1878,7 +1878,7 @@ ppl::common::RetCode RGB2YCrCb(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -1961,7 +1961,7 @@ ppl::common::RetCode BGRA2YCrCb(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2044,7 +2044,7 @@ ppl::common::RetCode RGBA2YCrCb(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2127,7 +2127,7 @@ ppl::common::RetCode YCrCb2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2205,7 +2205,7 @@ ppl::common::RetCode YCrCb2RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2283,7 +2283,7 @@ ppl::common::RetCode YCrCb2BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2369,7 +2369,7 @@ ppl::common::RetCode YCrCb2RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2453,7 +2453,7 @@ ppl::common::RetCode BGR2HSV(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2537,7 +2537,7 @@ ppl::common::RetCode RGB2HSV(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2621,7 +2621,7 @@ ppl::common::RetCode BGRA2HSV(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2705,7 +2705,7 @@ ppl::common::RetCode RGBA2HSV(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2789,7 +2789,7 @@ ppl::common::RetCode HSV2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2873,7 +2873,7 @@ ppl::common::RetCode HSV2RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -2957,7 +2957,7 @@ ppl::common::RetCode HSV2BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3042,7 +3042,7 @@ ppl::common::RetCode HSV2RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3125,7 +3125,7 @@ ppl::common::RetCode BGR2LAB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3208,7 +3208,7 @@ ppl::common::RetCode RGB2LAB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3291,7 +3291,7 @@ ppl::common::RetCode BGRA2LAB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3374,7 +3374,7 @@ ppl::common::RetCode RGBA2LAB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3457,7 +3457,7 @@ ppl::common::RetCode LAB2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3540,7 +3540,7 @@ ppl::common::RetCode LAB2RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3623,7 +3623,7 @@ ppl::common::RetCode LAB2BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3708,7 +3708,7 @@ ppl::common::RetCode LAB2RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3800,7 +3800,7 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3893,7 +3893,7 @@ ppl::common::RetCode BGR2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -3985,7 +3985,7 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4078,7 +4078,7 @@ ppl::common::RetCode RGB2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4170,7 +4170,7 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4263,7 +4263,7 @@ ppl::common::RetCode BGRA2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4355,7 +4355,7 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4448,7 +4448,7 @@ ppl::common::RetCode RGBA2NV12(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4539,7 +4539,7 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4634,7 +4634,7 @@ ppl::common::RetCode NV122BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4725,7 +4725,7 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4820,7 +4820,7 @@ ppl::common::RetCode NV122RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -4911,7 +4911,7 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5006,7 +5006,7 @@ ppl::common::RetCode NV122BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5097,7 +5097,7 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5194,7 +5194,7 @@ ppl::common::RetCode NV122RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5286,7 +5286,7 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5379,7 +5379,7 @@ ppl::common::RetCode BGR2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5471,7 +5471,7 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5564,7 +5564,7 @@ ppl::common::RetCode RGB2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5656,7 +5656,7 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5751,7 +5751,7 @@ ppl::common::RetCode BGRA2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5843,7 +5843,7 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -5938,7 +5938,7 @@ ppl::common::RetCode RGBA2NV21(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6029,7 +6029,7 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6124,7 +6124,7 @@ ppl::common::RetCode NV212BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6215,7 +6215,7 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6310,7 +6310,7 @@ ppl::common::RetCode NV212RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6401,7 +6401,7 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6496,7 +6496,7 @@ ppl::common::RetCode NV212BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6587,7 +6587,7 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6684,7 +6684,7 @@ ppl::common::RetCode NV212RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6779,7 +6779,7 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6879,7 +6879,7 @@ ppl::common::RetCode BGR2I420(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -6974,7 +6974,7 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7073,7 +7073,7 @@ ppl::common::RetCode RGB2I420(cl_command_queue queue,
  * <tr><td>uint8_t(uchar)<td>4<td>1
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7168,7 +7168,7 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7267,7 +7267,7 @@ ppl::common::RetCode BGRA2I420(cl_command_queue queue,
  * <tr><td>uint8_t(uchar)<td>4<td>1
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7362,7 +7362,7 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7462,7 +7462,7 @@ ppl::common::RetCode RGBA2I420(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7557,7 +7557,7 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7657,7 +7657,7 @@ ppl::common::RetCode I4202BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7752,7 +7752,7 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7850,7 +7850,7 @@ ppl::common::RetCode I4202RGB(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -7945,7 +7945,7 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8045,7 +8045,7 @@ ppl::common::RetCode I4202BGRA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8140,7 +8140,7 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8242,7 +8242,7 @@ ppl::common::RetCode I4202RGBA(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8324,7 +8324,7 @@ ppl::common::RetCode YUV2GRAY(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8400,7 +8400,7 @@ ppl::common::RetCode UYVY2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8478,7 +8478,7 @@ ppl::common::RetCode UYVY2GRAY(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8554,7 +8554,7 @@ ppl::common::RetCode YUYV2BGR(cl_command_queue queue,
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
  * <tr><td>Project       <td>ppl.cv
  * </table>
@@ -8602,398 +8602,6 @@ ppl::common::RetCode YUYV2GRAY(cl_command_queue queue,
                                const cl_mem inData,
                                int outWidthStride,
                                cl_mem outData);
-
-//NV12/21 <-> I420
-
-/**
- * @brief Convert NV21 images to I420 images,format: YYYYUVUVUVUV -> YYYYUUUUVVVV.
- * @tparam T The data type, used for both input image and output image,
- *         currently only uint8_t(uchar) is supported.
- * @param queue          opencl command queue.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
- * @param inY            Y-channel input image data.
- * @param inUVStride     input image's UV-channel width stride, similar to
- *                       inYStride.
- * @param inUV           UV-channel input image data..
- * @param outYStride     Y-channel width stride of output image, similar to
- *                       inWidthStride.
- * @param outY           Y-channel output image data.
- * @param outUStride     U-channel width stride of output image, similar to
- *                       inWidthStride / 2.
- * @param outU           U-channel output image data.
- * @param outVStride     V-channel width stride of output image, similar to
- *                       inWidthStride / 2.
- * @param outV           V-channel output image data.
- * @return The execution status, succeeds or fails with an error code.
- * @note For best performance, rows of input&output aligned with 64 bits are
- *       recommended.
- * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @remark The following table show which data type and channels are supported.
- * <table>
- * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>1<td>1
- * </table>
- * <table>
- * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
- * <tr><td>Project       <td>ppl.cv
- * </table>
- * @since ppl.cv-v1.0.0
- * ###Example
- * @code{.cpp}
- * #include "ppl/cv/ocl/cvtcolor.h"
- * #include "ppl/common/oclcommon.h"
- *
- * using namespace ppl::common::ocl;
- * using namespace ppl::cv::ocl;
- *
- * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
- *   int src_channels = 1;
- *   int dst_channels = 1;
- *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   uchar* gpu_output2;
- *   size_t input_pitch0, input_pitch1;
- *   size_t output_pitch0, output_pitch1, output_pitch2;
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output2, &output_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *
- *   NV122I420<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1,
- *                    output_pitch2 / sizeof(uchar), gpu_output2);
- *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
- *   cudaFree(gpu_output2);
- *
- *   return 0;
- * }
- * @endcode
- */
-/* template <typename T>
-ppl::common::RetCode NV122I420(cl_command_queue queue,
-                               int height,
-                               int width,
-                               int inYStride,
-                               const cl_mem inY,
-                               int inUVStride,
-                               const cl_mem inUV,
-                               int outYStride,
-                               cl_mem outY,
-                               int outUStride,
-                               cl_mem outU,
-                               int outVStride,
-                               cl_mem outV); */
-
-/**
- * @brief Convert NV21 images to I420 images,format: YYYYVUVUVUVU -> YYYYUUUUVVVV.
- * @tparam T The data type, used for both input image and output image,
- *         currently only uint8_t(uchar) is supported.
- * @param queue          opencl command queue.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
- * @param inYStride      input image's width stride, it is `width` for
- *                       cudaMalloc() allocated data, `pitch / sizeof(T)` for
- *                       2D cudaMallocPitch() allocated data.
- * @param inY            Y-channel input image data.
- * @param inUVStride     input image's UV-channel width stride, similar to
- *                       inYStride.
- * @param inUV           UV-channel input image data..
- * @param outYStride     Y-channel width stride of output image, similar to
- *                       inWidthStride.
- * @param outY           Y-channel output image data.
- * @param outUStride     U-channel width stride of output image, similar to
- *                       inWidthStride / 2.
- * @param outU           U-channel output image data.
- * @param outVStride     V-channel width stride of output image, similar to
- *                       inWidthStride / 2.
- * @param outV           V-channel output image data.
- * @return The execution status, succeeds or fails with an error code.
- * @note For best performance, rows of input&output aligned with 64 bits are
- *       recommended.
- * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @remark The following table show which data type and channels are supported.
- * <table>
- * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>1<td>1
- * </table>
- * <table>
- * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
- * <tr><td>Project       <td>ppl.cv
- * </table>
- * @since ppl.cv-v1.0.0
- * ###Example
- * @code{.cpp}
- * #include "ppl/cv/ocl/cvtcolor.h"
- * #include "ppl/common/oclcommon.h"
- *
- * using namespace ppl::common::ocl;
- * using namespace ppl::cv::ocl;
- *
- * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
- *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   uchar* gpu_output2;
- *   size_t input_pitch0, input_pitch1;
- *   size_t output_pitch0, output_pitch1, output_pitch2;
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output2, &output_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *
- *   NV212I420<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1,
- *                    output_pitch2 / sizeof(uchar), gpu_output2);
- *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_output0);
- *   cudaFree(gpu_output1);
- *   cudaFree(gpu_output2);
- *
- *   return 0;
- * }
- * @endcode
- */
-/* template <typename T>
-ppl::common::RetCode NV212I420(cl_command_queue queue,
-                               int height,
-                               int width,
-                               int inYStride,
-                               const cl_mem inY,
-                               int inUVStride,
-                               const cl_mem inUV,
-                               int outYStride,
-                               cl_mem outY,
-                               int outUStride,
-                               cl_mem outU,
-                               int outVStride,
-                               cl_mem outV); */
-
-/**
- * @brief Convert I420 images to NV12 images,format: YYYYUUUUVVVV -> YYYYUVUVUVUV
- * @tparam T The data type, used for both input image and output image,
- *         currently only uint8_t(uchar) is supported.
- * @param queue          opencl command queue.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
- * @param inYStride      Y-channel width stride of input image, it is `width`
- *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
- *                       for 2D cudaMallocPitch() allocated data.
- * @param inY            Y-channel input image data.
- * @param inUStride      U-channel width stride of input image, it is `width / 2` for cudaMalloc() allocated data, usually
- *                       no less than `width / 2` for 2D cudaMallocPitch() allocated data.
- * @param inU            U-channel input image data.
- * @param inVStride      U-channel width stride of input image, similar to inUStride.
- * @param inV            V-channel input image data.
- * @param outYStride     Y-channel width stride of output image, similar to
- *                       inWidthStride.
- * @param outY           Y-channel output image data.
- * @param outUVStride    UV-channel width stride of output image, similar to
- *                       inWidthStride.
- * @param outUV          UV-channel output image data.
- * @return The execution status, succeeds or fails with an error code.
- * @note For best performance, rows of input&output aligned with 64 bits are
- *       recommended.
- * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @remark The following table show which data type and channels are supported.
- * <table>
- * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>1<td>1
- * </table>
- * <table>
- * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
- * <tr><td>Project       <td>ppl.cv
- * </table>
- * @since ppl.cv-v1.0.0
- * ###Example
- * @code{.cpp}
- * #include "ppl/cv/ocl/cvtcolor.h"
- * #include "ppl/common/oclcommon.h"
- *
- * using namespace ppl::common::ocl;
- * using namespace ppl::cv::ocl;
- *
- * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
- *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_input2;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch0, input_pitch1, input_pitch2;
- *   size_t output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_input2, &input_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *
- *   I4202NV12<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    input_pitch2 / sizeof(uchar), gpu_input2,
- *                    output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_input2);
- *   cudaFree(gpu_output);
- *
- *   return 0;
- * }
- * @endcode
- */
-/* template <typename T>
-ppl::common::RetCode I4202NV12(cl_command_queue queue,
-                               int height,
-                               int width,
-                               int inYStride,
-                               const cl_mem inY,
-                               int inUStride,
-                               const cl_mem inU,
-                               int inVStride,
-                               const cl_mem inV,
-                               int outYStride,
-                               cl_mem outY,
-                               int outUVStride,
-                               cl_mem outUV); */
-
-/**
- * @brief Convert I420 images to NV21 images,format: YYYYUUUUVVVV -> YYYYVUVUVUVU
- * @tparam T The data type, used for both input image and output image,
- *         currently only uint8_t(uchar) is supported.
- * @param queue          opencl command queue.
- * @param height         input&output image's height.
- * @param width          input&output image's width.
- * @param inYStride      Y-channel width stride of input image, it is `width`
- *                       for cudaMalloc() allocated data, `pitch / sizeof(T)`
- *                       for 2D cudaMallocPitch() allocated data.
- * @param inY            Y-channel input image data.
- * @param inUStride      U-channel width stride of input image, it is `width / 2` for cudaMalloc() allocated data, usually
- *                       no less than `width / 2` for 2D cudaMallocPitch() allocated data.
- * @param inU            U-channel input image data.
- * @param inVStride      U-channel width stride of input image, similar to inUStride.
- * @param inV            V-channel input image data.
- * @param outYStride     Y-channel width stride of output image, similar to
- *                       inWidthStride.
- * @param outY           Y-channel output image data.
- * @param outUVStride    UV-channel width stride of output image, similar to
- *                       inWidthStride.
- * @param outUV          UV-channel output image data.
- * @return The execution status, succeeds or fails with an error code.
- * @note For best performance, rows of input&output aligned with 64 bits are
- *       recommended.
- * @warning All input parameters must be valid, or undefined behaviour may occur.
- * @remark The following table show which data type and channels are supported.
- * <table>
- * <tr><th>Data type(T)<th>ncSrc<th>ncDst
- * <tr><td>uint8_t(uchar)<td>1<td>1
- * </table>
- * <table>
- * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
- * <tr><td>Header files  <td> #include "ppl/cv/ocl/cvtcolor.h"
- * <tr><td>Project       <td>ppl.cv
- * </table>
- * @since ppl.cv-v1.0.0
- * ###Example
- * @code{.cpp}
- * #include "ppl/cv/ocl/cvtcolor.h"
- * #include "ppl/common/oclcommon.h"
- *
- * using namespace ppl::common::ocl;
- * using namespace ppl::cv::ocl;
- *
- * int main(int argc, char** argv) {
- *   int width  = 640;
- *   int height = 480;
- *
- *   uchar* gpu_input0;
- *   uchar* gpu_input1;
- *   uchar* gpu_input2;
- *   uchar* gpu_output0;
- *   uchar* gpu_output1;
- *   size_t input_pitch0, input_pitch1, input_pitch2;
- *   size_t output_pitch0, output_pitch1;
- *   cudaMallocPitch(&gpu_input0, &input_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_input1, &input_pitch1,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_input2, &input_pitch2,
- *                   (width >> 1) * sizeof(uchar), (height >> 1));
- *   cudaMallocPitch(&gpu_output0, &output_pitch0,
- *                   width * sizeof(uchar), height);
- *   cudaMallocPitch(&gpu_output1, &output_pitch1,
- *                   width * sizeof(uchar), (height >> 1));
- *
- *   I4202NV21<uchar>(stream, height, width, input_pitch0 / sizeof(uchar),
- *                    gpu_input0, input_pitch1 / sizeof(uchar), gpu_input1,
- *                    input_pitch2 / sizeof(uchar), gpu_input2,
- *                    output_pitch0 / sizeof(uchar), gpu_output0,
- *                    output_pitch1 / sizeof(uchar), gpu_output1);
- *
- *   cudaFree(gpu_input0);
- *   cudaFree(gpu_input1);
- *   cudaFree(gpu_input2);
- *   cudaFree(gpu_output);
- *
- *   return 0;
- * }
- * @endcode
- */
-/* template <typename T>
-ppl::common::RetCode I4202NV21(cl_command_queue queue,
-                               int height,
-                               int width,
-                               int inYStride,
-                               const cl_mem inY,
-                               int inUStride,
-                               const cl_mem inU,
-                               int inVStride,
-                               const cl_mem inV,
-                               int outYStride,
-                               cl_mem outY,
-                               int outUVStride,
-                               cl_mem outUV); */
 
 }  // namespace ocl
 }  // namespace cv

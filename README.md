@@ -10,7 +10,7 @@ It is a high-performance library of image processing for deep learning. We have 
 
 `Functions in ppl.cv are aligned with those in OpenCV.` In the industry of computer vision, *OpenCV* is the most popular library which has been used by professional people around the world for many years, and the implementations in *OpenCV* comply with precise mathematical principle in algorithm, so we salute it. To cut down the study cost, each function in *ppl.cv* is aligned with its counterpart in *OpenCV* in terms of what the function does and its interface. Instead of an abstract data type to represent an image in *OpenCV*, we adopt a combination of several low level C data types describing a 2D pixel array which are data pointer, height, width and row stride, to easy compatibility among different hardwares and their corresponding programming languages. In order to get a good precision, we prefer to realize the mathematical principles in algorithms and have implemented them in *ppl.cv* as possible as we can. Considering there are hardware and software differences of platforms in float point computation, the outputs of the vast majority of functions in *ppl.cv* are consistent with that of CPU functions in *OpenCV* which strictly adhere to the mathematical principles or approximate them with integer quantization.
 
-`Functions in ppl.cv is self-contained.` Given that the huge deep learning requirements of image processing and the complexity of porting *OpenCV* functions for application deployment, *ppl.cv* aims at providing self-contained implementations for each function and a tailorable image processing library. Each function has its own declaration, document, implementation and independent or limitedly shared unittest and benchmark. We decouple functions by eliminating the dependency between them and reduce the dependence on other definitions by maintaining a minimum common infrastructure for each platform. Developers and users can add or remove platforms/functions at your own will, so *ppl.cv* is friendly to development and deployment.
+`Functions in ppl.cv are self-contained.` Given that the huge deep learning requirements of image processing and the complexity of porting *OpenCV* functions for application deployment, *ppl.cv* aims at providing self-contained implementations for each function and a tailorable image processing library. Each function has its own declaration, document, implementation and independent or limitedly shared unittest and benchmark. We decouple functions by eliminating the dependency between them and reduce the dependence on other definitions by maintaining a minimum common infrastructure for each platform. Developers and users can add or remove platforms/functions at your own will, so *ppl.cv* is friendly to development and deployment.
 
 `Functions in ppl.cv pursue ultimate performance.` Through our theoretical analysis and experimental tests, it has been found that computations of most functions are memory bound while a few are compute bound. In regard to each specific hardware platform, deep optimization has been made in both memory access and computing. For memory access, it improves performance by adopting smaller data structures that meet the requirements, reducing memory allocation and release, address alignment, cache-friendly memory access, vector loading and storage, etc. For calculation, it uses instruction parallelism, fixed point quantization, compressing operation, and replacing double point operation with float point operation while keeping accuracy. Compared with that in *OpenCV*, each function in *ppl.cv* attains better speedup.
 
@@ -51,14 +51,21 @@ Please see the following guides for more detail.
 
 ### Documents
 
-Due to the difference of hardware and programming language in platforms, documents are classified according to platform. The aspects in documents cover code building, unittest, benchmark, library customization, adding a function, etc. Please pick up your desired document in the following list for your development or usage.
+Due to the difference of hardware and programming language in platforms, documents are classified according to platform. The aspects in documents cover prerequisites, code building, unittest, benchmark, adding a function, library customization, etc. Please pick up your desired document in the following list for your development or usage.
 
-* [X86 Platform Guide](docs/x86_usage.md)
-* [CUDA Platform Guide](docs/cuda_usage.md)
-* [Aarch64 Platform Guide](docs/aarch64_usage.md)
-* [RISCV Platform Guide](docs/riscv_usage.md)
-* [OpenCL Platform Guide](docs/ocl_usage.md)
-* [CUDA Memory Pool](docs/cuda_memory_pool.md)
+* X86
+  - [X86 Platform Guide](docs/x86_usage.md)
+* CUDA
+  - [CUDA Platform Guide](docs/cuda_usage.md)
+  - [CUDA Memory Pool](docs/cuda_memory_pool.md)
+  - [Benchmark](docs/cuda_benchmark.md)
+* Arm
+  - [Aarch64 Platform Guide](docs/aarch64_usage.md)
+* RISCV
+  - [RISCV Platform Guide](docs/riscv_usage.md)
+* OpenCL
+  - [OpenCL Platform Guide](docs/ocl_usage.md)
+  - [Benchmark](docs/ocl_benchmark.md)
 
 ### Documentation
 
@@ -72,8 +79,12 @@ then open `html/index.html` in your web browser.
 
 ### Contact Us
 
-* [OpenPPL](https://openppl.ai/)
-* [Github issues](https://github.com/openppl-public/ppl.cv/issues)
+Questions, reports, and suggestions are welcome through GitHub Issues!
+
+| WeChat Official Account | QQ Group |
+| :----:| :----: |
+| OpenPPL | 627853444 |
+| ![OpenPPL](docs/images/wechat_qrcode.jpg)| ![QQGroup](docs/images/qq_qrcode.jpg) |
 
 ### Contributing
 

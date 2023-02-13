@@ -66,7 +66,7 @@ namespace ocl {
  * </table>
  * <table>
  * <caption align="left">Requirements</caption>
- * <tr><td>OpenCL platforms supported <td>OpenCL 2.0
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
  * <tr><td>Header files  <td> #include "ppl/cv/ocl/warpaffine.h"
  * <tr><td>Project       <td> ppl.cv
  * </table>
