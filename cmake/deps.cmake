@@ -55,14 +55,16 @@ if(PPLCV_USE_OPENCL)
     set(PPLCOMMON_OPENCL_LIBRARIES ${PPLCV_OPENCL_LIBRARIES})
 endif()
 
-set(__PPLCOMMON_COMMIT__ efe7a34f1f081c593a28153171524e636987b19a)
+# set(__PPLCOMMON_COMMIT__ efe7a34f1f081c593a28153171524e636987b19a)
+set(__PPLCOMMON_COMMIT__ master)
 
 if(PPLCV_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
         ${PPLCV_DEP_PPLCOMMON_PKG})
 else()
     if(NOT PPLCV_DEP_PPLCOMMON_GIT)
-        set(PPLCV_DEP_PPLCOMMON_GIT "https://github.com/openppl-public/ppl.common.git")
+        # set(PPLCV_DEP_PPLCOMMON_GIT "https://github.com/openppl-public/ppl.common.git")
+        set(PPLCV_DEP_PPLCOMMON_GIT "https://github.com/jimurk/ppl.common.git")
     endif()
     hpcc_declare_git_dep(pplcommon
         ${PPLCV_DEP_PPLCOMMON_GIT}

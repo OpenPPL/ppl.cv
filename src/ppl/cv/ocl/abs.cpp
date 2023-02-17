@@ -40,7 +40,7 @@ RetCode absU8(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, abs);
 
   int columns = cols * channels;
   cols = divideUp(columns, 4, 2);
@@ -84,7 +84,7 @@ RetCode absF32(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, abs);
 
   int columns = cols * channels;
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
