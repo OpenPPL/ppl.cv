@@ -45,7 +45,7 @@ RetCode resizeU8(const cl_mem src, int src_rows, int src_cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, resize);
 
   cl_int error_code = 0;
   if (src_rows == dst_rows && src_cols == dst_cols &&
@@ -128,7 +128,7 @@ RetCode resizeF32(const cl_mem src, int src_rows, int src_cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, resize);
 
   cl_int error_code = 0;
   if (src_rows == dst_rows && src_cols == dst_cols &&

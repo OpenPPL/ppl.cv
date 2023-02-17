@@ -50,7 +50,7 @@ RetCode warpAffine(const cl_mem src, int src_rows, int src_cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, warpaffine);
 
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
   size_t global_size[] = {(size_t)dst_cols, (size_t)dst_rows};
@@ -99,7 +99,7 @@ RetCode warpAffine(const cl_mem src, int src_rows, int src_cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, warpaffine);
 
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
   size_t global_size[] = {(size_t)dst_cols, (size_t)dst_rows};

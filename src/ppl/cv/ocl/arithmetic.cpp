@@ -44,7 +44,7 @@ RetCode addU8(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
@@ -87,7 +87,7 @@ RetCode addF32(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -232,7 +232,7 @@ RetCode addWeightedU8(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
@@ -276,7 +276,7 @@ RetCode addWeightedF32(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -445,7 +445,7 @@ RetCode subtractU8(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
@@ -488,7 +488,7 @@ RetCode subtractF32(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -633,7 +633,7 @@ RetCode mulU8(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
@@ -676,7 +676,7 @@ RetCode mulF32(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -827,7 +827,7 @@ RetCode divU8(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   if (src0_stride == columns && src1_stride == columns &&
@@ -870,7 +870,7 @@ RetCode divF32(const cl_mem src0, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, arithmetic);
 
   int columns = cols * channels;
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};

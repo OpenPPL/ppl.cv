@@ -40,7 +40,7 @@ RetCode flipU8(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, flip);
 
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
   size_t global_size[] = {(size_t)cols, (size_t)rows};
@@ -77,7 +77,7 @@ RetCode flipF32(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, flip);
 
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
   size_t global_size[] = {(size_t)cols, (size_t)rows};

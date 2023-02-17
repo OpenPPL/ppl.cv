@@ -49,7 +49,7 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, dilate);
 
   cl_int error_code = 0;
   if (kernel_y == 1 && kernel_x == 1 && src_stride == dst_stride) {
@@ -213,7 +213,7 @@ RetCode dilate(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, dilate);
 
   cl_int error_code = 0;
   if (kernel_y == 1 && kernel_x == 1 && src_stride == dst_stride) {

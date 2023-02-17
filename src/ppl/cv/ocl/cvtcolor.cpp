@@ -41,7 +41,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
@@ -76,7 +76,7 @@ RetCode function ## _F32(const cl_mem src, int rows, int cols, int src_stride, \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
@@ -203,7 +203,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
@@ -244,7 +244,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
@@ -289,7 +289,7 @@ RetCode function ## _U8(const cl_mem src_y, int rows, int cols,                \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
@@ -336,7 +336,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
@@ -386,7 +386,7 @@ RetCode function ## _U8(const cl_mem src_y, int rows, int cols,                \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)cols, (size_t)rows};                         \
@@ -488,7 +488,7 @@ RetCode YUV2GRAY_U8(const cl_mem src, int rows, int cols, int src_stride,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);
 
   int columns = divideUp(cols, 4, 2);
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
@@ -529,7 +529,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)divideUp(cols, 2, 1), (size_t)rows};         \
@@ -567,7 +567,7 @@ RetCode function ## _U8(const cl_mem src, int rows, int cols, int src_stride,  \
                                                                                \
   FrameChain* frame_chain = getSharedFrameChain();                             \
   frame_chain->setProjectName("cv");                                           \
-  SET_PROGRAM_SOURCE(frame_chain);                                             \
+  SET_PROGRAM_SOURCE(frame_chain, cvtcolor);                                   \
                                                                                \
   size_t local_size[]  = {kBlockDimX0, kBlockDimY0};                           \
   size_t global_size[] = {(size_t)divideUp(cols, 2, 1), (size_t)rows};         \

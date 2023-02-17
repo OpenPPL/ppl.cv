@@ -53,7 +53,7 @@ RetCode copyMakeBorder(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, copymakeborder);
 
   cl_int error_code = 0;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&
@@ -121,7 +121,7 @@ RetCode copyMakeBorder(const cl_mem src, int rows, int cols, int channels,
 
   FrameChain* frame_chain = getSharedFrameChain();
   frame_chain->setProjectName("cv");
-  SET_PROGRAM_SOURCE(frame_chain);
+  SET_PROGRAM_SOURCE(frame_chain, copymakeborder);
 
   cl_int error_code = 0;
   if (top == 0 && bottom == 0 && left == 0 && right == 0 &&
