@@ -63,6 +63,7 @@ Due to the difference of hardware and programming language in platforms, documen
   - [Aarch64 Platform Guide](docs/aarch64_usage.md)
 * RISCV
   - [RISCV Platform Guide](docs/riscv_usage.md)
+  - [Benchmark](docs/riscv_benchmark.md)
 * OpenCL
   - [OpenCL Platform Guide](docs/ocl_usage.md)
   - [Benchmark](docs/ocl_benchmark.md)
