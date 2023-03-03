@@ -18,7 +18,7 @@
 
 /********************** 2d filter for all masked kernels *********************/
 
-#if defined(DILATE_FULLLY_MASKED_2D_U8C1) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_2D_U8C1) || defined(ALL_KERNELS)
 __kernel
 void dilate2DU8Kernel0(global const uchar* src, int rows, int cols,
                        int src_stride, int radius_x, int radius_y,
@@ -193,7 +193,7 @@ void dilate2DU8Kernel0(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_2D_U8C3) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_2D_U8C3) || defined(ALL_KERNELS)
 __kernel
 void dilate2DU8Kernel1(global const uchar* src, int rows, int cols,
                        int src_stride, int radius_x, int radius_y,
@@ -248,7 +248,7 @@ void dilate2DU8Kernel1(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_2D_U8C4) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_2D_U8C4) || defined(ALL_KERNELS)
 __kernel
 void dilate2DU8Kernel2(global const uchar* src, int rows, int cols,
                        int src_stride, int radius_x, int radius_y,
@@ -304,7 +304,7 @@ void dilate2DU8Kernel2(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_2D_F32C1) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_2D_F32C1) || defined(ALL_KERNELS)
 __kernel
 void dilate2DF32Kernel0(global const float* src, int rows, int cols,
                         int src_stride, int radius_x, int radius_y,
@@ -359,7 +359,7 @@ void dilate2DF32Kernel0(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_2D_F32C3) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_2D_F32C3) || defined(ALL_KERNELS)
 __kernel
 void dilate2DF32Kernel1(global const float* src, int rows, int cols,
                         int src_stride, int radius_x, int radius_y,
@@ -415,7 +415,7 @@ void dilate2DF32Kernel1(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_2D_F32C4) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_2D_F32C4) || defined(ALL_KERNELS)
 __kernel
 void dilate2DF32Kernel2(global const float* src, int rows, int cols,
                         int src_stride, int radius_x, int radius_y,
@@ -474,7 +474,7 @@ void dilate2DF32Kernel2(global const float* src, int rows, int cols,
 
 /********* separate 2d filter for all masked kernels with 4 vectors **********/
 
-#if defined(DILATE_FULLLY_MASKED_SEP2D_U8_C1) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_SEP2D_U8_C1) || defined(ALL_KERNELS)
 __kernel
 void dilateRowU8Kernel0(global const uchar* src, int rows, int cols,
                         int src_stride, int radius_x, global uchar* dst,
@@ -683,7 +683,7 @@ void dilateColU8Kernel0(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_SEP2D_U8_C3) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_SEP2D_U8_C3) || defined(ALL_KERNELS)
 __kernel
 void dilateRowU8Kernel1(global const uchar* src, int rows, int cols,
                         int src_stride, int radius_x, global uchar* dst,
@@ -922,7 +922,7 @@ void dilateColU8Kernel1(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_SEP2D_U8_C4) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_SEP2D_U8_C4) || defined(ALL_KERNELS)
 __kernel
 void dilateRowU8Kernel2(global const uchar* src, int rows, int cols,
                         int src_stride, int radius_x, global uchar* dst,
@@ -1163,7 +1163,7 @@ void dilateColU8Kernel2(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_SEP2D_F32_C1) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_SEP2D_F32_C1) || defined(ALL_KERNELS)
 __kernel
 void dilateRowF32Kernel0(global const float* src, int rows, int cols,
                          int src_stride, int radius_x, global float* dst,
@@ -1402,7 +1402,7 @@ void dilateColF32Kernel0(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_SEP2D_F32_C3) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_SEP2D_F32_C3) || defined(ALL_KERNELS)
 __kernel
 void dilateRowF32Kernel1(global const float* src, int rows, int cols,
                          int src_stride, int radius_x, global float* dst,
@@ -1644,7 +1644,7 @@ void dilateColF32Kernel1(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_FULLLY_MASKED_SEP2D_F32_C4) || defined(SPIR)
+#if defined(DILATE_FULLLY_MASKED_SEP2D_F32_C4) || defined(ALL_KERNELS)
 __kernel
 void dilateRowF32Kernel2(global const float* src, int rows, int cols,
                          int src_stride, int radius_x, global float* dst,
@@ -1889,7 +1889,7 @@ void dilateColF32Kernel2(global const float* src, int rows, int cols,
 
 /******************* 2d filter for partial masked kernels *******************/
 
-#if defined(DILATE_PARTIALLY_MASKED_2D_U8C1) || defined(SPIR)
+#if defined(DILATE_PARTIALLY_MASKED_2D_U8C1) || defined(ALL_KERNELS)
 __kernel
 void dilate2DU8Kernel3(global const uchar* src, int rows, int cols,
                        int src_stride, global const uchar* mask, int radius_x,
@@ -1974,7 +1974,7 @@ void dilate2DU8Kernel3(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_PARTIALLY_MASKED_2D_U8C3) || defined(SPIR)
+#if defined(DILATE_PARTIALLY_MASKED_2D_U8C3) || defined(ALL_KERNELS)
 __kernel
 void dilate2DU8Kernel4(global const uchar* src, int rows, int cols,
                        int src_stride, global const uchar* mask, int radius_x,
@@ -2060,7 +2060,7 @@ void dilate2DU8Kernel4(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_PARTIALLY_MASKED_2D_U8C4) || defined(SPIR)
+#if defined(DILATE_PARTIALLY_MASKED_2D_U8C4) || defined(ALL_KERNELS)
 __kernel
 void dilate2DU8Kernel5(global const uchar* src, int rows, int cols,
                        int src_stride, global const uchar* mask, int radius_x,
@@ -2147,7 +2147,7 @@ void dilate2DU8Kernel5(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_PARTIALLY_MASKED_2D_F32C1) || defined(SPIR)
+#if defined(DILATE_PARTIALLY_MASKED_2D_F32C1) || defined(ALL_KERNELS)
 __kernel
 void dilate2DF32Kernel3(global const float* src, int rows, int cols,
                         int src_stride, global const uchar* mask, int radius_x,
@@ -2233,7 +2233,7 @@ void dilate2DF32Kernel3(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_PARTIALLY_MASKED_2D_F32C3) || defined(SPIR)
+#if defined(DILATE_PARTIALLY_MASKED_2D_F32C3) || defined(ALL_KERNELS)
 __kernel
 void dilate2DF32Kernel4(global const float* src, int rows, int cols,
                         int src_stride, global const uchar* mask, int radius_x,
@@ -2320,7 +2320,7 @@ void dilate2DF32Kernel4(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(DILATE_PARTIALLY_MASKED_2D_F32C4) || defined(SPIR)
+#if defined(DILATE_PARTIALLY_MASKED_2D_F32C4) || defined(ALL_KERNELS)
 __kernel
 void dilate2DF32Kernel5(global const float* src, int rows, int cols,
                         int src_stride, global const uchar* mask, int radius_x,

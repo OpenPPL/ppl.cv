@@ -20,7 +20,7 @@
 #define AB_SCALE 1024
 #define ROUND_DELTA 512
 
-#if defined(WARPAFFINE_LINEAR_U8) || defined(SPIR)
+#if defined(WARPAFFINE_LINEAR_U8) || defined(ALL_KERNELS)
 __kernel
 void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
          int src_cols, int channels, int src_stride, float coeff0, float coeff1,
@@ -215,7 +215,7 @@ void warpaffineLinearU8Kernel(global const uchar* src, int src_rows,
 }
 #endif
 
-#if defined(WARPAFFINE_LINEAR_F32) || defined(SPIR)
+#if defined(WARPAFFINE_LINEAR_F32) || defined(ALL_KERNELS)
 __kernel
 void warpaffineLinearF32Kernel(global const float* src, int src_rows,
          int src_cols, int channels, int src_stride, float coeff0, float coeff1,
@@ -404,7 +404,7 @@ void warpaffineLinearF32Kernel(global const float* src, int src_rows,
 }
 #endif
 
-#if defined(WARPAFFINE_NP_U8) || defined(SPIR)
+#if defined(WARPAFFINE_NP_U8) || defined(ALL_KERNELS)
 __kernel
 void warpaffineNPU8Kernel(global const uchar* src, int src_rows, int src_cols,
          int channels, int src_stride, float coeff0, float coeff1, float coeff2,
@@ -522,7 +522,7 @@ void warpaffineNPU8Kernel(global const uchar* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(WARPAFFINE_NP_F32) || defined(SPIR)
+#if defined(WARPAFFINE_NP_F32) || defined(ALL_KERNELS)
 __kernel
 void warpaffineNPF32Kernel(global const float* src, int src_rows, int src_cols,
          int channels, int src_stride, float coeff0, float coeff1, float coeff2,

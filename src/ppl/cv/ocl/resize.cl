@@ -19,7 +19,7 @@
 #define INTER_RESIZE_COEF_SCALE (1 << INTER_RESIZE_COEF_BITS)
 #define CAST_BITS (INTER_RESIZE_COEF_BITS << 1)
 
-#if defined(RESIZE_LINEAR_U8) || defined(SPIR)
+#if defined(RESIZE_LINEAR_U8) || defined(ALL_KERNELS)
 __kernel
 void resizeLinearU8Kernel(global const uchar* src, int src_rows, int src_cols,
                           int channels, int src_stride, global uchar* dst,
@@ -133,7 +133,7 @@ void resizeLinearU8Kernel(global const uchar* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_LINEAR_F32) || defined(SPIR)
+#if defined(RESIZE_LINEAR_F32) || defined(ALL_KERNELS)
 __kernel
 void resizeLinearF32Kernel(global const float* src, int src_rows, int src_cols,
                            int channels, int src_stride, global float* dst,
@@ -242,7 +242,7 @@ void resizeLinearF32Kernel(global const float* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_NP_U8) || defined(SPIR)
+#if defined(RESIZE_NP_U8) || defined(ALL_KERNELS)
 __kernel
 void resizeNPU8Kernel(global const uchar* src, int src_rows, int src_cols,
                       int channels, int src_stride, global uchar* dst,
@@ -281,7 +281,7 @@ void resizeNPU8Kernel(global const uchar* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_NP_F32) || defined(SPIR)
+#if defined(RESIZE_NP_F32) || defined(ALL_KERNELS)
 __kernel
 void resizeNPF32Kernel(global const float* src, int src_rows, int src_cols,
                        int channels, int src_stride, global float* dst,
@@ -320,7 +320,7 @@ void resizeNPF32Kernel(global const float* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_AREA0_U8) || defined(SPIR)
+#if defined(RESIZE_AREA0_U8) || defined(ALL_KERNELS)
 __kernel
 void resizeAreaU8Kernel0(global const uchar* src, int src_rows, int src_cols,
                          int channels, int src_stride, global uchar* dst,
@@ -388,7 +388,7 @@ void resizeAreaU8Kernel0(global const uchar* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_AREA0_F32) || defined(SPIR)
+#if defined(RESIZE_AREA0_F32) || defined(ALL_KERNELS)
 __kernel
 void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
                           int channels, int src_stride, global float* dst,
@@ -454,7 +454,7 @@ void resizeAreaF32Kernel0(global const float* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_AREA1_U8) || defined(SPIR)
+#if defined(RESIZE_AREA1_U8) || defined(ALL_KERNELS)
 __kernel
 void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
                          int channels, int src_stride, global uchar* dst,
@@ -680,7 +680,7 @@ void resizeAreaU8Kernel1(global const uchar* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_AREA1_F32) || defined(SPIR)
+#if defined(RESIZE_AREA1_F32) || defined(ALL_KERNELS)
 __kernel
 void resizeAreaF32Kernel1(global const float* src, int src_rows, int src_cols,
                           int channels, int src_stride, global float* dst,
@@ -900,7 +900,7 @@ void resizeAreaF32Kernel1(global const float* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_AREA2_U8) || defined(SPIR)
+#if defined(RESIZE_AREA2_U8) || defined(ALL_KERNELS)
 __kernel
 void resizeAreaU8Kernel2(global const uchar* src, int src_rows, int src_cols,
                          int channels, int src_stride, global uchar* dst,
@@ -1015,7 +1015,7 @@ void resizeAreaU8Kernel2(global const uchar* src, int src_rows, int src_cols,
 }
 #endif
 
-#if defined(RESIZE_AREA2_F32) || defined(SPIR)
+#if defined(RESIZE_AREA2_F32) || defined(ALL_KERNELS)
 __kernel
 void resizeAreaF32Kernel2(global const float* src, int src_rows, int src_cols,
                           int channels, int src_stride, global float* dst,

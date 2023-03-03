@@ -16,7 +16,7 @@
 
 #include "ppl/cv/ocl/resize.h"
 
-#include "ppl/common/ocl/oclcommon.h"
+#include "ppl/common/ocl/pplopencl.h"
 #include "utility/utility.hpp"
 
 #include "kernels/resize.cl"

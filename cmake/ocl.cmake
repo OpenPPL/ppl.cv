@@ -30,12 +30,16 @@ foreach(KERNEL_FILE0 IN ITEMS ${KERNEL_FILES})
     string(REGEX REPLACE "(.)(.)" "0x\\1\\2, " CONTENT_HEX1 ${CONTENT_HEX0})
     string(REGEX MATCH "[0-9A-Za-z_]+\.cl$" KERNEL_FILE1 ${KERNEL_FILE0})
     string(REGEX MATCH "^[0-9A-Za-z_]+" KERNEL_FILE2 ${KERNEL_FILE1})
-    message(STATUS "file name: ${KERNEL_FILE2}") # debug
     set(KERNEL_CONTENT
         "static const char ${KERNEL_FILE2}_string[] = {${CONTENT_HEX1}0x00}\;")
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/kernels/${KERNEL_FILE1}
          ${KERNEL_CONTENT})
 endforeach()
+
+add_executable(compile_kernels src/ppl/cv/ocl/utility/binarycompilation.cpp)
+target_compile_features(compile_kernels PRIVATE cxx_std_11)
+target_include_directories(compile_kernels PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(compile_kernels PRIVATE pplcommon_static)
 
 file(GLOB __OCL_UNITTEST_SRC__ "src/ppl/cv/ocl/*_unittest.cpp")
 list(APPEND PPLCV_UNITTEST_SRC ${__OCL_UNITTEST_SRC__})

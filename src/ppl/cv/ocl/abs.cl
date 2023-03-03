@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#if defined(U8) || defined(SPIR)
+#if defined(U8) || defined(ALL_KERNELS)
 inline char abs_device(char value) {
   if (value == -128) {
     return 127;
@@ -25,7 +25,7 @@ inline char abs_device(char value) {
 }
 #endif
 
-#if defined(U8ALIGNED) || defined(SPIR)
+#if defined(U8ALIGNED) || defined(ALL_KERNELS)
 __kernel
 void absU8Kernel0(global const char* src, int rows, int cols, int src_stride,
                   global char* dst, int dst_stride) {
@@ -49,7 +49,7 @@ void absU8Kernel0(global const char* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(U81D) || defined(SPIR)
+#if defined(U81D) || defined(ALL_KERNELS)
 __kernel
 void absU8Kernel1(global const char* src, int cols, global char* dst) {
   int element_x = get_global_id(0);
@@ -93,7 +93,7 @@ void absU8Kernel1(global const char* src, int cols, global char* dst) {
 }
 #endif
 
-#if defined(U8UNALIGNED) || defined(SPIR)
+#if defined(U8UNALIGNED) || defined(ALL_KERNELS)
 __kernel
 void absU8Kernel2(global const char* src, int rows, int cols, int src_stride,
                   global char* dst, int dst_stride) {
@@ -149,7 +149,7 @@ void absU8Kernel2(global const char* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(F32ALIGNED) || defined(SPIR)
+#if defined(F32ALIGNED) || defined(ALL_KERNELS)
 __kernel
 void absF32Kernel0(global const float* src, int rows, int cols, int src_stride,
                    global float* dst, int dst_stride) {
@@ -169,7 +169,7 @@ void absF32Kernel0(global const float* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(F32UNALIGNED) || defined(SPIR)
+#if defined(F32UNALIGNED) || defined(ALL_KERNELS)
 __kernel
 void absF32Kernel1(global const float* src, int rows, int cols, int src_stride,
                    global float* dst, int dst_stride) {

@@ -16,7 +16,7 @@
 
 #include "ppl/cv/ocl/warpaffine.h"
 
-#include "ppl/common/ocl/oclcommon.h"
+#include "ppl/common/ocl/pplopencl.h"
 #include "utility/utility.hpp"
 
 #include "kernels/warpaffine.cl"

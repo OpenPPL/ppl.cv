@@ -22,7 +22,7 @@
 #include "opencv2/imgproc.hpp"
 #include "benchmark/benchmark.h"
 
-#include "ppl/common/ocl/oclcommon.h"
+#include "ppl/common/ocl/pplopencl.h"
 #include "ppl/cv/debug.h"
 #include "utility/infrastructure.h"
 
