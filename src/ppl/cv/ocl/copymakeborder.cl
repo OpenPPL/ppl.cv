@@ -16,7 +16,7 @@
 
 #include "kerneltypes.h"
 
-#if defined(COPYMAKEBORDER_U8C1) || defined(SPIR)
+#if defined(COPYMAKEBORDER_U8C1) || defined(ALL_KERNELS)
 __kernel
 void copyMakeBorderU8Kernel0(global const uchar* src, int rows, int cols,
                              int src_stride, global uchar* dst, int dst_stride,
@@ -147,7 +147,7 @@ void copyMakeBorderU8Kernel0(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(COPYMAKEBORDER_U8C3) || defined(SPIR)
+#if defined(COPYMAKEBORDER_U8C3) || defined(ALL_KERNELS)
 uchar3 makeUchar3(uchar value) {
   return (uchar3)(value, value, value);
 }
@@ -209,7 +209,7 @@ void copyMakeBorderU8Kernel1(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(COPYMAKEBORDER_U8C4) || defined(SPIR)
+#if defined(COPYMAKEBORDER_U8C4) || defined(ALL_KERNELS)
 uchar4 makeUchar4(uchar value) {
   return (uchar4)(value, value, value, value);
 }
@@ -271,7 +271,7 @@ void copyMakeBorderU8Kernel2(global const uchar* src, int rows, int cols,
 }
 #endif
 
-#if defined(COPYMAKEBORDER_F32C1) || defined(SPIR)
+#if defined(COPYMAKEBORDER_F32C1) || defined(ALL_KERNELS)
 __kernel
 void copyMakeBorderF32Kernel0(global const float* src, int rows, int cols,
                               int src_stride, global float* dst, int dst_stride,
@@ -329,7 +329,7 @@ void copyMakeBorderF32Kernel0(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(COPYMAKEBORDER_F32C3) || defined(SPIR)
+#if defined(COPYMAKEBORDER_F32C3) || defined(ALL_KERNELS)
 float3 makeFloat3(float value) {
   return (float3)(value, value, value);
 }
@@ -391,7 +391,7 @@ void copyMakeBorderF32Kernel1(global const float* src, int rows, int cols,
 }
 #endif
 
-#if defined(COPYMAKEBORDER_F32C4) || defined(SPIR)
+#if defined(COPYMAKEBORDER_F32C4) || defined(ALL_KERNELS)
 float4 makeFloat4(float value) {
   return (float4)(value, value, value, value);
 }

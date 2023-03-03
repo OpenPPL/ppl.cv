@@ -19,7 +19,7 @@
 /************************** BGR(RBB) <-> BGRA(RGBA) *************************/
 
 #if defined(BGR2BGRA_U8_1D) || defined(BGR2BGRA_F32_1D) ||                     \
-    defined(RGB2RGBA_U8_1D) || defined(RGB2RGBA_F32_1D) || defined(SPIR)
+    defined(RGB2RGBA_U8_1D) || defined(RGB2RGBA_F32_1D) || defined(ALL_KERNELS)
 #define BGR2BGRATYPE_1D(Function, base_type, T, T3, T4, alpha)                 \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -37,7 +37,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
 #endif
 
 #if defined(BGR2BGRA_U8_2D) || defined(BGR2BGRA_F32_2D) ||                     \
-    defined(RGB2RGBA_U8_2D) || defined(RGB2RGBA_F32_2D) || defined(SPIR)
+    defined(RGB2RGBA_U8_2D) || defined(RGB2RGBA_F32_2D) || defined(ALL_KERNELS)
 #define BGR2BGRATYPE_2D(Function, base_type, T, T3, T4, alpha)                 \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -58,40 +58,40 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 }
 #endif
 
-#if defined(BGR2BGRA_U8_1D) || defined(SPIR)
+#if defined(BGR2BGRA_U8_1D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_1D(BGR2BGRA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(BGR2BGRA_U8_2D) || defined(SPIR)
+#if defined(BGR2BGRA_U8_2D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_2D(BGR2BGRA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(BGR2BGRA_F32_1D) || defined(SPIR)
+#if defined(BGR2BGRA_F32_1D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_1D(BGR2BGRA, F32, float, float3, float4, 1.f)
 #endif
 
-#if defined(BGR2BGRA_F32_2D) || defined(SPIR)
+#if defined(BGR2BGRA_F32_2D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_2D(BGR2BGRA, F32, float, float3, float4, 1.f)
 #endif
 
-#if defined(RGB2RGBA_U8_1D) || defined(SPIR)
+#if defined(RGB2RGBA_U8_1D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_1D(RGB2RGBA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(RGB2RGBA_U8_2D) || defined(SPIR)
+#if defined(RGB2RGBA_U8_2D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_2D(RGB2RGBA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(RGB2RGBA_F32_1D) || defined(SPIR)
+#if defined(RGB2RGBA_F32_1D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_1D(RGB2RGBA, F32, float, float3, float4, 1.f)
 #endif
 
-#if defined(RGB2RGBA_F32_2D) || defined(SPIR)
+#if defined(RGB2RGBA_F32_2D) || defined(ALL_KERNELS)
 BGR2BGRATYPE_2D(RGB2RGBA, F32, float, float3, float4, 1.f)
 #endif
 
 #if defined(BGRA2BGR_U8_1D) || defined(BGRA2BGR_F32_1D) ||                     \
-    defined(RGBA2RGB_U8_1D) || defined(RGBA2RGB_F32_1D) || defined(SPIR)
+    defined(RGBA2RGB_U8_1D) || defined(RGBA2RGB_F32_1D) || defined(ALL_KERNELS)
 #define BGRA2BGRTYPE_1D(Function, base_type, T, T3, T4)                        \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -109,7 +109,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
 #endif
 
 #if defined(BGRA2BGR_U8_2D) || defined(BGRA2BGR_F32_2D) ||                     \
-    defined(RGBA2RGB_U8_2D) || defined(RGBA2RGB_F32_2D) || defined(SPIR)
+    defined(RGBA2RGB_U8_2D) || defined(RGBA2RGB_F32_2D) || defined(ALL_KERNELS)
 #define BGRA2BGRTYPE_2D(Function, base_type, T, T3, T4)                        \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -130,40 +130,40 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 }
 #endif
 
-#if defined(BGRA2BGR_U8_1D) || defined(SPIR)
+#if defined(BGRA2BGR_U8_1D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_1D(BGRA2BGR, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(BGRA2BGR_U8_2D) || defined(SPIR)
+#if defined(BGRA2BGR_U8_2D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_2D(BGRA2BGR, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(BGRA2BGR_F32_1D) || defined(SPIR)
+#if defined(BGRA2BGR_F32_1D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_1D(BGRA2BGR, F32, float, float3, float4)
 #endif
 
-#if defined(BGRA2BGR_F32_2D) || defined(SPIR)
+#if defined(BGRA2BGR_F32_2D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_2D(BGRA2BGR, F32, float, float3, float4)
 #endif
 
-#if defined(RGBA2RGB_U8_1D) || defined(SPIR)
+#if defined(RGBA2RGB_U8_1D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_1D(RGBA2RGB, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(RGBA2RGB_U8_2D) || defined(SPIR)
+#if defined(RGBA2RGB_U8_2D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_2D(RGBA2RGB, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(RGBA2RGB_F32_1D) || defined(SPIR)
+#if defined(RGBA2RGB_F32_1D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_1D(RGBA2RGB, F32, float, float3, float4)
 #endif
 
-#if defined(RGBA2RGB_F32_2D) || defined(SPIR)
+#if defined(RGBA2RGB_F32_2D) || defined(ALL_KERNELS)
 BGRA2BGRTYPE_2D(RGBA2RGB, F32, float, float3, float4)
 #endif
 
 #if defined(BGR2RGBA_U8_1D) || defined(BGR2RGBA_F32_1D) ||                     \
-    defined(RGB2BGRA_U8_1D) || defined(RGB2BGRA_F32_1D) || defined(SPIR)
+    defined(RGB2BGRA_U8_1D) || defined(RGB2BGRA_F32_1D) || defined(ALL_KERNELS)
 #define BGR2RGBATYPE_1D(Function, base_type, T, T3, T4, alpha)                 \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -181,7 +181,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
 #endif
 
 #if defined(BGR2RGBA_U8_2D) || defined(BGR2RGBA_F32_2D) ||                     \
-    defined(RGB2BGRA_U8_2D) || defined(RGB2BGRA_F32_2D) || defined(SPIR)
+    defined(RGB2BGRA_U8_2D) || defined(RGB2BGRA_F32_2D) || defined(ALL_KERNELS)
 #define BGR2RGBATYPE_2D(Function, base_type, T, T3, T4, alpha)                 \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -202,40 +202,40 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 }
 #endif
 
-#if defined(BGR2RGBA_U8_1D) || defined(SPIR)
+#if defined(BGR2RGBA_U8_1D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_1D(BGR2RGBA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(BGR2RGBA_U8_2D) || defined(SPIR)
+#if defined(BGR2RGBA_U8_2D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_2D(BGR2RGBA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(BGR2RGBA_F32_1D) || defined(SPIR)
+#if defined(BGR2RGBA_F32_1D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_1D(BGR2RGBA, F32, float, float3, float4, 1.f)
 #endif
 
-#if defined(BGR2RGBA_F32_2D) || defined(SPIR)
+#if defined(BGR2RGBA_F32_2D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_2D(BGR2RGBA, F32, float, float3, float4, 1.f)
 #endif
 
-#if defined(RGB2BGRA_U8_1D) || defined(SPIR)
+#if defined(RGB2BGRA_U8_1D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_1D(RGB2BGRA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(RGB2BGRA_U8_2D) || defined(SPIR)
+#if defined(RGB2BGRA_U8_2D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_2D(RGB2BGRA, U8, uchar, uchar3, uchar4, 255)
 #endif
 
-#if defined(RGB2BGRA_F32_1D) || defined(SPIR)
+#if defined(RGB2BGRA_F32_1D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_1D(RGB2BGRA, F32, float, float3, float4, 1.f)
 #endif
 
-#if defined(RGB2BGRA_F32_2D) || defined(SPIR)
+#if defined(RGB2BGRA_F32_2D) || defined(ALL_KERNELS)
 BGR2RGBATYPE_2D(RGB2BGRA, F32, float, float3, float4, 1.f)
 #endif
 
 #if defined(RGBA2BGR_U8_1D) || defined(RGBA2BGR_F32_1D) ||                     \
-    defined(BGRA2RGB_U8_1D) || defined(BGRA2RGB_F32_1D) || defined(SPIR)
+    defined(BGRA2RGB_U8_1D) || defined(BGRA2RGB_F32_1D) || defined(ALL_KERNELS)
 #define RGBA2BGRTYPE_1D(Function, base_type, T, T3, T4)                        \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -253,7 +253,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
 #endif
 
 #if defined(RGBA2BGR_U8_2D) || defined(RGBA2BGR_F32_2D) ||                     \
-    defined(BGRA2RGB_U8_2D) || defined(BGRA2RGB_F32_2D) || defined(SPIR)
+    defined(BGRA2RGB_U8_2D) || defined(BGRA2RGB_F32_2D) || defined(ALL_KERNELS)
 #define RGBA2BGRTYPE_2D(Function, base_type, T, T3, T4)                        \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -274,42 +274,42 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 }
 #endif
 
-#if defined(RGBA2BGR_U8_1D) || defined(SPIR)
+#if defined(RGBA2BGR_U8_1D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_1D(RGBA2BGR, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(RGBA2BGR_U8_2D) || defined(SPIR)
+#if defined(RGBA2BGR_U8_2D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_2D(RGBA2BGR, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(RGBA2BGR_F32_1D) || defined(SPIR)
+#if defined(RGBA2BGR_F32_1D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_1D(RGBA2BGR, F32, float, float3, float4)
 #endif
 
-#if defined(RGBA2BGR_F32_2D) || defined(SPIR)
+#if defined(RGBA2BGR_F32_2D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_2D(RGBA2BGR, F32, float, float3, float4)
 #endif
 
-#if defined(BGRA2RGB_U8_1D) || defined(SPIR)
+#if defined(BGRA2RGB_U8_1D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_1D(BGRA2RGB, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(BGRA2RGB_U8_2D) || defined(SPIR)
+#if defined(BGRA2RGB_U8_2D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_2D(BGRA2RGB, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(BGRA2RGB_F32_1D) || defined(SPIR)
+#if defined(BGRA2RGB_F32_1D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_1D(BGRA2RGB, F32, float, float3, float4)
 #endif
 
-#if defined(BGRA2RGB_F32_2D) || defined(SPIR)
+#if defined(BGRA2RGB_F32_2D) || defined(ALL_KERNELS)
 RGBA2BGRTYPE_2D(BGRA2RGB, F32, float, float3, float4)
 #endif
 
 /******************************* BGR <-> RGB ******************************/
 
 #if defined(RGB2BGR_U8_1D) || defined(RGB2BGR_F32_1D) ||                       \
-    defined(BGR2RGB_U8_1D) || defined(BGR2RGB_F32_1D) || defined(SPIR)
+    defined(BGR2RGB_U8_1D) || defined(BGR2RGB_F32_1D) || defined(ALL_KERNELS)
 #define RGB2BGRTYPE_1D(Function, base_type, T, T3)                             \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -327,7 +327,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
 #endif
 
 #if defined(RGB2BGR_U8_2D) || defined(RGB2BGR_F32_2D) ||                       \
-    defined(BGR2RGB_U8_2D) || defined(BGR2RGB_F32_2D) || defined(SPIR)
+    defined(BGR2RGB_U8_2D) || defined(BGR2RGB_F32_2D) || defined(ALL_KERNELS)
 #define RGB2BGRTYPE_2D(Function, base_type, T, T3)                             \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -348,42 +348,43 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 }
 #endif
 
-#if defined(BGR2RGB_U8_1D) || defined(SPIR)
+#if defined(BGR2RGB_U8_1D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_1D(BGR2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2RGB_U8_2D) || defined(SPIR)
+#if defined(BGR2RGB_U8_2D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_2D(BGR2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2RGB_F32_1D) || defined(SPIR)
+#if defined(BGR2RGB_F32_1D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_1D(BGR2RGB, F32, float, float3)
 #endif
 
-#if defined(BGR2RGB_F32_2D) || defined(SPIR)
+#if defined(BGR2RGB_F32_2D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_2D(BGR2RGB, F32, float, float3)
 #endif
 
-#if defined(RGB2BGR_U8_1D) || defined(SPIR)
+#if defined(RGB2BGR_U8_1D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_1D(RGB2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2BGR_U8_2D) || defined(SPIR)
+#if defined(RGB2BGR_U8_2D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_2D(RGB2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2BGR_F32_1D) || defined(SPIR)
+#if defined(RGB2BGR_F32_1D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_1D(RGB2BGR, F32, float, float3)
 #endif
 
-#if defined(RGB2BGR_F32_2D) || defined(SPIR)
+#if defined(RGB2BGR_F32_2D) || defined(ALL_KERNELS)
 RGB2BGRTYPE_2D(RGB2BGR, F32, float, float3)
 #endif
 
 /******************************* BGRA <-> RGBA ******************************/
 
 #if defined(BGRA2RGBA_U8_1D) || defined(BGRA2RGBA_F32_1D) ||                   \
-    defined(RGBA2BGRA_U8_1D) || defined(RGBA2BGRA_F32_1D) || defined(SPIR)
+    defined(RGBA2BGRA_U8_1D) || defined(RGBA2BGRA_F32_1D) ||                   \
+    defined(ALL_KERNELS)
 #define BGRA2RGBATYPE_1D(Function, base_type, T, T4)                           \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -401,7 +402,8 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
 #endif
 
 #if defined(BGRA2RGBA_U8_2D) || defined(BGRA2RGBA_F32_2D) ||                   \
-    defined(RGBA2BGRA_U8_2D) || defined(RGBA2BGRA_F32_2D) || defined(SPIR)
+    defined(RGBA2BGRA_U8_2D) || defined(RGBA2BGRA_F32_2D) ||                   \
+    defined(ALL_KERNELS)
 #define BGRA2RGBATYPE_2D(Function, base_type, T, T4)                           \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -422,35 +424,35 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
 }
 #endif
 
-#if defined(BGRA2RGBA_U8_1D) || defined(SPIR)
+#if defined(BGRA2RGBA_U8_1D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_1D(BGRA2RGBA, U8, uchar, uchar4)
 #endif
 
-#if defined(BGRA2RGBA_U8_2D) || defined(SPIR)
+#if defined(BGRA2RGBA_U8_2D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_2D(BGRA2RGBA, U8, uchar, uchar4)
 #endif
 
-#if defined(BGRA2RGBA_F32_1D) || defined(SPIR)
+#if defined(BGRA2RGBA_F32_1D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_1D(BGRA2RGBA, F32, float, float4)
 #endif
 
-#if defined(BGRA2RGBA_F32_2D) || defined(SPIR)
+#if defined(BGRA2RGBA_F32_2D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_2D(BGRA2RGBA, F32, float, float4)
 #endif
 
-#if defined(RGBA2BGRA_U8_1D) || defined(SPIR)
+#if defined(RGBA2BGRA_U8_1D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_1D(RGBA2BGRA, U8, uchar, uchar4)
 #endif
 
-#if defined(RGBA2BGRA_U8_2D) || defined(SPIR)
+#if defined(RGBA2BGRA_U8_2D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_2D(RGBA2BGRA, U8, uchar, uchar4)
 #endif
 
-#if defined(RGBA2BGRA_F32_1D) || defined(SPIR)
+#if defined(RGBA2BGRA_F32_1D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_1D(RGBA2BGRA, F32, float, float4)
 #endif
 
-#if defined(RGBA2BGRA_F32_2D) || defined(SPIR)
+#if defined(RGBA2BGRA_F32_2D) || defined(ALL_KERNELS)
 BGRA2RGBATYPE_2D(RGBA2BGRA, F32, float, float4)
 #endif
 
@@ -464,7 +466,7 @@ enum Bgr2GrayCoefficients {
 };
 
 #if defined(BGR2GRAY_U8_1D) || defined(BGR2GRAY_F32_1D) ||                     \
-    defined(RGB2GRAY_U8_1D) || defined(RGB2GRAY_F32_1D) || defined(SPIR)
+    defined(RGB2GRAY_U8_1D) || defined(RGB2GRAY_F32_1D) || defined(ALL_KERNELS)
 #define BGR2GRAYTYPE_1D(Function, base_type, T, T3)                            \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -475,14 +477,14 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
   }                                                                            \
                                                                                \
   T3 input_value = vload3(element_x, src);                                     \
-  T value = Function ## Compute(input_value);                                  \
+  T value = Function ## base_type ## Compute(input_value);                     \
                                                                                \
   dst[element_x] = value;                                                      \
 }
 #endif
 
 #if defined(BGR2GRAY_U8_2D) || defined(BGR2GRAY_F32_2D) ||                     \
-    defined(RGB2GRAY_U8_2D) || defined(RGB2GRAY_F32_2D) || defined(SPIR)
+    defined(RGB2GRAY_U8_2D) || defined(RGB2GRAY_F32_2D) || defined(ALL_KERNELS)
 #define BGR2GRAYTYPE_2D(Function, base_type, T, T3)                            \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -496,15 +498,15 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
                                                                                \
   global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
   T3 input_value = vload3(element_x, data);                                    \
-  T value = Function ## Compute(input_value);                                  \
+  T value = Function ## base_type ## Compute(input_value);                     \
                                                                                \
   data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
   data[element_x] = value;                                                     \
 }
 #endif
 
-#if defined(BGR2GRAY_U8_1D) || defined(BGR2GRAY_U8_2D) || defined(SPIR)
-uchar BGR2GRAYCompute(const uchar3 src) {
+#if defined(BGR2GRAY_U8_1D) || defined(BGR2GRAY_U8_2D) || defined(ALL_KERNELS)
+uchar BGR2GRAYU8Compute(const uchar3 src) {
   int b = src.x;
   int g = src.y;
   int r = src.z;
@@ -514,8 +516,8 @@ uchar BGR2GRAYCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(BGR2GRAY_F32_1D) || defined(BGR2GRAY_F32_2D) || defined(SPIR)
-float BGR2GRAYCompute(const float3 src) {
+#if defined(BGR2GRAY_F32_1D) || defined(BGR2GRAY_F32_2D) || defined(ALL_KERNELS)
+float BGR2GRAYF32Compute(const float3 src) {
   float b = src.x;
   float g = src.y;
   float r = src.z;
@@ -525,8 +527,8 @@ float BGR2GRAYCompute(const float3 src) {
 }
 #endif
 
-#if defined(RGB2GRAY_U8_1D) || defined(RGB2GRAY_U8_2D) || defined(SPIR)
-uchar RGB2GRAYCompute(const uchar3 src) {
+#if defined(RGB2GRAY_U8_1D) || defined(RGB2GRAY_U8_2D) || defined(ALL_KERNELS)
+uchar RGB2GRAYU8Compute(const uchar3 src) {
   int r = src.x;
   int g = src.y;
   int b = src.z;
@@ -536,8 +538,8 @@ uchar RGB2GRAYCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(RGB2GRAY_F32_1D) || defined(RGB2GRAY_F32_2D) || defined(SPIR)
-float RGB2GRAYCompute(const float3 src) {
+#if defined(RGB2GRAY_F32_1D) || defined(RGB2GRAY_F32_2D) || defined(ALL_KERNELS)
+float RGB2GRAYF32Compute(const float3 src) {
   float r = src.x;
   float g = src.y;
   float b = src.z;
@@ -547,40 +549,41 @@ float RGB2GRAYCompute(const float3 src) {
 }
 #endif
 
-#if defined(BGR2GRAY_U8_1D) || defined(SPIR)
+#if defined(BGR2GRAY_U8_1D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_1D(BGR2GRAY, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2GRAY_U8_2D) || defined(SPIR)
+#if defined(BGR2GRAY_U8_2D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_2D(BGR2GRAY, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2GRAY_F32_1D) || defined(SPIR)
+#if defined(BGR2GRAY_F32_1D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_1D(BGR2GRAY, F32, float, float3)
 #endif
 
-#if defined(BGR2GRAY_F32_2D) || defined(SPIR)
+#if defined(BGR2GRAY_F32_2D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_2D(BGR2GRAY, F32, float, float3)
 #endif
 
-#if defined(RGB2GRAY_U8_1D) || defined(SPIR)
+#if defined(RGB2GRAY_U8_1D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_1D(RGB2GRAY, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2GRAY_U8_2D) || defined(SPIR)
+#if defined(RGB2GRAY_U8_2D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_2D(RGB2GRAY, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2GRAY_F32_1D) || defined(SPIR)
+#if defined(RGB2GRAY_F32_1D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_1D(RGB2GRAY, F32, float, float3)
 #endif
 
-#if defined(RGB2GRAY_F32_2D) || defined(SPIR)
+#if defined(RGB2GRAY_F32_2D) || defined(ALL_KERNELS)
 BGR2GRAYTYPE_2D(RGB2GRAY, F32, float, float3)
 #endif
 
 #if defined(BGRA2GRAY_U8_1D) || defined(BGRA2GRAY_F32_1D) ||                   \
-    defined(RGBA2GRAY_U8_1D) || defined(RGBA2GRAY_F32_1D) || defined(SPIR)
+    defined(RGBA2GRAY_U8_1D) || defined(RGBA2GRAY_F32_1D) ||                   \
+    defined(ALL_KERNELS)
 #define BGRA2GRAYTYPE_1D(Function, base_type, T, T4)                           \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -591,14 +594,15 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
   }                                                                            \
                                                                                \
   T4 input_value = vload4(element_x, src);                                     \
-  T value = Function ## Compute(input_value);                                  \
+  T value = Function ## base_type ## Compute(input_value);                     \
                                                                                \
   dst[element_x] = value;                                                      \
 }
 #endif
 
 #if defined(BGRA2GRAY_U8_2D) || defined(BGRA2GRAY_F32_2D) ||                   \
-    defined(RGBA2GRAY_U8_2D) || defined(RGBA2GRAY_F32_2D) || defined(SPIR)
+    defined(RGBA2GRAY_U8_2D) || defined(RGBA2GRAY_F32_2D) ||                   \
+    defined(ALL_KERNELS)
 #define BGRA2GRAYTYPE_2D(Function, base_type, T, T4)                           \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -612,15 +616,15 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
                                                                                \
   global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
   T4 input_value = vload4(element_x, data);                                    \
-  T value = Function ## Compute(input_value);                                  \
+  T value = Function ## base_type ## Compute(input_value);                     \
                                                                                \
   data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
   data[element_x] = value;                                                     \
 }
 #endif
 
-#if defined(BGRA2GRAY_U8_1D) || defined(BGRA2GRAY_U8_2D) || defined(SPIR)
-uchar BGRA2GRAYCompute(const uchar4 src) {
+#if defined(BGRA2GRAY_U8_1D) || defined(BGRA2GRAY_U8_2D) || defined(ALL_KERNELS)
+uchar BGRA2GRAYU8Compute(const uchar4 src) {
   int b = src.x;
   int g = src.y;
   int r = src.z;
@@ -630,8 +634,9 @@ uchar BGRA2GRAYCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(BGRA2GRAY_F32_1D) || defined(BGRA2GRAY_F32_2D) || defined(SPIR)
-float BGRA2GRAYCompute(const float4 src) {
+#if defined(BGRA2GRAY_F32_1D) || defined(BGRA2GRAY_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float BGRA2GRAYF32Compute(const float4 src) {
   float b = src.x;
   float g = src.y;
   float r = src.z;
@@ -641,8 +646,8 @@ float BGRA2GRAYCompute(const float4 src) {
 }
 #endif
 
-#if defined(RGBA2GRAY_U8_1D) || defined(RGBA2GRAY_U8_2D) || defined(SPIR)
-uchar RGBA2GRAYCompute(const uchar4 src) {
+#if defined(RGBA2GRAY_U8_1D) || defined(RGBA2GRAY_U8_2D) || defined(ALL_KERNELS)
+uchar RGBA2GRAYU8Compute(const uchar4 src) {
   int r = src.x;
   int g = src.y;
   int b = src.z;
@@ -652,8 +657,9 @@ uchar RGBA2GRAYCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(RGBA2GRAY_F32_1D) || defined(RGBA2GRAY_F32_2D) || defined(SPIR)
-float RGBA2GRAYCompute(const float4 src) {
+#if defined(RGBA2GRAY_F32_1D) || defined(RGBA2GRAY_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float RGBA2GRAYF32Compute(const float4 src) {
   float r = src.x;
   float g = src.y;
   float b = src.z;
@@ -663,40 +669,40 @@ float RGBA2GRAYCompute(const float4 src) {
 }
 #endif
 
-#if defined(BGRA2GRAY_U8_1D) || defined(SPIR)
+#if defined(BGRA2GRAY_U8_1D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_1D(BGRA2GRAY, U8, uchar, uchar4)
 #endif
 
-#if defined(BGRA2GRAY_U8_2D) || defined(SPIR)
+#if defined(BGRA2GRAY_U8_2D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_2D(BGRA2GRAY, U8, uchar, uchar4)
 #endif
 
-#if defined(BGRA2GRAY_F32_1D) || defined(SPIR)
+#if defined(BGRA2GRAY_F32_1D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_1D(BGRA2GRAY, F32, float, float4)
 #endif
 
-#if defined(BGRA2GRAY_F32_2D) || defined(SPIR)
+#if defined(BGRA2GRAY_F32_2D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_2D(BGRA2GRAY, F32, float, float4)
 #endif
 
-#if defined(RGBA2GRAY_U8_1D) || defined(SPIR)
+#if defined(RGBA2GRAY_U8_1D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_1D(RGBA2GRAY, U8, uchar, uchar4)
 #endif
 
-#if defined(RGBA2GRAY_U8_2D) || defined(SPIR)
+#if defined(RGBA2GRAY_U8_2D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_2D(RGBA2GRAY, U8, uchar, uchar4)
 #endif
 
-#if defined(RGBA2GRAY_F32_1D) || defined(SPIR)
+#if defined(RGBA2GRAY_F32_1D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_1D(RGBA2GRAY, F32, float, float4)
 #endif
 
-#if defined(RGBA2GRAY_F32_2D) || defined(SPIR)
+#if defined(RGBA2GRAY_F32_2D) || defined(ALL_KERNELS)
 BGRA2GRAYTYPE_2D(RGBA2GRAY, F32, float, float4)
 #endif
 
 #if defined(GRAY2BGR_U8_1D) || defined(GRAY2BGR_F32_1D) ||                     \
-    defined(GRAY2RGB_U8_1D) || defined(GRAY2RGB_F32_1D) || defined(SPIR)
+    defined(GRAY2RGB_U8_1D) || defined(GRAY2RGB_F32_1D) || defined(ALL_KERNELS)
 #define GRAY2BGRTYPE_1D(Function, base_type, T, T3)                            \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -707,14 +713,14 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
   }                                                                            \
                                                                                \
   T input_value = src[element_x];                                              \
-  T3 value = Function ## Compute(input_value);                                 \
+  T3 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   vstore3(value, element_x, dst);                                              \
 }
 #endif
 
 #if defined(GRAY2BGR_U8_2D) || defined(GRAY2BGR_F32_2D) ||                     \
-    defined(GRAY2RGB_U8_2D) || defined(GRAY2RGB_F32_2D) || defined(SPIR)
+    defined(GRAY2RGB_U8_2D) || defined(GRAY2RGB_F32_2D) || defined(ALL_KERNELS)
 #define GRAY2BGRTYPE_2D(Function, base_type, T, T3)                            \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -728,15 +734,15 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
                                                                                \
   global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
   T input_value = data[element_x];                                             \
-  T3 value = Function ## Compute(input_value);                                 \
+  T3 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
   vstore3(value, element_x, data);                                             \
 }
 #endif
 
-#if defined(GRAY2BGR_U8_1D) || defined(GRAY2BGR_U8_2D) || defined(SPIR)
-uchar3 GRAY2BGRCompute(const uchar src) {
+#if defined(GRAY2BGR_U8_1D) || defined(GRAY2BGR_U8_2D) || defined(ALL_KERNELS)
+uchar3 GRAY2BGRU8Compute(const uchar src) {
   uchar3 dst;
   dst.x = src;
   dst.y = src;
@@ -746,8 +752,8 @@ uchar3 GRAY2BGRCompute(const uchar src) {
 }
 #endif
 
-#if defined(GRAY2BGR_F32_1D) || defined(GRAY2BGR_F32_2D) || defined(SPIR)
-float3 GRAY2BGRCompute(const float src) {
+#if defined(GRAY2BGR_F32_1D) || defined(GRAY2BGR_F32_2D) || defined(ALL_KERNELS)
+float3 GRAY2BGRF32Compute(const float src) {
   float3 dst;
   dst.x = src;
   dst.y = src;
@@ -757,8 +763,8 @@ float3 GRAY2BGRCompute(const float src) {
 }
 #endif
 
-#if defined(GRAY2RGB_U8_1D) || defined(GRAY2RGB_U8_2D) || defined(SPIR)
-uchar3 GRAY2RGBCompute(const uchar src) {
+#if defined(GRAY2RGB_U8_1D) || defined(GRAY2RGB_U8_2D) || defined(ALL_KERNELS)
+uchar3 GRAY2RGBU8Compute(const uchar src) {
   uchar3 dst;
   dst.x = src;
   dst.y = src;
@@ -768,8 +774,8 @@ uchar3 GRAY2RGBCompute(const uchar src) {
 }
 #endif
 
-#if defined(GRAY2RGB_F32_1D) || defined(GRAY2RGB_F32_2D) || defined(SPIR)
-float3 GRAY2RGBCompute(const float src) {
+#if defined(GRAY2RGB_F32_1D) || defined(GRAY2RGB_F32_2D) || defined(ALL_KERNELS)
+float3 GRAY2RGBF32Compute(const float src) {
   float3 dst;
   dst.x = src;
   dst.y = src;
@@ -779,40 +785,41 @@ float3 GRAY2RGBCompute(const float src) {
 }
 #endif
 
-#if defined(GRAY2BGR_U8_1D) || defined(SPIR)
+#if defined(GRAY2BGR_U8_1D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_1D(GRAY2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(GRAY2BGR_U8_2D) || defined(SPIR)
+#if defined(GRAY2BGR_U8_2D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_2D(GRAY2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(GRAY2BGR_F32_1D) || defined(SPIR)
+#if defined(GRAY2BGR_F32_1D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_1D(GRAY2BGR, F32, float, float3)
 #endif
 
-#if defined(GRAY2BGR_F32_2D) || defined(SPIR)
+#if defined(GRAY2BGR_F32_2D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_2D(GRAY2BGR, F32, float, float3)
 #endif
 
-#if defined(GRAY2RGB_U8_1D) || defined(SPIR)
+#if defined(GRAY2RGB_U8_1D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_1D(GRAY2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(GRAY2RGB_U8_2D) || defined(SPIR)
+#if defined(GRAY2RGB_U8_2D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_2D(GRAY2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(GRAY2RGB_F32_1D) || defined(SPIR)
+#if defined(GRAY2RGB_F32_1D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_1D(GRAY2RGB, F32, float, float3)
 #endif
 
-#if defined(GRAY2RGB_F32_2D) || defined(SPIR)
+#if defined(GRAY2RGB_F32_2D) || defined(ALL_KERNELS)
 GRAY2BGRTYPE_2D(GRAY2RGB, F32, float, float3)
 #endif
 
 #if defined(GRAY2BGRA_U8_1D) || defined(GRAY2BGRA_F32_1D) ||                   \
-    defined(GRAY2RGBA_U8_1D) || defined(GRAY2RGBA_F32_1D) || defined(SPIR)
+    defined(GRAY2RGBA_U8_1D) || defined(GRAY2RGBA_F32_1D) ||                   \
+    defined(ALL_KERNELS)
 #define GRAY2BGRATYPE_1D(Function, base_type, T, T4)                           \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -823,14 +830,15 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
   }                                                                            \
                                                                                \
   T input_value = src[element_x];                                              \
-  T4 value = Function ## Compute(input_value);                                 \
+  T4 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   vstore4(value, element_x, dst);                                              \
 }
 #endif
 
 #if defined(GRAY2BGRA_U8_2D) || defined(GRAY2BGRA_F32_2D) ||                   \
-    defined(GRAY2RGBA_U8_2D) || defined(GRAY2RGBA_F32_2D) || defined(SPIR)
+    defined(GRAY2RGBA_U8_2D) || defined(GRAY2RGBA_F32_2D) ||                   \
+    defined(ALL_KERNELS)
 #define GRAY2BGRATYPE_2D(Function, base_type, T, T4)                           \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -844,15 +852,15 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
                                                                                \
   global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
   T input_value = data[element_x];                                             \
-  T4 value = Function ## Compute(input_value);                                 \
+  T4 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
   vstore4(value, element_x, data);                                             \
 }
 #endif
 
-#if defined(GRAY2BGRA_U8_1D) || defined(GRAY2BGRA_U8_2D) || defined(SPIR)
-uchar4 GRAY2BGRACompute(const uchar src) {
+#if defined(GRAY2BGRA_U8_1D) || defined(GRAY2BGRA_U8_2D) || defined(ALL_KERNELS)
+uchar4 GRAY2BGRAU8Compute(const uchar src) {
   uchar4 dst;
   dst.x = src;
   dst.y = src;
@@ -863,8 +871,9 @@ uchar4 GRAY2BGRACompute(const uchar src) {
 }
 #endif
 
-#if defined(GRAY2BGRA_F32_1D) || defined(GRAY2BGRA_F32_2D) || defined(SPIR)
-float4 GRAY2BGRACompute(const float src) {
+#if defined(GRAY2BGRA_F32_1D) || defined(GRAY2BGRA_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float4 GRAY2BGRAF32Compute(const float src) {
   float4 dst;
   dst.x = src;
   dst.y = src;
@@ -875,8 +884,8 @@ float4 GRAY2BGRACompute(const float src) {
 }
 #endif
 
-#if defined(GRAY2RGBA_U8_1D) || defined(GRAY2RGBA_U8_2D) || defined(SPIR)
-uchar4 GRAY2RGBACompute(const uchar src) {
+#if defined(GRAY2RGBA_U8_1D) || defined(GRAY2RGBA_U8_2D) || defined(ALL_KERNELS)
+uchar4 GRAY2RGBAU8Compute(const uchar src) {
   uchar4 dst;
   dst.x = src;
   dst.y = src;
@@ -887,8 +896,9 @@ uchar4 GRAY2RGBACompute(const uchar src) {
 }
 #endif
 
-#if defined(GRAY2RGBA_F32_1D) || defined(GRAY2RGBA_F32_2D) || defined(SPIR)
-float4 GRAY2RGBACompute(const float src) {
+#if defined(GRAY2RGBA_F32_1D) || defined(GRAY2RGBA_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float4 GRAY2RGBAF32Compute(const float src) {
   float4 dst;
   dst.x = src;
   dst.y = src;
@@ -899,35 +909,35 @@ float4 GRAY2RGBACompute(const float src) {
 }
 #endif
 
-#if defined(GRAY2BGRA_U8_1D) || defined(SPIR)
+#if defined(GRAY2BGRA_U8_1D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_1D(GRAY2BGRA, U8, uchar, uchar4)
 #endif
 
-#if defined(GRAY2BGRA_U8_2D) || defined(SPIR)
+#if defined(GRAY2BGRA_U8_2D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_2D(GRAY2BGRA, U8, uchar, uchar4)
 #endif
 
-#if defined(GRAY2BGRA_F32_1D) || defined(SPIR)
+#if defined(GRAY2BGRA_F32_1D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_1D(GRAY2BGRA, F32, float, float4)
 #endif
 
-#if defined(GRAY2BGRA_F32_2D) || defined(SPIR)
+#if defined(GRAY2BGRA_F32_2D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_2D(GRAY2BGRA, F32, float, float4)
 #endif
 
-#if defined(GRAY2RGBA_U8_1D) || defined(SPIR)
+#if defined(GRAY2RGBA_U8_1D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_1D(GRAY2RGBA, U8, uchar, uchar4)
 #endif
 
-#if defined(GRAY2RGBA_U8_2D) || defined(SPIR)
+#if defined(GRAY2RGBA_U8_2D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_2D(GRAY2RGBA, U8, uchar, uchar4)
 #endif
 
-#if defined(GRAY2RGBA_F32_1D) || defined(SPIR)
+#if defined(GRAY2RGBA_F32_1D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_1D(GRAY2RGBA, F32, float, float4)
 #endif
 
-#if defined(GRAY2RGBA_F32_2D) || defined(SPIR)
+#if defined(GRAY2RGBA_F32_2D) || defined(ALL_KERNELS)
 GRAY2BGRATYPE_2D(GRAY2RGBA, F32, float, float4)
 #endif
 
@@ -976,7 +986,7 @@ enum YCrCbShifts {
     defined(BGR2LAB_U8_1D) || defined(BGR2LAB_F32_1D) ||                       \
     defined(RGB2LAB_U8_1D) || defined(RGB2LAB_F32_1D) ||                       \
     defined(LAB2BGR_U8_1D) || defined(LAB2BGR_F32_1D) ||                       \
-    defined(LAB2RGB_U8_1D) || defined(LAB2RGB_F32_1D) || defined(SPIR)
+    defined(LAB2RGB_U8_1D) || defined(LAB2RGB_F32_1D) || defined(ALL_KERNELS)
 #define Convert3To3_1D(Function, base_type, T, T3)                             \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -987,7 +997,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
   }                                                                            \
                                                                                \
   T3 input_value = vload3(element_x, src);                                     \
-  T3 value = Function ## Compute(input_value);                                 \
+  T3 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   vstore3(value, element_x, dst);                                              \
 }
@@ -1004,7 +1014,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
     defined(BGR2LAB_U8_2D) || defined(BGR2LAB_F32_2D) ||                       \
     defined(RGB2LAB_U8_2D) || defined(RGB2LAB_F32_2D) ||                       \
     defined(LAB2BGR_U8_2D) || defined(LAB2BGR_F32_2D) ||                       \
-    defined(LAB2RGB_U8_2D) || defined(LAB2RGB_F32_2D) || defined(SPIR)
+    defined(LAB2RGB_U8_2D) || defined(LAB2RGB_F32_2D) || defined(ALL_KERNELS)
 #define Convert3To3_2D(Function, base_type, T, T3)                             \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -1018,15 +1028,15 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
                                                                                \
   global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
   T3 input_value = vload3(element_x, data);                                    \
-  T3 value = Function ## Compute(input_value);                                 \
+  T3 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
   vstore3(value, element_x, data);                                             \
 }
 #endif
 
-#if defined(BGR2YCrCb_U8_1D) || defined(BGR2YCrCb_U8_2D) || defined(SPIR)
-uchar3 BGR2YCrCbCompute(const uchar3 src) {
+#if defined(BGR2YCrCb_U8_1D) || defined(BGR2YCrCb_U8_2D) || defined(ALL_KERNELS)
+uchar3 BGR2YCrCbU8Compute(const uchar3 src) {
   int3 value;
   value.x = divideUp(src.z * kR2YCoeff + src.y * kG2YCoeff + src.x * kB2YCoeff,
                      kYCrCbShift);
@@ -1039,8 +1049,9 @@ uchar3 BGR2YCrCbCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(BGR2YCrCb_F32_1D) || defined(BGR2YCrCb_F32_2D) || defined(SPIR)
-float3 BGR2YCrCbCompute(const float3 src) {
+#if defined(BGR2YCrCb_F32_1D) || defined(BGR2YCrCb_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float3 BGR2YCrCbF32Compute(const float3 src) {
   float3 dst;
   dst.x = src.z * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
           src.x * B2Y_FLOAT_COEFF;
@@ -1051,8 +1062,8 @@ float3 BGR2YCrCbCompute(const float3 src) {
 }
 #endif
 
-#if defined(RGB2YCrCb_U8_1D) || defined(RGB2YCrCb_U8_2D) || defined(SPIR)
-uchar3 RGB2YCrCbCompute(const uchar3 src) {
+#if defined(RGB2YCrCb_U8_1D) || defined(RGB2YCrCb_U8_2D) || defined(ALL_KERNELS)
+uchar3 RGB2YCrCbU8Compute(const uchar3 src) {
   int3 value;
   value.x = divideUp(src.x * kR2YCoeff + src.y * kG2YCoeff + src.z * kB2YCoeff,
                      kYCrCbShift);
@@ -1065,8 +1076,9 @@ uchar3 RGB2YCrCbCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(RGB2YCrCb_F32_1D) || defined(RGB2YCrCb_F32_2D) || defined(SPIR)
-float3 RGB2YCrCbCompute(const float3 src) {
+#if defined(RGB2YCrCb_F32_1D) || defined(RGB2YCrCb_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float3 RGB2YCrCbF32Compute(const float3 src) {
   float3 dst;
   dst.x = src.x * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
           src.z * B2Y_FLOAT_COEFF;
@@ -1077,35 +1089,35 @@ float3 RGB2YCrCbCompute(const float3 src) {
 }
 #endif
 
-#if defined(BGR2YCrCb_U8_1D) || defined(SPIR)
+#if defined(BGR2YCrCb_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(BGR2YCrCb, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2YCrCb_U8_2D) || defined(SPIR)
+#if defined(BGR2YCrCb_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(BGR2YCrCb, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2YCrCb_F32_1D) || defined(SPIR)
+#if defined(BGR2YCrCb_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(BGR2YCrCb, F32, float, float3)
 #endif
 
-#if defined(BGR2YCrCb_F32_2D) || defined(SPIR)
+#if defined(BGR2YCrCb_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(BGR2YCrCb, F32, float, float3)
 #endif
 
-#if defined(RGB2YCrCb_U8_1D) || defined(SPIR)
+#if defined(RGB2YCrCb_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(RGB2YCrCb, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2YCrCb_U8_2D) || defined(SPIR)
+#if defined(RGB2YCrCb_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(RGB2YCrCb, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2YCrCb_F32_1D) || defined(SPIR)
+#if defined(RGB2YCrCb_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(RGB2YCrCb, F32, float, float3)
 #endif
 
-#if defined(RGB2YCrCb_F32_2D) || defined(SPIR)
+#if defined(RGB2YCrCb_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(RGB2YCrCb, F32, float, float3)
 #endif
 
@@ -1115,7 +1127,7 @@ Convert3To3_2D(RGB2YCrCb, F32, float, float3)
     defined(BGRA2HSV_U8_1D) || defined(BGRA2HSV_F32_1D) ||                     \
     defined(RGBA2HSV_U8_1D) || defined(RGBA2HSV_F32_1D) ||                     \
     defined(BGRA2LAB_U8_1D) || defined(BGRA2LAB_F32_1D) ||                     \
-    defined(RGBA2LAB_U8_1D) || defined(RGBA2LAB_F32_1D) || defined(SPIR)
+    defined(RGBA2LAB_U8_1D) || defined(RGBA2LAB_F32_1D) || defined(ALL_KERNELS)
 #define Convert4To3_1D(Function, base_type, T, T4, T3)                         \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -1126,7 +1138,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
   }                                                                            \
                                                                                \
   T4 input_value = vload4(element_x, src);                                     \
-  T3 value = Function ## Compute(input_value);                                 \
+  T3 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   vstore3(value, element_x, dst);                                              \
 }
@@ -1137,7 +1149,8 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
     defined(BGRA2YHSV_U8_2D) || defined(BGRA2YHSV_F32_2D) ||                   \
     defined(RGBA2YHSV_U8_2D) || defined(RGBA2YHSV_F32_2D) ||                   \
     defined(BGRA2YLAB_U8_2D) || defined(BGRA2YLAB_F32_2D) ||                   \
-    defined(RGBA2YLAB_U8_2D) || defined(RGBA2YLAB_F32_2D) || defined(SPIR)
+    defined(RGBA2YLAB_U8_2D) || defined(RGBA2YLAB_F32_2D) ||                   \
+    defined(ALL_KERNELS)
 #define Convert4To3_2D(Function, base_type, T, T4, T3)                         \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -1151,15 +1164,16 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
                                                                                \
   global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
   T4 input_value = vload4(element_x, data);                                    \
-  T3 value = Function ## Compute(input_value);                                 \
+  T3 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
   vstore3(value, element_x, data);                                             \
 }
 #endif
 
-#if defined(BGRA2YCrCb_U8_1D) || defined(BGRA2YCrCb_U8_2D) || defined(SPIR)
-uchar3 BGRA2YCrCbCompute(const uchar4 src) {
+#if defined(BGRA2YCrCb_U8_1D) || defined(BGRA2YCrCb_U8_2D) ||                  \
+    defined(ALL_KERNELS)
+uchar3 BGRA2YCrCbU8Compute(const uchar4 src) {
   int3 value;
   value.x = divideUp(src.z * kR2YCoeff + src.y * kG2YCoeff + src.x * kB2YCoeff,
                      kYCrCbShift);
@@ -1172,8 +1186,9 @@ uchar3 BGRA2YCrCbCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(BGRA2YCrCb_F32_1D) || defined(BGRA2YCrCb_F32_2D) || defined(SPIR)
-float3 BGRA2YCrCbCompute(const float4 src) {
+#if defined(BGRA2YCrCb_F32_1D) || defined(BGRA2YCrCb_F32_2D) ||                \
+    defined(ALL_KERNELS)
+float3 BGRA2YCrCbF32Compute(const float4 src) {
   float3 dst;
   dst.x = src.z * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
           src.x * B2Y_FLOAT_COEFF;
@@ -1184,8 +1199,9 @@ float3 BGRA2YCrCbCompute(const float4 src) {
 }
 #endif
 
-#if defined(RGBA2YCrCb_U8_1D) || defined(RGBA2YCrCb_U8_2D) || defined(SPIR)
-uchar3 RGBA2YCrCbCompute(const uchar4 src) {
+#if defined(RGBA2YCrCb_U8_1D) || defined(RGBA2YCrCb_U8_2D) ||                  \
+    defined(ALL_KERNELS)
+uchar3 RGBA2YCrCbU8Compute(const uchar4 src) {
   int3 value;
   value.x = divideUp(src.x * kR2YCoeff + src.y * kG2YCoeff + src.z * kB2YCoeff,
                      kYCrCbShift);
@@ -1198,8 +1214,9 @@ uchar3 RGBA2YCrCbCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(RGBA2YCrCb_F32_1D) || defined(RGBA2YCrCb_F32_2D) || defined(SPIR)
-float3 RGBA2YCrCbCompute(const float4 src) {
+#if defined(RGBA2YCrCb_F32_1D) || defined(RGBA2YCrCb_F32_2D) ||                \
+    defined(ALL_KERNELS)
+float3 RGBA2YCrCbF32Compute(const float4 src) {
   float3 dst;
   dst.x = src.x * R2Y_FLOAT_COEFF + src.y * G2Y_FLOAT_COEFF +
           src.z * B2Y_FLOAT_COEFF;
@@ -1210,41 +1227,42 @@ float3 RGBA2YCrCbCompute(const float4 src) {
 }
 #endif
 
-#if defined(BGRA2YCrCb_U8_1D) || defined(SPIR)
+#if defined(BGRA2YCrCb_U8_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(BGRA2YCrCb, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(BGRA2YCrCb_U8_2D) || defined(SPIR)
+#if defined(BGRA2YCrCb_U8_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(BGRA2YCrCb, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(BGRA2YCrCb_F32_1D) || defined(SPIR)
+#if defined(BGRA2YCrCb_F32_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(BGRA2YCrCb, F32, float, float4, float3)
 #endif
 
-#if defined(BGRA2YCrCb_F32_2D) || defined(SPIR)
+#if defined(BGRA2YCrCb_F32_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(BGRA2YCrCb, F32, float, float4, float3)
 #endif
 
-#if defined(RGBA2YCrCb_U8_1D) || defined(SPIR)
+#if defined(RGBA2YCrCb_U8_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(RGBA2YCrCb, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(RGBA2YCrCb_U8_2D) || defined(SPIR)
+#if defined(RGBA2YCrCb_U8_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(RGBA2YCrCb, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(RGBA2YCrCb_F32_1D) || defined(SPIR)
+#if defined(RGBA2YCrCb_F32_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(RGBA2YCrCb, F32, float, float4, float3)
 #endif
 
-#if defined(RGBA2YCrCb_F32_2D) || defined(SPIR)
+#if defined(RGBA2YCrCb_F32_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(RGBA2YCrCb, F32, float, float4, float3)
 #endif
 
 
-#if defined(YCrCb2BGR_U8_1D) || defined(YCrCb2BGR_U8_2D) || defined(SPIR)
-uchar3 YCrCb2BGRCompute(const uchar3 src) {
+#if defined(YCrCb2BGR_U8_1D) || defined(YCrCb2BGR_U8_2D) ||                    \
+    defined(ALL_KERNELS)
+uchar3 YCrCb2BGRU8Compute(const uchar3 src) {
   int y  = src.x;
   int cr = src.y - YCRCB_UCHAR_DELTA;
   int cb = src.z - YCRCB_UCHAR_DELTA;
@@ -1260,8 +1278,9 @@ uchar3 YCrCb2BGRCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(YCrCb2BGR_F32_1D) || defined(YCrCb2BGR_F32_2D) || defined(SPIR)
-float3 YCrCb2BGRCompute(const float3 src) {
+#if defined(YCrCb2BGR_F32_1D) || defined(YCrCb2BGR_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float3 YCrCb2BGRF32Compute(const float3 src) {
   float y  = src.x;
   float cr = src.y - YCRCB_FLOAT_DELTA;
   float cb = src.z - YCRCB_FLOAT_DELTA;
@@ -1275,8 +1294,8 @@ float3 YCrCb2BGRCompute(const float3 src) {
 }
 #endif
 
-#if defined(YCrCb2RGB_U8_1D) || defined(YCrCb2RGB_U8_2D) || defined(SPIR)
-uchar3 YCrCb2RGBCompute(const uchar3 src) {
+#if defined(YCrCb2RGB_U8_1D) || defined(YCrCb2RGB_U8_2D) || defined(ALL_KERNELS)
+uchar3 YCrCb2RGBU8Compute(const uchar3 src) {
   int y  = src.x;
   int cr = src.y - YCRCB_UCHAR_DELTA;
   int cb = src.z - YCRCB_UCHAR_DELTA;
@@ -1292,8 +1311,9 @@ uchar3 YCrCb2RGBCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(YCrCb2RGB_F32_1D) || defined(YCrCb2RGB_F32_2D) || defined(SPIR)
-float3 YCrCb2RGBCompute(const float3 src) {
+#if defined(YCrCb2RGB_F32_1D) || defined(YCrCb2RGB_F32_2D) ||                  \
+    defined(ALL_KERNELS)
+float3 YCrCb2RGBF32Compute(const float3 src) {
   float y  = src.x;
   float cr = src.y - YCRCB_FLOAT_DELTA;
   float cb = src.z - YCRCB_FLOAT_DELTA;
@@ -1307,35 +1327,35 @@ float3 YCrCb2RGBCompute(const float3 src) {
 }
 #endif
 
-#if defined(YCrCb2BGR_U8_1D) || defined(SPIR)
+#if defined(YCrCb2BGR_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(YCrCb2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(YCrCb2BGR_U8_2D) || defined(SPIR)
+#if defined(YCrCb2BGR_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(YCrCb2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(YCrCb2BGR_F32_1D) || defined(SPIR)
+#if defined(YCrCb2BGR_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(YCrCb2BGR, F32, float, float3)
 #endif
 
-#if defined(YCrCb2BGR_F32_2D) || defined(SPIR)
+#if defined(YCrCb2BGR_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(YCrCb2BGR, F32, float, float3)
 #endif
 
-#if defined(YCrCb2RGB_U8_1D) || defined(SPIR)
+#if defined(YCrCb2RGB_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(YCrCb2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(YCrCb2RGB_U8_2D) || defined(SPIR)
+#if defined(YCrCb2RGB_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(YCrCb2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(YCrCb2RGB_F32_1D) || defined(SPIR)
+#if defined(YCrCb2RGB_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(YCrCb2RGB, F32, float, float3)
 #endif
 
-#if defined(YCrCb2RGB_F32_2D) || defined(SPIR)
+#if defined(YCrCb2RGB_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(YCrCb2RGB, F32, float, float3)
 #endif
 
@@ -1345,7 +1365,7 @@ Convert3To3_2D(YCrCb2RGB, F32, float, float3)
     defined(HSV2BGRA_U8_1D) || defined(HSV2BGRA_F32_1D) ||                     \
     defined(HSV2RGBA_U8_1D) || defined(HSV2RGBA_F32_1D) ||                     \
     defined(LAB2BGRA_U8_1D) || defined(LAB2BGRA_F32_1D) ||                     \
-    defined(LAB2RGBA_U8_1D) || defined(LAB2RGBA_F32_1D) || defined(SPIR)
+    defined(LAB2RGBA_U8_1D) || defined(LAB2RGBA_F32_1D) || defined(ALL_KERNELS)
 #define Convert3To4_1D(Function, base_type, T, T3, T4)                         \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const T* src, int cols,           \
@@ -1356,7 +1376,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
   }                                                                            \
                                                                                \
   T3 input_value = vload3(element_x, src);                                     \
-  T4 value = Function ## Compute(input_value);                                 \
+  T4 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   vstore4(value, element_x, dst);                                              \
 }
@@ -1367,7 +1387,7 @@ void Function ## base_type ## Kernel0(global const T* src, int cols,           \
     defined(HSV2BGRA_U8_2D) || defined(HSV2BGRA_F32_2D) ||                     \
     defined(HSV2RGBA_U8_2D) || defined(HSV2RGBA_F32_2D) ||                     \
     defined(LAB2BGRA_U8_2D) || defined(LAB2BGRA_F32_2D) ||                     \
-    defined(LAB2RGBA_U8_2D) || defined(LAB2RGBA_F32_2D) || defined(SPIR)
+    defined(LAB2RGBA_U8_2D) || defined(LAB2RGBA_F32_2D) || defined(ALL_KERNELS)
 #define Convert3To4_2D(Function, base_type, T, T3, T4)                         \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
@@ -1381,15 +1401,16 @@ void Function ## base_type ## Kernel1(global const T* src, int rows, int cols, \
                                                                                \
   global T* data = (global T*)((global uchar*)src + element_y * src_stride);   \
   T3 input_value = vload3(element_x, data);                                    \
-  T4 value = Function ## Compute(input_value);                                 \
+  T4 value = Function ## base_type ## Compute(input_value);                    \
                                                                                \
   data = (global T*)((global uchar*)dst + element_y * dst_stride);             \
   vstore4(value, element_x, data);                                             \
 }
 #endif
 
-#if defined(YCrCb2BGRA_U8_1D) || defined(YCrCb2BGRA_U8_2D) || defined(SPIR)
-uchar4 YCrCb2BGRACompute(const uchar3 src) {
+#if defined(YCrCb2BGRA_U8_1D) || defined(YCrCb2BGRA_U8_2D) ||                  \
+    defined(ALL_KERNELS)
+uchar4 YCrCb2BGRAU8Compute(const uchar3 src) {
   int y  = src.x;
   int cr = src.y - YCRCB_UCHAR_DELTA;
   int cb = src.z - YCRCB_UCHAR_DELTA;
@@ -1406,8 +1427,9 @@ uchar4 YCrCb2BGRACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(YCrCb2BGRA_F32_1D) || defined(YCrCb2BGRA_F32_2D) || defined(SPIR)
-float4 YCrCb2BGRACompute(const float3 src) {
+#if defined(YCrCb2BGRA_F32_1D) || defined(YCrCb2BGRA_F32_2D) ||                \
+    defined(ALL_KERNELS)
+float4 YCrCb2BGRAF32Compute(const float3 src) {
   float y  = src.x;
   float cr = src.y - YCRCB_FLOAT_DELTA;
   float cb = src.z - YCRCB_FLOAT_DELTA;
@@ -1422,8 +1444,9 @@ float4 YCrCb2BGRACompute(const float3 src) {
 }
 #endif
 
-#if defined(YCrCb2RGBA_U8_1D) || defined(YCrCb2RGBA_U8_2D) || defined(SPIR)
-uchar4 YCrCb2RGBACompute(const uchar3 src) {
+#if defined(YCrCb2RGBA_U8_1D) || defined(YCrCb2RGBA_U8_2D) ||                  \
+    defined(ALL_KERNELS)
+uchar4 YCrCb2RGBAU8Compute(const uchar3 src) {
   int y  = src.x;
   int cr = src.y - YCRCB_UCHAR_DELTA;
   int cb = src.z - YCRCB_UCHAR_DELTA;
@@ -1440,8 +1463,9 @@ uchar4 YCrCb2RGBACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(YCrCb2RGBA_F32_1D) || defined(YCrCb2RGBA_F32_2D) || defined(SPIR)
-float4 YCrCb2RGBACompute(const float3 src) {
+#if defined(YCrCb2RGBA_F32_1D) || defined(YCrCb2RGBA_F32_2D) ||                \
+    defined(ALL_KERNELS)
+float4 YCrCb2RGBAF32Compute(const float3 src) {
   float y  = src.x;
   float cr = src.y - YCRCB_FLOAT_DELTA;
   float cb = src.z - YCRCB_FLOAT_DELTA;
@@ -1456,42 +1480,42 @@ float4 YCrCb2RGBACompute(const float3 src) {
 }
 #endif
 
-#if defined(YCrCb2BGRA_U8_1D) || defined(SPIR)
+#if defined(YCrCb2BGRA_U8_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(YCrCb2BGRA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(YCrCb2BGRA_U8_2D) || defined(SPIR)
+#if defined(YCrCb2BGRA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(YCrCb2BGRA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(YCrCb2BGRA_F32_1D) || defined(SPIR)
+#if defined(YCrCb2BGRA_F32_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(YCrCb2BGRA, F32, float, float3, float4)
 #endif
 
-#if defined(YCrCb2BGRA_F32_2D) || defined(SPIR)
+#if defined(YCrCb2BGRA_F32_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(YCrCb2BGRA, F32, float, float3, float4)
 #endif
 
-#if defined(YCrCb2RGBA_U8_1D) || defined(SPIR)
+#if defined(YCrCb2RGBA_U8_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(YCrCb2RGBA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(YCrCb2RGBA_U8_2D) || defined(SPIR)
+#if defined(YCrCb2RGBA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(YCrCb2RGBA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(YCrCb2RGBA_F32_1D) || defined(SPIR)
+#if defined(YCrCb2RGBA_F32_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(YCrCb2RGBA, F32, float, float3, float4)
 #endif
 
-#if defined(YCrCb2RGBA_F32_2D) || defined(SPIR)
+#if defined(YCrCb2RGBA_F32_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(YCrCb2RGBA, F32, float, float3, float4)
 #endif
 
 /*********************** BGR/RGB/BGRA/RGBA <-> HSV ************************/
 
-#if defined(BGR2HSV_U8_1D) || defined(BGR2HSV_U8_2D) || defined(SPIR)
-uchar3 BGR2HSVCompute(const uchar3 src) {
+#if defined(BGR2HSV_U8_1D) || defined(BGR2HSV_U8_2D) || defined(ALL_KERNELS)
+uchar3 BGR2HSVU8Compute(const uchar3 src) {
   int h, v, s;
   v = max(max(src.x, src.y), src.z);
   s = min(min(src.x, src.y), src.z);
@@ -1528,8 +1552,8 @@ uchar3 BGR2HSVCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(BGR2HSV_F32_1D) || defined(BGR2HSV_F32_2D) || defined(SPIR)
-float3 BGR2HSVCompute(const float3 src) {
+#if defined(BGR2HSV_F32_1D) || defined(BGR2HSV_F32_2D) || defined(ALL_KERNELS)
+float3 BGR2HSVF32Compute(const float3 src) {
   float diff;
   float3 dst;
 
@@ -1555,8 +1579,8 @@ float3 BGR2HSVCompute(const float3 src) {
 }
 #endif
 
-#if defined(RGB2HSV_U8_1D) || defined(RGB2HSV_U8_2D) || defined(SPIR)
-uchar3 RGB2HSVCompute(const uchar3 src) {
+#if defined(RGB2HSV_U8_1D) || defined(RGB2HSV_U8_2D) || defined(ALL_KERNELS)
+uchar3 RGB2HSVU8Compute(const uchar3 src) {
   int h, v, s;
   v = max(max(src.z, src.y), src.x);
   s = min(min(src.z, src.y), src.x);
@@ -1593,8 +1617,8 @@ uchar3 RGB2HSVCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(RGB2HSV_F32_1D) || defined(RGB2HSV_F32_2D) || defined(SPIR)
-float3 RGB2HSVCompute(const float3 src) {
+#if defined(RGB2HSV_F32_1D) || defined(RGB2HSV_F32_2D) || defined(ALL_KERNELS)
+float3 RGB2HSVF32Compute(const float3 src) {
   float diff;
   float3 dst;
 
@@ -1620,41 +1644,41 @@ float3 RGB2HSVCompute(const float3 src) {
 }
 #endif
 
-#if defined(BGR2HSV_U8_1D) || defined(SPIR)
+#if defined(BGR2HSV_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(BGR2HSV, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2HSV_U8_2D) || defined(SPIR)
+#if defined(BGR2HSV_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(BGR2HSV, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2HSV_F32_1D) || defined(SPIR)
+#if defined(BGR2HSV_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(BGR2HSV, F32, float, float3)
 #endif
 
-#if defined(BGR2HSV_F32_2D) || defined(SPIR)
+#if defined(BGR2HSV_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(BGR2HSV, F32, float, float3)
 #endif
 
-#if defined(RGB2HSV_U8_1D) || defined(SPIR)
+#if defined(RGB2HSV_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(RGB2HSV, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2HSV_U8_2D) || defined(SPIR)
+#if defined(RGB2HSV_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(RGB2HSV, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2HSV_F32_1D) || defined(SPIR)
+#if defined(RGB2HSV_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(RGB2HSV, F32, float, float3)
 #endif
 
-#if defined(RGB2HSV_F32_2D) || defined(SPIR)
+#if defined(RGB2HSV_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(RGB2HSV, F32, float, float3)
 #endif
 
 
-#if defined(BGRA2HSV_U8_1D) || defined(BGRA2HSV_U8_2D) || defined(SPIR)
-uchar3 BGRA2HSVCompute(const uchar4 src) {
+#if defined(BGRA2HSV_U8_1D) || defined(BGRA2HSV_U8_2D) || defined(ALL_KERNELS)
+uchar3 BGRA2HSVU8Compute(const uchar4 src) {
   int h, v, s;
   v = max(max(src.x, src.y), src.z);
   s = min(min(src.x, src.y), src.z);
@@ -1691,8 +1715,8 @@ uchar3 BGRA2HSVCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(BGRA2HSV_F32_1D) || defined(BGRA2HSV_F32_2D) || defined(SPIR)
-float3 BGRA2HSVCompute(const float4 src) {
+#if defined(BGRA2HSV_F32_1D) || defined(BGRA2HSV_F32_2D) || defined(ALL_KERNELS)
+float3 BGRA2HSVF32Compute(const float4 src) {
   float diff;
   float3 dst;
 
@@ -1718,8 +1742,8 @@ float3 BGRA2HSVCompute(const float4 src) {
 }
 #endif
 
-#if defined(RGBA2HSV_U8_1D) || defined(RGBA2HSV_U8_2D) || defined(SPIR)
-uchar3 RGBA2HSVCompute(const uchar4 src) {
+#if defined(RGBA2HSV_U8_1D) || defined(RGBA2HSV_U8_2D) || defined(ALL_KERNELS)
+uchar3 RGBA2HSVU8Compute(const uchar4 src) {
   int h, v, s;
   v = max(max(src.z, src.y), src.x);
   s = min(min(src.z, src.y), src.x);
@@ -1756,8 +1780,8 @@ uchar3 RGBA2HSVCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(RGBA2HSV_F32_1D) || defined(RGBA2HSV_F32_2D) || defined(SPIR)
-float3 RGBA2HSVCompute(const float4 src) {
+#if defined(RGBA2HSV_F32_1D) || defined(RGBA2HSV_F32_2D) || defined(ALL_KERNELS)
+float3 RGBA2HSVF32Compute(const float4 src) {
   float diff;
   float3 dst;
 
@@ -1783,41 +1807,41 @@ float3 RGBA2HSVCompute(const float4 src) {
 }
 #endif
 
-#if defined(BGRA2HSV_U8_1D) || defined(SPIR)
+#if defined(BGRA2HSV_U8_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(BGRA2HSV, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(BGRA2HSV_U8_2D) || defined(SPIR)
+#if defined(BGRA2HSV_U8_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(BGRA2HSV, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(BGRA2HSV_F32_1D) || defined(SPIR)
+#if defined(BGRA2HSV_F32_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(BGRA2HSV, F32, float, float4, float3)
 #endif
 
-#if defined(BGRA2HSV_F32_2D) || defined(SPIR)
+#if defined(BGRA2HSV_F32_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(BGRA2HSV, F32, float, float4, float3)
 #endif
 
-#if defined(RGBA2HSV_U8_1D) || defined(SPIR)
+#if defined(RGBA2HSV_U8_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(RGBA2HSV, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(RGBA2HSV_U8_2D) || defined(SPIR)
+#if defined(RGBA2HSV_U8_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(RGBA2HSV, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(RGBA2HSV_F32_1D) || defined(SPIR)
+#if defined(RGBA2HSV_F32_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(RGBA2HSV, F32, float, float4, float3)
 #endif
 
-#if defined(RGBA2HSV_F32_2D) || defined(SPIR)
+#if defined(RGBA2HSV_F32_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(RGBA2HSV, F32, float, float4, float3)
 #endif
 
 
-#if defined(HSV2BGR_U8_1D) || defined(HSV2BGR_U8_2D) || defined(SPIR)
-uchar3 HSV2BGRCompute(const uchar3 src) {
+#if defined(HSV2BGR_U8_1D) || defined(HSV2BGR_U8_2D) || defined(ALL_KERNELS)
+uchar3 HSV2BGRU8Compute(const uchar3 src) {
   float h = src.x;
   float s = src.y;
   float v = src.z;
@@ -1894,8 +1918,8 @@ uchar3 HSV2BGRCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(HSV2BGR_F32_1D) || defined(HSV2BGR_F32_2D) || defined(SPIR)
-float3 HSV2BGRCompute(const float3 src) {
+#if defined(HSV2BGR_F32_1D) || defined(HSV2BGR_F32_2D) || defined(ALL_KERNELS)
+float3 HSV2BGRF32Compute(const float3 src) {
   float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
@@ -1934,8 +1958,8 @@ float3 HSV2BGRCompute(const float3 src) {
 }
 #endif
 
-#if defined(HSV2RGB_U8_1D) || defined(HSV2RGB_U8_2D) || defined(SPIR)
-uchar3 HSV2RGBCompute(const uchar3 src) {
+#if defined(HSV2RGB_U8_1D) || defined(HSV2RGB_U8_2D) || defined(ALL_KERNELS)
+uchar3 HSV2RGBU8Compute(const uchar3 src) {
   float h = src.x;
   float s = src.y;
   float v = src.z;
@@ -2012,8 +2036,8 @@ uchar3 HSV2RGBCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(HSV2RGB_F32_1D) || defined(HSV2RGB_F32_2D) || defined(SPIR)
-float3 HSV2RGBCompute(const float3 src) {
+#if defined(HSV2RGB_F32_1D) || defined(HSV2RGB_F32_2D) || defined(ALL_KERNELS)
+float3 HSV2RGBF32Compute(const float3 src) {
   float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
@@ -2052,41 +2076,41 @@ float3 HSV2RGBCompute(const float3 src) {
 }
 #endif
 
-#if defined(HSV2BGR_U8_1D) || defined(SPIR)
+#if defined(HSV2BGR_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(HSV2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(HSV2BGR_U8_2D) || defined(SPIR)
+#if defined(HSV2BGR_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(HSV2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(HSV2BGR_F32_1D) || defined(SPIR)
+#if defined(HSV2BGR_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(HSV2BGR, F32, float, float3)
 #endif
 
-#if defined(HSV2BGR_F32_2D) || defined(SPIR)
+#if defined(HSV2BGR_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(HSV2BGR, F32, float, float3)
 #endif
 
-#if defined(HSV2RGB_U8_1D) || defined(SPIR)
+#if defined(HSV2RGB_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(HSV2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(HSV2RGB_U8_2D) || defined(SPIR)
+#if defined(HSV2RGB_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(HSV2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(HSV2RGB_F32_1D) || defined(SPIR)
+#if defined(HSV2RGB_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(HSV2RGB, F32, float, float3)
 #endif
 
-#if defined(HSV2RGB_F32_2D) || defined(SPIR)
+#if defined(HSV2RGB_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(HSV2RGB, F32, float, float3)
 #endif
 
 
-#if defined(HSV2BGRA_U8_1D) || defined(HSV2BGRA_U8_2D) || defined(SPIR)
-uchar4 HSV2BGRACompute(const uchar3 src) {
+#if defined(HSV2BGRA_U8_1D) || defined(HSV2BGRA_U8_2D) || defined(ALL_KERNELS)
+uchar4 HSV2BGRAU8Compute(const uchar3 src) {
   float h = src.x;
   float s = src.y;
   float v = src.z;
@@ -2163,8 +2187,8 @@ uchar4 HSV2BGRACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(HSV2BGRA_F32_1D) || defined(HSV2BGRA_F32_2D) || defined(SPIR)
-float4 HSV2BGRACompute(const float3 src) {
+#if defined(HSV2BGRA_F32_1D) || defined(HSV2BGRA_F32_2D) || defined(ALL_KERNELS)
+float4 HSV2BGRAF32Compute(const float3 src) {
   float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
@@ -2204,8 +2228,8 @@ float4 HSV2BGRACompute(const float3 src) {
 }
 #endif
 
-#if defined(HSV2RGBA_U8_1D) || defined(HSV2RGBA_U8_2D) || defined(SPIR)
-uchar4 HSV2RGBACompute(const uchar3 src) {
+#if defined(HSV2RGBA_U8_1D) || defined(HSV2RGBA_U8_2D) || defined(ALL_KERNELS)
+uchar4 HSV2RGBAU8Compute(const uchar3 src) {
   float h = src.x;
   float s = src.y;
   float v = src.z;
@@ -2282,8 +2306,8 @@ uchar4 HSV2RGBACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(HSV2RGBA_F32_1D) || defined(HSV2RGBA_F32_2D) || defined(SPIR)
-float4 HSV2RGBACompute(const float3 src) {
+#if defined(HSV2RGBA_F32_1D) || defined(HSV2RGBA_F32_2D) || defined(ALL_KERNELS)
+float4 HSV2RGBAF32Compute(const float3 src) {
   float _1_60 = 0.016666667f;  // 1.f / 60.f;
   float diff = src.y * src.z;
   float min = src.z - diff;
@@ -2323,35 +2347,35 @@ float4 HSV2RGBACompute(const float3 src) {
 }
 #endif
 
-#if defined(HSV2BGRA_U8_1D) || defined(SPIR)
+#if defined(HSV2BGRA_U8_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(HSV2BGRA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(HSV2BGRA_U8_2D) || defined(SPIR)
+#if defined(HSV2BGRA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(HSV2BGRA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(HSV2BGRA_F32_1D) || defined(SPIR)
+#if defined(HSV2BGRA_F32_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(HSV2BGRA, F32, float, float3, float4)
 #endif
 
-#if defined(HSV2BGRA_F32_2D) || defined(SPIR)
+#if defined(HSV2BGRA_F32_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(HSV2BGRA, F32, float, float3, float4)
 #endif
 
-#if defined(HSV2RGBA_U8_1D) || defined(SPIR)
+#if defined(HSV2RGBA_U8_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(HSV2RGBA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(HSV2RGBA_U8_2D) || defined(SPIR)
+#if defined(HSV2RGBA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(HSV2RGBA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(HSV2RGBA_F32_1D) || defined(SPIR)
+#if defined(HSV2RGBA_F32_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(HSV2RGBA, F32, float, float3, float4)
 #endif
 
-#if defined(HSV2RGBA_F32_2D) || defined(SPIR)
+#if defined(HSV2RGBA_F32_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(HSV2RGBA, F32, float, float3, float4)
 #endif
 
@@ -2376,8 +2400,8 @@ int labCbrt_b(int i) {
   return (1 << kLabShift2) * value;
 }
 
-#if defined(BGR2LAB_U8_1D) || defined(BGR2LAB_U8_2D) || defined(SPIR)
-uchar3 BGR2LABCompute(const uchar3 src) {
+#if defined(BGR2LAB_U8_1D) || defined(BGR2LAB_U8_2D) || defined(ALL_KERNELS)
+uchar3 BGR2LABU8Compute(const uchar3 src) {
   int Lscale = 296;  // (116 * 255 + 50) / 100;
   int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
@@ -2407,8 +2431,8 @@ uchar3 BGR2LABCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(BGR2LAB_F32_1D) || defined(BGR2LAB_F32_2D) || defined(SPIR)
-float3 BGR2LABCompute(float3 src) {
+#if defined(BGR2LAB_F32_1D) || defined(BGR2LAB_F32_2D) || defined(ALL_KERNELS)
+float3 BGR2LABF32Compute(float3 src) {
   float div_1_3     = 0.333333f;
   float div_16_116  = 0.137931f;
 
@@ -2439,8 +2463,8 @@ float3 BGR2LABCompute(float3 src) {
 }
 #endif
 
-#if defined(RGB2LAB_U8_1D) || defined(RGB2LAB_U8_2D) || defined(SPIR)
-uchar3 RGB2LABCompute(const uchar3 src) {
+#if defined(RGB2LAB_U8_1D) || defined(RGB2LAB_U8_2D) || defined(ALL_KERNELS)
+uchar3 RGB2LABU8Compute(const uchar3 src) {
   int Lscale = 296;  // (116 * 255 + 50) / 100;
   int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
@@ -2470,8 +2494,8 @@ uchar3 RGB2LABCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(RGB2LAB_F32_1D) || defined(RGB2LAB_F32_2D) || defined(SPIR)
-float3 RGB2LABCompute(float3 src) {
+#if defined(RGB2LAB_F32_1D) || defined(RGB2LAB_F32_2D) || defined(ALL_KERNELS)
+float3 RGB2LABF32Compute(float3 src) {
   float div_1_3     = 0.333333f;
   float div_16_116  = 0.137931f;
 
@@ -2502,41 +2526,41 @@ float3 RGB2LABCompute(float3 src) {
 }
 #endif
 
-#if defined(BGR2LAB_U8_1D) || defined(SPIR)
+#if defined(BGR2LAB_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(BGR2LAB, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2LAB_U8_2D) || defined(SPIR)
+#if defined(BGR2LAB_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(BGR2LAB, U8, uchar, uchar3)
 #endif
 
-#if defined(BGR2LAB_F32_1D) || defined(SPIR)
+#if defined(BGR2LAB_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(BGR2LAB, F32, float, float3)
 #endif
 
-#if defined(BGR2LAB_F32_2D) || defined(SPIR)
+#if defined(BGR2LAB_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(BGR2LAB, F32, float, float3)
 #endif
 
-#if defined(RGB2LAB_U8_1D) || defined(SPIR)
+#if defined(RGB2LAB_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(RGB2LAB, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2LAB_U8_2D) || defined(SPIR)
+#if defined(RGB2LAB_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(RGB2LAB, U8, uchar, uchar3)
 #endif
 
-#if defined(RGB2LAB_F32_1D) || defined(SPIR)
+#if defined(RGB2LAB_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(RGB2LAB, F32, float, float3)
 #endif
 
-#if defined(RGB2LAB_F32_2D) || defined(SPIR)
+#if defined(RGB2LAB_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(RGB2LAB, F32, float, float3)
 #endif
 
 
-#if defined(BGRA2LAB_U8_1D) || defined(BGRA2LAB_U8_2D) || defined(SPIR)
-uchar3 BGRA2LABCompute(const uchar4 src) {
+#if defined(BGRA2LAB_U8_1D) || defined(BGRA2LAB_U8_2D) || defined(ALL_KERNELS)
+uchar3 BGRA2LABU8Compute(const uchar4 src) {
   int Lscale = 296;  // (116 * 255 + 50) / 100;
   int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
@@ -2566,8 +2590,8 @@ uchar3 BGRA2LABCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(BGRA2LAB_F32_1D) || defined(BGRA2LAB_F32_2D) || defined(SPIR)
-float3 BGRA2LABCompute(float4 src) {
+#if defined(BGRA2LAB_F32_1D) || defined(BGRA2LAB_F32_2D) || defined(ALL_KERNELS)
+float3 BGRA2LABF32Compute(float4 src) {
   float div_1_3     = 0.333333f;
   float div_16_116  = 0.137931f;
 
@@ -2598,8 +2622,8 @@ float3 BGRA2LABCompute(float4 src) {
 }
 #endif
 
-#if defined(RGBA2LAB_U8_1D) || defined(RGBA2LAB_U8_2D) || defined(SPIR)
-uchar3 RGBA2LABCompute(const uchar4 src) {
+#if defined(RGBA2LAB_U8_1D) || defined(RGBA2LAB_U8_2D) || defined(ALL_KERNELS)
+uchar3 RGBA2LABU8Compute(const uchar4 src) {
   int Lscale = 296;  // (116 * 255 + 50) / 100;
   int Lshift = -1336935;  // -((16 * 255 * (1 << kLabShift2) + 50) / 100);
 
@@ -2629,8 +2653,8 @@ uchar3 RGBA2LABCompute(const uchar4 src) {
 }
 #endif
 
-#if defined(RGBA2LAB_F32_1D) || defined(RGBA2LAB_F32_2D) || defined(SPIR)
-float3 RGBA2LABCompute(float4 src) {
+#if defined(RGBA2LAB_F32_1D) || defined(RGBA2LAB_F32_2D) || defined(ALL_KERNELS)
+float3 RGBA2LABF32Compute(float4 src) {
   float div_1_3     = 0.333333f;
   float div_16_116  = 0.137931f;
 
@@ -2661,41 +2685,41 @@ float3 RGBA2LABCompute(float4 src) {
 }
 #endif
 
-#if defined(BGRA2LAB_U8_1D) || defined(SPIR)
+#if defined(BGRA2LAB_U8_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(BGRA2LAB, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(BGRA2LAB_U8_2D) || defined(SPIR)
+#if defined(BGRA2LAB_U8_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(BGRA2LAB, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(BGRA2LAB_F32_1D) || defined(SPIR)
+#if defined(BGRA2LAB_F32_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(BGRA2LAB, F32, float, float4, float3)
 #endif
 
-#if defined(BGRA2LAB_F32_2D) || defined(SPIR)
+#if defined(BGRA2LAB_F32_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(BGRA2LAB, F32, float, float4, float3)
 #endif
 
-#if defined(RGBA2LAB_U8_1D) || defined(SPIR)
+#if defined(RGBA2LAB_U8_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(RGBA2LAB, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(RGBA2LAB_U8_2D) || defined(SPIR)
+#if defined(RGBA2LAB_U8_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(RGBA2LAB, U8, uchar, uchar4, uchar3)
 #endif
 
-#if defined(RGBA2LAB_F32_1D) || defined(SPIR)
+#if defined(RGBA2LAB_F32_1D) || defined(ALL_KERNELS)
 Convert4To3_1D(RGBA2LAB, F32, float, float4, float3)
 #endif
 
-#if defined(RGBA2LAB_F32_2D) || defined(SPIR)
+#if defined(RGBA2LAB_F32_2D) || defined(ALL_KERNELS)
 Convert4To3_2D(RGBA2LAB, F32, float, float4, float3)
 #endif
 
 
-#if defined(LAB2BGR_U8_1D) || defined(LAB2BGR_U8_2D) || defined(SPIR)
-uchar3 LAB2BGRCompute(const uchar3 src) {
+#if defined(LAB2BGR_U8_1D) || defined(LAB2BGR_U8_2D) || defined(ALL_KERNELS)
+uchar3 LAB2BGRU8Compute(const uchar3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -2750,8 +2774,8 @@ uchar3 LAB2BGRCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(LAB2BGR_F32_1D) || defined(LAB2BGR_F32_2D) || defined(SPIR)
-float3 LAB2BGRCompute(const float3 src) {
+#if defined(LAB2BGR_F32_1D) || defined(LAB2BGR_F32_2D) || defined(ALL_KERNELS)
+float3 LAB2BGRF32Compute(const float3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -2800,8 +2824,8 @@ float3 LAB2BGRCompute(const float3 src) {
 }
 #endif
 
-#if defined(LAB2RGB_U8_1D) || defined(LAB2RGB_U8_2D) || defined(SPIR)
-uchar3 LAB2RGBCompute(const uchar3 src) {
+#if defined(LAB2RGB_U8_1D) || defined(LAB2RGB_U8_2D) || defined(ALL_KERNELS)
+uchar3 LAB2RGBU8Compute(const uchar3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -2856,8 +2880,8 @@ uchar3 LAB2RGBCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(LAB2RGB_F32_1D) || defined(LAB2RGB_F32_2D) || defined(SPIR)
-float3 LAB2RGBCompute(const float3 src) {
+#if defined(LAB2RGB_F32_1D) || defined(LAB2RGB_F32_2D) || defined(ALL_KERNELS)
+float3 LAB2RGBF32Compute(const float3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -2906,41 +2930,41 @@ float3 LAB2RGBCompute(const float3 src) {
 }
 #endif
 
-#if defined(LAB2BGR_U8_1D) || defined(SPIR)
+#if defined(LAB2BGR_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(LAB2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(LAB2BGR_U8_2D) || defined(SPIR)
+#if defined(LAB2BGR_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(LAB2BGR, U8, uchar, uchar3)
 #endif
 
-#if defined(LAB2BGR_F32_1D) || defined(SPIR)
+#if defined(LAB2BGR_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(LAB2BGR, F32, float, float3)
 #endif
 
-#if defined(LAB2BGR_F32_2D) || defined(SPIR)
+#if defined(LAB2BGR_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(LAB2BGR, F32, float, float3)
 #endif
 
-#if defined(LAB2RGB_U8_1D) || defined(SPIR)
+#if defined(LAB2RGB_U8_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(LAB2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(LAB2RGB_U8_2D) || defined(SPIR)
+#if defined(LAB2RGB_U8_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(LAB2RGB, U8, uchar, uchar3)
 #endif
 
-#if defined(LAB2RGB_F32_1D) || defined(SPIR)
+#if defined(LAB2RGB_F32_1D) || defined(ALL_KERNELS)
 Convert3To3_1D(LAB2RGB, F32, float, float3)
 #endif
 
-#if defined(LAB2RGB_F32_2D) || defined(SPIR)
+#if defined(LAB2RGB_F32_2D) || defined(ALL_KERNELS)
 Convert3To3_2D(LAB2RGB, F32, float, float3)
 #endif
 
 
-#if defined(LAB2BGRA_U8_1D) || defined(LAB2BGRA_U8_2D) || defined(SPIR)
-uchar4 LAB2BGRACompute(const uchar3 src) {
+#if defined(LAB2BGRA_U8_1D) || defined(LAB2BGRA_U8_2D) || defined(ALL_KERNELS)
+uchar4 LAB2BGRAU8Compute(const uchar3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -2995,8 +3019,8 @@ uchar4 LAB2BGRACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(LAB2BGRA_F32_1D) || defined(LAB2BGRA_F32_2D) || defined(SPIR)
-float4 LAB2BGRACompute(const float3 src) {
+#if defined(LAB2BGRA_F32_1D) || defined(LAB2BGRA_F32_2D) || defined(ALL_KERNELS)
+float4 LAB2BGRAF32Compute(const float3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -3046,8 +3070,8 @@ float4 LAB2BGRACompute(const float3 src) {
 }
 #endif
 
-#if defined(LAB2RGBA_U8_1D) || defined(LAB2RGBA_U8_2D) || defined(SPIR)
-uchar4 LAB2RGBACompute(const uchar3 src) {
+#if defined(LAB2RGBA_U8_1D) || defined(LAB2RGBA_U8_2D) || defined(ALL_KERNELS)
+uchar4 LAB2RGBAU8Compute(const uchar3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -3102,8 +3126,8 @@ uchar4 LAB2RGBACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(LAB2RGBA_F32_1D) || defined(LAB2RGBA_F32_2D) || defined(SPIR)
-float4 LAB2RGBACompute(const float3 src) {
+#if defined(LAB2RGBA_F32_1D) || defined(LAB2RGBA_F32_2D) || defined(ALL_KERNELS)
+float4 LAB2RGBAF32Compute(const float3 src) {
   float _16_116 = 0.137931034f;  // 16.0f / 116.0f;
   float lThresh = 7.9996248f;    // 0.008856f * 903.3f;
   float fThresh = 0.206892706f;  // 0.008856f * 7.787f + _16_116;
@@ -3153,35 +3177,35 @@ float4 LAB2RGBACompute(const float3 src) {
 }
 #endif
 
-#if defined(LAB2BGRA_U8_1D) || defined(SPIR)
+#if defined(LAB2BGRA_U8_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(LAB2BGRA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(LAB2BGRA_U8_2D) || defined(SPIR)
+#if defined(LAB2BGRA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(LAB2BGRA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(LAB2BGRA_F32_1D) || defined(SPIR)
+#if defined(LAB2BGRA_F32_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(LAB2BGRA, F32, float, float3, float4)
 #endif
 
-#if defined(LAB2BGRA_F32_2D) || defined(SPIR)
+#if defined(LAB2BGRA_F32_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(LAB2BGRA, F32, float, float3, float4)
 #endif
 
-#if defined(LAB2RGBA_U8_1D) || defined(SPIR)
+#if defined(LAB2RGBA_U8_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(LAB2RGBA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(LAB2RGBA_U8_2D) || defined(SPIR)
+#if defined(LAB2RGBA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(LAB2RGBA, U8, uchar, uchar3, uchar4)
 #endif
 
-#if defined(LAB2RGBA_F32_1D) || defined(SPIR)
+#if defined(LAB2RGBA_F32_1D) || defined(ALL_KERNELS)
 Convert3To4_1D(LAB2RGBA, F32, float, float3, float4)
 #endif
 
-#if defined(LAB2RGBA_F32_2D) || defined(SPIR)
+#if defined(LAB2RGBA_F32_2D) || defined(ALL_KERNELS)
 Convert3To4_2D(LAB2RGBA, F32, float, float3, float4)
 #endif
 
@@ -3214,7 +3238,7 @@ enum {
 };
 
 #if defined(BGR2NV12_U8_2D) || defined(RGB2NV12_U8_2D) ||                      \
-    defined(BGR2NV21_U8_2D) || defined(RGB2NV21_U8_2D) || defined(SPIR)
+    defined(BGR2NV21_U8_2D) || defined(RGB2NV21_U8_2D) || defined(ALL_KERNELS)
 #define ConvertToNVXX_2D(Function, base_type)                                  \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -3239,7 +3263,8 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(BGR2NV12_U8_2D) || defined(BGR2NV12_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGR2NV12_U8_2D) || defined(BGR2NV12_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 BGR2NV12Compute(const uchar3 src, uint row, uint col) {
   int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3258,7 +3283,8 @@ uchar3 BGR2NV12Compute(const uchar3 src, uint row, uint col) {
 }
 #endif
 
-#if defined(RGB2NV12_U8_2D) || defined(RGB2NV12_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGB2NV12_U8_2D) || defined(RGB2NV12_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 RGB2NV12Compute(const uchar3 src, uint row, uint col) {
   int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3277,16 +3303,16 @@ uchar3 RGB2NV12Compute(const uchar3 src, uint row, uint col) {
 }
 #endif
 
-#if defined(BGR2NV12_U8_2D) || defined(SPIR)
+#if defined(BGR2NV12_U8_2D) || defined(ALL_KERNELS)
 ConvertToNVXX_2D(BGR2NV12, U8)
 #endif
 
-#if defined(RGB2NV12_U8_2D) || defined(SPIR)
+#if defined(RGB2NV12_U8_2D) || defined(ALL_KERNELS)
 ConvertToNVXX_2D(RGB2NV12, U8)
 #endif
 
 #if defined(BGRA2NV12_U8_2D) || defined(RGBA2NV12_U8_2D) ||                    \
-    defined(BGRA2NV21_U8_2D) || defined(RGBA2NV21_U8_2D) || defined(SPIR)
+    defined(BGRA2NV21_U8_2D) || defined(RGBA2NV21_U8_2D) || defined(ALL_KERNELS)
 #define Convert4To3NVXX_2D(Function, base_type)                                \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -3312,7 +3338,7 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 #endif
 
 #if defined(BGRA2NV12_U8_2D) || defined(BGRA2NV12_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar3 BGRA2NV12Compute(const uchar4 src, uint row, uint col) {
   int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3332,7 +3358,7 @@ uchar3 BGRA2NV12Compute(const uchar4 src, uint row, uint col) {
 #endif
 
 #if defined(RGBA2NV12_U8_2D) || defined(RGBA2NV12_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar3 RGBA2NV12Compute(const uchar4 src, uint row, uint col) {
   int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3351,16 +3377,16 @@ uchar3 RGBA2NV12Compute(const uchar4 src, uint row, uint col) {
 }
 #endif
 
-#if defined(BGRA2NV12_U8_2D) || defined(SPIR)
+#if defined(BGRA2NV12_U8_2D) || defined(ALL_KERNELS)
 Convert4To3NVXX_2D(BGRA2NV12, U8)
 #endif
 
-#if defined(RGBA2NV12_U8_2D) || defined(SPIR)
+#if defined(RGBA2NV12_U8_2D) || defined(ALL_KERNELS)
 Convert4To3NVXX_2D(RGBA2NV12, U8)
 #endif
 
 #if defined(NV122BGR_U8_2D) || defined(NV122RGB_U8_2D) ||                      \
-    defined(NV212BGR_U8_2D) || defined(NV212RGB_U8_2D) || defined(SPIR)
+    defined(NV212BGR_U8_2D) || defined(NV212RGB_U8_2D) || defined(ALL_KERNELS)
 #define ConvertFromNVXX_2D(Function, base_type)                                \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -3387,7 +3413,8 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(NV122BGR_U8_2D) || defined(NV122BGR_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV122BGR_U8_2D) || defined(NV122BGR_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 NV122BGRCompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -3406,7 +3433,8 @@ uchar3 NV122BGRCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(NV122RGB_U8_2D) || defined(NV122RGB_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV122RGB_U8_2D) || defined(NV122RGB_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 NV122RGBCompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -3425,16 +3453,16 @@ uchar3 NV122RGBCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(NV122BGR_U8_2D) || defined(SPIR)
+#if defined(NV122BGR_U8_2D) || defined(ALL_KERNELS)
 ConvertFromNVXX_2D(NV122BGR, U8)
 #endif
 
-#if defined(NV122RGB_U8_2D) || defined(SPIR)
+#if defined(NV122RGB_U8_2D) || defined(ALL_KERNELS)
 ConvertFromNVXX_2D(NV122RGB, U8)
 #endif
 
 #if defined(NV122BGRA_U8_2D) || defined(NV122RGBA_U8_2D) ||                    \
-    defined(NV212BGRA_U8_2D) || defined(NV212RGBA_U8_2D) || defined(SPIR)
+    defined(NV212BGRA_U8_2D) || defined(NV212RGBA_U8_2D) || defined(ALL_KERNELS)
 #define Convert3To4NVXX_2D(Function, base_type)                                \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -3462,7 +3490,7 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 #endif
 
 #if defined(NV122BGRA_U8_2D) || defined(NV122BGRA_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar4 NV122BGRACompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -3482,7 +3510,7 @@ uchar4 NV122BGRACompute(const uchar3 src) {
 #endif
 
 #if defined(NV122RGBA_U8_2D) || defined(NV122RGBA_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar4 NV122RGBACompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -3501,18 +3529,18 @@ uchar4 NV122RGBACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(NV122BGRA_U8_2D) || defined(SPIR)
+#if defined(NV122BGRA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4NVXX_2D(NV122BGRA, U8)
 #endif
 
-#if defined(NV122RGBA_U8_2D) || defined(SPIR)
+#if defined(NV122RGBA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4NVXX_2D(NV122RGBA, U8)
 #endif
 
 
 #if defined(BGR2NV12_DISCRETE_U8_2D) || defined(RGB2NV12_DISCRETE_U8_2D) ||    \
     defined(BGR2NV21_DISCRETE_U8_2D) || defined(RGB2NV21_DISCRETE_U8_2D) ||    \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define ConvertToDISCRETE_NVXX_2D(Function, base_type)                         \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
@@ -3539,17 +3567,17 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(BGR2NV12_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGR2NV12_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertToDISCRETE_NVXX_2D(BGR2NV12, U8)
 #endif
 
-#if defined(RGB2NV12_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGB2NV12_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertToDISCRETE_NVXX_2D(RGB2NV12, U8)
 #endif
 
 #if defined(BGRA2NV12_DISCRETE_U8_2D) || defined(RGBA2NV12_DISCRETE_U8_2D) ||  \
     defined(BGRA2NV21_DISCRETE_U8_2D) || defined(RGBA2NV21_DISCRETE_U8_2D) ||  \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define Convert4To3DISCRETE_NVXX_2D(Function, base_type)                       \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
@@ -3576,17 +3604,17 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(BGRA2NV12_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGRA2NV12_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert4To3DISCRETE_NVXX_2D(BGRA2NV12, U8)
 #endif
 
-#if defined(RGBA2NV12_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGBA2NV12_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert4To3DISCRETE_NVXX_2D(RGBA2NV12, U8)
 #endif
 
 #if defined(NV122BGR_DISCRETE_U8_2D) || defined(NV122RGB_DISCRETE_U8_2D) ||    \
     defined(NV212BGR_DISCRETE_U8_2D) || defined(NV212RGB_DISCRETE_U8_2D) ||    \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define ConvertFromDISCRETE_NVXX_2D(Function, base_type)                       \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
@@ -3615,17 +3643,17 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
 }
 #endif
 
-#if defined(NV122BGR_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV122BGR_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertFromDISCRETE_NVXX_2D(NV122BGR, U8)
 #endif
 
-#if defined(NV122RGB_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV122RGB_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertFromDISCRETE_NVXX_2D(NV122RGB, U8)
 #endif
 
 #if defined(NV122BGRA_DISCRETE_U8_2D) || defined(NV122RGBA_DISCRETE_U8_2D) ||  \
     defined(NV212BGRA_DISCRETE_U8_2D) || defined(NV212RGBA_DISCRETE_U8_2D) ||  \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define Convert3To4DISCRETE_NVXX_2D(Function, base_type)                       \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
@@ -3654,17 +3682,18 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
 }
 #endif
 
-#if defined(NV122BGRA_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV122BGRA_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert3To4DISCRETE_NVXX_2D(NV122BGRA, U8)
 #endif
 
-#if defined(NV122RGBA_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV122RGBA_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert3To4DISCRETE_NVXX_2D(NV122RGBA, U8)
 #endif
 
 /*********************** BGR/RGB/BGRA/RGBA <-> NV21 ************************/
 
-#if defined(BGR2NV21_U8_2D) || defined(BGR2NV21_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGR2NV21_U8_2D) || defined(BGR2NV21_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 BGR2NV21Compute(const uchar3 src, uint row, uint col) {
   int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3683,7 +3712,8 @@ uchar3 BGR2NV21Compute(const uchar3 src, uint row, uint col) {
 }
 #endif
 
-#if defined(RGB2NV21_U8_2D) || defined(RGB2NV21_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGB2NV21_U8_2D) || defined(RGB2NV21_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 RGB2NV21Compute(const uchar3 src, uint row, uint col) {
   int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3702,16 +3732,16 @@ uchar3 RGB2NV21Compute(const uchar3 src, uint row, uint col) {
 }
 #endif
 
-#if defined(BGR2NV21_U8_2D) || defined(SPIR)
+#if defined(BGR2NV21_U8_2D) || defined(ALL_KERNELS)
 ConvertToNVXX_2D(BGR2NV21, U8)
 #endif
 
-#if defined(RGB2NV21_U8_2D) || defined(SPIR)
+#if defined(RGB2NV21_U8_2D) || defined(ALL_KERNELS)
 ConvertToNVXX_2D(RGB2NV21, U8)
 #endif
 
 #if defined(BGRA2NV21_U8_2D) || defined(BGRA2NV21_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar3 BGRA2NV21Compute(const uchar4 src, uint row, uint col) {
   int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3731,7 +3761,7 @@ uchar3 BGRA2NV21Compute(const uchar4 src, uint row, uint col) {
 #endif
 
 #if defined(RGBA2NV21_U8_2D) || defined(RGBA2NV21_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar3 RGBA2NV21Compute(const uchar4 src, uint row, uint col) {
   int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3750,15 +3780,16 @@ uchar3 RGBA2NV21Compute(const uchar4 src, uint row, uint col) {
 }
 #endif
 
-#if defined(BGRA2NV21_U8_2D) || defined(SPIR)
+#if defined(BGRA2NV21_U8_2D) || defined(ALL_KERNELS)
 Convert4To3NVXX_2D(BGRA2NV21, U8)
 #endif
 
-#if defined(RGBA2NV21_U8_2D) || defined(SPIR)
+#if defined(RGBA2NV21_U8_2D) || defined(ALL_KERNELS)
 Convert4To3NVXX_2D(RGBA2NV21, U8)
 #endif
 
-#if defined(NV212BGR_U8_2D) || defined(NV212BGR_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV212BGR_U8_2D) || defined(NV212BGR_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 NV212BGRCompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int v = src.y - 128;
@@ -3777,7 +3808,8 @@ uchar3 NV212BGRCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(NV212RGB_U8_2D) || defined(NV212RGB_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV212RGB_U8_2D) || defined(NV212RGB_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 NV212RGBCompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int v = src.y - 128;
@@ -3796,16 +3828,16 @@ uchar3 NV212RGBCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(NV212BGR_U8_2D) || defined(SPIR)
+#if defined(NV212BGR_U8_2D) || defined(ALL_KERNELS)
 ConvertFromNVXX_2D(NV212BGR, U8)
 #endif
 
-#if defined(NV212RGB_U8_2D) || defined(SPIR)
+#if defined(NV212RGB_U8_2D) || defined(ALL_KERNELS)
 ConvertFromNVXX_2D(NV212RGB, U8)
 #endif
 
 #if defined(NV212BGRA_U8_2D) || defined(NV212BGRA_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar4 NV212BGRACompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int v = src.y - 128;
@@ -3825,7 +3857,7 @@ uchar4 NV212BGRACompute(const uchar3 src) {
 #endif
 
 #if defined(NV212RGBA_U8_2D) || defined(NV212RGBA_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar4 NV212RGBACompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int v = src.y - 128;
@@ -3844,50 +3876,50 @@ uchar4 NV212RGBACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(NV212BGRA_U8_2D) || defined(SPIR)
+#if defined(NV212BGRA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4NVXX_2D(NV212BGRA, U8)
 #endif
 
-#if defined(NV212RGBA_U8_2D) || defined(SPIR)
+#if defined(NV212RGBA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4NVXX_2D(NV212RGBA, U8)
 #endif
 
 
-#if defined(BGR2NV21_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGR2NV21_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertToDISCRETE_NVXX_2D(BGR2NV21, U8)
 #endif
 
-#if defined(RGB2NV21_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGB2NV21_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertToDISCRETE_NVXX_2D(RGB2NV21, U8)
 #endif
 
-#if defined(BGRA2NV21_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGRA2NV21_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert4To3DISCRETE_NVXX_2D(BGRA2NV21, U8)
 #endif
 
-#if defined(RGBA2NV21_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGBA2NV21_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert4To3DISCRETE_NVXX_2D(RGBA2NV21, U8)
 #endif
 
-#if defined(NV212BGR_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV212BGR_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertFromDISCRETE_NVXX_2D(NV212BGR, U8)
 #endif
 
-#if defined(NV212RGB_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV212RGB_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertFromDISCRETE_NVXX_2D(NV212RGB, U8)
 #endif
 
-#if defined(NV212BGRA_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV212BGRA_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert3To4DISCRETE_NVXX_2D(NV212BGRA, U8)
 #endif
 
-#if defined(NV212RGBA_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(NV212RGBA_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert3To4DISCRETE_NVXX_2D(NV212RGBA, U8)
 #endif
 
 /*********************** BGR/RGB/BGRA/RGBA <-> I420 ************************/
 
-#if defined(BGR2I420_U8_2D) || defined(RGB2I420_U8_2D) || defined(SPIR)
+#if defined(BGR2I420_U8_2D) || defined(RGB2I420_U8_2D) || defined(ALL_KERNELS)
 #define ConvertToI420_2D(Function, base_type)                                  \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -3922,7 +3954,8 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(BGR2I420_U8_2D) || defined(BGR2I420_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGR2I420_U8_2D) || defined(BGR2I420_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 BGR2I420Compute(const uchar3 src, uint row, uint col) {
   int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3941,7 +3974,8 @@ uchar3 BGR2I420Compute(const uchar3 src, uint row, uint col) {
 }
 #endif
 
-#if defined(RGB2I420_U8_2D) || defined(RGB2I420_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGB2I420_U8_2D) || defined(RGB2I420_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 RGB2I420Compute(const uchar3 src, uint row, uint col) {
   int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -3960,15 +3994,15 @@ uchar3 RGB2I420Compute(const uchar3 src, uint row, uint col) {
 }
 #endif
 
-#if defined(BGR2I420_U8_2D) || defined(SPIR)
+#if defined(BGR2I420_U8_2D) || defined(ALL_KERNELS)
 ConvertToI420_2D(BGR2I420, U8)
 #endif
 
-#if defined(RGB2I420_U8_2D) || defined(SPIR)
+#if defined(RGB2I420_U8_2D) || defined(ALL_KERNELS)
 ConvertToI420_2D(RGB2I420, U8)
 #endif
 
-#if defined(BGRA2I420_U8_2D) || defined(RGBA2I420_U8_2D) || defined(SPIR)
+#if defined(BGRA2I420_U8_2D) || defined(RGBA2I420_U8_2D) || defined(ALL_KERNELS)
 #define Convert4To3I420_2D(Function, base_type)                                \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -4004,7 +4038,7 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 #endif
 
 #if defined(BGRA2I420_U8_2D) || defined(BGRA2I420_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar3 BGRA2I420Compute(const uchar4 src, uint row, uint col) {
   int y = (src.x * NVXX_YB + src.y * NVXX_YG + src.z * NVXX_YR +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -4024,7 +4058,7 @@ uchar3 BGRA2I420Compute(const uchar4 src, uint row, uint col) {
 #endif
 
 #if defined(RGBA2I420_U8_2D) || defined(RGBA2I420_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar3 RGBA2I420Compute(const uchar4 src, uint row, uint col) {
   int y = (src.x * NVXX_YR + src.y * NVXX_YG + src.z * NVXX_YB +
            kG2NHalfShift + kG2NShift16) >> kG2NShift;
@@ -4043,15 +4077,15 @@ uchar3 RGBA2I420Compute(const uchar4 src, uint row, uint col) {
 }
 #endif
 
-#if defined(BGRA2I420_U8_2D) || defined(SPIR)
+#if defined(BGRA2I420_U8_2D) || defined(ALL_KERNELS)
 Convert4To3I420_2D(BGRA2I420, U8)
 #endif
 
-#if defined(RGBA2I420_U8_2D) || defined(SPIR)
+#if defined(RGBA2I420_U8_2D) || defined(ALL_KERNELS)
 Convert4To3I420_2D(RGBA2I420, U8)
 #endif
 
-#if defined(I4202BGR_U8_2D) || defined(I4202RGB_U8_2D) || defined(SPIR)
+#if defined(I4202BGR_U8_2D) || defined(I4202RGB_U8_2D) || defined(ALL_KERNELS)
 #define ConvertFromI420_2D(Function, base_type)                                \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -4082,7 +4116,8 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(I4202BGR_U8_2D) || defined(I4202BGR_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(I4202BGR_U8_2D) || defined(I4202BGR_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 I4202BGRCompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -4101,7 +4136,8 @@ uchar3 I4202BGRCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(I4202RGB_U8_2D) || defined(I4202RGB_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(I4202RGB_U8_2D) || defined(I4202RGB_DISCRETE_U8_2D) ||             \
+    defined(ALL_KERNELS)
 uchar3 I4202RGBCompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -4120,15 +4156,15 @@ uchar3 I4202RGBCompute(const uchar3 src) {
 }
 #endif
 
-#if defined(I4202BGR_U8_2D) || defined(SPIR)
+#if defined(I4202BGR_U8_2D) || defined(ALL_KERNELS)
 ConvertFromI420_2D(I4202BGR, U8)
 #endif
 
-#if defined(I4202RGB_U8_2D) || defined(SPIR)
+#if defined(I4202RGB_U8_2D) || defined(ALL_KERNELS)
 ConvertFromI420_2D(I4202RGB, U8)
 #endif
 
-#if defined(I4202BGRA_U8_2D) || defined(I4202RGBA_U8_2D) || defined(SPIR)
+#if defined(I4202BGRA_U8_2D) || defined(I4202RGBA_U8_2D) || defined(ALL_KERNELS)
 #define Convert3To4I420_2D(Function, base_type)                                \
 __kernel                                                                       \
 void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
@@ -4160,7 +4196,7 @@ void Function ## base_type ## Kernel0(global const uchar* src, int rows,       \
 #endif
 
 #if defined(I4202BGRA_U8_2D) || defined(I4202BGRA_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar4 I4202BGRACompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -4180,7 +4216,7 @@ uchar4 I4202BGRACompute(const uchar3 src) {
 #endif
 
 #if defined(I4202RGBA_U8_2D) || defined(I4202RGBA_DISCRETE_U8_2D) ||           \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 uchar4 I4202RGBACompute(const uchar3 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -4199,17 +4235,17 @@ uchar4 I4202RGBACompute(const uchar3 src) {
 }
 #endif
 
-#if defined(I4202BGRA_U8_2D) || defined(SPIR)
+#if defined(I4202BGRA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4I420_2D(I4202BGRA, U8)
 #endif
 
-#if defined(I4202RGBA_U8_2D) || defined(SPIR)
+#if defined(I4202RGBA_U8_2D) || defined(ALL_KERNELS)
 Convert3To4I420_2D(I4202RGBA, U8)
 #endif
 
 
 #if defined(BGR2I420_DISCRETE_U8_2D) || defined(RGB2I420_DISCRETE_U8_2D) ||    \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define ConvertToDISCRETE_I420_2D(Function, base_type)                         \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
@@ -4238,16 +4274,16 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(BGR2I420_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGR2I420_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertToDISCRETE_I420_2D(BGR2I420, U8)
 #endif
 
-#if defined(RGB2I420_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGB2I420_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertToDISCRETE_I420_2D(RGB2I420, U8)
 #endif
 
 #if defined(BGRA2I420_DISCRETE_U8_2D) || defined(RGBA2I420_DISCRETE_U8_2D) ||  \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define Convert4To3DISCRETE_I420_2D(Function, base_type)                       \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
@@ -4276,16 +4312,16 @@ void Function ## base_type ## Kernel1(global const uchar* src, int rows,       \
 }
 #endif
 
-#if defined(BGRA2I420_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(BGRA2I420_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert4To3DISCRETE_I420_2D(BGRA2I420, U8)
 #endif
 
-#if defined(RGBA2I420_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(RGBA2I420_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert4To3DISCRETE_I420_2D(RGBA2I420, U8)
 #endif
 
 #if defined(I4202BGR_DISCRETE_U8_2D) || defined(I4202RGB_DISCRETE_U8_2D) ||    \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define ConvertFromDISCRETE_I420_2D(Function, base_type)                       \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
@@ -4316,16 +4352,16 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
 }
 #endif
 
-#if defined(I4202BGR_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(I4202BGR_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertFromDISCRETE_I420_2D(I4202BGR, U8)
 #endif
 
-#if defined(I4202RGB_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(I4202RGB_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 ConvertFromDISCRETE_I420_2D(I4202RGB, U8)
 #endif
 
 #if defined(I4202BGRA_DISCRETE_U8_2D) || defined(I4202RGBA_DISCRETE_U8_2D) ||  \
-    defined(SPIR)
+    defined(ALL_KERNELS)
 #define Convert3To4DISCRETE_I420_2D(Function, base_type)                       \
 __kernel                                                                       \
 void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
@@ -4356,17 +4392,17 @@ void Function ## base_type ## Kernel1(global const uchar* src_y, int rows,     \
 }
 #endif
 
-#if defined(I4202BGRA_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(I4202BGRA_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert3To4DISCRETE_I420_2D(I4202BGRA, U8)
 #endif
 
-#if defined(I4202RGBA_DISCRETE_U8_2D) || defined(SPIR)
+#if defined(I4202RGBA_DISCRETE_U8_2D) || defined(ALL_KERNELS)
 Convert3To4DISCRETE_I420_2D(I4202RGBA, U8)
 #endif
 
 /***************************** YUV2 -> GRAY ******************************/
 
-#if defined(YUV2GRAY_U8_2D) || defined(SPIR)
+#if defined(YUV2GRAY_U8_2D) || defined(ALL_KERNELS)
 __kernel
 void YUV2GRAYU8Kernel(global const uchar* src, int rows, int cols,
                       int src_stride, global uchar* dst, int dst_stride) {
@@ -4406,7 +4442,7 @@ void YUV2GRAYU8Kernel(global const uchar* src, int rows, int cols,
 
 /************************** BGR/GRAY <-> UYVY/YUYV ***************************/
 
-#if defined(UYVY2BGR_U8_2D) || defined(YUYV2BGR_U8_2D) || defined(SPIR)
+#if defined(UYVY2BGR_U8_2D) || defined(YUYV2BGR_U8_2D) || defined(ALL_KERNELS)
 #define ConvertFROM_YUV422_2D(Function, base_type)                             \
 __kernel                                                                       \
 void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
@@ -4430,7 +4466,7 @@ void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
 }
 #endif
 
-#if defined(UYVY2BGR_U8_2D) || defined(SPIR)
+#if defined(UYVY2BGR_U8_2D) || defined(ALL_KERNELS)
 uchar3 UYVY2BGRCompute0(const uchar4 src) {
   int y = max(0, (src.y - 16)) * NVXX_CY;
   int u = src.x - 128;
@@ -4468,7 +4504,7 @@ uchar3 UYVY2BGRCompute1(const uchar4 src) {
 ConvertFROM_YUV422_2D(UYVY2BGR, U8)
 #endif
 
-#if defined(YUYV2BGR_U8_2D) || defined(SPIR)
+#if defined(YUYV2BGR_U8_2D) || defined(ALL_KERNELS)
 uchar3 YUYV2BGRCompute0(const uchar4 src) {
   int y = max(0, (src.x - 16)) * NVXX_CY;
   int u = src.y - 128;
@@ -4506,7 +4542,7 @@ uchar3 YUYV2BGRCompute1(const uchar4 src) {
 ConvertFROM_YUV422_2D(YUYV2BGR, U8)
 #endif
 
-#if defined(UYVY2GRAY_U8_2D) || defined(YUYV2GRAY_U8_2D) || defined(SPIR)
+#if defined(UYVY2GRAY_U8_2D) || defined(YUYV2GRAY_U8_2D) || defined(ALL_KERNELS)
 #define ConvertFROM_YUV422_2D(Function, base_type)                             \
 __kernel                                                                       \
 void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
@@ -4529,7 +4565,7 @@ void Function ## base_type ## Kernel(global const uchar* src, int rows,        \
 }
 #endif
 
-#if defined(UYVY2GRAY_U8_2D) || defined(SPIR)
+#if defined(UYVY2GRAY_U8_2D) || defined(ALL_KERNELS)
 uchar2 UYVY2GRAYCompute(const uchar2 src0, const uchar2 src1) {
   uchar2 dst;
   dst.x = src0.y;
@@ -4541,7 +4577,7 @@ uchar2 UYVY2GRAYCompute(const uchar2 src0, const uchar2 src1) {
 ConvertFROM_YUV422_2D(UYVY2GRAY, U8)
 #endif
 
-#if defined(YUYV2GRAY_U8_2D) || defined(SPIR)
+#if defined(YUYV2GRAY_U8_2D) || defined(ALL_KERNELS)
 uchar2 YUYV2GRAYCompute(const uchar2 src0, const uchar2 src1) {
   uchar2 dst;
   dst.x = src0.x;

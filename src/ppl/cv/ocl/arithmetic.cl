@@ -16,7 +16,7 @@
 
 /******************************* add operation *******************************/
 
-#if defined(ADD_U81D) || defined(SPIR)
+#if defined(ADD_U81D) || defined(ALL_KERNELS)
 __kernel
 void addU8Kernel0(global const uchar* src0, int cols, global const uchar* src1,
                   global uchar* dst) {
@@ -45,7 +45,7 @@ void addU8Kernel0(global const uchar* src0, int cols, global const uchar* src1,
 }
 #endif
 
-#if defined(ADD_U82D) || defined(SPIR)
+#if defined(ADD_U82D) || defined(ALL_KERNELS)
 __kernel
 void addU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
                   global const uchar* src1, int src1_stride, global uchar* dst,
@@ -79,7 +79,7 @@ void addU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
 }
 #endif
 
-#if defined(ADD_F32ALIGNED) || defined(SPIR)
+#if defined(ADD_F32ALIGNED) || defined(ALL_KERNELS)
 __kernel
 void addF32Kernel0(global const float* src0, int rows, int cols,
                    int src0_stride, global const float* src1, int src1_stride,
@@ -102,7 +102,7 @@ void addF32Kernel0(global const float* src0, int rows, int cols,
 }
 #endif
 
-#if defined(ADD_F32UNALIGNED) || defined(SPIR)
+#if defined(ADD_F32UNALIGNED) || defined(ALL_KERNELS)
 __kernel
 void addF32Kernel1(global const float* src0, int rows, int cols,
                    int src0_stride, global const float* src1, int src1_stride,
@@ -133,7 +133,7 @@ void addF32Kernel1(global const float* src0, int rows, int cols,
 
 /*************************** addWeighted operation ***************************/
 
-#if defined(ADDWEIGHTED_U81D) || defined(SPIR)
+#if defined(ADDWEIGHTED_U81D) || defined(ALL_KERNELS)
 __kernel
 void addWeightedU8Kernel0(global const uchar* src0, int cols, float alpha,
                           global const uchar* src1, float beta, float gamma,
@@ -166,7 +166,7 @@ void addWeightedU8Kernel0(global const uchar* src0, int cols, float alpha,
 }
 #endif
 
-#if defined(ADDWEIGHTED_U82D) || defined(SPIR)
+#if defined(ADDWEIGHTED_U82D) || defined(ALL_KERNELS)
 __kernel
 void addWeightedU8Kernel1(global const uchar* src0, int rows, int cols,
                           int src0_stride, float alpha,
@@ -205,7 +205,7 @@ void addWeightedU8Kernel1(global const uchar* src0, int rows, int cols,
 }
 #endif
 
-#if defined(ADDWEIGHTED_F32ALIGNED) || defined(SPIR)
+#if defined(ADDWEIGHTED_F32ALIGNED) || defined(ALL_KERNELS)
 __kernel
 void addWeightedF32Kernel0(global const float* src0, int rows, int cols,
                            int src0_stride, float alpha,
@@ -233,7 +233,7 @@ void addWeightedF32Kernel0(global const float* src0, int rows, int cols,
 }
 #endif
 
-#if defined(ADDWEIGHTED_F32UNALIGNED) || defined(SPIR)
+#if defined(ADDWEIGHTED_F32UNALIGNED) || defined(ALL_KERNELS)
 __kernel
 void addWeightedF32Kernel1(global const float* src0, int rows, int cols,
                            int src0_stride, float alpha,
@@ -269,7 +269,7 @@ void addWeightedF32Kernel1(global const float* src0, int rows, int cols,
 
 /**************************** subtract operation ****************************/
 
-#if defined(SUBTRACT_U81D) || defined(SPIR)
+#if defined(SUBTRACT_U81D) || defined(ALL_KERNELS)
 __kernel
 void subtractU8Kernel0(global const uchar* src0, int cols,
                        global const uchar* src1, global uchar* dst) {
@@ -298,7 +298,7 @@ void subtractU8Kernel0(global const uchar* src0, int cols,
 }
 #endif
 
-#if defined(SUBTRACT_U82D) || defined(SPIR)
+#if defined(SUBTRACT_U82D) || defined(ALL_KERNELS)
 __kernel
 void subtractU8Kernel1(global const uchar* src0, int rows, int cols,
                        int src0_stride, global const uchar* src1,
@@ -332,7 +332,7 @@ void subtractU8Kernel1(global const uchar* src0, int rows, int cols,
 }
 #endif
 
-#if defined(SUBTRACT_F32ALIGNED) || defined(SPIR)
+#if defined(SUBTRACT_F32ALIGNED) || defined(ALL_KERNELS)
 __kernel
 void subtractF32Kernel0(global const float* src0, int rows, int cols,
                         int src0_stride, global const float* src1,
@@ -355,7 +355,7 @@ void subtractF32Kernel0(global const float* src0, int rows, int cols,
 }
 #endif
 
-#if defined(SUBTRACT_F32UNALIGNED) || defined(SPIR)
+#if defined(SUBTRACT_F32UNALIGNED) || defined(ALL_KERNELS)
 __kernel
 void subtractF32Kernel1(global const float* src0, int rows, int cols,
                         int src0_stride, global const float* src1,
@@ -386,7 +386,7 @@ void subtractF32Kernel1(global const float* src0, int rows, int cols,
 
 /**************************** multiply operation *****************************/
 
-#if defined(MUL_U81D) || defined(SPIR)
+#if defined(MUL_U81D) || defined(ALL_KERNELS)
 __kernel
 void mulU8Kernel0(global const uchar* src0, int cols, global const uchar* src1,
                   float scale, global uchar* dst) {
@@ -424,7 +424,7 @@ void mulU8Kernel0(global const uchar* src0, int cols, global const uchar* src1,
 }
 #endif
 
-#if defined(MUL_U82D) || defined(SPIR)
+#if defined(MUL_U82D) || defined(ALL_KERNELS)
 __kernel
 void mulU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
                   global const uchar* src1, int src1_stride, float scale,
@@ -467,7 +467,7 @@ void mulU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
 }
 #endif
 
-#if defined(MUL_F32ALIGNED) || defined(SPIR)
+#if defined(MUL_F32ALIGNED) || defined(ALL_KERNELS)
 __kernel
 void mulF32Kernel0(global const float* src0, int rows, int cols,
                    int src0_stride, global const float* src1, int src1_stride,
@@ -491,7 +491,7 @@ void mulF32Kernel0(global const float* src0, int rows, int cols,
 }
 #endif
 
-#if defined(MUL_F32UNALIGNED) || defined(SPIR)
+#if defined(MUL_F32UNALIGNED) || defined(ALL_KERNELS)
 __kernel
 void mulF32Kernel1(global const float* src0, int rows, int cols,
                    int src0_stride, global const float* src1, int src1_stride,
@@ -523,7 +523,7 @@ void mulF32Kernel1(global const float* src0, int rows, int cols,
 
 /**************************** divide operation *****************************/
 
-#if defined(DIV_U81D) || defined(SPIR)
+#if defined(DIV_U81D) || defined(ALL_KERNELS)
 __kernel
 void divU8Kernel0(global const uchar* src0, int cols, global const uchar* src1,
                   float scale, global uchar* dst) {
@@ -557,7 +557,7 @@ void divU8Kernel0(global const uchar* src0, int cols, global const uchar* src1,
 }
 #endif
 
-#if defined(DIV_U82D) || defined(SPIR)
+#if defined(DIV_U82D) || defined(ALL_KERNELS)
 __kernel
 void divU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
                   global const uchar* src1, int src1_stride, float scale,
@@ -596,7 +596,7 @@ void divU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
 }
 #endif
 
-#if defined(DIV_F32ALIGNED) || defined(SPIR)
+#if defined(DIV_F32ALIGNED) || defined(ALL_KERNELS)
 __kernel
 void divF32Kernel0(global const float* src0, int rows, int cols,
                    int src0_stride, global const float* src1, int src1_stride,
@@ -623,7 +623,7 @@ void divF32Kernel0(global const float* src0, int rows, int cols,
 }
 #endif
 
-#if defined(DIV_F32UNALIGNED) || defined(SPIR)
+#if defined(DIV_F32UNALIGNED) || defined(ALL_KERNELS)
 __kernel
 void divF32Kernel1(global const float* src0, int rows, int cols,
                    int src0_stride, global const float* src1, int src1_stride,

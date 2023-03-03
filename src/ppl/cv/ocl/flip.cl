@@ -14,7 +14,7 @@
  * under the License.
  */
 
-#if defined(FLIP_U8C1) || defined(SPIR)
+#if defined(FLIP_U8C1) || defined(ALL_KERNELS)
 __kernel
 void flipU8Kernel0(global const uchar* src, int rows, int cols, int src_stride,
                    global uchar* dst, int dst_stride, int flip_code) {
@@ -108,7 +108,7 @@ void flipU8Kernel0(global const uchar* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(FLIP_U8C3) || defined(SPIR)
+#if defined(FLIP_U8C3) || defined(ALL_KERNELS)
 __kernel
 void flipU8Kernel1(global const uchar* src, int rows, int cols, int src_stride,
                    global uchar* dst, int dst_stride, int flip_code) {
@@ -139,7 +139,7 @@ void flipU8Kernel1(global const uchar* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(FLIP_U8C4) || defined(SPIR)
+#if defined(FLIP_U8C4) || defined(ALL_KERNELS)
 __kernel
 void flipU8Kernel2(global const uchar* src, int rows, int cols, int src_stride,
                    global uchar* dst, int dst_stride, int flip_code) {
@@ -170,7 +170,7 @@ void flipU8Kernel2(global const uchar* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(FLIP_F32C1) || defined(SPIR)
+#if defined(FLIP_F32C1) || defined(ALL_KERNELS)
 __kernel
 void flipF32Kernel0(global const float* src, int rows, int cols, int src_stride,
                     global float* dst, int dst_stride, int flip_code) {
@@ -201,7 +201,7 @@ void flipF32Kernel0(global const float* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(FLIP_F32C3) || defined(SPIR)
+#if defined(FLIP_F32C3) || defined(ALL_KERNELS)
 __kernel
 void flipF32Kernel1(global const float* src, int rows, int cols, int src_stride,
                     global float* dst, int dst_stride, int flip_code) {
@@ -232,7 +232,7 @@ void flipF32Kernel1(global const float* src, int rows, int cols, int src_stride,
 }
 #endif
 
-#if defined(FLIP_F32C4) || defined(SPIR)
+#if defined(FLIP_F32C4) || defined(ALL_KERNELS)
 __kernel
 void flipF32Kernel2(global const float* src, int rows, int cols, int src_stride,
                     global float* dst, int dst_stride, int flip_code) {

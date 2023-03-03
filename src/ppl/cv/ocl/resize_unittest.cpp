@@ -22,7 +22,7 @@
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
 
-#include "ppl/common/ocl/oclcommon.h"
+#include "ppl/common/ocl/pplopencl.h"
 #include "utility/infrastructure.h"
 
 enum Scaling {
@@ -88,9 +88,19 @@ class PplCvOclResizeTest : public ::testing::TestWithParam<Parameters> {
     ppl::common::ocl::createSharedFrameChain(false);
     context = ppl::common::ocl::getSharedFrameChain()->getContext();
     queue   = ppl::common::ocl::getSharedFrameChain()->getQueue();
+
+    bool status = ppl::common::ocl::initializeKernelBinariesManager(
+                      ppl::common::ocl::BINARIES_RETRIEVE);
+    if (status) {
+      ppl::common::ocl::FrameChain* frame_chain =
+          ppl::common::ocl::getSharedFrameChain();
+      frame_chain->setCreatingProgramType(ppl::common::ocl::WITH_BINARIES);
+    }
   }
 
   ~PplCvOclResizeTest() {
+    ppl::common::ocl::shutDownKernelBinariesManager(
+        ppl::common::ocl::BINARIES_RETRIEVE);
   }
 
   bool apply();
