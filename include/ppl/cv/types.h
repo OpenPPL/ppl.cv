@@ -130,6 +130,13 @@ enum {
                                  with CV_THRESH_OTSU */
 };
 
+enum ImageFormats {
+	BMP,
+	JPEG,
+	PNG,
+	UNSUPPORTED,
+};
+
 } // namespace cv
 } // namespace ppl
 

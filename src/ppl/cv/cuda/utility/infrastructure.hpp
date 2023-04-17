@@ -30,6 +30,7 @@
 
 #define EPSILON_1F 1.1f
 #define EPSILON_2F 2.1f
+#define EPSILON_3F 3.1f
 #define EPSILON_4F 4.1f
 #define EPSILON_E1 1e-1
 #define EPSILON_E2 1e-2
