@@ -23,11 +23,14 @@ file(GLOB PPLCV_X86_AVX_SRC
      src/ppl/cv/x86/avx/*.cpp)
 file(GLOB PPLCV_X86_FMA_SRC
      src/ppl/cv/x86/fma/*.cpp)
+file(GLOB PPLCV_X86_IMGCODECS
+     src/ppl/cv/x86/imgcodecs/*.cpp)
 
 set(PPLCV_X86_SRC
     ${PPLCV_X86_SSE_SRC}
     ${PPLCV_X86_AVX_SRC}
-    ${PPLCV_X86_FMA_SRC})
+    ${PPLCV_X86_FMA_SRC}
+    ${PPLCV_X86_IMGCODECS})
 
 foreach(filename ${PPLCV_X86_FMA_SRC})
     set_source_files_properties(${filename} PROPERTIES COMPILE_FLAGS "${FMA_ENABLED_FLAGS}")
@@ -38,6 +41,9 @@ endforeach()
 foreach(filename ${PPLCV_X86_SSE_SRC})
     set_source_files_properties(${filename} PROPERTIES COMPILE_FLAGS "${SSE_ENABLED_FLAGS}")
 endforeach()
+# foreach(filename ${PPLCV_X86_IMGCODECS})
+#     set_source_files_properties(${filename} PROPERTIES COMPILE_FLAGS "-O2 -g")
+# endforeach()
 
 if(USE_X86_OMP)
     FIND_PACKAGE(OpenMP REQUIRED)

@@ -1,0 +1,134 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License. You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+#include "ppl/cv/x86/imread.h"
+#include "imgcodecs/bytesreader.h"
+#include "imgcodecs/imagecodecs.h"
+#include "imgcodecs/bmp.h"
+#include "imgcodecs/jpeg.h"
+#include "imgcodecs/codecs.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include <iostream> // debug
+
+#include "ppl/common/log.h"
+
+using namespace ppl::common;
+
+namespace ppl {
+namespace cv {
+namespace x86 {
+
+bool detectFormat(BytesReader& file_data, ImageFormats* image_format) {
+    const char* bmp_signature  = "BM";
+    const char* jpeg_signature = "\xFF\xD8\xFF";
+    const char* png_signature  = "\x89\x50\x4e\x47\xd\xa\x1a\xa";
+
+    const char* file_signature = (char*)file_data.data();
+
+    int matched;
+    matched = memcmp(bmp_signature, file_signature, 2);
+    if (matched == 0) {
+        *image_format = BMP;
+        return true;
+    }
+    matched = memcmp(jpeg_signature, file_signature, 3);
+    if (matched == 0) {
+        *image_format = JPEG;
+        // std::cout << "JPEG file." << std::endl;
+        return true;
+    }
+    matched = memcmp(png_signature, file_signature, 8);
+    if (matched == 0) {
+        *image_format = PNG;
+        return true;
+    }
+
+    *image_format = UNSUPPORTED;
+    return false;
+}
+
+RetCode Imread(const char* file_name, int* height, int* width, int* channels,
+               int* stride, uchar** image) {
+    assert(file_name != nullptr);
+    assert(height != nullptr);
+    assert(width != nullptr);
+    assert(channels != nullptr);
+    assert(stride != nullptr);
+    assert(image != nullptr);
+
+    RetCode code = RC_SUCCESS;
+    FILE* fp = fopen(file_name, "rb");
+    if (fp == nullptr) {
+        LOG(ERROR) << "failed to open the input file: " << file_name;
+        return RC_OTHER_ERROR;
+    }
+
+    BytesReader file_data(fp);
+    ImageFormats image_format;
+    bool succeeded = detectFormat(file_data, &image_format);
+    if (succeeded == false) {
+        if (image_format == UNSUPPORTED) {
+            LOG(ERROR) << "unsupported image format.";
+        }
+        fclose(fp);
+        return RC_OTHER_ERROR;
+    }
+
+    ImageDecoder* decoder = nullptr;
+    if (image_format == BMP) {
+        decoder = new BmpDecoder(file_data);
+    }
+    else if (image_format == JPEG) {
+        decoder = new JpegDecoder(file_data);
+    }
+    else {  // image_format == PNG
+    }
+
+    succeeded = decoder->readHeader();
+    if (succeeded == false) {
+        LOG(ERROR) << "failed to read file header.";
+        fclose(fp);
+        return RC_OTHER_ERROR;
+    }
+
+    *height   = decoder->height();
+    *width    = decoder->width();
+    *channels = decoder->channels();
+    *stride   = (decoder->width() * decoder->channels() + 3) & -4;
+    size_t size = (*stride) * (*height);
+    assert(size < MAX_IMAGE_SIZE);
+    (*image) = (uchar*)malloc(size);
+    // std::cout << "File info: " << std::dec << *height << ", " << *width << ", "
+    //           << *channels << ", " << *stride << std::endl;
+
+    succeeded = decoder->decodeData(*stride, (*image));
+    if (succeeded == false) {
+        LOG(ERROR) << "failed to decode the file data.";
+        fclose(fp);
+        return RC_OTHER_ERROR;
+    }
+    fclose(fp);
+
+    return code;
+}
+
+}  // namespace x86
+}  // namespace cv
+}  // namespace ppl

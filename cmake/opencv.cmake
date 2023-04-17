@@ -14,7 +14,7 @@ if(PPLCV_USE_RISCV)
 endif()
 
 set(BUILD_PNG ON CACHE BOOL "")
-set(BUILD_LIST "ximgproc,core,imgproc,features2d,flann,calib3d,${BUILD_LIST}" CACHE INTERNAL "")
+set(BUILD_LIST "ximgproc,core,imgproc,imgcodecs,features2d,flann,calib3d,${BUILD_LIST}" CACHE INTERNAL "")
 
 hpcc_populate_dep(opencv_contrib)
 hpcc_populate_dep(opencv)
@@ -30,8 +30,9 @@ list(APPEND opencv_INCLUDE_DIRECTORIES
     ${opencv_SOURCE_DIR}/modules/flann/include
     ${opencv_SOURCE_DIR}/modules/calib3d/include
     ${opencv_SOURCE_DIR}/modules/core/include
-    ${opencv_SOURCE_DIR}/modules/imgproc/include)
-list(APPEND opencv_LIBRARIES opencv_ximgproc opencv_imgproc opencv_core)
+    ${opencv_SOURCE_DIR}/modules/imgproc/include
+    ${opencv_SOURCE_DIR}/modules/imgcodecs/include)
+list(APPEND opencv_LIBRARIES opencv_ximgproc opencv_imgproc opencv_core opencv_imgcodecs)
 
 if(PPLCV_USE_CUDA)
     list(APPEND opencv_INCLUDE_DIRECTORIES
