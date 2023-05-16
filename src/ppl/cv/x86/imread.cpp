@@ -20,6 +20,7 @@
 #include "imgcodecs/imagecodecs.h"
 #include "imgcodecs/bmp.h"
 #include "imgcodecs/jpeg.h"
+#include "imgcodecs/png.h"
 #include "imgcodecs/codecs.h"
 
 #include <stdio.h>
@@ -38,7 +39,10 @@ namespace x86 {
 bool detectFormat(BytesReader& file_data, ImageFormats* image_format) {
     const char* bmp_signature  = "BM";
     const char* jpeg_signature = "\xFF\xD8\xFF";
-    const char* png_signature  = "\x89\x50\x4e\x47\xd\xa\x1a\xa";
+    // const char* png_signature  = "\x89\x50\x4e\x47\xd\xa\x1a\xa";
+    const char png_signature[] = {(int8_t)0x89, (int8_t)0x50, (int8_t)0x4E,
+                                  (int8_t)0x47, (int8_t)0x0D, (int8_t)0x0A,
+                                  (int8_t)0x1A, (int8_t)0x0A};
 
     const char* file_signature = (char*)file_data.data();
 
@@ -46,17 +50,20 @@ bool detectFormat(BytesReader& file_data, ImageFormats* image_format) {
     matched = memcmp(bmp_signature, file_signature, 2);
     if (matched == 0) {
         *image_format = BMP;
+        // file_data.skip(2);
         return true;
     }
     matched = memcmp(jpeg_signature, file_signature, 3);
     if (matched == 0) {
         *image_format = JPEG;
+        // file_data.skip(3);
         // std::cout << "JPEG file." << std::endl;
         return true;
     }
     matched = memcmp(png_signature, file_signature, 8);
     if (matched == 0) {
         *image_format = PNG;
+        file_data.skip(8);
         return true;
     }
 
@@ -98,7 +105,10 @@ RetCode Imread(const char* file_name, int* height, int* width, int* channels,
     else if (image_format == JPEG) {
         decoder = new JpegDecoder(file_data);
     }
-    else {  // image_format == PNG
+    else if (image_format == PNG) {
+        decoder = new PngDecoder(file_data);
+    }
+    else {
     }
 
     succeeded = decoder->readHeader();
@@ -115,8 +125,8 @@ RetCode Imread(const char* file_name, int* height, int* width, int* channels,
     size_t size = (*stride) * (*height);
     assert(size < MAX_IMAGE_SIZE);
     (*image) = (uchar*)malloc(size);
-    // std::cout << "File info: " << std::dec << *height << ", " << *width << ", "
-    //           << *channels << ", " << *stride << std::endl;
+    std::cout << "Detected file info: " << /* std::dec << */ *height << ", " << *width << ", "
+              << *channels << ", " << *stride << std::endl;
 
     succeeded = decoder->decodeData(*stride, (*image));
     if (succeeded == false) {
