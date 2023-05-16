@@ -31,6 +31,10 @@ namespace x86 {
 
 // huffman decoding acceleration
 #define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
+#define BIT_BUFFER_SIZE 32
+#define SHIFT_SIZE 24
+// #define BIT_BUFFER_SIZE 64
+// #define SHIFT_SIZE 56
 
 typedef uint8_t *(*resampleRow)(uint8_t *out, uint8_t *in0, uint8_t *in1,
                                 int32_t width, int32_t hs);
@@ -47,9 +51,9 @@ typedef struct {
 typedef struct {
     uint8_t  fast[1 << FAST_BITS];
     // weirdly, repacking this into AoS is a 10% speed loss, instead of a win
-    uint16_t code[256];    // huffman code
+    uint16_t code[256];    // bit code
     uint8_t  values[256];  // the stored symbol/code value
-    uint8_t  size[257];    // code lengths/width
+    uint8_t  size[257];    // bit lengths of code
     uint32_t maxcode[18];
     int32_t  delta[17];    // old 'firstsymbol' - old 'firstcode'
 } HuffmanLookupTable;
@@ -81,6 +85,7 @@ typedef struct {
         int32_t coeff_w, coeff_h; // number of 8x8 coefficient blocks
     } img_comp[4];
 
+    // uint64_t code_buffer; // jpeg entropy-coded buffer
     uint32_t code_buffer; // jpeg entropy-coded buffer
     int32_t code_bits;    // number of valid bits
     uint8_t marker;       // marker seen while filling entropy buffer
@@ -188,6 +193,8 @@ class JpegDecoder : public ImageDecoder {
     BytesReader* file_data_;
     JpegDecodeData* jpeg_;
     YCrCb2BGR_i* ycrcb2bgr_;
+    size_t shortcode;
+    size_t longcode;
 };
 
 } //! namespace x86

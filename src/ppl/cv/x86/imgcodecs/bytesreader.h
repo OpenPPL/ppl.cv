@@ -44,6 +44,7 @@ class BytesReader {
     int getWordBigEndian();
     int getDWord();
     int getDWordBigEndian();
+    uint32_t getDWordBigEndian1();
 
   private:
     FILE* fp_;

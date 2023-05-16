@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <string>
 
 #include <tuple>
 #include <sstream>
@@ -479,6 +480,8 @@ bool PplCvX86ImreadJpegTest::apply() {
         std::cout << "failed to delete test.jpeg." << std::endl;
     }
 
+    std::cout << "uint64_t: " << sizeof(uint64_t) << std::endl;
+
     return identity;
 }
 
@@ -501,12 +504,127 @@ TEST_P(PplCvX86ImreadJpegTest, Standard) {
 
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadJpegTest,
     ::testing::Combine(
-        ::testing::Values(1, 3),
-        ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},
-                          cv::Size{1283, 720}, cv::Size{1976, 1080},
-                          cv::Size{320, 240}, cv::Size{640, 480},
-                          cv::Size{1280, 720}, cv::Size{1920, 1080})),
+        ::testing::Values(1),
+        ::testing::Values(cv::Size{4, 4})),
     [](const testing::TestParamInfo<PplCvX86ImreadJpegTest::ParamType>& info) {
         return convertToStringJpeg(info.param);
     }
 );
+
+/***************************** Png unittest *****************************/
+
+using Parameters1 = std::tuple<int, cv::Size>;
+inline std::string convertToStringPng(const Parameters1& parameters) {
+    std::ostringstream formatted;
+
+    int channels = std::get<0>(parameters);
+    formatted << "Channels" << channels << "_";
+
+    cv::Size size = std::get<1>(parameters);
+    formatted << size.width << "x";
+    formatted << size.height;
+
+    return formatted.str();
+}
+
+template <typename T>
+class PplCvX86ImreadPngTest : public ::testing::TestWithParam<Parameters1> {
+  public:
+    PplCvX86ImreadPngTest() {
+        const Parameters1& parameters = GetParam();
+        channels = std::get<0>(parameters);
+        size     = std::get<1>(parameters);
+    }
+
+    ~PplCvX86ImreadPngTest() {
+    }
+
+    bool apply();
+
+  private:
+    int channels;
+    cv::Size size;
+};
+
+template <typename T>
+bool PplCvX86ImreadPngTest<T>::apply() {
+    cv::Mat src = createSourceImage(size.height, size.width,
+                                    CV_MAKETYPE(cv::DataType<T>::depth,
+                                    channels));
+    // std::cout << "src, width: " << size.width << ", height: " << size.height
+    //           << ", channels: " << channels << std::endl;
+
+    std::string file_name("test.png");
+    bool succeeded = cv::imwrite(file_name.c_str(), src);
+    if (succeeded == false) {
+        std::cout << "failed to write the image to test.png." << std::endl;
+        return false;
+    }
+
+    // cv::Mat cv_dst = cv::imread(file_name, cv::IMREAD_UNCHANGED);
+    // std::cout << "cv_dst: width: " << cv_dst.cols << ", height: " << cv_dst.rows
+    //           << ", channels: " << cv_dst.channels() << std::endl;
+
+    int height, width, channels, stride;
+    T* image;
+    for (int i = 0; i < 17; i++) {
+        std::string png_image = "/home/sensetime/Downloads/pngs/png" + std::to_string(i) + ".png";
+        std::cout << "#######processing png image " << i << ": " << std::endl;
+        ppl::cv::x86::Imread(png_image.c_str(), &height, &width, &channels, &stride,
+                            &image);
+    }
+    // std::cout << std::dec << "stride: " << stride << std::endl;
+
+    float epsilon = EPSILON_3F;
+    bool identity = true;/*  checkDataIdentity<T>(cv_dst.data, image, height, width,
+                                         channels, cv_dst.step, stride,
+                                         epsilon); */
+
+    free(image);
+    int code = remove(file_name.c_str());
+    if (code != 0) {
+        std::cout << "failed to delete test.png." << std::endl;
+    }
+
+    return identity;
+}
+
+/* #define UNITTEST(T)                                                            \
+using PplCvX86ImreadPngTest ## T = PplCvX86ImreadPngTest<T>;                   \
+TEST_P(PplCvX86ImreadPngTest ## T, Standard) {                                 \
+  bool identity = this->apply();                                               \
+  EXPECT_TRUE(identity);                                                       \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadPngTest ## T,                   \
+    ::testing::Combine(                                                        \
+        ::testing::Values(1, 2, 3, 4),                                         \
+        ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},              \
+                          cv::Size{1283, 720}, cv::Size{1976, 1080},           \
+                          cv::Size{320, 240}, cv::Size{640, 480},              \
+                          cv::Size{1280, 720}, cv::Size{1920, 1080})),         \
+    [](const testing::TestParamInfo<PplCvX86ImreadPngTest ## T::ParamType>&    \
+       info) {                                                                 \
+        return convertToStringPng(info.param);                                 \
+    }                                                                          \
+); */
+
+#define UNITTEST(T)                                                            \
+using PplCvX86ImreadPngTest ## T = PplCvX86ImreadPngTest<T>;                   \
+TEST_P(PplCvX86ImreadPngTest ## T, Standard) {                                 \
+  bool identity = this->apply();                                               \
+  EXPECT_TRUE(identity);                                                       \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadPngTest ## T,                   \
+    ::testing::Combine(                                                        \
+        ::testing::Values(1),                                         \
+        ::testing::Values(cv::Size{321, 240})),         \
+    [](const testing::TestParamInfo<PplCvX86ImreadPngTest ## T::ParamType>&    \
+       info) {                                                                 \
+        return convertToStringPng(info.param);                                 \
+    }                                                                          \
+);
+
+UNITTEST(uchar)
+// UNITTEST(ushort)

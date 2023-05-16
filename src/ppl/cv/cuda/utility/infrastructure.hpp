@@ -72,7 +72,8 @@ void randomImage(cv::Mat& image, int basic_type, int channels) {
   AUX_ASSERT(image.data != nullptr);
   AUX_ASSERT(image.rows >= 1 && image.cols >= 1);
   AUX_ASSERT(basic_type == CV_8U || basic_type == CV_8S ||
-             basic_type == CV_32F || basic_type == CV_64F);
+             basic_type == CV_16U || basic_type == CV_32F ||
+             basic_type == CV_64F);
   AUX_ASSERT(channels == 1 || channels == 2 || channels == 3 || channels == 4);
 
   int rows = image.rows;
@@ -105,6 +106,18 @@ void randomImage(cv::Mat& image, int basic_type, int channels) {
         }
         if (channels == 4) {
           element[3] = 255;
+        }
+      }
+      else if (basic_type == CV_16U) {
+        element[0] = rand() % 65536;
+        if (channels >= 2) {
+          element[1] = rand() % 65536;
+        }
+        if (channels >= 3) {
+          element[2] = rand() % 65536;
+        }
+        if (channels == 4) {
+          element[3] = 65535;
         }
       }
       else if (basic_type == CV_32F) {
@@ -230,6 +243,8 @@ cv::Mat createSourceImage(int rows, int cols, int type) {
              type == CV_8UC3 || type == CV_8UC4 ||
              type == CV_8SC1 || type == CV_8SC2 ||
              type == CV_8SC3 || type == CV_8SC4 ||
+             type == CV_16UC1 || type == CV_16UC2 ||
+             type == CV_16UC3 || type == CV_16UC4 ||
              type == CV_32FC1 || type == CV_32FC2 ||
              type == CV_32FC3 || type == CV_32FC4 ||
              type == CV_64FC1 || type == CV_64FC2 ||
@@ -260,6 +275,18 @@ cv::Mat createSourceImage(int rows, int cols, int type) {
   }
   else if (type == CV_8SC4) {
     randomImage<char>(image, CV_8S, 4);
+  }
+  else if (type == CV_16UC1) {
+    randomImage<unsigned short>(image, CV_16U, 1);
+  }
+  else if (type == CV_16UC2) {
+    randomImage<unsigned short>(image, CV_16U, 2);
+  }
+  else if (type == CV_16UC3) {
+    randomImage<unsigned short>(image, CV_16U, 3);
+  }
+  else if (type == CV_16UC4) {
+    randomImage<unsigned short>(image, CV_16U, 4);
   }
   else if (type == CV_32FC1) {
     randomImage<float>(image, CV_32F, 1);
@@ -447,6 +474,8 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
              image0.type() == CV_8UC3 || image0.type() == CV_8UC4 ||
              image0.type() == CV_8SC1 || image0.type() == CV_8SC2 ||
              image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
+             image0.type() == CV_16UC1 || image0.type() == CV_16UC2 ||
+             image0.type() == CV_16UC3 || image0.type() == CV_16UC4 ||
              image0.type() == CV_16SC1 || image0.type() == CV_16SC2 ||
              image0.type() == CV_16SC3 || image0.type() == CV_16SC4 ||
              image0.type() == CV_32SC1 || image0.type() == CV_32SC2 ||
@@ -529,6 +558,8 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
              image0.type() == CV_8UC3 || image0.type() == CV_8UC4 ||
              image0.type() == CV_8SC1 || image0.type() == CV_8SC2 ||
              image0.type() == CV_8SC3 || image0.type() == CV_8SC4 ||
+             image0.type() == CV_16UC1 || image0.type() == CV_16UC2 ||
+             image0.type() == CV_16UC3 || image0.type() == CV_16UC4 ||
              image0.type() == CV_16SC1 || image0.type() == CV_16SC2 ||
              image0.type() == CV_16SC3 || image0.type() == CV_16SC4 ||
              image0.type() == CV_32SC1 || image0.type() == CV_32SC2 ||

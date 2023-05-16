@@ -110,6 +110,13 @@ int BytesReader::getBytes(void* buffer, int count) {
     uchar* data = (uchar*)buffer;
     int readed = 0;
 
+    // if (count <= ) {
+    //     memcpy();
+    //     return readed;
+    // }
+    // else {
+    // }
+
     while (count > 0) {
         int left;
 
@@ -187,6 +194,26 @@ int BytesReader::getDWord() {
 int BytesReader::getDWordBigEndian() {
     uchar *current = current_;
     int value;
+
+    if (current + 3 < end_) {
+        value = (current[0] << 24) + (current[1] << 16) + (current[2] << 8) +
+                current[3];
+        current_ = current + 4;
+    }
+    else {
+        value  = getByte() << 24;
+        value |= getByte() << 16;
+        value |= getByte() << 8;
+        value |= getByte();
+    }
+
+    // std::cout << "getDWordBigEndian: " << std::dec << value << std::endl;
+    return value;
+}
+
+uint32_t BytesReader::getDWordBigEndian1() {
+    uchar *current = current_;
+    uint32_t value;
 
     if (current + 3 < end_) {
         value = (current[0] << 24) + (current[1] << 16) + (current[2] << 8) +
