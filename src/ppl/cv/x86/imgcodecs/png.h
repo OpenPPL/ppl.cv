@@ -20,6 +20,7 @@
 
 #include "imagecodecs.h"
 #include "bytesreader.h"
+#include "crc32.h"
 
 #include <string>
 
@@ -164,9 +165,12 @@ class PngDecoder : public ImageDecoder {
 
     void releaseSource();
     std::string getChunkName(uint32_t chunk_type);
+    bool setCrc32();
+    bool isCrcCorrect();
 
   private:
     BytesReader* file_data_;
+    Crc32 crc32_;
     PngInfo png_info_;
     uint8_t bit_depth_;
     uint8_t color_type_;

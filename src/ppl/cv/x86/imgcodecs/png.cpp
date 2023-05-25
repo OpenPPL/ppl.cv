@@ -73,7 +73,9 @@ PngDecoder::PngDecoder(BytesReader& file_data) {
     png_info_.palette_length = 0;
     png_info_.color_palette = nullptr;
     png_info_.alpha_palette = nullptr;
+    png_info_.chunk_status = 0;
 
+    // crc32_.turnOff();
     // jpeg_ = (JpegDecodeData*) malloc(sizeof(JpegDecodeData));
     // if (jpeg_ == nullptr) {
     //    LOG(ERROR) << "No enough memory to initialize PngDecoder.";
@@ -105,6 +107,17 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
                    << ", correct bytes: 13.";
         return false;
     }
+
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
+    // uint32_t crc2 = crc32(0, nullptr, 0);
+    // std::cout << "$$$$chunk type crc2: " << crc2 << std::endl;
+    // crc2 = crc32(crc2, ((uint8_t*)(&png_info.current_chunk.type)), 4);
+    // std::cout << "$$$$chunk type crc2: " << crc2 << std::endl;
+    // uint8_t* buffer = file_data_->getCurrentPosition();
+    // crc2 = crc32(crc2, buffer, png_info.current_chunk.length);
+    // std::cout << "crc2: " << crc2 << std::endl;
 
     width_ = file_data_->getDWordBigEndian1();
     height_ = file_data_->getDWordBigEndian1();
@@ -151,6 +164,10 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
         return false;
     }
 
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
+
     if (color_type_ == 0) {
         channels_ = 1;
     }
@@ -188,6 +205,11 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
         return false;
     }
 
+    if (bit_depth_ == 16) {
+        LOG(ERROR) << "This implementation does not support bit depth 16.";
+        return false;
+    }
+
     std::cout << "IHDR chunk appear." << std::endl;
     std::cout << "width_: " << width_ << ", height_: " << height_
               << ", bit_depth_: " << (uint32_t)bit_depth_ << ", color_type_: " << (uint32_t)color_type_
@@ -220,6 +242,9 @@ bool PngDecoder::parsePLTE(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     uint32_t length = png_info.current_chunk.length / 3;
     png_info.palette_length = length;
     png_info.color_palette = new PlteEntry[length];
@@ -231,6 +256,10 @@ bool PngDecoder::parsePLTE(PngInfo& png_info) {
         return false;
     }
     png_info.chunk_status |= HAVE_PLTE;
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     std::cout << "PLTE chunk appear, the color palette: " << std::endl;
     for (uint32_t index = 0; index < length; index++) {
@@ -249,8 +278,15 @@ bool PngDecoder::parseIDAT(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     std::cout << "IDAT size: " << png_info.current_chunk.length << std::endl; //
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     png_info.chunk_status |= HAVE_IDAT;
 
@@ -270,6 +306,18 @@ bool PngDecoder::parseIEND(PngInfo& png_info) {
     }
     std::cout << "IEND chunk appear." << std::endl;
 
+    // uint32_t crc2 = crc32(0, nullptr, 0);
+    // std::cout << "$$$$IEND, chunk type crc2: " << crc2 << std::endl;
+    // crc2 = crc32(crc2, ((uint8_t*)(&png_info.current_chunk.type)), 4);
+    // std::cout << "$$$$IEND, chunk type crc2: " << crc2 << std::endl;
+
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
+
     return true;
 }
 
@@ -279,6 +327,9 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
                    << "with alpha.";
         return false;
     }
+
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
 
     if (color_type_ == 3) {
         // if (png_info.color_palette == nullptr) {
@@ -360,6 +411,10 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
     }
     png_info.chunk_status |= HAVE_tRNS;
 
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
+
     std::cout << "tRNS chunk appear." << std::endl;
     std::cout << "in tRNS, channels_: " << channels_ << std::endl;
 
@@ -378,8 +433,15 @@ bool PngDecoder::parsecHRM(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(32);
     LOG(INFO) << "The cHRM chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -396,8 +458,15 @@ bool PngDecoder::parsegAMA(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(4);
     LOG(INFO) << "The gAMA chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -420,9 +489,16 @@ bool PngDecoder::parseiCCP(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_iCCP;
     LOG(INFO) << "The iCCP chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -462,8 +538,15 @@ bool PngDecoder::parsesBIT(PngInfo& png_info) {
         }
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     LOG(INFO) << "The sBIT chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -486,9 +569,16 @@ bool PngDecoder::parsesRGB(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(1);
     png_info.chunk_status |= HAVE_sRGB;
     LOG(INFO) << "The sRGB chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -500,8 +590,15 @@ bool PngDecoder::parsetEXt(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     LOG(INFO) << "A tEXt chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -513,8 +610,15 @@ bool PngDecoder::parsezTXt(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     LOG(INFO) << "A zTXt chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -526,8 +630,15 @@ bool PngDecoder::parseiTXt(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     LOG(INFO) << "A iTXt chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -555,9 +666,16 @@ bool PngDecoder::parsebKGD(PngInfo& png_info) {
         }
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_bKGD;
     LOG(INFO) << "The bKGD chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -575,9 +693,16 @@ bool PngDecoder::parsehIST(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_hIST;
     LOG(INFO) << "The hIST chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -589,8 +714,15 @@ bool PngDecoder::parsepHYs(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(9);
     LOG(INFO) << "The pHYs chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -602,8 +734,15 @@ bool PngDecoder::parsesPLT(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(png_info.current_chunk.length);
     LOG(INFO) << "A sPLT chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -615,8 +754,15 @@ bool PngDecoder::parsetIME(PngInfo& png_info) {
         return false;
     }
 
+    bool succeeded = setCrc32();
+    if (!succeeded) return false;
+
     file_data_->skip(7);
     LOG(INFO) << "The tIME chunk is skipped.";
+
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    succeeded = isCrcCorrect();
+    if (!succeeded) return false;
 
     return true;
 }
@@ -628,8 +774,16 @@ bool PngDecoder::parsetUnknownChunk(PngInfo& png_info) {
         return false;
     }
     else {  // ancillary chunk
+        bool succeeded = setCrc32();
+        if (!succeeded) return false;
+
         LOG(INFO) << "Encountering an unknown ancillary chunk: " << chunk_name;
         file_data_->skip(png_info.current_chunk.length);
+
+        png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+        succeeded = isCrcCorrect();
+        if (!succeeded) return false;
+
         return true;
     }
 }
@@ -653,29 +807,83 @@ std::string PngDecoder::getChunkName(uint32_t chunk_type) {
     return chunk_name;
 }
 
+bool PngDecoder::setCrc32() {
+    if (!crc32_.isChecking()) {
+        LOG(INFO) << "Crc32 checksum verification is turned off.";
+        return true;
+    }
+
+    if (png_info_.current_chunk.length != 0) {
+        uint8_t* buffer = file_data_->getCurrentPosition();
+        uint32_t buffer_size = file_data_->getValidSize();
+        crc32_.setCrc(buffer, buffer_size, 0, png_info_.current_chunk.length);
+        file_data_->setCrcChecking(&crc32_);
+        // std::cout << "####png chunk type crc: " << crc32_.getCrcValue() << std::endl;
+        bool succeeded = crc32_.calculateCrc(png_info_.current_chunk.type);  // return false?
+        // std::cout << "####png chunk type crc: " << crc32_.getCrcValue() << std::endl;
+        if (!succeeded) return false;
+        succeeded = crc32_.calculateCrc();
+        if (!succeeded) return false;
+    }
+    else {
+        crc32_.setCrc(nullptr, 0, 0, 0);
+        bool succeeded = crc32_.calculateCrc(png_info_.current_chunk.type);  // return false?
+        if (!succeeded) return false;
+    }
+
+    return true;
+}
+
+bool PngDecoder::isCrcCorrect() {
+    if (!crc32_.isChecking()) return true;
+
+    uint32_t calculated_crc = crc32_.getCrcValue();
+    uint32_t transmitted_crc = png_info_.current_chunk.crc;
+    if (png_info_.current_chunk.length != 0) {
+        file_data_->unsetCrcChecking();
+    }
+
+    // debug
+    std::string chunk_name = getChunkName(png_info_.current_chunk.type);
+    LOG(INFO) << "The crc of Chunk " << chunk_name
+              << ", calculated value: " << calculated_crc
+              << ", transmitted value: " << transmitted_crc;
+
+    if (calculated_crc == transmitted_crc) {
+        return true;
+    }
+    else {
+        std::string chunk_name = getChunkName(png_info_.current_chunk.type);
+        LOG(ERROR) << "The crc of Chunk " << chunk_name << " mismatchs, "
+                   << "calculated value: " << calculated_crc
+                   << ", transmitted value: " << transmitted_crc;
+        return false;
+    }
+}
+
 bool PngDecoder::readHeader() {
     // file_data_->skip(8);
     getChunkHeader(png_info_);
     if (png_info_.current_chunk.type != png_IHDR) {
         std::string chunk_name = getChunkName(png_info_.current_chunk.type);
         // std::string chunk_name = getChunkName(png_IHDR);
-        for (auto c : chunk_name) {
-            std::cout << (uint32_t)c << ", ";
-        }
-        std::cout << "string size: " << chunk_name.size() << std::endl;
-        LOG(ERROR) << "encountering the chunk: "
-                    << chunk_name
-                    << ", expecting an IHDR chunk.";
+        // for (auto c : chunk_name) {
+        //     std::cout << (uint32_t)c << ", ";
+        // }
+        // std::cout << "string size: " << chunk_name.size() << std::endl;
+        LOG(ERROR) << "encountering the chunk: " << chunk_name
+                   << ", expecting an IHDR chunk.";
         LOG(ERROR) << "The first chunk must be IHDR.";
         return false;
     }
 
     bool succeeded = parseIHDR(png_info_);
     if (!succeeded) return false;
+    // return true;  // debug
 
     // png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
     // crc checking.
-    file_data_->skip(4);
+    // file_data_->skip(4);
 
     getChunkHeader(png_info_);
     while (png_info_.current_chunk.type != png_IDAT &&
@@ -747,7 +955,7 @@ bool PngDecoder::readHeader() {
                 break;
         }
 
-        file_data_->skip(4);  // skip crc checking.
+        // file_data_->skip(4);  // skip crc checking.
         getChunkHeader(png_info_);
     }
 
@@ -760,6 +968,7 @@ bool PngDecoder::readHeader() {
 }
 
 bool PngDecoder::decodeData(int32_t stride, uint8_t* image) {
+    // return true;  // debug
     if (png_info_.current_chunk.type != png_IDAT) {
         LOG(ERROR) << "encountering the chunk: "
                    << getChunkName(png_info_.current_chunk.type)
@@ -799,7 +1008,7 @@ bool PngDecoder::decodeData(int32_t stride, uint8_t* image) {
         }
 
         // file_data_->skip(png_info_.current_chunk.length);
-        file_data_->skip(4);  // skip crc checking.
+        // file_data_->skip(4);  // skip crc checking.
         getChunkHeader(png_info_);
     }
 

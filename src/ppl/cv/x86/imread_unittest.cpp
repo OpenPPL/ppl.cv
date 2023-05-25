@@ -566,12 +566,12 @@ bool PplCvX86ImreadPngTest<T>::apply() {
     //           << ", channels: " << cv_dst.channels() << std::endl;
 
     int height, width, channels, stride;
-    T* image;
+    T* image = nullptr;
     for (int i = 0; i < 17; i++) {
         std::string png_image = "/home/sensetime/Downloads/pngs/png" + std::to_string(i) + ".png";
         std::cout << "#######processing png image " << i << ": " << std::endl;
         ppl::cv::x86::Imread(png_image.c_str(), &height, &width, &channels, &stride,
-                            &image);
+                             &image);
     }
     // std::cout << std::dec << "stride: " << stride << std::endl;
 
@@ -579,8 +579,9 @@ bool PplCvX86ImreadPngTest<T>::apply() {
     bool identity = true;/*  checkDataIdentity<T>(cv_dst.data, image, height, width,
                                          channels, cv_dst.step, stride,
                                          epsilon); */
-
-    free(image);
+    if (image != nullptr) {
+        free(image);
+    }
     int code = remove(file_name.c_str());
     if (code != 0) {
         std::cout << "failed to delete test.png." << std::endl;

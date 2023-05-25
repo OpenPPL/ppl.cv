@@ -18,6 +18,8 @@
 #ifndef __ST_HPC_PPL_CV_X86_BYTES_READER_H_
 #define __ST_HPC_PPL_CV_X86_BYTES_READER_H_
 
+#include "crc32.h"
+
 #include <stdio.h>
 
 #include "ppl/cv/types.h"
@@ -45,9 +47,14 @@ class BytesReader {
     int getDWord();
     int getDWordBigEndian();
     uint32_t getDWordBigEndian1();
+    uchar* getCurrentPosition() const;
+    uint32_t getValidSize() const;
+    void setCrcChecking(Crc32* crc);
+    void unsetCrcChecking();
 
   private:
     FILE* fp_;
+    Crc32* crc_;
     uchar* start_;
     uchar* end_;
     uchar* current_;

@@ -29,6 +29,7 @@ namespace x86 {
 
 BytesReader::BytesReader(FILE* fp) {
     fp_ = fp;
+    crc_ = nullptr;
     start_ = new uchar[FILE_BLOCK_SIZE];
     current_ = start_;
     block_position_ = 0;
@@ -76,6 +77,11 @@ void BytesReader::readBlock() {
         LOG(ERROR) << "Error in reading the file.";
     }
     end_ = start_ + readed;
+
+    if (crc_ != nullptr && crc_->isChecking()) {
+        crc_->resetBuffer(start_, readed);
+        crc_->calculateCrc();
+    }
 }
 
 int BytesReader::getByte() {
@@ -217,7 +223,7 @@ uint32_t BytesReader::getDWordBigEndian1() {
 
     if (current + 3 < end_) {
         value = (current[0] << 24) + (current[1] << 16) + (current[2] << 8) +
-                current[3];
+                 current[3];
         current_ = current + 4;
     }
     else {
@@ -229,6 +235,22 @@ uint32_t BytesReader::getDWordBigEndian1() {
 
     // std::cout << "getDWordBigEndian: " << std::dec << value << std::endl;
     return value;
+}
+
+uchar* BytesReader::getCurrentPosition() const {
+    return current_;
+}
+
+uint32_t BytesReader::getValidSize() const {
+    return end_ - current_;
+}
+
+void BytesReader::setCrcChecking(Crc32* crc) {
+    crc_ = crc;
+}
+
+void BytesReader::unsetCrcChecking() {
+    crc_ = nullptr;
 }
 
 } //! namespace x86
