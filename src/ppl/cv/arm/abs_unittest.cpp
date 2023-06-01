@@ -44,6 +44,10 @@ TEST(ABS_FP32, arm)
     AbsTest<float, 3>(720, 1080);
     AbsTest<float, 4>(640, 720);
     AbsTest<float, 4>(720, 1080);
+    // Non-divsiable Cases
+    AbsTest<float, 1>(640, 728);
+    AbsTest<float, 1>(720, 724);
+    AbsTest<float, 1>(720, 723);
 }
 
 TEST(ABS_INT8, arm)
@@ -54,4 +58,8 @@ TEST(ABS_INT8, arm)
     AbsTest<int8_t, 3>(720, 1080);
     AbsTest<int8_t, 4>(640, 720);
     AbsTest<int8_t, 4>(720, 1080);
+    // Non-divsiable Cases
+    AbsTest<int8_t, 1>(640, 728);
+    AbsTest<int8_t, 1>(720, 724);
+    AbsTest<int8_t, 1>(720, 723);
 }
