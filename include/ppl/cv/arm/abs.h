@@ -26,7 +26,7 @@ namespace arm {
 
 /**
 * @brief Calculates an absolute value of each matrix element.
-* @tparam T The data type of input and output image, currently only \a float and int8 is supported.
+* @tparam T The data type of input and output image, currently only \a float and \a int8_t is supported.
 * @tparam nc The number of channels of input image and output image, 1, 3 and 4 are supported.
 * @param height            input image's height
 * @param width             input image's width
@@ -41,9 +41,9 @@ namespace arm {
 * <tr><td>float<td>1
 * <tr><td>float<td>3
 * <tr><td>float<td>4
-* <tr><td>int8<td>1
-* <tr><td>int8<td>3
-* <tr><td>int8<td>4
+* <tr><td>int8_t<td>1
+* <tr><td>int8_t<td>3
+* <tr><td>int8_t<td>4
 * </table>
 * <table>
 * <caption align="left">Requirements</caption>
