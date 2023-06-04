@@ -26,78 +26,79 @@
 #include "utility/infrastructure.hpp"
 
 using Parameters = std::tuple<cv::Size>;
-inline std::string convertToString(const Parameters& parameters) {
-  std::ostringstream formatted;
+inline std::string convertToString(const Parameters& parameters)
+{
+    std::ostringstream formatted;
 
-  cv::Size size = std::get<0>(parameters);
-  formatted << size.width << "x";
-  formatted << size.height;
+    cv::Size size = std::get<0>(parameters);
+    formatted << size.width << "x";
+    formatted << size.height;
 
-  return formatted.str();
+    return formatted.str();
 }
 
 template <typename T, int channels>
 class PplCvArmAbsTest : public ::testing::TestWithParam<Parameters> {
- public:
-  PplCvArmAbsTest() {
-    const Parameters& parameters = GetParam();
-    size = std::get<0>(parameters);
-  }
+public:
+    PplCvArmAbsTest()
+    {
+        const Parameters& parameters = GetParam();
+        size = std::get<0>(parameters);
+    }
 
-  ~PplCvArmAbsTest() {
-  }
+    ~PplCvArmAbsTest() {}
 
-  bool apply();
+    bool apply();
 
- private:
-  cv::Size size;
+private:
+    cv::Size size;
 };
 
 template <typename T, int channels>
-bool PplCvArmAbsTest<T, channels>::apply() {
-  cv::Mat src;
-  src = createSourceImage(size.height, size.width,
-                          CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  cv::Mat dst(size.height, size.width,
-              CV_MAKETYPE(cv::DataType<T>::depth, channels));
-  cv::Mat cv_dst(size.height, size.width,
-                 CV_MAKETYPE(cv::DataType<T>::depth, channels));
+bool PplCvArmAbsTest<T, channels>::apply()
+{
+    cv::Mat src;
+    src = createSourceImage(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat dst(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat cv_dst(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
-  cv_dst = cv::abs(src);
+    cv_dst = cv::abs(src);
 
-  ppl::cv::arm::Abs<T, channels>(src.rows, src.cols,
-      src.step / sizeof(T), (T*)src.data, dst.step / sizeof(T),
-      (T*)dst.data);
+    ppl::cv::arm::Abs<T, channels>(
+        src.rows, src.cols, src.step / sizeof(T), (T*)src.data, dst.step / sizeof(T), (T*)dst.data);
 
-  float epsilon;
-  if (sizeof(T) == 1) {
-    epsilon = EPSILON_1F;
-  }
-  else {
-    epsilon = EPSILON_E6;
-  }
-  bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
+    float epsilon;
+    if (sizeof(T) == 1) {
+        epsilon = EPSILON_1F;
+    } else {
+        epsilon = EPSILON_E6;
+    }
+    bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
 
-  return identity;
+    return identity;
 }
 
-#define UNITTEST(T, channels)                                                  \
-using PplCvArmAbsTest_ ## T ## _ ## channels = PplCvArmAbsTest<T, channels>;   \
-TEST_P(PplCvArmAbsTest_ ## T ## _ ## channels, Standard) {                     \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
-}                                                                              \
-                                                                               \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvArmAbsTest_ ## T ## _ ## channels,       \
-  ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                    \
-                    cv::Size{1283, 720}, cv::Size{1934, 1080},                 \
-                    cv::Size{320, 240}, cv::Size{640, 480},                    \
-                    cv::Size{1280, 720}, cv::Size{1920, 1080}),                \
-  [](const testing::TestParamInfo<                                             \
-      PplCvArmAbsTest_ ## T ## _ ## channels::ParamType>& info) {              \
-    return convertToString(info.param);                                        \
-  }                                                                            \
-);
+#define UNITTEST(T, channels)                                                                                     \
+    using PplCvArmAbsTest_##T##_##channels = PplCvArmAbsTest<T, channels>;                                        \
+    TEST_P(PplCvArmAbsTest_##T##_##channels, Standard)                                                            \
+    {                                                                                                             \
+        bool identity = this->apply();                                                                            \
+        EXPECT_TRUE(identity);                                                                                    \
+    }                                                                                                             \
+                                                                                                                  \
+    INSTANTIATE_TEST_CASE_P(IsEqual,                                                                              \
+                            PplCvArmAbsTest_##T##_##channels,                                                     \
+                            ::testing::Values(cv::Size{321, 240},                                                 \
+                                              cv::Size{642, 480},                                                 \
+                                              cv::Size{1283, 720},                                                \
+                                              cv::Size{1934, 1080},                                               \
+                                              cv::Size{320, 240},                                                 \
+                                              cv::Size{640, 480},                                                 \
+                                              cv::Size{1280, 720},                                                \
+                                              cv::Size{1920, 1080}),                                              \
+                            [](const testing::TestParamInfo<PplCvArmAbsTest_##T##_##channels::ParamType>& info) { \
+                                return convertToString(info.param);                                               \
+                            });
 
 UNITTEST(int8_t, 1)
 UNITTEST(int8_t, 3)

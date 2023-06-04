@@ -32,33 +32,38 @@ namespace {
 template <typename T, int32_t channels>
 void BM_Mla_ppl_aarch64(benchmark::State &state)
 {
-    int32_t width  = state.range(0);
+    int32_t width = state.range(0);
     int32_t height = state.range(1);
-    cv::Mat src0 = createSourceImage(height, width,
-        CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    cv::Mat src1 = createSourceImage(height, width,
-        CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    cv::Mat dst = createSourceImage(height, width,
-        CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    
+    cv::Mat src0 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat src1 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+
     int warmup_iters = 5;
     int perf_iters = 50;
-    
+
     // Warm up the CPU.
     for (int i = 0; i < warmup_iters; i++) {
-        ppl::cv::arm::Mla<T, channels>(src0.rows, src0.cols,
-                src0.step / sizeof(T), (T*)src0.data,
-                src1.step / sizeof(T), (T*)src1.data,
-                dst.step / sizeof(T), (T*)dst.data);
+        ppl::cv::arm::Mla<T, channels>(src0.rows,
+                                       src0.cols,
+                                       src0.step / sizeof(T),
+                                       (T *)src0.data,
+                                       src1.step / sizeof(T),
+                                       (T *)src1.data,
+                                       dst.step / sizeof(T),
+                                       (T *)dst.data);
     }
 
     for (auto _ : state) {
         auto time_start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < perf_iters; i++) {
-            ppl::cv::arm::Mla<T, channels>(src0.rows, src0.cols,
-                src0.step / sizeof(T), (T*)src0.data,
-                src1.step / sizeof(T), (T*)src1.data,
-                dst.step / sizeof(T), (T*)dst.data);
+            ppl::cv::arm::Mla<T, channels>(src0.rows,
+                                           src0.cols,
+                                           src0.step / sizeof(T),
+                                           (T *)src0.data,
+                                           src1.step / sizeof(T),
+                                           (T *)src1.data,
+                                           dst.step / sizeof(T),
+                                           (T *)dst.data);
         }
         auto time_end = std::chrono::high_resolution_clock::now();
         auto duration = time_end - time_start;
@@ -69,20 +74,13 @@ void BM_Mla_ppl_aarch64(benchmark::State &state)
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type)                                             \
-BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c1)->Args({640, 480})->                \
-                   UseManualTime()->Iterations(10);                                 \
-BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c3)->Args({640, 480})->                \
-                   UseManualTime()->Iterations(10);                                 \
-BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c4)->Args({640, 480})->                \
-                   UseManualTime()->Iterations(10);                                 \
-BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c1)->Args({1920, 1080})->              \
-                   UseManualTime()->Iterations(10);                                 \
-BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c3)->Args({1920, 1080})->              \
-                   UseManualTime()->Iterations(10);                                 \
-BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c4)->Args({1920, 1080})->              \
-                   UseManualTime()->Iterations(10);
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type)                                                                    \
+    BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c1)->Args({640, 480})->UseManualTime()->Iterations(10);   \
+    BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c3)->Args({640, 480})->UseManualTime()->Iterations(10);   \
+    BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c4)->Args({640, 480})->UseManualTime()->Iterations(10);   \
+    BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c1)->Args({1920, 1080})->UseManualTime()->Iterations(10); \
+    BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c3)->Args({1920, 1080})->UseManualTime()->Iterations(10); \
+    BENCHMARK_TEMPLATE(BM_Mla_ppl_aarch64, type, c4)->Args({1920, 1080})->UseManualTime()->Iterations(10);
 
 RUN_PPL_CV_TYPE_FUNCTIONS(float)
 
