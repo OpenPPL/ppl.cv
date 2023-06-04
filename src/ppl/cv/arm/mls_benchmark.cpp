@@ -16,33 +16,74 @@
 // under the License.
 
 #include "ppl/cv/arm/arithmetic.h"
+
+#include <chrono>
+
+#include "opencv2/core.hpp"
+#include "benchmark/benchmark.h"
+
 #include "ppl/cv/debug.h"
-#include <memory>
-#include <benchmark/benchmark.h>
-#include <opencv2/imgproc.hpp>
+#include "utility/infrastructure.hpp"
+
+using namespace ppl::cv::debug;
 
 namespace {
 
-template <typename T, int32_t nc>
+template <typename T, int32_t channels>
 void BM_Mls_ppl_aarch64(benchmark::State &state)
 {
     int32_t width  = state.range(0);
     int32_t height = state.range(1);
-    std::unique_ptr<T[]> src0(new T[width * height * nc]);
-    std::unique_ptr<T[]> src1(new T[width * height * nc]);
-    std::unique_ptr<T[]> dst(new T[width * height * nc]);
-    ppl::cv::debug::randomFill<T>(src0.get(), width * height * nc, 0, 1);
-    ppl::cv::debug::randomFill<T>(src1.get(), width * height * nc, 0, 1);
+    cv::Mat src0 = createSourceImage(height, width,
+        CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat src1 = createSourceImage(height, width,
+        CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat dst = createSourceImage(height, width,
+        CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    
+    int warmup_iters = 5;
+    int perf_iters = 50;
+    
+    // Warm up the CPU.
+    for (int i = 0; i < warmup_iters; i++) {
+        ppl::cv::arm::Mls<T, channels>(src0.rows, src0.cols,
+                src0.step / sizeof(T), (T*)src0.data,
+                src1.step / sizeof(T), (T*)src1.data,
+                dst.step / sizeof(T), (T*)dst.data);
+    }
+
     for (auto _ : state) {
-        ppl::cv::arm::Mls<T, nc>(height, width, width * nc, src0.get(), width * nc, src1.get(), width * nc, dst.get());
+        auto time_start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < perf_iters; i++) {
+            ppl::cv::arm::Mls<T, channels>(src0.rows, src0.cols,
+                src0.step / sizeof(T), (T*)src0.data,
+                src1.step / sizeof(T), (T*)src1.data,
+                dst.step / sizeof(T), (T*)dst.data);
+        }
+        auto time_end = std::chrono::high_resolution_clock::now();
+        auto duration = time_end - time_start;
+        auto overall_time = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+        double time = overall_time * 1.0 / perf_iters;
+        state.SetIterationTime(time * 1e-6);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-using namespace ppl::cv::debug;
 
-BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, float, c1)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, float, c3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, float, c4)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type)                                             \
+BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, type, c1)->Args({640, 480})->                \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, type, c3)->Args({640, 480})->                \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, type, c4)->Args({640, 480})->                \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, type, c1)->Args({1920, 1080})->              \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, type, c3)->Args({1920, 1080})->              \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Mls_ppl_aarch64, type, c4)->Args({1920, 1080})->              \
+                   UseManualTime()->Iterations(10);
+
+RUN_PPL_CV_TYPE_FUNCTIONS(float)
 
 } // namespace

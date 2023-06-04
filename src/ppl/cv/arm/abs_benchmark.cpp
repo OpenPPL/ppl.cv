@@ -16,58 +16,118 @@
 // under the License.
 
 #include "ppl/cv/arm/abs.h"
+
+#include <chrono>
+
+#include "opencv2/core.hpp"
+#include "benchmark/benchmark.h"
+
 #include "ppl/cv/debug.h"
-#include <memory>
-#include <benchmark/benchmark.h>
-#include <opencv2/imgproc.hpp>
+#include "utility/infrastructure.hpp"
+
+using namespace ppl::cv::debug;
+
 namespace {
 
-template<typename T, int nc>
-void BM_Abs_ppl_arm(benchmark::State &state) {
+template<typename T, int channels>
+void BM_Abs_ppl_aarch64(benchmark::State &state) {
     int width = state.range(0);
     int height = state.range(1);
-    std::unique_ptr<float[]> src(new float[width * height * nc]);
-    std::unique_ptr<float[]> dst(new float[width * height * nc]);
-    ppl::cv::debug::randomFill<float>(src.get(), width * height * nc, 0, 1);
+    cv::Mat src = createSourceImage(height, width,
+        CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    
+    int warmup_iters = 5;
+    int perf_iters = 50;
+    
+    // Warm up the CPU.
+    for (int i = 0; i < warmup_iters; i++) {
+        ppl::cv::arm::Abs<T, channels>(src.rows, src.cols,
+                src.step / sizeof(T), (T*)src.data, dst.step / sizeof(T),
+                (T*)dst.data);
+    }
+
     for (auto _ : state) {
-        ppl::cv::arm::Abs<float, nc>(height, width, width * nc, src.get(),
-                                                    width * nc, dst.get());
+        auto time_start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < perf_iters; i++) {
+            ppl::cv::arm::Abs<T, channels>(src.rows, src.cols,
+                src.step / sizeof(T), (T*)src.data, dst.step / sizeof(T),
+                (T*)dst.data);
+        }
+        auto time_end = std::chrono::high_resolution_clock::now();
+        auto duration = time_end - time_start;
+        auto overall_time = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+        double time = overall_time * 1.0 / perf_iters;
+        state.SetIterationTime(time * 1e-6);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type)                                             \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_aarch64, type, c1)->Args({640, 480})->                \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_aarch64, type, c3)->Args({640, 480})->                \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_aarch64, type, c4)->Args({640, 480})->                \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_aarch64, type, c1)->Args({1920, 1080})->              \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_aarch64, type, c3)->Args({1920, 1080})->              \
+                   UseManualTime()->Iterations(10);                                 \
+BENCHMARK_TEMPLATE(BM_Abs_ppl_aarch64, type, c4)->Args({1920, 1080})->              \
+                   UseManualTime()->Iterations(10);
 
-using namespace ppl::cv::debug;
-
-BENCHMARK_TEMPLATE(BM_Abs_ppl_arm, float, c1)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_ppl_arm, float, c3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_ppl_arm, float, c4)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_ppl_arm, int8_t, c1)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_ppl_arm, int8_t, c3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_ppl_arm, int8_t, c4)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+RUN_PPL_CV_TYPE_FUNCTIONS(float)
+RUN_PPL_CV_TYPE_FUNCTIONS(int8_t)
 
 #ifdef PPLCV_BENCHMARK_OPENCV
-using namespace ppl::cv::debug;
-template<typename T, int32_t nc>
-void BM_Abs_opencv_arm(benchmark::State &state) {
+template<typename T, int32_t channels>
+void BM_Abs_opencv_aarch64(benchmark::State &state) {
     int32_t width = state.range(0);
     int32_t height = state.range(1);
-    std::unique_ptr<T[]> src(new T[width * height * nc]);
-    std::unique_ptr<T[]> dst(new T[width * height * nc]);
-    ppl::cv::debug::randomFill<T>(src.get(), width * height * nc, 0, 255);
-    cv::Mat iMat(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), src.get(), sizeof(T) * width * nc);
-    cv::Mat oMat(height, width, CV_MAKETYPE(cv::DataType<T>::depth, nc), dst.get(), sizeof(T) * width * nc);
+    cv::Mat src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+
+    int warmup_iters = 5;
+    int perf_iters = 50;
+
+    // Warm up the CPU.
+    for (int i = 0; i < warmup_iters; i++) {
+        dst = cv::abs(src);
+    }
+
     for (auto _ : state) {
-        oMat = cv::abs(iMat);
+        auto time_start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < perf_iters; i++) {
+            dst = cv::abs(src);
+        }
+        auto time_end = std::chrono::high_resolution_clock::now();
+        auto duration = time_end - time_start;
+        auto overall_time = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+        double time = overall_time * 1.0 / perf_iters;
+        state.SetIterationTime(time * 1e-6);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-BENCHMARK_TEMPLATE(BM_Abs_opencv_arm, float, 1)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_opencv_arm, float, 3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_opencv_arm, float, 4)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_opencv_arm, int8_t, 1)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_opencv_arm, int8_t, 3)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
-BENCHMARK_TEMPLATE(BM_Abs_opencv_arm, int8_t, 4)->Args({320, 240})->Args({640, 480})->Args({1280, 720})->Args({1920, 1080})->Args({3840, 2160});
+
+#define RUN_OPENCV_TYPE_FUNCTIONS(type)                                                 \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_aarch64, type, c1)->Args({640, 480})->                 \
+                   UseManualTime()->Iterations(10);                                     \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_aarch64, type, c3)->Args({640, 480})->                 \
+                   UseManualTime()->Iterations(10);                                     \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_aarch64, type, c4)->Args({640, 480})->                 \
+                   UseManualTime()->Iterations(10);                                     \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_aarch64, type, c1)->Args({1920, 1080})->               \
+                   UseManualTime()->Iterations(10);                                     \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_aarch64, type, c3)->Args({1920, 1080})->               \
+                   UseManualTime()->Iterations(10);                                     \
+BENCHMARK_TEMPLATE(BM_Abs_opencv_aarch64, type, c4)->Args({1920, 1080})->               \
+                   UseManualTime()->Iterations(10);
+
+RUN_OPENCV_TYPE_FUNCTIONS(float)
+RUN_OPENCV_TYPE_FUNCTIONS(int8_t)
+
 #endif //! PPLCV_BENCHMARK_OPENCV
+
 }
