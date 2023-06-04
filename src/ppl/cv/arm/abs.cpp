@@ -23,22 +23,17 @@
 #include <algorithm>
 #include <cmath>
 
-namespace ppl {
-namespace cv {
-namespace arm {
+namespace ppl::cv::arm {
 
-::ppl::common::RetCode abs_s8(
-    int32_t height,
-    int32_t width,
-    int32_t channels,
-    int32_t inWidthStride,
-    const int8_t *inData,
-    int32_t outWidthStride,
-    int8_t *outData)
+::ppl::common::RetCode abs_s8(int32_t height,
+                              int32_t width,
+                              int32_t channels,
+                              int32_t inWidthStride,
+                              const int8_t *inData,
+                              int32_t outWidthStride,
+                              int8_t *outData)
 {
-    if (nullptr == inData || nullptr == outData) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
+    if (nullptr == inData || nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
     if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -69,54 +64,48 @@ namespace arm {
     return ppl::common::RC_SUCCESS;
 }
 
-template<>
-::ppl::common::RetCode Abs<int8_t, 1>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const int8_t *inData,
-    int32_t outWidthStride,
-    int8_t *outData)
+template <>
+::ppl::common::RetCode Abs<int8_t, 1>(int32_t height,
+                                      int32_t width,
+                                      int32_t inWidthStride,
+                                      const int8_t *inData,
+                                      int32_t outWidthStride,
+                                      int8_t *outData)
 {
     return abs_s8(height, width, 1, inWidthStride, inData, outWidthStride, outData);
 }
 
-template<>
-::ppl::common::RetCode Abs<int8_t, 3>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const int8_t *inData,
-    int32_t outWidthStride,
-    int8_t *outData)
+template <>
+::ppl::common::RetCode Abs<int8_t, 3>(int32_t height,
+                                      int32_t width,
+                                      int32_t inWidthStride,
+                                      const int8_t *inData,
+                                      int32_t outWidthStride,
+                                      int8_t *outData)
 {
     return abs_s8(height, width, 3, inWidthStride, inData, outWidthStride, outData);
 }
 
-template<>
-::ppl::common::RetCode Abs<int8_t, 4>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const int8_t *inData,
-    int32_t outWidthStride,
-    int8_t *outData)
+template <>
+::ppl::common::RetCode Abs<int8_t, 4>(int32_t height,
+                                      int32_t width,
+                                      int32_t inWidthStride,
+                                      const int8_t *inData,
+                                      int32_t outWidthStride,
+                                      int8_t *outData)
 {
     return abs_s8(height, width, 4, inWidthStride, inData, outWidthStride, outData);
 }
 
-::ppl::common::RetCode abs_f32(
-    int32_t height,
-    int32_t width,
-    int32_t channels,
-    int32_t inWidthStride,
-    const float32_t *inData,
-    int32_t outWidthStride,
-    float32_t *outData)
+::ppl::common::RetCode abs_f32(int32_t height,
+                               int32_t width,
+                               int32_t channels,
+                               int32_t inWidthStride,
+                               const float32_t *inData,
+                               int32_t outWidthStride,
+                               float32_t *outData)
 {
-    if (nullptr == inData || nullptr == outData) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
+    if (nullptr == inData || nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
     if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -146,42 +135,37 @@ template<>
     return ppl::common::RC_SUCCESS;
 }
 
-template<>
-::ppl::common::RetCode Abs<float32_t, 1>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const float32_t *inData,
-    int32_t outWidthStride,
-    float32_t *outData)
+template <>
+::ppl::common::RetCode Abs<float32_t, 1>(int32_t height,
+                                         int32_t width,
+                                         int32_t inWidthStride,
+                                         const float32_t *inData,
+                                         int32_t outWidthStride,
+                                         float32_t *outData)
 {
     return abs_f32(height, width, 1, inWidthStride, inData, outWidthStride, outData);
 }
 
-template<>
-::ppl::common::RetCode Abs<float32_t, 3>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const float32_t *inData,
-    int32_t outWidthStride,
-    float32_t *outData)
+template <>
+::ppl::common::RetCode Abs<float32_t, 3>(int32_t height,
+                                         int32_t width,
+                                         int32_t inWidthStride,
+                                         const float32_t *inData,
+                                         int32_t outWidthStride,
+                                         float32_t *outData)
 {
     return abs_f32(height, width, 3, inWidthStride, inData, outWidthStride, outData);
 }
 
-template<>
-::ppl::common::RetCode Abs<float32_t, 4>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const float32_t *inData,
-    int32_t outWidthStride,
-    float32_t *outData)
+template <>
+::ppl::common::RetCode Abs<float32_t, 4>(int32_t height,
+                                         int32_t width,
+                                         int32_t inWidthStride,
+                                         const float32_t *inData,
+                                         int32_t outWidthStride,
+                                         float32_t *outData)
 {
     return abs_f32(height, width, 4, inWidthStride, inData, outWidthStride, outData);
 }
 
-}
-}
 } // namespace ppl::cv::arm

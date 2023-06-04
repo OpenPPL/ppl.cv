@@ -23,24 +23,19 @@
 #include <algorithm>
 #include <cmath>
 
-namespace ppl {
-namespace cv {
-namespace arm {
+namespace ppl::cv::arm {
 
-::ppl::common::RetCode mls_f32(
-    int32_t height,
-    int32_t width,
-    int32_t channels,
-    int32_t inWidthStride0,
-    const float32_t *inData0,
-    int32_t inWidthStride1,
-    const float32_t *inData1,
-    int32_t outWidthStride,
-    float32_t *outData)
+::ppl::common::RetCode mls_f32(int32_t height,
+                               int32_t width,
+                               int32_t channels,
+                               int32_t inWidthStride0,
+                               const float32_t *inData0,
+                               int32_t inWidthStride1,
+                               const float32_t *inData1,
+                               int32_t outWidthStride,
+                               float32_t *outData)
 {
-    if (nullptr == inData0 || nullptr == inData1 || nullptr == outData) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
+    if (nullptr == inData0 || nullptr == inData1 || nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
     if (width <= 0 || height <= 0 || inWidthStride0 <= 0 || inWidthStride1 <= 0 || outWidthStride <= 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -80,47 +75,42 @@ namespace arm {
 }
 
 template <>
-::ppl::common::RetCode Mls<float, 1>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride0,
-    const float32_t *inData0,
-    int32_t inWidthStride1,
-    const float32_t *inData1,
-    int32_t outWidthStride,
-    float32_t *outData)
+::ppl::common::RetCode Mls<float, 1>(int32_t height,
+                                     int32_t width,
+                                     int32_t inWidthStride0,
+                                     const float32_t *inData0,
+                                     int32_t inWidthStride1,
+                                     const float32_t *inData1,
+                                     int32_t outWidthStride,
+                                     float32_t *outData)
 {
     return mls_f32(height, width, 1, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Mls<float, 3>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride0,
-    const float32_t *inData0,
-    int32_t inWidthStride1,
-    const float32_t *inData1,
-    int32_t outWidthStride,
-    float32_t *outData)
+::ppl::common::RetCode Mls<float, 3>(int32_t height,
+                                     int32_t width,
+                                     int32_t inWidthStride0,
+                                     const float32_t *inData0,
+                                     int32_t inWidthStride1,
+                                     const float32_t *inData1,
+                                     int32_t outWidthStride,
+                                     float32_t *outData)
 {
     return mls_f32(height, width, 3, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
 template <>
-::ppl::common::RetCode Mls<float, 4>(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride0,
-    const float32_t *inData0,
-    int32_t inWidthStride1,
-    const float32_t *inData1,
-    int32_t outWidthStride,
-    float32_t *outData)
+::ppl::common::RetCode Mls<float, 4>(int32_t height,
+                                     int32_t width,
+                                     int32_t inWidthStride0,
+                                     const float32_t *inData0,
+                                     int32_t inWidthStride1,
+                                     const float32_t *inData1,
+                                     int32_t outWidthStride,
+                                     float32_t *outData)
 {
     return mls_f32(height, width, 4, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
-}
-}
 } // namespace ppl::cv::arm
