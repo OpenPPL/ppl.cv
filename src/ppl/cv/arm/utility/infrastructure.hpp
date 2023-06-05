@@ -24,7 +24,6 @@
 #include <iostream>
 
 #include "opencv2/core.hpp"
-#include "opencv2/core/cuda.hpp"
 
 #include "ppl/common/log.h"
 
@@ -583,4 +582,4 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
   }
 }
 
-#endif  // _ST_HPC_PPL_CV_CUDA_INFRASTRUCTURE_HPP_
+#endif  // _ST_HPC_PPL_CV_ARM_INFRASTRUCTURE_HPP_
