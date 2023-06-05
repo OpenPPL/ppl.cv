@@ -27,16 +27,18 @@
 #include "ppl/cv/arm/test.h"
 #include "utility/infrastructure.hpp"
 
+#define BASE (50)
+#define SCALE (10.f)
+
 using Parameters = std::tuple<float, float, cv::Size>;
-inline std::string convertToStringConvertto(const Parameters& parameters)
-{
+inline std::string convertToStringConvertto(const Parameters& parameters) {
     std::ostringstream formatted;
 
-    float alpha = std::get<0>(parameters);
-    formatted << "alpha_" << (alpha < 0 ? "n" : "") << static_cast<int>(std::abs(alpha) * 1000) << "_";
+    int int_alpha = std::get<0>(parameters);
+    formatted << "IntAlpha" << int_alpha << "_";
 
-    float beta = std::get<1>(parameters);
-    formatted << "beta_" << (beta < 0 ? "n" : "") << static_cast<int>(std::abs(beta) * 1000) << "_";
+    int int_beta = std::get<1>(parameters);
+    formatted << "IntBeta" << int_beta << "_";
 
     cv::Size size = std::get<2>(parameters);
     formatted << size.width << "x";
@@ -51,9 +53,9 @@ public:
     PplCvArmConvertToTest()
     {
         const Parameters& parameters = GetParam();
-        alpha = std::get<0>(parameters);
-        beta = std::get<1>(parameters);
-        size = std::get<2>(parameters);
+        alpha = (std::get<0>(parameters) - BASE) / SCALE;
+        beta  = (std::get<1>(parameters) - BASE) / SCALE;
+        size  = std::get<2>(parameters);
     }
 
     ~PplCvArmConvertToTest() {}
@@ -108,8 +110,8 @@ bool PplCvArmConvertToTest<Tsrc, Tdst, channels>::apply()
     INSTANTIATE_TEST_CASE_P(                                                                                       \
         IsEqual,                                                                                                   \
         PplCvArmConvertToTest_##Tsrc##_To_##Tdst##_##channels,                                                     \
-        ::testing::Combine(::testing::Values(1.0f / 255, -1.25f, 1.0f, 1.5f, 255.0f),                              \
-                           ::testing::Values(-3.5f, 0.0f, 4.9f),                                                   \
+        ::testing::Combine(::testing::Values(37, 60, 65),                              \
+                           ::testing::Values(13, 50, 89),                                                   \
                            ::testing::Values(cv::Size{321, 240},                                                   \
                                              cv::Size{642, 480},                                                   \
                                              cv::Size{1283, 720},                                                  \
