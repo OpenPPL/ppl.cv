@@ -459,14 +459,14 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
     for (int col = 0; col < cols; ++col) {
       difference = fabs((float) element0[0] - (float) element1[0]);
       findMax(max, difference);
-      if (difference > epsilon || display)  {
+      if (difference > epsilon && display)  {
         std::cout << "[" << row << ", " << col <<"].0: " << (float)element0[0]
                   << ", " << (float)element1[0] << std::endl;
       }
       if (channels >= 2) {
         difference = fabs((float) element0[1] - (float) element1[1]);
         findMax(max, difference);
-        if (difference > epsilon || display)  {
+        if (difference > epsilon && display)  {
           std::cout << "[" << row << ", " << col <<"].1: " << (float)element0[1]
                     << ", " << (float)element1[1] << std::endl;
         }
@@ -474,7 +474,7 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
       if (channels >= 3) {
         difference = fabs((float) element0[2] - (float) element1[2]);
         findMax(max, difference);
-        if (difference > epsilon || display)  {
+        if (difference > epsilon && display)  {
           std::cout << "[" << row << ", " << col <<"].2: " << (float)element0[2]
                     << ", " << (float)element1[2] << std::endl;
         }
@@ -482,7 +482,7 @@ bool checkMatricesIdentity(const cv::Mat& image0, const cv::Mat& image1,
       if (channels == 4) {
         difference = fabs((float) element0[3] - (float) element1[3]);
         findMax(max, difference);
-        if (difference > epsilon || display)  {
+        if (difference > epsilon && display)  {
           std::cout << "[" << row << ", " << col <<"].3: " << (float)element0[3]
                     << ", " << (float)element1[3] << std::endl;
         }
@@ -540,20 +540,20 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
     for (int col = 0; col < cols; ++col) {
       difference = fabs((float) element0[0] - (float) element1[0]);
       findMax(max, difference);
-      if (difference > epsilon || display) {
+      if (difference > epsilon && display) {
         std::cout << "[" << row << ", " << col <<"].0: " << (float)element0[0]
                   << ", " << (float)element1[0] << std::endl;
       }
       if (channels >= 3) {
         difference = fabs((float) element0[1] - (float) element1[1]);
         findMax(max, difference);
-        if (difference > epsilon || display) {
+        if (difference > epsilon && display) {
           std::cout << "[" << row << ", " << col <<"].1: " << (float)element0[1]
                     << ", " << (float)element1[1] << std::endl;
         }
         difference = fabs((float) element0[2] - (float) element1[2]);
         findMax(max, difference);
-        if (difference > epsilon || display) {
+        if (difference > epsilon && display) {
           std::cout << "[" << row << ", " << col <<"].2: " << (float)element0[2]
                     << ", " << (float)element1[2] << std::endl;
         }
@@ -561,7 +561,7 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1,
       if (channels == 4) {
         difference = fabs((float) element0[3] - (float) element1[3]);
         findMax(max, difference);
-        if (difference > epsilon || display) {
+        if (difference > epsilon && display) {
           std::cout << "[" << row << ", " << col <<"].3: " << (float)element0[3]
                     << ", " << (float)element1[3] << std::endl;
         }
