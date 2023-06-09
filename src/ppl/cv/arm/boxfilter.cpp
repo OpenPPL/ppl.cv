@@ -48,10 +48,10 @@ struct RowSum {
         for (k = 0; k < cn; k++, S++, D++) {
             ST s = 0;
             for (i = 0; i < ksz_cn; i += cn)
-                s += S[i];
+                s += (ST)S[i];
             D[0] = s;
             for (i = 0; i < width; i += cn) {
-                s += S[i + ksz_cn] - S[i];
+                s += (ST)S[i + ksz_cn] - (ST)S[i];
                 D[i + cn] = s;
             }
         }
@@ -59,8 +59,9 @@ struct RowSum {
     int32_t ksize;
 };
 
-static uint8_t saturate_cast(float32_t v)
+static uint8_t saturate_cast(float val)
 {
+    int32_t v = roundf(val);
     if (v > 255)
         return 255;
     else if (v < 0)
@@ -119,10 +120,8 @@ struct ColumnSum {
             if (haveScale) {
                 for (i = 0; i <= width - 2; i += 2) {
                     ST s0 = SUM[i] + Sp[i], s1 = SUM[i + 1] + Sp[i + 1];
-                    ST val0 = s0 * scale;
-                    D[i] = (std::is_same<float32_t, T>::value) ? val0 : saturate_cast(val0);
-                    ST val1 = s1 * scale;
-                    D[i + 1] = (std::is_same<float32_t, T>::value) ? val1 : saturate_cast(val1);
+                    D[i] = s0 * scale;
+                    D[i + 1] = s1 * scale;
                     s0 -= Sm[i];
                     s1 -= Sm[i + 1];
                     SUM[i] = s0;
@@ -131,17 +130,14 @@ struct ColumnSum {
 
                 for (; i < width; i++) {
                     ST s0 = SUM[i] + Sp[i];
-                    ST val = s0 * scale;
-                    D[i] = (std::is_same<float32_t, T>::value) ? val : saturate_cast(val);
+                    D[i] = s0 * scale;
                     SUM[i] = s0 - Sm[i];
                 }
             } else {
                 for (i = 0; i <= width - 2; i += 2) {
                     ST s0 = SUM[i] + Sp[i], s1 = SUM[i + 1] + Sp[i + 1];
-                    ST val0 = s0;
-                    D[i] = (std::is_same<float32_t, T>::value) ? val0 : saturate_cast(val0);
-                    ST val1 = s1;
-                    D[i + 1] = (std::is_same<float32_t, T>::value) ? val1 : saturate_cast(val1);
+                    D[i] = s0;
+                    D[i + 1] = s1;
                     s0 -= Sm[i];
                     s1 -= Sm[i + 1];
                     SUM[i] = s0;
@@ -150,8 +146,7 @@ struct ColumnSum {
 
                 for (; i < width; i++) {
                     ST s0 = SUM[i] + Sp[i];
-                    ST val = s0;
-                    D[i] = (std::is_same<float32_t, T>::value) ? val : saturate_cast(val);
+                    D[i] = s0;
                     SUM[i] = s0 - Sm[i];
                 }
             }
@@ -162,6 +157,74 @@ struct ColumnSum {
     int32_t sumCount;
     float scale;
     std::vector<ST> sum;
+};
+
+template <>
+struct ColumnSum<int32_t, uint8_t> {
+    ColumnSum(int32_t _ksize, float _scale)
+    {
+        ksize = _ksize;
+        scale = _scale;
+        sumCount = 0;
+    }
+
+    void reset()
+    {
+        sumCount = 0;
+    }
+
+    void operator()(const int32_t** src, uint8_t* dst, int32_t dststep, int32_t count, int32_t width)
+    {
+        int32_t i;
+        int32_t* SUM;
+        bool haveScale = scale != 1;
+        float _scale = scale;
+
+        if (width != (int32_t)sum.size()) {
+            sum.resize(width);
+            sumCount = 0;
+        }
+
+        SUM = &sum[0];
+        if (sumCount == 0) {
+            memset((void*)SUM, 0, width * sizeof(int32_t));
+            for (; sumCount < ksize - 1; sumCount++, src++) {
+                const int32_t* Sp = (const int32_t*)src[0];
+                i = 0;
+                for (; i < width; i++)
+                    SUM[i] += Sp[i];
+            }
+        } else {
+            // assert( sumCount == ksize-1 );
+            src += ksize - 1;
+        }
+
+        for (; count--; src++) {
+            const int32_t* Sp = (const int32_t*)src[0];
+            const int32_t* Sm = (const int32_t*)src[1 - ksize];
+            uint8_t* D = (uint8_t*)dst;
+            if (haveScale) {
+                i = 0;
+                for (; i < width; i++) {
+                    int32_t s0 = SUM[i] + Sp[i];
+                    D[i] = saturate_cast(s0 * _scale);
+                    SUM[i] = s0 - Sm[i];
+                }
+            } else {
+                i = 0;
+                for (; i < width; i++) {
+                    int32_t s0 = SUM[i] + Sp[i];
+                    D[i] = saturate_cast(s0);
+                    SUM[i] = s0 - Sm[i];
+                }
+            }
+            dst += dststep;
+        }
+    }
+    int32_t ksize;
+    float scale;
+    int32_t sumCount;
+    std::vector<int32_t> sum;
 };
 
 template <int32_t cn>
