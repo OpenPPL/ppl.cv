@@ -117,7 +117,7 @@ bool PplCvArmBoxFilterTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = EPSILON_1F;
+        epsilon = normalize ? EPSILON_1F : EPSILON_E1;
     } else {
         epsilon = EPSILON_E1;
     }
