@@ -114,6 +114,35 @@ template <>
         const float* base_in = inData + h * inWidthStride;
         uint8_t* base_out = outData + h * outWidthStride;
         int32_t w = 0;
+        for (; w <= row_width - 16; w += 16) {            
+            float32x4x2_t vFData01 = vld2q_f32(base_in + w);
+            float32x4x2_t vFData23 = vld2q_f32(base_in + w + 8);
+            
+            float32x4_t vScale = vdupq_n_f32(scale);
+            float32x4_t vFRes0 = vdupq_n_f32(delta);
+            float32x4_t vFRes1 = vdupq_n_f32(delta);
+            float32x4_t vFRes2 = vdupq_n_f32(delta);
+            float32x4_t vFRes3 = vdupq_n_f32(delta);
+            vFRes0 = vfmaq_f32(vFRes0, vFData01.val[0], vScale);
+            vFRes1 = vfmaq_f32(vFRes1, vFData01.val[1], vScale);
+            vFRes2 = vfmaq_f32(vFRes2, vFData23.val[0], vScale);
+            vFRes3 = vfmaq_f32(vFRes3, vFData23.val[1], vScale);
+
+            int32x4_t vSiData0 = vcvtaq_s32_f32(vFRes0);
+            int32x4_t vSiData1 = vcvtaq_s32_f32(vFRes1);
+            int32x4_t vSiData2 = vcvtaq_s32_f32(vFRes2);
+            int32x4_t vSiData3 = vcvtaq_s32_f32(vFRes3);
+
+            uint16x4_t vUhData00 = vqmovun_s32(vSiData0);
+            uint16x8_t vUhData0 = vqmovun_high_s32(vUhData00, vSiData1);
+            uint16x4_t vUhData10 = vqmovun_s32(vSiData2);
+            uint16x8_t vUhData1 = vqmovun_high_s32(vUhData10, vSiData3);
+
+            uint8x8_t vOutData0 = vqmovn_u16(vUhData0);
+            uint8x8_t vOutData1 = vqmovn_u16(vUhData1);
+            vst1_u8(base_out + w, vOutData0);
+            vst1_u8(base_out + w + 8, vOutData1);
+        }
         for (; w < row_width; ++w) {
             float value = scale * base_in[w] + delta;
             base_out[w] = static_cast<uint8_t>(std::round(std::min(std::max(value, 0.0f), 255.0f)));
@@ -143,6 +172,48 @@ template <>
         const uint8_t* base_in = inData + h * inWidthStride;
         uint8_t* base_out = outData + h * outWidthStride;
         int32_t w = 0;
+        for (; w <= row_width - 16; w += 16) {            
+            uint8x16_t vInData = vld1q_u8(base_in + w);
+
+            float32x4_t vScale = vdupq_n_f32(scale);
+            float32x4_t vFRes0 = vdupq_n_f32(delta);
+            float32x4_t vFRes1 = vdupq_n_f32(delta);
+            float32x4_t vFRes2 = vdupq_n_f32(delta);
+            float32x4_t vFRes3 = vdupq_n_f32(delta);
+
+            uint16x8_t vUHInData0 = vmovl_u8(vget_low_u8(vInData));
+            uint16x8_t vUHInData1 = vmovl_high_u8(vInData);
+
+            uint32x4_t vUiInData0 = vmovl_u16(vget_low_u16(vUHInData0));
+            uint32x4_t vUiInData1 = vmovl_high_u16(vUHInData0);
+            uint32x4_t vUiInData2 = vmovl_u16(vget_low_u16(vUHInData1));
+            uint32x4_t vUiInData3 = vmovl_high_u16(vUHInData1);
+
+            float32x4_t vFData0 = vcvtq_f32_u32(vUiInData0);
+            float32x4_t vFData1 = vcvtq_f32_u32(vUiInData1);
+            float32x4_t vFData2 = vcvtq_f32_u32(vUiInData2);
+            float32x4_t vFData3 = vcvtq_f32_u32(vUiInData3);
+
+            vFRes0 = vfmaq_f32(vFRes0, vFData0, vScale);
+            vFRes1 = vfmaq_f32(vFRes1, vFData1, vScale);
+            vFRes2 = vfmaq_f32(vFRes2, vFData2, vScale);
+            vFRes3 = vfmaq_f32(vFRes3, vFData3, vScale);
+
+            int32x4_t vSiData0 = vcvtaq_s32_f32(vFRes0);
+            int32x4_t vSiData1 = vcvtaq_s32_f32(vFRes1);
+            int32x4_t vSiData2 = vcvtaq_s32_f32(vFRes2);
+            int32x4_t vSiData3 = vcvtaq_s32_f32(vFRes3);
+
+            uint16x4_t vUhData00 = vqmovun_s32(vSiData0);
+            uint16x8_t vUhData0 = vqmovun_high_s32(vUhData00, vSiData1);
+            uint16x4_t vUhData10 = vqmovun_s32(vSiData2);
+            uint16x8_t vUhData1 = vqmovun_high_s32(vUhData10, vSiData3);
+
+            uint8x8_t vOutData0 = vqmovn_u16(vUhData0);
+            uint8x8_t vOutData1 = vqmovn_u16(vUhData1);
+            vst1_u8(base_out + w, vOutData0);
+            vst1_u8(base_out + w + 8, vOutData1);
+        }
         for (; w < row_width; ++w) {
             float value = scale * base_in[w] + delta;
             base_out[w] = static_cast<uint8_t>(std::round(std::min(std::max(value, 0.0f), 255.0f)));
