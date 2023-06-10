@@ -59,7 +59,7 @@ template <typename T>
 void randomImage(cv::Mat& image, int basic_type, int channels) {
   AUX_ASSERT(image.data != nullptr);
   AUX_ASSERT(image.rows >= 1 && image.cols >= 1);
-  AUX_ASSERT(basic_type == CV_8U || basic_type == CV_8S || basic_type == CV_32F);
+  AUX_ASSERT(basic_type == CV_8U || basic_type == CV_8S || basic_type == CV_32F || basic_type == CV_64F);
   AUX_ASSERT(channels == 1 || channels == 2 || channels == 3 || channels == 4);
 
   int rows = image.rows;
