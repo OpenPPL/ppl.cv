@@ -27,11 +27,12 @@
 #include "ppl/cv/arm/test.h"
 #include "utility/infrastructure.hpp"
 
-#define BASE (50)
+#define BASE  (50)
 #define SCALE (10.f)
 
 using Parameters = std::tuple<float, float, cv::Size>;
-inline std::string convertToStringConvertto(const Parameters& parameters) {
+inline std::string convertToStringConvertto(const Parameters& parameters)
+{
     std::ostringstream formatted;
 
     int int_alpha = std::get<0>(parameters);
@@ -54,8 +55,8 @@ public:
     {
         const Parameters& parameters = GetParam();
         alpha = (std::get<0>(parameters) - BASE) / SCALE;
-        beta  = (std::get<1>(parameters) - BASE) / SCALE;
-        size  = std::get<2>(parameters);
+        beta = (std::get<1>(parameters) - BASE) / SCALE;
+        size = std::get<2>(parameters);
     }
 
     ~PplCvArmConvertToTest() {}
@@ -73,8 +74,7 @@ bool PplCvArmConvertToTest<Tsrc, Tdst, channels>::apply()
 {
     int width = size.width;
     int height = size.height;
-    cv::Mat src;
-    src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels));
+    cv::Mat src = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels));
     cv::Mat dst(height, width, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
     cv::Mat cv_dst(height, width, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
     src.convertTo(cv_dst, cv_dst.type(), alpha, beta);
@@ -110,16 +110,14 @@ bool PplCvArmConvertToTest<Tsrc, Tdst, channels>::apply()
     INSTANTIATE_TEST_CASE_P(                                                                                       \
         IsEqual,                                                                                                   \
         PplCvArmConvertToTest_##Tsrc##_To_##Tdst##_##channels,                                                     \
-        ::testing::Combine(::testing::Values(37, 60, 65),                              \
-                           ::testing::Values(13, 50, 89),                                                   \
-                           ::testing::Values(cv::Size{321, 240},                                                   \
-                                             cv::Size{642, 480},                                                   \
-                                             cv::Size{1283, 720},                                                  \
-                                             cv::Size{1934, 1080},                                                 \
-                                             cv::Size{320, 240},                                                   \
-                                             cv::Size{640, 480},                                                   \
+        ::testing::Combine(::testing::Values(37, 60, 65, 2560),                                                    \
+                           ::testing::Values(13, 50, 89),                                                          \
+                           ::testing::Values(cv::Size{320, 240},                                                   \
                                              cv::Size{1280, 720},                                                  \
-                                             cv::Size{1920, 1080})),                                               \
+                                             cv::Size{1920, 1080},                                                 \
+                                             cv::Size{321, 245},                                                   \
+                                             cv::Size{647, 493},                                                   \
+                                             cv::Size{654, 486})),                                                 \
         [](const testing::TestParamInfo<PplCvArmConvertToTest_##Tsrc##_To_##Tdst##_##channels::ParamType>& info) { \
             return convertToStringConvertto(info.param);                                                           \
         });
