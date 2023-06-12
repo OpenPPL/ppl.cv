@@ -23,27 +23,42 @@
 
 namespace ppl::cv::arm {
 
-template <typename T>
+template <>
 ::ppl::common::RetCode Split3Channels(int32_t height,
                                       int32_t width,
                                       int32_t inWidthStride,
-                                      const T* inData,
+                                      const float* inData,
                                       int32_t outWidthStride,
-                                      T* outDataChannel0,
-                                      T* outDataChannel1,
-                                      T* outDataChannel2)
+                                      float* outDataChannel0,
+                                      float* outDataChannel1,
+                                      float* outDataChannel2)
 {
     if (nullptr == inData) { return ppl::common::RC_INVALID_VALUE; }
     if (nullptr == outDataChannel0 || nullptr == outDataChannel1 || nullptr == outDataChannel2) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
+    if (inWidthStride == width * 3 && outWidthStride == width) {
+        width *= height;
+        inWidthStride *= height;
+        outWidthStride *= height;
+        height = 1;
+    }
+
     for (int32_t h = 0; h < height; h++) {
-        const T* src_ptr = inData + h * inWidthStride;
-        T* dst0_ptr = outDataChannel0 + h * outWidthStride;
-        T* dst1_ptr = outDataChannel1 + h * outWidthStride;
-        T* dst2_ptr = outDataChannel2 + h * outWidthStride;
-        for (int32_t i = 0; i < width; i++) {
+        const float* src_ptr = inData + h * inWidthStride;
+        float* dst0_ptr = outDataChannel0 + h * outWidthStride;
+        float* dst1_ptr = outDataChannel1 + h * outWidthStride;
+        float* dst2_ptr = outDataChannel2 + h * outWidthStride;
+        int32_t i = 0;
+        for (; i <= width - 4; i += 4) {
+            prefetch(src_ptr + i * 3);
+            float32x4x3_t vData = vld3q_f32(src_ptr + 3 * i);
+            vst1q_f32(dst0_ptr + i, vData.val[0]);
+            vst1q_f32(dst1_ptr + i, vData.val[1]);
+            vst1q_f32(dst2_ptr + i, vData.val[2]);
+        }
+        for (; i < width; i++) {
             dst0_ptr[i] = src_ptr[i * 3 + 0];
             dst1_ptr[i] = src_ptr[i * 3 + 1];
             dst2_ptr[i] = src_ptr[i * 3 + 2];
@@ -52,47 +67,89 @@ template <typename T>
     return ppl::common::RC_SUCCESS;
 }
 
-template ::ppl::common::RetCode Split3Channels<float>(int32_t height,
-                                                      int32_t width,
-                                                      int32_t inWidthStride,
-                                                      const float* inData,
-                                                      int32_t outWidthStride,
-                                                      float* outDataChannel0,
-                                                      float* outDataChannel1,
-                                                      float* outDataChannel2);
-
-template ::ppl::common::RetCode Split3Channels<uint8_t>(int32_t height,
-                                                        int32_t width,
-                                                        int32_t inWidthStride,
-                                                        const uint8_t* inData,
-                                                        int32_t outWidthStride,
-                                                        uint8_t* outDataChannel0,
-                                                        uint8_t* outDataChannel1,
-                                                        uint8_t* outDataChannel2);
-
-template <typename T>
-::ppl::common::RetCode Split4Channels(int32_t height,
+template <>
+::ppl::common::RetCode Split3Channels(int32_t height,
                                       int32_t width,
                                       int32_t inWidthStride,
-                                      const T* inData,
+                                      const uint8_t* inData,
                                       int32_t outWidthStride,
-                                      T* outDataChannel0,
-                                      T* outDataChannel1,
-                                      T* outDataChannel2,
-                                      T* outDataChannel3)
+                                      uint8_t* outDataChannel0,
+                                      uint8_t* outDataChannel1,
+                                      uint8_t* outDataChannel2)
 {
     if (nullptr == inData) { return ppl::common::RC_INVALID_VALUE; }
     if (nullptr == outDataChannel0 || nullptr == outDataChannel1 || nullptr == outDataChannel2) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
+    if (inWidthStride == width * 3 && outWidthStride == width) {
+        width *= height;
+        inWidthStride *= height;
+        outWidthStride *= height;
+        height = 1;
+    }
+
     for (int32_t h = 0; h < height; h++) {
-        const T* src_ptr = inData + h * inWidthStride;
-        T* dst0_ptr = outDataChannel0 + h * outWidthStride;
-        T* dst1_ptr = outDataChannel1 + h * outWidthStride;
-        T* dst2_ptr = outDataChannel2 + h * outWidthStride;
-        T* dst3_ptr = outDataChannel3 + h * outWidthStride;
-        for (int32_t i = 0; i < width; i++) {
+        const uint8_t* src_ptr = inData + h * inWidthStride;
+        uint8_t* dst0_ptr = outDataChannel0 + h * outWidthStride;
+        uint8_t* dst1_ptr = outDataChannel1 + h * outWidthStride;
+        uint8_t* dst2_ptr = outDataChannel2 + h * outWidthStride;
+        int32_t i = 0;
+        for (; i <= width - 16; i += 16) {
+            prefetch(src_ptr + i * 3);
+            uint8x16x3_t vData = vld3q_u8(src_ptr + 3 * i);
+            vst1q_u8(dst0_ptr + i, vData.val[0]);
+            vst1q_u8(dst1_ptr + i, vData.val[1]);
+            vst1q_u8(dst2_ptr + i, vData.val[2]);
+        }
+        for (; i < width; i++) {
+            dst0_ptr[i] = src_ptr[i * 3 + 0];
+            dst1_ptr[i] = src_ptr[i * 3 + 1];
+            dst2_ptr[i] = src_ptr[i * 3 + 2];
+        }
+    }
+    return ppl::common::RC_SUCCESS;
+}
+
+template <>
+::ppl::common::RetCode Split4Channels(int32_t height,
+                                      int32_t width,
+                                      int32_t inWidthStride,
+                                      const float* inData,
+                                      int32_t outWidthStride,
+                                      float* outDataChannel0,
+                                      float* outDataChannel1,
+                                      float* outDataChannel2,
+                                      float* outDataChannel3)
+{
+    if (nullptr == inData) { return ppl::common::RC_INVALID_VALUE; }
+    if (nullptr == outDataChannel0 || nullptr == outDataChannel1 || nullptr == outDataChannel2) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+
+    if (inWidthStride == width * 4 && outWidthStride == width) {
+        width *= height;
+        inWidthStride *= height;
+        outWidthStride *= height;
+        height = 1;
+    }
+
+    for (int32_t h = 0; h < height; h++) {
+        const float* src_ptr = inData + h * inWidthStride;
+        float* dst0_ptr = outDataChannel0 + h * outWidthStride;
+        float* dst1_ptr = outDataChannel1 + h * outWidthStride;
+        float* dst2_ptr = outDataChannel2 + h * outWidthStride;
+        float* dst3_ptr = outDataChannel3 + h * outWidthStride;
+        int32_t i = 0;
+        for (; i <= width - 4; i += 4) {
+            prefetch(src_ptr + i * 4);
+            float32x4x4_t vData = vld4q_f32(src_ptr + 4 * i);
+            vst1q_f32(dst0_ptr + i, vData.val[0]);
+            vst1q_f32(dst1_ptr + i, vData.val[1]);
+            vst1q_f32(dst2_ptr + i, vData.val[2]);
+            vst1q_f32(dst3_ptr + i, vData.val[3]);
+        }
+        for (; i < width; i++) {
             dst0_ptr[i] = src_ptr[i * 4 + 0];
             dst1_ptr[i] = src_ptr[i * 4 + 1];
             dst2_ptr[i] = src_ptr[i * 4 + 2];
@@ -102,24 +159,52 @@ template <typename T>
     return ppl::common::RC_SUCCESS;
 }
 
-template ::ppl::common::RetCode Split4Channels<float>(int32_t height,
-                                                      int32_t width,
-                                                      int32_t inWidthStride,
-                                                      const float* inData,
-                                                      int32_t outWidthStride,
-                                                      float* outDataChannel0,
-                                                      float* outDataChannel1,
-                                                      float* outDataChannel2,
-                                                      float* outDataChannel3);
+template <>
+::ppl::common::RetCode Split4Channels(int32_t height,
+                                      int32_t width,
+                                      int32_t inWidthStride,
+                                      const uint8_t* inData,
+                                      int32_t outWidthStride,
+                                      uint8_t* outDataChannel0,
+                                      uint8_t* outDataChannel1,
+                                      uint8_t* outDataChannel2,
+                                      uint8_t* outDataChannel3)
+{
+    if (nullptr == inData) { return ppl::common::RC_INVALID_VALUE; }
+    if (nullptr == outDataChannel0 || nullptr == outDataChannel1 || nullptr == outDataChannel2) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
 
-template ::ppl::common::RetCode Split4Channels<uint8_t>(int32_t height,
-                                                        int32_t width,
-                                                        int32_t inWidthStride,
-                                                        const uint8_t* inData,
-                                                        int32_t outWidthStride,
-                                                        uint8_t* outDataChannel0,
-                                                        uint8_t* outDataChannel1,
-                                                        uint8_t* outDataChannel2,
-                                                        uint8_t* outDataChannel3);
+    if (inWidthStride == width * 4 && outWidthStride == width) {
+        width *= height;
+        inWidthStride *= height;
+        outWidthStride *= height;
+        height = 1;
+    }
+
+    for (int32_t h = 0; h < height; h++) {
+        const uint8_t* src_ptr = inData + h * inWidthStride;
+        uint8_t* dst0_ptr = outDataChannel0 + h * outWidthStride;
+        uint8_t* dst1_ptr = outDataChannel1 + h * outWidthStride;
+        uint8_t* dst2_ptr = outDataChannel2 + h * outWidthStride;
+        uint8_t* dst3_ptr = outDataChannel3 + h * outWidthStride;
+        int32_t i = 0;
+        for (; i <= width - 16; i += 16) {
+            prefetch(src_ptr + i * 4);
+            uint8x16x4_t vData = vld4q_u8(src_ptr + 4 * i);
+            vst1q_u8(dst0_ptr + i, vData.val[0]);
+            vst1q_u8(dst1_ptr + i, vData.val[1]);
+            vst1q_u8(dst2_ptr + i, vData.val[2]);
+            vst1q_u8(dst3_ptr + i, vData.val[3]);
+        }
+        for (; i < width; i++) {
+            dst0_ptr[i] = src_ptr[i * 4 + 0];
+            dst1_ptr[i] = src_ptr[i * 4 + 1];
+            dst2_ptr[i] = src_ptr[i * 4 + 2];
+            dst3_ptr[i] = src_ptr[i * 4 + 3];
+        }
+    }
+    return ppl::common::RC_SUCCESS;
+}
 
 } // namespace ppl::cv::arm
