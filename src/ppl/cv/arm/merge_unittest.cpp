@@ -111,12 +111,10 @@ bool PplCvArmMergeTest<T, channels>::apply()
                                                                                                                     \
     INSTANTIATE_TEST_CASE_P(IsEqual,                                                                                \
                             PplCvArmMergeTest_##T##_##channels,                                                     \
-                            ::testing::Values(cv::Size{321, 240},                                                   \
-                                              cv::Size{642, 480},                                                   \
-                                              cv::Size{1283, 720},                                                  \
-                                              cv::Size{1934, 1080},                                                 \
-                                              cv::Size{320, 240},                                                   \
-                                              cv::Size{640, 480},                                                   \
+                            ::testing::Values(cv::Size{320, 240},                                                   \
+                                              cv::Size{321, 245},                                                   \
+                                              cv::Size{647, 493},                                                   \
+                                              cv::Size{654, 486},                                                   \
                                               cv::Size{1280, 720},                                                  \
                                               cv::Size{1920, 1080}),                                                \
                             [](const testing::TestParamInfo<PplCvArmMergeTest_##T##_##channels::ParamType>& info) { \
