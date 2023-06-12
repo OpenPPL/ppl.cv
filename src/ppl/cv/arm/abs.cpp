@@ -42,19 +42,27 @@ namespace ppl::cv::arm {
         int32_t j = 0;
         const int8_t *in0 = inData + i * inWidthStride;
         int8_t *out = outData + i * outWidthStride;
-        for (; j <= width - 32; j += 32) {
+        for (; j <= width - 64; j += 64) {
             prefetch(in0 + j);
-            int8x16_t vdata0 = vld1q_s8(in0 + j);
-            int8x16_t vdata1 = vld1q_s8(in0 + j + 16);
-            int8x16_t voutData0 = vqabsq_s8(vdata0);
-            int8x16_t voutData1 = vqabsq_s8(vdata1);
-            vst1q_s8(out + j, voutData0);
-            vst1q_s8(out + j + 16, voutData1);
+            int8x16x4_t vdata = vld1q_s8_x4(in0 + j);
+            int8x16x4_t vOutData;
+            vOutData.val[0] = vqabsq_s8(vdata.val[0]);
+            vOutData.val[1] = vqabsq_s8(vdata.val[1]);
+            vOutData.val[2] = vqabsq_s8(vdata.val[2]);
+            vOutData.val[3] = vqabsq_s8(vdata.val[3]);
+            vst1q_s8_x4(out + j, vOutData);
+        }
+        for (; j <= width - 32; j += 32) {
+            int8x16x2_t vdata = vld1q_s8_x2(in0 + j);
+            int8x16x2_t vOutData;
+            vOutData.val[0] = vqabsq_s8(vdata.val[0]);
+            vOutData.val[1] = vqabsq_s8(vdata.val[1]);
+            vst1q_s8_x2(out + j, vOutData);
         }
         for (; j <= width - 16; j += 16) {
             int8x16_t vdata0 = vld1q_s8(in0 + j);
-            int8x16_t voutData = vqabsq_s8(vdata0);
-            vst1q_s8(out + j, voutData);
+            int8x16_t vOutData = vqabsq_s8(vdata0);
+            vst1q_s8(out + j, vOutData);
         }
         for (; j < width; ++j) {
             int8_t srcVal = inData[i * inWidthStride + j];
@@ -114,19 +122,27 @@ template <>
         int32_t j = 0;
         const float *in0 = inData + i * inWidthStride;
         float *out = outData + i * outWidthStride;
-        for (; j <= width - 8; j += 8) {
+        for (; j <= width - 16; j += 16) {
             prefetch(in0 + j);
-            float32x4_t vdata0 = vld1q_f32(in0 + j);
-            float32x4_t vdata1 = vld1q_f32(in0 + j + 4);
-            float32x4_t voutData0 = vabsq_f32(vdata0);
-            float32x4_t voutData1 = vabsq_f32(vdata1);
-            vst1q_f32(out + j, voutData0);
-            vst1q_f32(out + j + 4, voutData1);
+            float32x4x4_t vData = vld1q_f32_x4(in0 + j);
+            float32x4x4_t vOutData;
+            vOutData.val[0] = vabsq_f32(vData.val[0]);
+            vOutData.val[1] = vabsq_f32(vData.val[1]);
+            vOutData.val[2] = vabsq_f32(vData.val[2]);
+            vOutData.val[3] = vabsq_f32(vData.val[3]);
+            vst1q_f32_x4(out + j, vOutData);
+        }
+        for (; j <= width - 8; j += 8) {
+            float32x4x2_t vData = vld1q_f32_x2(in0 + j);
+            float32x4x2_t vOutData;
+            vOutData.val[0] = vabsq_f32(vData.val[0]);
+            vOutData.val[1] = vabsq_f32(vData.val[1]);
+            vst1q_f32_x2(out + j, vOutData);
         }
         for (; j <= width - 4; j += 4) {
             float32x4_t vdata0 = vld1q_f32(in0 + j);
-            float32x4_t voutData = vabsq_f32(vdata0);
-            vst1q_f32(out + j, voutData);
+            float32x4_t vOutData = vabsq_f32(vdata0);
+            vst1q_f32(out + j, vOutData);
         }
         for (; j < width; ++j) {
             outData[i * outWidthStride + j] = std::abs(inData[i * inWidthStride + j]);
