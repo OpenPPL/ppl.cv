@@ -5,7 +5,7 @@ namespace ppl {
 namespace cv {
 namespace arm {
 
-inline void prefetch(const void *ptr, size_t offset = 1024)
+inline void prefetch(const void *ptr, size_t offset = 512)
 {
 #if defined __GNUC__
     __builtin_prefetch(reinterpret_cast<const char *>(ptr) + offset);
