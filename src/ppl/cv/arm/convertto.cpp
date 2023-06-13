@@ -17,7 +17,7 @@
 
 #include "ppl/cv/arm/convertto.h"
 #include "ppl/cv/types.h"
-#include "ppl/common/sys.h"
+#include "common.hpp"
 #include <string.h>
 #include <arm_neon.h>
 
@@ -114,7 +114,8 @@ template <>
         const float* base_in = inData + h * inWidthStride;
         uint8_t* base_out = outData + h * outWidthStride;
         int32_t w = 0;
-        for (; w <= row_width - 16; w += 16) {            
+        for (; w <= row_width - 16; w += 16) {        
+            prefetch(base_in + w);
             float32x4x4_t vFData = vld1q_f32_x4(base_in + w);
             
             float32x4_t vScale = vdupq_n_f32(scale);
@@ -171,7 +172,8 @@ template <>
         const uint8_t* base_in = inData + h * inWidthStride;
         uint8_t* base_out = outData + h * outWidthStride;
         int32_t w = 0;
-        for (; w <= row_width - 16; w += 16) {            
+        for (; w <= row_width - 16; w += 16) {
+            prefetch(base_in + w);
             uint8x16_t vInData = vld1q_u8(base_in + w);
 
             float32x4_t vScale = vdupq_n_f32(scale);
