@@ -120,7 +120,7 @@ bool PplCvArmCropTest<T, channels>::apply()
                             PplCvArmCropTest_##T##_##channels,                                                     \
                             ::testing::Combine(::testing::Values(0, 11, 187),                                      \
                                                ::testing::Values(0, 11, 187),                                      \
-                                               ::testing::Values(0, 10, 15),                                       \
+                                               ::testing::Values(3, 10, 15),                                       \
                                                ::testing::Values(cv::Size{321, 240},                               \
                                                                  cv::Size{642, 480},                               \
                                                                  cv::Size{1283, 720},                              \

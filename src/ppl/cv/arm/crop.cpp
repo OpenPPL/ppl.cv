@@ -17,9 +17,11 @@
 
 #include "ppl/cv/arm/crop.h"
 #include "ppl/cv/types.h"
-#include "ppl/common/sys.h"
+#include "common.hpp"
 #include <string.h>
 #include <arm_neon.h>
+
+#include <cmath>
 
 namespace ppl::cv::arm {
 
@@ -43,15 +45,57 @@ static void crop_line_common(const T* src, T* dst, int32_t outWidth, float scale
 template <>
 void crop_line_common(const uint8_t* src, uint8_t* dst, int32_t outWidth, float scale)
 {
-    if (scale < 1.000001f && scale > 0.9999999f) {
-        memcpy(dst, src, outWidth * sizeof(uint8_t));
-    } else {
-        int32_t i = 0;
-        for (; i < outWidth; i++, src++) {
-            int32_t val = scale * src[0];
-            dst[i] = sat_cast(val);
-        }
+    int32_t i = 0;
+
+    float32x4_t vScale = vdupq_n_f32(scale);
+    for (; i <= outWidth - 16; i += 16) {
+        prefetch(src + i);
+        uint8x16_t vInData = vld1q_u8(src + i);
+
+        uint16x8_t vUHInData0 = vmovl_u8(vget_low_u8(vInData));
+        uint16x8_t vUHInData1 = vmovl_high_u8(vInData);
+
+        uint32x4_t vUiInData0 = vmovl_u16(vget_low_u16(vUHInData0));
+        uint32x4_t vUiInData1 = vmovl_high_u16(vUHInData0);
+        uint32x4_t vUiInData2 = vmovl_u16(vget_low_u16(vUHInData1));
+        uint32x4_t vUiInData3 = vmovl_high_u16(vUHInData1);
+
+        float32x4_t vFData0 = vcvtq_f32_u32(vUiInData0);
+        float32x4_t vFData1 = vcvtq_f32_u32(vUiInData1);
+        float32x4_t vFData2 = vcvtq_f32_u32(vUiInData2);
+        float32x4_t vFData3 = vcvtq_f32_u32(vUiInData3);
+
+        float32x4_t vFRes0 = vmulq_f32(vFData0, vScale);
+        float32x4_t vFRes1 = vmulq_f32(vFData1, vScale);
+        float32x4_t vFRes2 = vmulq_f32(vFData2, vScale);
+        float32x4_t vFRes3 = vmulq_f32(vFData3, vScale);
+
+        int32x4_t vSiData0 = vcvtaq_s32_f32(vFRes0);
+        int32x4_t vSiData1 = vcvtaq_s32_f32(vFRes1);
+        int32x4_t vSiData2 = vcvtaq_s32_f32(vFRes2);
+        int32x4_t vSiData3 = vcvtaq_s32_f32(vFRes3);
+
+        uint16x4_t vUhData00 = vqmovun_s32(vSiData0);
+        uint16x8_t vUhData0 = vqmovun_high_s32(vUhData00, vSiData1);
+        uint16x4_t vUhData10 = vqmovun_s32(vSiData2);
+        uint16x8_t vUhData1 = vqmovun_high_s32(vUhData10, vSiData3);
+
+        uint8x8_t vOutData0 = vqmovn_u16(vUhData0);
+        uint8x8_t vOutData1 = vqmovn_u16(vUhData1);
+        vst1_u8(dst + i, vOutData0);
+        vst1_u8(dst + i + 8, vOutData1);
     }
+    
+    for (; i < outWidth; i++) {
+        int32_t val = std::round(scale * src[i]);
+        dst[i] = sat_cast(val);
+    }
+}
+
+template <typename T>
+void crop_line_noscale(const T* src, T* dst, int32_t outWidth)
+{
+    memcpy(dst, src, outWidth * sizeof(T));
 }
 
 template <typename T, int32_t channels>
@@ -74,8 +118,13 @@ ppl::common::RetCode Crop(const int32_t inHeight,
     T* dst = outData;
 
     int32_t out_row_width = outWidth * channels;
+    bool noscale = (scale == 1.0f);
     for (int32_t i = 0; i < outHeight; i++) {
-        crop_line_common(src, dst, out_row_width, scale);
+        if (noscale) {
+            crop_line_noscale(src, dst, out_row_width);
+        } else {
+            crop_line_common(src, dst, out_row_width, scale);
+        }
         src += inWidthStride;
         dst += outWidthStride;
     }
