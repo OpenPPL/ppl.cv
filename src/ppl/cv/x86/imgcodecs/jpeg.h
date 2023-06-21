@@ -146,7 +146,7 @@ class JpegDecoder : public ImageDecoder {
     ~JpegDecoder();
 
     bool readHeader() override;
-    bool decodeData(int32_t stride, uint8_t* image) override;
+    bool decodeData(uint32_t stride, uint8_t* image) override;
 
   private:
     bool buildHuffmanTable(HuffmanLookupTable *huffman_table, int32_t *count);

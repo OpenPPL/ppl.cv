@@ -54,7 +54,7 @@ class Crc32 {
     uint32_t crc_value_;
     uint32_t crc_length_;
     ByteOrder byte_order_;
-    bool is_checking_; // a switch to control whether doing do checksum calculataions.
+    bool is_checking_; // a switch to control whether doing checksum calculataions.
 };
 
 } //! namespace x86

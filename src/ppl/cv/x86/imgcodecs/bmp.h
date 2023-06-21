@@ -49,7 +49,7 @@ class BmpDecoder : public ImageDecoder {
     ~BmpDecoder();
 
     bool readHeader() override;
-    bool decodeData(int stride, uchar* image) override;
+    bool decodeData(uint32_t stride, uint8_t* image) override;
 
   private:
     bool checkPaletteColor(PaletteEntry* palette, int bits_per_pixel);

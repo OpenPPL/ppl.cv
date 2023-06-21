@@ -452,7 +452,7 @@ bool BmpDecoder::readHeader() {
     return result;
 }
 
-bool BmpDecoder::decodeData(int stride, uchar* image) {
+bool BmpDecoder::decodeData(uint32_t stride, uint8_t* image) {
     if ((uint64_t)height_ * width_ * channels_ > (1 << 30)) {
         LOG(ERROR) << "BMP reader implementation doesn't support "
                    << "large images >= 1Gb";

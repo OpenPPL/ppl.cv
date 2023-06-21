@@ -121,12 +121,18 @@ RetCode Imread(const char* file_name, int* height, int* width, int* channels,
     *height   = decoder->height();
     *width    = decoder->width();
     *channels = decoder->channels();
-    *stride   = (decoder->width() * decoder->channels() + 3) & -4;
+    if (image_format == PNG) {
+        *stride = (decoder->width() * decoder->channels() *
+                   (decoder->depth() >> 3) + 1 + 3) & -4;
+    }
+    else {
+        *stride = (decoder->width() * decoder->channels() + 3) & -4;
+    }
     size_t size = (*stride) * (*height);
     assert(size < MAX_IMAGE_SIZE);
     (*image) = (uchar*)malloc(size);
     std::cout << "Detected file info: " << /* std::dec << */ *height << ", " << *width << ", "
-              << *channels << ", " << *stride << std::endl;
+              << *channels << ", " << decoder->depth() << ", " << *stride << std::endl;
 
     succeeded = decoder->decodeData(*stride, (*image));
     if (succeeded == false) {

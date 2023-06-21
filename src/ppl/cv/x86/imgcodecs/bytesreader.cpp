@@ -152,8 +152,8 @@ int BytesReader::getWord() {
         current_ = current + 2;
     }
     else {
-        value = getByte();
-        value|= getByte() << 8;
+        value  = getByte();
+        value |= getByte() << 8;
     }
 
     // std::cout << "getWord: " << std::dec << value << std::endl;
