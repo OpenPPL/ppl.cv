@@ -29,16 +29,18 @@ class ImageDecoder {
     ImageDecoder();
     virtual ~ImageDecoder();
 
-    int height() const;
-    int width() const;
-    int channels() const;
+    uint32_t height() const;
+    uint32_t width() const;
+    uint32_t channels() const;
+    uint32_t depth() const;
     virtual bool readHeader() = 0;
-    virtual bool decodeData(int stride, uchar* image) = 0;
+    virtual bool decodeData(uint32_t stride, uint8_t* image) = 0;
 
   protected:
-    int height_;
-    int width_;
-    int channels_;
+    uint32_t height_;
+    uint32_t width_;
+    uint32_t channels_;
+    uint32_t depth_;
 };
 
 } //! namespace x86

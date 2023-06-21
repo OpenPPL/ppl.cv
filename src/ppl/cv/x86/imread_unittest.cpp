@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <string.h>
 #include <string>
+#include <assert.h>
 
 #include <tuple>
 #include <sstream>
@@ -98,6 +99,28 @@ bool checkDataIdentity(const T* image0, const T* image1, int height, int width,
               << max << std::endl;
     return false;
   }
+}
+
+void BGRA2GRAYA(cv::Mat& src, cv::Mat& dst) {
+    assert(src.type() == CV_8UC4);
+    assert(dst.type() == CV_8UC2);
+
+    int rows = src.rows;
+    int cols = src.cols;
+    int src_channels = src.channels();
+    int dst_channels = dst.channels();
+    uchar *element0, *element1;
+
+    for (int row = 0; row < rows; row++) {
+        element0 = src.ptr<uchar>(row);
+        element1 = dst.ptr<uchar>(row);
+        for (int col = 0; col < cols; col++) {
+            element1[0] = element0[0];
+            element1[1] = element0[3];
+            element0 += src_channels;
+            element1 += dst_channels;
+        }
+    }
 }
 
 /***************************** Bmp unittest *****************************/
@@ -528,15 +551,15 @@ inline std::string convertToStringPng(const Parameters1& parameters) {
 }
 
 template <typename T>
-class PplCvX86ImreadPngTest : public ::testing::TestWithParam<Parameters1> {
+class PplCvX86ImreadPngTest0 : public ::testing::TestWithParam<Parameters1> {
   public:
-    PplCvX86ImreadPngTest() {
+    PplCvX86ImreadPngTest0() {
         const Parameters1& parameters = GetParam();
         channels = std::get<0>(parameters);
         size     = std::get<1>(parameters);
     }
 
-    ~PplCvX86ImreadPngTest() {
+    ~PplCvX86ImreadPngTest0() {
     }
 
     bool apply();
@@ -547,13 +570,12 @@ class PplCvX86ImreadPngTest : public ::testing::TestWithParam<Parameters1> {
 };
 
 template <typename T>
-bool PplCvX86ImreadPngTest<T>::apply() {
+bool PplCvX86ImreadPngTest0<T>::apply() {
     cv::Mat src = createSourceImage(size.height, size.width,
                                     CV_MAKETYPE(cv::DataType<T>::depth,
                                     channels));
     // std::cout << "src, width: " << size.width << ", height: " << size.height
     //           << ", channels: " << channels << std::endl;
-
     std::string file_name("test.png");
     bool succeeded = cv::imwrite(file_name.c_str(), src);
     if (succeeded == false) {
@@ -561,24 +583,19 @@ bool PplCvX86ImreadPngTest<T>::apply() {
         return false;
     }
 
-    // cv::Mat cv_dst = cv::imread(file_name, cv::IMREAD_UNCHANGED);
-    // std::cout << "cv_dst: width: " << cv_dst.cols << ", height: " << cv_dst.rows
-    //           << ", channels: " << cv_dst.channels() << std::endl;
+    cv::Mat cv_dst = cv::imread(file_name, cv::IMREAD_UNCHANGED);
+    std::cout << "cv_dst: width: " << cv_dst.cols << ", height: " << cv_dst.rows
+              << ", channels: " << cv_dst.channels() << std::endl;
 
     int height, width, channels, stride;
     T* image = nullptr;
-    for (int i = 0; i < 17; i++) {
-        std::string png_image = "/home/sensetime/Downloads/pngs/png" + std::to_string(i) + ".png";
-        std::cout << "#######processing png image " << i << ": " << std::endl;
-        ppl::cv::x86::Imread(png_image.c_str(), &height, &width, &channels, &stride,
-                             &image);
-    }
-    // std::cout << std::dec << "stride: " << stride << std::endl;
+    ppl::cv::x86::Imread(file_name.c_str(), &height, &width, &channels, &stride,
+                         &image);
 
-    float epsilon = EPSILON_3F;
-    bool identity = true;/*  checkDataIdentity<T>(cv_dst.data, image, height, width,
+    float epsilon = EPSILON_1F;
+    bool identity = checkDataIdentity<T>(cv_dst.data, image, height, width,
                                          channels, cv_dst.step, stride,
-                                         epsilon); */
+                                         epsilon);
     if (image != nullptr) {
         free(image);
     }
@@ -590,42 +607,101 @@ bool PplCvX86ImreadPngTest<T>::apply() {
     return identity;
 }
 
-/* #define UNITTEST(T)                                                            \
-using PplCvX86ImreadPngTest ## T = PplCvX86ImreadPngTest<T>;                   \
-TEST_P(PplCvX86ImreadPngTest ## T, Standard) {                                 \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
+#define PNG_UNITTEST0(T)                                                       \
+using PplCvX86ImreadPngTest0 ## T = PplCvX86ImreadPngTest0<T>;                 \
+TEST_P(PplCvX86ImreadPngTest0 ## T, Standard) {                                \
+    bool identity = this->apply();                                             \
+    EXPECT_TRUE(identity);                                                     \
 }                                                                              \
                                                                                \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadPngTest ## T,                   \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadPngTest0 ## T,                  \
     ::testing::Combine(                                                        \
-        ::testing::Values(1, 2, 3, 4),                                         \
+        ::testing::Values(1, 3, 4),                                            \
         ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},              \
                           cv::Size{1283, 720}, cv::Size{1976, 1080},           \
                           cv::Size{320, 240}, cv::Size{640, 480},              \
                           cv::Size{1280, 720}, cv::Size{1920, 1080})),         \
-    [](const testing::TestParamInfo<PplCvX86ImreadPngTest ## T::ParamType>&    \
-       info) {                                                                 \
-        return convertToStringPng(info.param);                                 \
-    }                                                                          \
-); */
-
-#define UNITTEST(T)                                                            \
-using PplCvX86ImreadPngTest ## T = PplCvX86ImreadPngTest<T>;                   \
-TEST_P(PplCvX86ImreadPngTest ## T, Standard) {                                 \
-  bool identity = this->apply();                                               \
-  EXPECT_TRUE(identity);                                                       \
-}                                                                              \
-                                                                               \
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadPngTest ## T,                   \
-    ::testing::Combine(                                                        \
-        ::testing::Values(1),                                         \
-        ::testing::Values(cv::Size{321, 240})),         \
-    [](const testing::TestParamInfo<PplCvX86ImreadPngTest ## T::ParamType>&    \
-       info) {                                                                 \
+    [](const testing::TestParamInfo<PplCvX86ImreadPngTest0 ## T::ParamType>&   \
+        info) {                                                                \
         return convertToStringPng(info.param);                                 \
     }                                                                          \
 );
 
-UNITTEST(uchar)
-// UNITTEST(ushort)
+PNG_UNITTEST0(uchar)
+
+template <typename T>
+class PplCvX86ImreadPngTest1 : public ::testing::TestWithParam<Parameters1> {
+  public:
+    PplCvX86ImreadPngTest1() {
+        const Parameters1& parameters = GetParam();
+        channels = std::get<0>(parameters);
+        size     = std::get<1>(parameters);
+    }
+
+    ~PplCvX86ImreadPngTest1() {
+    }
+
+    bool apply();
+
+  private:
+    int channels;
+    cv::Size size;
+};
+
+template <typename T>
+bool PplCvX86ImreadPngTest1<T>::apply() {
+    int height, width, channels, stride;
+    T* image = nullptr;
+    bool identity;
+    for (int i = 0; i < 17; i++) {
+        std::string png_image = "data/pngs/png" + std::to_string(i) + ".png";
+        cv::Mat cv_dst = cv::imread(png_image, cv::IMREAD_UNCHANGED);
+        std::cout << "cv_dst: width: " << cv_dst.cols << ", height: " << cv_dst.rows
+                  << ", channels: " << cv_dst.channels() << std::endl;
+
+        std::cout << "#######processing png image " << i << ": " << std::endl;
+        ppl::cv::x86::Imread(png_image.c_str(), &height, &width, &channels,
+                             &stride, &image);
+
+        float epsilon = EPSILON_1F;
+        if (channels != 2) {
+            identity = checkDataIdentity<T>(cv_dst.data, image, height, width,
+                                            channels, cv_dst.step, stride,
+                                            epsilon);
+        }
+        else {
+            cv::Mat dst(height, width, CV_8UC2);
+            BGRA2GRAYA(cv_dst, dst);
+            identity = checkDataIdentity<T>(dst.data, image, height, width,
+                                            channels, dst.step, stride,
+                                            epsilon);
+        }
+        if (image != nullptr) {
+            free(image);
+            image = nullptr;
+        }
+
+        if (!identity) return false;
+    }
+
+    return true;
+}
+
+#define PNG_UNITTEST1(T)                                                       \
+using PplCvX86ImreadPngTest1 ## T = PplCvX86ImreadPngTest1<T>;                 \
+TEST_P(PplCvX86ImreadPngTest1 ## T, Standard) {                                \
+    bool identity = this->apply();                                             \
+    EXPECT_TRUE(identity);                                                     \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadPngTest1 ## T,                  \
+    ::testing::Combine(                                                        \
+        ::testing::Values(1),                                                  \
+        ::testing::Values(cv::Size{1, 1})),                                    \
+    [](const testing::TestParamInfo<PplCvX86ImreadPngTest1 ## T::ParamType>&   \
+        info) {                                                                \
+        return convertToStringPng(info.param);                                 \
+    }                                                                          \
+);
+
+PNG_UNITTEST1(uchar)

@@ -21,25 +21,26 @@ namespace ppl {
 namespace cv {
 namespace x86 {
 
-ImageDecoder::ImageDecoder() {
-    height_   = -1;
-    width_    = -1;
-    channels_ = -1;
+ImageDecoder::ImageDecoder() : height_(0), width_(0), channels_(0), depth_(0) {
 }
 
 ImageDecoder::~ImageDecoder() {
 }
 
-int ImageDecoder::height() const {
+uint32_t ImageDecoder::height() const {
     return height_;
 }
 
-int ImageDecoder::width() const {
+uint32_t ImageDecoder::width() const {
     return width_;
 }
 
-int ImageDecoder::channels() const {
+uint32_t ImageDecoder::channels() const {
     return channels_;
+}
+
+uint32_t ImageDecoder::depth() const {
+    return depth_;
 }
 
 } //! namespace x86

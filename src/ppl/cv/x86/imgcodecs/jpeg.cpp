@@ -2250,7 +2250,7 @@ bool JpegDecoder::readHeader() {
     return true;
 }
 
-bool JpegDecoder::decodeData(int32_t stride, uint8_t* image) {
+bool JpegDecoder::decodeData(uint32_t stride, uint8_t* image) {
     // struct timeval start, end;
     // struct timeval start1, end1;
     // struct timeval start2, end2;
