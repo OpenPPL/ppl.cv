@@ -656,8 +656,8 @@ bool PplCvX86ImreadPngTest1<T>::apply() {
     for (int i = 0; i < 17; i++) {
         std::string png_image = "data/pngs/png" + std::to_string(i) + ".png";
         cv::Mat cv_dst = cv::imread(png_image, cv::IMREAD_UNCHANGED);
-        std::cout << "cv_dst: width: " << cv_dst.cols << ", height: " << cv_dst.rows
-                  << ", channels: " << cv_dst.channels() << std::endl;
+        // std::cout << "cv_dst: width: " << cv_dst.cols << ", height: " << cv_dst.rows
+        //           << ", channels: " << cv_dst.channels() << std::endl;
 
         std::cout << "#######processing png image " << i << ": " << std::endl;
         ppl::cv::x86::Imread(png_image.c_str(), &height, &width, &channels,
