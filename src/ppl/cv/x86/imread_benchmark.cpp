@@ -458,3 +458,79 @@ BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({1920, 1080})->      \
 
 RUN_JPEG_BENCHMARK(1)
 RUN_JPEG_BENCHMARK(3)
+
+
+template <typename T>
+void BM_ImreadPNG_ppl_x86(benchmark::State &state) {
+    int index = state.range(0);
+
+    std::string png_image = "data/pngs/png" + std::to_string(index) + ".png";
+    int height, width, channels, stride;
+    T* image = nullptr;
+
+    struct timeval start, end;
+    for (auto _ : state) {
+        gettimeofday(&start, NULL);
+        ppl::cv::x86::Imread(png_image.c_str(), &height, &width, &channels,
+                             &stride, &image);
+        gettimeofday(&end, NULL);
+        int time = (end.tv_sec * 1000000 + end.tv_usec) -
+                   (start.tv_sec * 1000000 + start.tv_usec);
+        state.SetIterationTime(time * 1e-6);
+
+        if (image != nullptr) {
+            free(image);
+            image = nullptr;
+        }
+    }
+    state.SetItemsProcessed(state.iterations() * 1);
+}
+
+template <typename T>
+void BM_ImreadPNG_opencv_x86(benchmark::State &state) {
+    int index = state.range(0);
+
+    std::string png_image = "data/pngs/png" + std::to_string(index) + ".png";
+    for (auto _ : state) {
+        cv::Mat cv_dst = cv::imread(png_image, cv::IMREAD_UNCHANGED);
+    }
+    state.SetItemsProcessed(state.iterations() * 1);
+}
+
+#define RUN_PNG_BENCHMARK(uchar)                                              \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({0});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({0})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({1});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({1})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({2});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({2})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({3});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({3})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({4});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({4})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({5});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({5})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({6});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({6})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({7});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({7})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({8});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({8})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({9});                 \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({9})->UseManualTime();   \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({10});                \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({10})->UseManualTime();  \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({11});                \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({11})->UseManualTime();  \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({12});                \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({12})->UseManualTime();  \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({13});                \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({13})->UseManualTime();  \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({14});                \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({14})->UseManualTime();  \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({15});                \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({15})->UseManualTime();  \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({16});                \
+BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({16})->UseManualTime();
+
+RUN_PNG_BENCHMARK(uchar)

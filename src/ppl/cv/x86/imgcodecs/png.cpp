@@ -272,7 +272,7 @@ bool PngDecoder::parsetIME(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(7);
-    LOG(INFO) << "The tIME chunk is skipped.";
+    // LOG(INFO) << "The tIME chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -292,7 +292,7 @@ bool PngDecoder::parsezTXt(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(png_info.current_chunk.length);
-    LOG(INFO) << "A zTXt chunk is skipped.";
+    // LOG(INFO) << "A zTXt chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -312,7 +312,7 @@ bool PngDecoder::parsetEXt(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(png_info.current_chunk.length);
-    LOG(INFO) << "A tEXt chunk is skipped.";
+    // LOG(INFO) << "A tEXt chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -332,7 +332,7 @@ bool PngDecoder::parseiTXt(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(png_info.current_chunk.length);
-    LOG(INFO) << "A iTXt chunk is skipped.";
+    // LOG(INFO) << "A iTXt chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -352,7 +352,7 @@ bool PngDecoder::parsepHYs(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(9);
-    LOG(INFO) << "The pHYs chunk is skipped.";
+    // LOG(INFO) << "The pHYs chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -372,7 +372,7 @@ bool PngDecoder::parsesPLT(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(png_info.current_chunk.length);
-    LOG(INFO) << "A sPLT chunk is skipped.";
+    // LOG(INFO) << "A sPLT chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -404,7 +404,7 @@ bool PngDecoder::parseiCCP(PngInfo& png_info) {
 
     file_data_->skip(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_iCCP;
-    LOG(INFO) << "The iCCP chunk is skipped.";
+    // LOG(INFO) << "The iCCP chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -436,7 +436,7 @@ bool PngDecoder::parsesRGB(PngInfo& png_info) {
 
     file_data_->skip(1);
     png_info.chunk_status |= HAVE_sRGB;
-    LOG(INFO) << "The sRGB chunk is skipped.";
+    // LOG(INFO) << "The sRGB chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -484,7 +484,7 @@ bool PngDecoder::parsesBIT(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(png_info.current_chunk.length);
-    LOG(INFO) << "The sBIT chunk is skipped.";
+    // LOG(INFO) << "The sBIT chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -509,7 +509,7 @@ bool PngDecoder::parsegAMA(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(4);
-    LOG(INFO) << "The gAMA chunk is skipped.";
+    // LOG(INFO) << "The gAMA chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -534,7 +534,7 @@ bool PngDecoder::parsecHRM(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(32);
-    LOG(INFO) << "The cHRM chunk is skipped.";
+    // LOG(INFO) << "The cHRM chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -725,8 +725,8 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
-    std::cout << "tRNS chunk appear." << std::endl;
-    std::cout << "in tRNS, channels_: " << channels_ << std::endl;
+    // std::cout << "tRNS chunk appear." << std::endl;
+    // std::cout << "in tRNS, channels_: " << channels_ << std::endl;
 
     return true;
 }
@@ -749,7 +749,7 @@ bool PngDecoder::parsehIST(PngInfo& png_info) {
 
     file_data_->skip(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_hIST;
-    LOG(INFO) << "The hIST chunk is skipped.";
+    // LOG(INFO) << "The hIST chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -786,7 +786,7 @@ bool PngDecoder::parsebKGD(PngInfo& png_info) {
 
     file_data_->skip(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_bKGD;
-    LOG(INFO) << "The bKGD chunk is skipped.";
+    // LOG(INFO) << "The bKGD chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
     succeeded = isCrcCorrect();
@@ -812,11 +812,11 @@ bool PngDecoder::parseIDATs(PngInfo& png_info, uint8_t* image,
         if (!succeeded) return false;
     }
 
-    std::cout << "IDAT size: " << png_info.current_chunk.length << std::endl; //
+    // std::cout << "IDAT size: " << png_info.current_chunk.length << std::endl; //
     succeeded = inflateImage(png_info, image, stride);
     if (!succeeded) return false;
     // skipping 32 bits of the optional ADLER32 checksum in zlib data stream.
-    std::cout << "IDAT leftover: " << png_info.current_chunk.length << std::endl;
+    // std::cout << "IDAT leftover: " << png_info.current_chunk.length << std::endl;
     file_data_->skip(png_info.current_chunk.length);
 
     // process crc of the current of last IDAT chunk.
@@ -842,7 +842,7 @@ bool PngDecoder::parseIEND(PngInfo& png_info) {
                    << ", correct bytes: 0.";
         return false;
     }
-    std::cout << "IEND chunk appear." << std::endl;
+    // std::cout << "IEND chunk appear." << std::endl;
 
     // uint32_t crc2 = crc32(0, nullptr, 0);
     // std::cout << "$$$$IEND, chunk type crc2: " << crc2 << std::endl;
@@ -869,7 +869,7 @@ bool PngDecoder::parsetUnknownChunk(PngInfo& png_info) {
         bool succeeded = setCrc32();
         if (!succeeded) return false;
 
-        LOG(INFO) << "Encountering an unknown ancillary chunk: " << chunk_name;
+        // LOG(INFO) << "Encountering an unknown ancillary chunk: " << chunk_name;
         file_data_->skip(png_info.current_chunk.length);
 
         png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
@@ -901,7 +901,7 @@ std::string PngDecoder::getChunkName(uint32_t chunk_type) {
 
 bool PngDecoder::setCrc32() {
     if (!crc32_.isChecking()) {
-        LOG(INFO) << "Crc32 checksum verification is turned off.";
+        // LOG(INFO) << "Crc32 checksum verification is turned off.";
         return true;
     }
 
@@ -957,8 +957,8 @@ bool PngDecoder::parseDeflateHeader() {
     uint8_t flags = file_data_->getByte();
     uint32_t compression_method = cmf & 15;
     uint32_t compresson_info = (cmf >> 4) & 15;
-    std::cout << "CM: " << compression_method << std::endl;
-    std::cout << "CINFO: " << compresson_info << std::endl;
+    // std::cout << "CM: " << compression_method << std::endl;
+    // std::cout << "CINFO: " << compresson_info << std::endl;
     if (compression_method != 8 ||
         (compression_method == 8 && compresson_info > 7)) {
         LOG(ERROR) << "Only deflate compressin method with a window size "
@@ -971,9 +971,9 @@ bool PngDecoder::parseDeflateHeader() {
     }
 
     uint32_t fdict = (int)((flags >> 5) & 1);
-    std::cout << "FCHECK: " << (int)(flags & 31) << std::endl;
-    std::cout << "FDICT: " << fdict << std::endl;
-    std::cout << "FLEVEL: " << (int)((flags >> 6) & 3) << std::endl;
+    // std::cout << "FCHECK: " << (int)(flags & 31) << std::endl;
+    // std::cout << "FDICT: " << fdict << std::endl;
+    // std::cout << "FLEVEL: " << (int)((flags >> 6) & 3) << std::endl;
     // *zlib_header_length = 2;
     if (fdict) {
         // *zlib_header_length += 4;  // debug
@@ -983,7 +983,7 @@ bool PngDecoder::parseDeflateHeader() {
     }
     png_info_.current_chunk.length -= 2;
     png_info_.zbuffer.window_size = 1 << (compresson_info + 8);
-    std::cout << "sliding window size: " << png_info_.zbuffer.window_size << std::endl;
+    // std::cout << "sliding window size: " << png_info_.zbuffer.window_size << std::endl;
 
     return true;
 }
@@ -1011,8 +1011,8 @@ bool PngDecoder::fillBits(ZbufferInfo *z) {  // z -> zbuffer
             if (png_info_.current_chunk.type != png_IDAT) {
                 png_info_.header_after_idat = true;
                 std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-                LOG(INFO) << "The reached Chunk: " << chunk_name
-                          << ", this is the last IDAT chunk.";
+                // LOG(INFO) << "The reached Chunk: " << chunk_name
+                //           << ", this is the last IDAT chunk.";
                 return true;
             }
         }
@@ -1099,8 +1099,8 @@ bool PngDecoder::parseZlibUncompressedBlock(PngInfo& png_info) {
                 if (png_info_.current_chunk.type != png_IDAT) {
                     png_info_.header_after_idat = true;
                     std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-                    LOG(INFO) << "The reached Chunk: " << chunk_name
-                              << ", this is the last IDAT chunk.";
+                    // LOG(INFO) << "The reached Chunk: " << chunk_name
+                    //           << ", this is the last IDAT chunk.";
                     return true;
                 }
             }

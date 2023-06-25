@@ -131,8 +131,8 @@ RetCode Imread(const char* file_name, int* height, int* width, int* channels,
     size_t size = (*stride) * (*height);
     assert(size < MAX_IMAGE_SIZE);
     (*image) = (uchar*)malloc(size);
-    std::cout << "Detected file info: " << /* std::dec << */ *height << ", " << *width << ", "
-              << *channels << ", " << decoder->depth() << ", " << *stride << std::endl;
+    // std::cout << "Detected file info: " << /* std::dec << */ *height << ", " << *width << ", "
+    //           << *channels << ", " << decoder->depth() << ", " << *stride << std::endl;
 
     succeeded = decoder->decodeData(*stride, (*image));
     if (succeeded == false) {
