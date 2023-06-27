@@ -27,6 +27,7 @@
 
 #include "ppl/common/log.h"
 
+#define EPSILON_0I 0.1f
 #define EPSILON_1F 1.1f
 #define EPSILON_2F 2.1f
 #define EPSILON_4F 4.1f
