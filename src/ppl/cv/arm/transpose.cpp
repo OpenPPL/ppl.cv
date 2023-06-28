@@ -84,6 +84,40 @@ inline void neon_transpose_u8_8x8(uint8x8_t &va,
     vh = vzip2_u8(v0246_6, v1357_6);
 }
 
+inline void neon_transpose_u8_8x8_new_device(uint8x8_t &va,
+                                  uint8x8_t &vb,
+                                  uint8x8_t &vc,
+                                  uint8x8_t &vd,
+                                  uint8x8_t &ve,
+                                  uint8x8_t &vf,
+                                  uint8x8_t &vg,
+                                  uint8x8_t &vh)
+{
+    uint8x16_t v04 = vzip1q_u8(vcombine_u8(va, va), vcombine_u8(ve, ve));
+    uint8x16_t v15 = vzip1q_u8(vcombine_u8(vb, vb), vcombine_u8(vf, vf));
+    uint8x16_t v26 = vzip1q_u8(vcombine_u8(vc, vc), vcombine_u8(vg, vg));
+    uint8x16_t v37 = vzip1q_u8(vcombine_u8(vd, vd), vcombine_u8(vh, vh));
+
+    uint8x16_t v0246_0 = vzip1q_u8(v04, v26);
+    uint8x16_t v1357_0 = vzip1q_u8(v15, v37);
+    uint8x16_t v0246_4 = vzip2q_u8(v04, v26);
+    uint8x16_t v1357_4 = vzip2q_u8(v15, v37);
+
+    uint8x16_t vab = vzip1q_u8(v0246_0, v1357_0);
+    uint8x16_t vcd = vzip2q_u8(v0246_0, v1357_0);
+    uint8x16_t vef = vzip1q_u8(v0246_4, v1357_4);
+    uint8x16_t vgh = vzip2q_u8(v0246_4, v1357_4);
+
+    va = vget_low_u8(vab);
+    vb = vget_high_u8(vab);
+    vc = vget_low_u8(vcd);
+    vd = vget_high_u8(vcd);
+    ve = vget_low_u8(vef);
+    vf = vget_high_u8(vef);
+    vg = vget_low_u8(vgh);
+    vh = vget_high_u8(vgh);
+}
+
 // Applies to perfect square blocks only
 template <typename T, int CHANNELS, int OUT_BLOCKDIM_R, int OUT_BLOCKDIM_C>
 inline void transpose_inner_block(const T *src, int obi, int obj, int inWidthStride, int outWidthStride, T *dst)
