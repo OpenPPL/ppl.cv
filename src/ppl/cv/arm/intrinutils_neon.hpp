@@ -121,5 +121,23 @@ static inline void neon_transpose_u8_8x8_new_device(uint8x8_t &va,
     vh = vget_high_u8(vgh);
 }
 
+static inline uint8x8_t neon_reverse_u8x8(uint8x8_t va) {
+    return vrev64_u8(va);
+}
+
+static inline uint8x16_t neon_reverse_u8x16(uint8x16_t va) {
+    uint8x16_t rev_inlane = vrev64q_u8(va);
+    return vcombine_u8(vget_high_u8(rev_inlane), vget_low_u8(rev_inlane));
+}
+
+static inline float32x2_t neon_reverse_f32x2(float32x2_t va) {
+    return vrev64_f32(va);
+}
+
+static inline float32x4_t neon_reverse_f32x4(float32x4_t va) {
+    float32x4_t rev_inlane = vrev64q_f32(va);
+    return vcombine_f32(vget_high_f32(rev_inlane), vget_low_f32(rev_inlane));
+}
+
 }
 #endif
