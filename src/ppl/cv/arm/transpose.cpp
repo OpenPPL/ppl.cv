@@ -143,42 +143,6 @@ inline void transpose_inner_block<float, 4, 32, 32>(const float *src,
 }
 
 template <>
-inline void transpose_inner_block<uint8_t, 4, 64, 64>(const uint8_t *src,
-                                                      int obi,
-                                                      int obj,
-                                                      int inWidthStride,
-                                                      int outWidthStride,
-                                                      uint8_t *dst)
-{
-    // little trick here: use uint32_t for uint8_t * 4 channel to avoid register overflow
-    constexpr int CHANNELS = 4;
-    constexpr int OUT_BLOCKDIM_R = 64;
-    constexpr int OUT_BLOCKDIM_C = 64;
-    constexpr int INNER_BLOCKDIM = 4;
-    // assert((OUT_BLOCKDIM_R % INNER_BLOCKDIM == 0) && (OUT_BLOCKDIM_C % INNER_BLOCKDIM == 0))
-    for (int i = obi * OUT_BLOCKDIM_R; i < (obi + 1) * OUT_BLOCKDIM_R; i += INNER_BLOCKDIM) {
-        for (int j = obj * OUT_BLOCKDIM_C; j < (obj + 1) * OUT_BLOCKDIM_C; j += INNER_BLOCKDIM) {
-            prefetch(src + (i + 0) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
-            prefetch(src + (i + 1) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
-            prefetch(src + (i + 2) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
-            prefetch(src + (i + 3) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
-            // load 4 * 4channel pixel
-            uint32x4_t va = vld1q_u32((uint32_t *)(src + (i + 0) * inWidthStride + j * CHANNELS));
-            uint32x4_t vb = vld1q_u32((uint32_t *)(src + (i + 1) * inWidthStride + j * CHANNELS));
-            uint32x4_t vc = vld1q_u32((uint32_t *)(src + (i + 2) * inWidthStride + j * CHANNELS));
-            uint32x4_t vd = vld1q_u32((uint32_t *)(src + (i + 3) * inWidthStride + j * CHANNELS));
-            // transpose 4channel pixel as an uint32_t
-            neon_transpose_u32_4x4(va, vb, vc, vd);
-            // store 4 * 4channel pixel
-            vst1q_u32((uint32_t *)(dst + (j + 0) * outWidthStride + i * CHANNELS), va);
-            vst1q_u32((uint32_t *)(dst + (j + 1) * outWidthStride + i * CHANNELS), vb);
-            vst1q_u32((uint32_t *)(dst + (j + 2) * outWidthStride + i * CHANNELS), vc);
-            vst1q_u32((uint32_t *)(dst + (j + 3) * outWidthStride + i * CHANNELS), vd);
-        }
-    }
-}
-
-template <>
 inline void transpose_inner_block<uint8_t, 1, 64, 64>(const uint8_t *src,
                                                       int obi,
                                                       int obj,
@@ -267,6 +231,42 @@ inline void transpose_inner_block<uint8_t, 3, 64, 64>(const uint8_t *src,
             vst3_u8(dst + (j + 5) * outWidthStride + i * CHANNELS, vf);
             vst3_u8(dst + (j + 6) * outWidthStride + i * CHANNELS, vg);
             vst3_u8(dst + (j + 7) * outWidthStride + i * CHANNELS, vh);
+        }
+    }
+}
+
+template <>
+inline void transpose_inner_block<uint8_t, 4, 64, 64>(const uint8_t *src,
+                                                      int obi,
+                                                      int obj,
+                                                      int inWidthStride,
+                                                      int outWidthStride,
+                                                      uint8_t *dst)
+{
+    // little trick here: use uint32_t for uint8_t * 4 channel to avoid register overflow
+    constexpr int CHANNELS = 4;
+    constexpr int OUT_BLOCKDIM_R = 64;
+    constexpr int OUT_BLOCKDIM_C = 64;
+    constexpr int INNER_BLOCKDIM = 4;
+    // assert((OUT_BLOCKDIM_R % INNER_BLOCKDIM == 0) && (OUT_BLOCKDIM_C % INNER_BLOCKDIM == 0))
+    for (int i = obi * OUT_BLOCKDIM_R; i < (obi + 1) * OUT_BLOCKDIM_R; i += INNER_BLOCKDIM) {
+        for (int j = obj * OUT_BLOCKDIM_C; j < (obj + 1) * OUT_BLOCKDIM_C; j += INNER_BLOCKDIM) {
+            prefetch(src + (i + 0) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
+            prefetch(src + (i + 1) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
+            prefetch(src + (i + 2) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
+            prefetch(src + (i + 3) * inWidthStride + j * CHANNELS, 4 * INNER_BLOCKDIM * CHANNELS * sizeof(uint8_t));
+            // load 4 * 4channel pixel
+            uint32x4_t va = vld1q_u32((uint32_t *)(src + (i + 0) * inWidthStride + j * CHANNELS));
+            uint32x4_t vb = vld1q_u32((uint32_t *)(src + (i + 1) * inWidthStride + j * CHANNELS));
+            uint32x4_t vc = vld1q_u32((uint32_t *)(src + (i + 2) * inWidthStride + j * CHANNELS));
+            uint32x4_t vd = vld1q_u32((uint32_t *)(src + (i + 3) * inWidthStride + j * CHANNELS));
+            // transpose 4channel pixel as an uint32_t
+            neon_transpose_u32_4x4(va, vb, vc, vd);
+            // store 4 * 4channel pixel
+            vst1q_u32((uint32_t *)(dst + (j + 0) * outWidthStride + i * CHANNELS), va);
+            vst1q_u32((uint32_t *)(dst + (j + 1) * outWidthStride + i * CHANNELS), vb);
+            vst1q_u32((uint32_t *)(dst + (j + 2) * outWidthStride + i * CHANNELS), vc);
+            vst1q_u32((uint32_t *)(dst + (j + 3) * outWidthStride + i * CHANNELS), vd);
         }
     }
 }
