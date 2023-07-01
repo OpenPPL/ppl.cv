@@ -25,12 +25,15 @@
 
 #include "utility/infrastructure.hpp"
 
-using Parameters = std::tuple<cv::Size>;
+using Parameters = std::tuple<int, cv::Size>;
 inline std::string convertToString(const Parameters& parameters)
 {
     std::ostringstream formatted;
 
-    cv::Size size = std::get<0>(parameters);
+    int legacy = std::get<0>(parameters);
+    formatted << "legacy" << legacy << "_";
+
+    cv::Size size = std::get<1>(parameters);
     formatted << size.width << "x";
     formatted << size.height;
 
@@ -43,7 +46,8 @@ public:
     PplCvArmIntegralTest()
     {
         const Parameters& parameters = GetParam();
-        size = std::get<0>(parameters);
+        legacy = std::get<0>(parameters);
+        size = std::get<1>(parameters);
     }
 
     ~PplCvArmIntegralTest() {}
@@ -51,15 +55,17 @@ public:
     bool apply();
 
 private:
+    int legacy;
     cv::Size size;
 };
 
 template <typename Tsrc, typename Tdst, int channels>
 bool PplCvArmIntegralTest<Tsrc, Tdst, channels>::apply()
 {
+    int offset = legacy ? 0 : 1;
     cv::Mat src = createSourceImage(size.height, size.width, CV_MAKETYPE(cv::DataType<Tsrc>::depth, channels));
-    cv::Mat dst(size.height + 1, size.width + 1, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
-    cv::Mat cv_dst(size.height + 1, size.width + 1, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
+    cv::Mat dst(size.height + offset, size.width + offset, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
+    cv::Mat cv_dst(size.height + offset, size.width + offset, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
 
     cv::integral(src, cv_dst, CV_MAKETYPE(cv::DataType<Tdst>::depth, channels));
     if (dst.rows == src.rows && dst.cols == src.cols) {
@@ -81,7 +87,7 @@ bool PplCvArmIntegralTest<Tsrc, Tdst, channels>::apply()
 
     float epsilon;
     if (sizeof(Tdst) == 1) {
-        epsilon = EPSILON_1F;
+        epsilon = EPSILON_0I;
     } else {
         epsilon = EPSILON_E6;
     }
@@ -101,14 +107,13 @@ bool PplCvArmIntegralTest<Tsrc, Tdst, channels>::apply()
     INSTANTIATE_TEST_CASE_P(                                                                                   \
         IsEqual,                                                                                               \
         PplCvArmIntegralTest_##Tsrc##_##Tdst##_##channels,                                                     \
-        ::testing::Values(cv::Size{321, 240},                                                                  \
-                          cv::Size{642, 480},                                                                  \
-                          cv::Size{1283, 720},                                                                 \
-                          cv::Size{1934, 1080},                                                                \
-                          cv::Size{320, 240},                                                                  \
-                          cv::Size{640, 480},                                                                  \
-                          cv::Size{1280, 720},                                                                 \
-                          cv::Size{1920, 1080}),                                                               \
+        ::testing::Combine(::testing::Values(0, 1),                                                            \
+                           ::testing::Values(cv::Size{320, 240},                                               \
+                                             cv::Size{321, 245},                                               \
+                                             cv::Size{642, 484},                                               \
+                                             cv::Size{647, 493},                                               \
+                                             cv::Size{654, 486},                                               \
+                                             cv::Size{1920, 1080})),                                           \
         [](const testing::TestParamInfo<PplCvArmIntegralTest_##Tsrc##_##Tdst##_##channels::ParamType>& info) { \
             return convertToString(info.param);                                                                \
         });

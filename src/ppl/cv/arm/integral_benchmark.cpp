@@ -73,15 +73,7 @@ void BM_Integral_ppl_aarch64(benchmark::State &state)
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(tsrc, tdst, channels)               \
     BENCHMARK_TEMPLATE(BM_Integral_ppl_aarch64, tsrc, tdst, channels) \
-        ->Args({320, 240})                                            \
-        ->UseManualTime()                                             \
-        ->Iterations(10);                                             \
-    BENCHMARK_TEMPLATE(BM_Integral_ppl_aarch64, tsrc, tdst, channels) \
         ->Args({640, 480})                                            \
-        ->UseManualTime()                                             \
-        ->Iterations(10);                                             \
-    BENCHMARK_TEMPLATE(BM_Integral_ppl_aarch64, tsrc, tdst, channels) \
-        ->Args({1280, 720})                                           \
         ->UseManualTime()                                             \
         ->Iterations(10);                                             \
     BENCHMARK_TEMPLATE(BM_Integral_ppl_aarch64, tsrc, tdst, channels) \
@@ -129,15 +121,7 @@ void BM_Integral_opencv_aarch64(benchmark::State &state)
 
 #define RUN_OPENCV_TYPE_FUNCTIONS(tsrc, tdst, channels)                  \
     BENCHMARK_TEMPLATE(BM_Integral_opencv_aarch64, tsrc, tdst, channels) \
-        ->Args({320, 240})                                               \
-        ->UseManualTime()                                                \
-        ->Iterations(10);                                                \
-    BENCHMARK_TEMPLATE(BM_Integral_opencv_aarch64, tsrc, tdst, channels) \
         ->Args({640, 480})                                               \
-        ->UseManualTime()                                                \
-        ->Iterations(10);                                                \
-    BENCHMARK_TEMPLATE(BM_Integral_opencv_aarch64, tsrc, tdst, channels) \
-        ->Args({1280, 720})                                              \
         ->UseManualTime()                                                \
         ->Iterations(10);                                                \
     BENCHMARK_TEMPLATE(BM_Integral_opencv_aarch64, tsrc, tdst, channels) \
