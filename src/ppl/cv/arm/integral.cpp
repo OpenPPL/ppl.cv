@@ -41,17 +41,8 @@ void IntegralImage(int32_t height,
             for (int32_t c = 0; c < channels; c++) {
                 TSrc in_v = in[h * inWidthStride + w * channels + c];
                 sum[c] += in_v;
-                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c];
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
             }
-        }
-    }
-
-    for (int32_t w = 0; w < width * channels; w++) {
-        TDst sum = (TDst)0;
-        for (int32_t h = 0; h < height; h++) {
-            TDst in_v = out[(h + 1) * outWidthStride + channels + w];
-            sum += in_v;
-            out[(h + 1) * outWidthStride + channels + w] = sum;
         }
     }
 }
@@ -71,17 +62,9 @@ void IntegralImageDeprecate(int32_t height,
             for (int32_t c = 0; c < channels; c++) {
                 TSrc in_v = in[h * inWidthStride + w * channels + c];
                 sum[c] += in_v;
-                out[h * outWidthStride + w * channels + c] = sum[c];
+                TDst prev_line_data = (h == 0) ? 0 : out[(h - 1) * outWidthStride + w * channels + c];
+                out[h * outWidthStride + w * channels + c] = sum[c] + prev_line_data;
             }
-        }
-    }
-
-    for (int32_t w = 0; w < width * channels; w++) {
-        TDst sum = (TDst)0;
-        for (int32_t h = 0; h < height; h++) {
-            TDst in_v = out[h * outWidthStride + w];
-            sum += in_v;
-            out[h * outWidthStride + w] = sum;
         }
     }
 }
