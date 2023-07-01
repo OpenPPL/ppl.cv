@@ -18,11 +18,13 @@
 #ifndef __INTRINUTILS_NEON_H__
 #define __INTRINUTILS_NEON_H__
 
+#include <algorithm>
+
 #include "ppl/cv/types.h"
 #include "ppl/common/sys.h"
 #include "common.hpp"
 
-#include<arm_neon.h>
+#include <arm_neon.h>
 
 namespace ppl::cv::arm {
 
@@ -51,13 +53,13 @@ static inline void neon_transpose_u32_4x4(uint32x4_t &va, uint32x4_t &vb, uint32
 }
 
 static inline void neon_transpose_u8_8x8(uint8x8_t &va,
-                                  uint8x8_t &vb,
-                                  uint8x8_t &vc,
-                                  uint8x8_t &vd,
-                                  uint8x8_t &ve,
-                                  uint8x8_t &vf,
-                                  uint8x8_t &vg,
-                                  uint8x8_t &vh)
+                                         uint8x8_t &vb,
+                                         uint8x8_t &vc,
+                                         uint8x8_t &vd,
+                                         uint8x8_t &ve,
+                                         uint8x8_t &vf,
+                                         uint8x8_t &vg,
+                                         uint8x8_t &vh)
 {
     uint8x8_t v04_0 = vzip1_u8(va, ve);
     uint8x8_t v15_0 = vzip1_u8(vb, vf);
@@ -88,13 +90,13 @@ static inline void neon_transpose_u8_8x8(uint8x8_t &va,
 }
 
 static inline void neon_transpose_u8_8x8_new_device(uint8x8_t &va,
-                                  uint8x8_t &vb,
-                                  uint8x8_t &vc,
-                                  uint8x8_t &vd,
-                                  uint8x8_t &ve,
-                                  uint8x8_t &vf,
-                                  uint8x8_t &vg,
-                                  uint8x8_t &vh)
+                                                    uint8x8_t &vb,
+                                                    uint8x8_t &vc,
+                                                    uint8x8_t &vd,
+                                                    uint8x8_t &ve,
+                                                    uint8x8_t &vf,
+                                                    uint8x8_t &vg,
+                                                    uint8x8_t &vh)
 {
     uint8x16_t v04 = vzip1q_u8(vcombine_u8(va, va), vcombine_u8(ve, ve));
     uint8x16_t v15 = vzip1q_u8(vcombine_u8(vb, vb), vcombine_u8(vf, vf));
@@ -121,23 +123,101 @@ static inline void neon_transpose_u8_8x8_new_device(uint8x8_t &va,
     vh = vget_high_u8(vgh);
 }
 
-static inline uint8x8_t neon_reverse_u8x8(uint8x8_t va) {
+static inline uint8x8_t neon_reverse_u8x8(uint8x8_t va)
+{
     return vrev64_u8(va);
 }
 
-static inline uint8x16_t neon_reverse_u8x16(uint8x16_t va) {
+static inline uint8x16_t neon_reverse_u8x16(uint8x16_t va)
+{
     uint8x16_t rev_inlane = vrev64q_u8(va);
     return vcombine_u8(vget_high_u8(rev_inlane), vget_low_u8(rev_inlane));
 }
 
-static inline float32x2_t neon_reverse_f32x2(float32x2_t va) {
+static inline float32x2_t neon_reverse_f32x2(float32x2_t va)
+{
     return vrev64_f32(va);
 }
 
-static inline float32x4_t neon_reverse_f32x4(float32x4_t va) {
+static inline float32x4_t neon_reverse_f32x4(float32x4_t va)
+{
     float32x4_t rev_inlane = vrev64q_f32(va);
     return vcombine_f32(vget_high_f32(rev_inlane), vget_low_f32(rev_inlane));
 }
 
+static inline uint32x4_t neon_reverse_u32x4(uint32x4_t va)
+{
+    uint32x4_t rev_inlane = vrev64q_u32(va);
+    return vcombine_u32(vget_high_u32(rev_inlane), vget_low_u32(rev_inlane));
 }
+
+static inline void neon_rotate90_f32_4x4(float32x4_t &va, float32x4_t &vb, float32x4_t &vc, float32x4_t &vd)
+{
+    neon_transpose_f32_4x4(va, vb, vc, vd);
+    va = neon_reverse_f32x4(va);
+    vb = neon_reverse_f32x4(vb);
+    vc = neon_reverse_f32x4(vc);
+    vd = neon_reverse_f32x4(vd);
+}
+
+static inline void neon_rotate90_u32_4x4(uint32x4_t &va, uint32x4_t &vb, uint32x4_t &vc, uint32x4_t &vd)
+{
+    neon_transpose_u32_4x4(va, vb, vc, vd);
+    va = neon_reverse_u32x4(va);
+    vb = neon_reverse_u32x4(vb);
+    vc = neon_reverse_u32x4(vc);
+    vd = neon_reverse_u32x4(vd);
+}
+
+static inline void neon_rotate270_f32_4x4(float32x4_t &va, float32x4_t &vb, float32x4_t &vc, float32x4_t &vd)
+{
+    neon_transpose_f32_4x4(va, vb, vc, vd);
+    std::swap(va, vd);
+    std::swap(vb, vc);
+}
+
+static inline void neon_rotate270_u32_4x4(uint32x4_t &va, uint32x4_t &vb, uint32x4_t &vc, uint32x4_t &vd)
+{
+    neon_transpose_u32_4x4(va, vb, vc, vd);
+    std::swap(va, vd);
+    std::swap(vb, vc);
+}
+
+static inline void neon_rotate90_u8_8x8(uint8x8_t &va,
+                                        uint8x8_t &vb,
+                                        uint8x8_t &vc,
+                                        uint8x8_t &vd,
+                                        uint8x8_t &ve,
+                                        uint8x8_t &vf,
+                                        uint8x8_t &vg,
+                                        uint8x8_t &vh)
+{
+    neon_transpose_u8_8x8(va, vb, vc, vd, ve, vf, vg, vh);
+    va = neon_reverse_u8x8(va);
+    vb = neon_reverse_u8x8(vb);
+    vc = neon_reverse_u8x8(vc);
+    vd = neon_reverse_u8x8(vd);
+    ve = neon_reverse_u8x8(ve);
+    vf = neon_reverse_u8x8(vf);
+    vg = neon_reverse_u8x8(vg);
+    vh = neon_reverse_u8x8(vh);
+}
+
+static inline void neon_rotate270_u8_8x8(uint8x8_t &va,
+                                         uint8x8_t &vb,
+                                         uint8x8_t &vc,
+                                         uint8x8_t &vd,
+                                         uint8x8_t &ve,
+                                         uint8x8_t &vf,
+                                         uint8x8_t &vg,
+                                         uint8x8_t &vh)
+{
+    neon_transpose_u8_8x8(va, vb, vc, vd, ve, vf, vg, vh);
+    std::swap(va, vh);
+    std::swap(vb, vg);
+    std::swap(vc, vf);
+    std::swap(vd, ve);
+}
+
+} // namespace ppl::cv::arm
 #endif
