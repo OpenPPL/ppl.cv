@@ -68,7 +68,10 @@ void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
         int32_t w = 0;
         int32_t sum[channels] = {0};
         for (; w <= width - 16; w += 16) {
+            prefetch(in + h * inWidthStride + w * channels);
             uint8x16_t vInData0 = vld1q_u8(in + h * inWidthStride + w * channels);
+            prefetch(out + h * outWidthStride + (w + 1 + 0) * channels);
+            prefetch(out + h * outWidthStride + (w + 1 + 8) * channels);
             uint32x4_t vInData1_0 = vld1q_u32(out + h * outWidthStride + (w + 1 + 0) * channels);
             uint32x4_t vInData1_1 = vld1q_u32(out + h * outWidthStride + (w + 1 + 4) * channels);
             uint32x4_t vInData1_2 = vld1q_u32(out + h * outWidthStride + (w + 1 + 8) * channels);
@@ -77,20 +80,13 @@ void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
             uint16x8_t vUhInData0 = vmovl_u8(vget_low_u8(vInData0));
             uint16x8_t vUhInData1 = vmovl_high_u8(vInData0);
 
-            uint32x4_t vUiInData0 = vmovl_u16(vget_low_u16(vUhInData0));
-            uint32x4_t vUiInData1 = vmovl_high_u16(vUhInData0);
-            uint32x4_t vUiInData2 = vmovl_u16(vget_low_u16(vUhInData1));
-            uint32x4_t vUiInData3 = vmovl_high_u16(vUhInData1);
+            uint16x8_t vUhScanRes0 = neon_scan_across_vector_u16x8(vUhInData0);
+            uint16x8_t vUhScanRes1 = neon_scan_across_vector_u16x8(vUhInData1);
 
-            uint32x4_t vScanRes0 = neon_scan_across_vector_u32x4(vUiInData0);
-            uint32x4_t vScanRes1 = neon_scan_across_vector_u32x4(vUiInData1);
-            uint32x4_t vScanRes2 = neon_scan_across_vector_u32x4(vUiInData2);
-            uint32x4_t vScanRes3 = neon_scan_across_vector_u32x4(vUiInData3);
-
-            vScanRes0 = vaddq_u32(vScanRes0, vdupq_n_u32(sum[0]));
-            vScanRes1 = vaddq_u32(vScanRes1, vdupq_laneq_u32(vScanRes0, 3));
-            vScanRes2 = vaddq_u32(vScanRes2, vdupq_laneq_u32(vScanRes1, 3));
-            vScanRes3 = vaddq_u32(vScanRes3, vdupq_laneq_u32(vScanRes2, 3));
+            uint32x4_t vScanRes0 = vaddw_u16(vdupq_n_u32(sum[0]), vget_low_u16(vUhScanRes0));
+            uint32x4_t vScanRes1 = vaddw_u16(vdupq_n_u32(sum[0]), vget_high_u16(vUhScanRes0));
+            uint32x4_t vScanRes2 = vaddw_u16(vdupq_laneq_u32(vScanRes1, 3), vget_low_u16(vUhScanRes1));
+            uint32x4_t vScanRes3 = vaddw_u16(vdupq_laneq_u32(vScanRes1, 3), vget_high_u16(vUhScanRes1));
 
             sum[0] = vgetq_lane_u32(vScanRes3, 3);
 
@@ -103,6 +99,211 @@ void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
             vst1q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 4) * channels), vRes1);
             vst1q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 8) * channels), vRes2);
             vst1q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 12) * channels), vRes3);
+        }
+
+        for (; w < width; w++) {
+            for (int32_t c = 0; c < channels; c++) {
+                uint8_t in_v = in[h * inWidthStride + w * channels + c];
+                sum[c] += in_v;
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
+            }
+        }
+    }
+}
+
+template <>
+void IntegralImage<uint8_t, uint32_t, 3>(int32_t height,
+                   int32_t width,
+                   int32_t inWidthStride,
+                   const uint8_t *in,
+                   int32_t outWidthStride,
+                   uint32_t *out)
+{
+    constexpr int channels = 3;
+
+    int32_t outWidth = width + 1;
+    memset(out, 0, sizeof(uint32_t) * outWidth * channels);
+
+    for (int32_t h = 0; h < height; h++) {
+        memset(out + (h + 1) * outWidthStride, 0, sizeof(uint32_t) * channels);
+        
+        int32_t w = 0;
+        int32_t sum[channels] = {0};
+        for (; w <= width - 16; w += 16) {
+            prefetch(in + h * inWidthStride + w * channels);
+            uint8x16x3_t vInData0 = vld3q_u8(in + h * inWidthStride + w * channels);
+
+            uint16x8x3_t vUhInData0, vUhInData1;
+            vUhInData0.val[0] = vmovl_u8(vget_low_u8(vInData0.val[0]));
+            vUhInData1.val[0] = vmovl_high_u8(vInData0.val[0]);
+            vUhInData0.val[1] = vmovl_u8(vget_low_u8(vInData0.val[1]));
+            vUhInData1.val[1] = vmovl_high_u8(vInData0.val[1]);
+            vUhInData0.val[2] = vmovl_u8(vget_low_u8(vInData0.val[2]));
+            vUhInData1.val[2] = vmovl_high_u8(vInData0.val[2]);
+
+            uint16x8x3_t vUhScanRes0, vUhScanRes1;
+            vUhScanRes0.val[0] = neon_scan_across_vector_u16x8(vUhInData0.val[0]);
+            vUhScanRes1.val[0] = neon_scan_across_vector_u16x8(vUhInData1.val[0]);
+            vUhScanRes0.val[1] = neon_scan_across_vector_u16x8(vUhInData0.val[1]);
+            vUhScanRes1.val[1] = neon_scan_across_vector_u16x8(vUhInData1.val[1]);
+            vUhScanRes0.val[2] = neon_scan_across_vector_u16x8(vUhInData0.val[2]);
+            vUhScanRes1.val[2] = neon_scan_across_vector_u16x8(vUhInData1.val[2]);
+
+            uint32x4x3_t vScanRes0, vScanRes1, vScanRes2, vScanRes3;
+            vScanRes0.val[0] = vaddw_u16(vdupq_n_u32(sum[0]), vget_low_u16(vUhScanRes0.val[0]));
+            vScanRes1.val[0] = vaddw_u16(vdupq_n_u32(sum[0]), vget_high_u16(vUhScanRes0.val[0]));
+            vScanRes2.val[0] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[0], 3), vget_low_u16(vUhScanRes1.val[0]));
+            vScanRes3.val[0] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[0], 3), vget_high_u16(vUhScanRes1.val[0]));
+            vScanRes0.val[1] = vaddw_u16(vdupq_n_u32(sum[1]), vget_low_u16(vUhScanRes0.val[1]));
+            vScanRes1.val[1] = vaddw_u16(vdupq_n_u32(sum[1]), vget_high_u16(vUhScanRes0.val[1]));
+            vScanRes2.val[1] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[1], 3), vget_low_u16(vUhScanRes1.val[1]));
+            vScanRes3.val[1] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[1], 3), vget_high_u16(vUhScanRes1.val[1]));
+            vScanRes0.val[2] = vaddw_u16(vdupq_n_u32(sum[2]), vget_low_u16(vUhScanRes0.val[2]));
+            vScanRes1.val[2] = vaddw_u16(vdupq_n_u32(sum[2]), vget_high_u16(vUhScanRes0.val[2]));
+            vScanRes2.val[2] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[2], 3), vget_low_u16(vUhScanRes1.val[2]));
+            vScanRes3.val[2] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[2], 3), vget_high_u16(vUhScanRes1.val[2]));
+
+            sum[0] = vgetq_lane_u32(vScanRes3.val[0], 3);
+            sum[1] = vgetq_lane_u32(vScanRes3.val[1], 3);
+            sum[2] = vgetq_lane_u32(vScanRes3.val[2], 3);
+
+            prefetch(out + h * outWidthStride + (w + 1 + 0) * channels);
+            prefetch(out + h * outWidthStride + (w + 1 + 4) * channels);
+            prefetch(out + h * outWidthStride + (w + 1 + 8) * channels);
+            prefetch(out + h * outWidthStride + (w + 1 + 12) * channels);
+            uint32x4x3_t vInData1_0 = vld3q_u32(out + h * outWidthStride + (w + 1 + 0) * channels);
+            uint32x4x3_t vInData1_1 = vld3q_u32(out + h * outWidthStride + (w + 1 + 4) * channels);
+            uint32x4x3_t vInData1_2 = vld3q_u32(out + h * outWidthStride + (w + 1 + 8) * channels);
+            uint32x4x3_t vInData1_3 = vld3q_u32(out + h * outWidthStride + (w + 1 + 12) * channels);
+
+            uint32x4x3_t vRes0, vRes1, vRes2, vRes3;
+            vRes0.val[0] = vaddq_u32(vInData1_0.val[0], vScanRes0.val[0]);
+            vRes1.val[0] = vaddq_u32(vInData1_1.val[0], vScanRes1.val[0]);
+            vRes2.val[0] = vaddq_u32(vInData1_2.val[0], vScanRes2.val[0]);
+            vRes3.val[0] = vaddq_u32(vInData1_3.val[0], vScanRes3.val[0]);
+            vRes0.val[1] = vaddq_u32(vInData1_0.val[1], vScanRes0.val[1]);
+            vRes1.val[1] = vaddq_u32(vInData1_1.val[1], vScanRes1.val[1]);
+            vRes2.val[1] = vaddq_u32(vInData1_2.val[1], vScanRes2.val[1]);
+            vRes3.val[1] = vaddq_u32(vInData1_3.val[1], vScanRes3.val[1]);
+            vRes0.val[2] = vaddq_u32(vInData1_0.val[2], vScanRes0.val[2]);
+            vRes1.val[2] = vaddq_u32(vInData1_1.val[2], vScanRes1.val[2]);
+            vRes2.val[2] = vaddq_u32(vInData1_2.val[2], vScanRes2.val[2]);
+            vRes3.val[2] = vaddq_u32(vInData1_3.val[2], vScanRes3.val[2]);
+
+            vst3q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 0) * channels), vRes0);
+            vst3q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 4) * channels), vRes1);
+            vst3q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 8) * channels), vRes2);
+            vst3q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 12) * channels), vRes3);
+        }
+
+        for (; w < width; w++) {
+            for (int32_t c = 0; c < channels; c++) {
+                uint8_t in_v = in[h * inWidthStride + w * channels + c];
+                sum[c] += in_v;
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
+            }
+        }
+    }
+}
+
+template <>
+void IntegralImage<uint8_t, uint32_t, 4>(int32_t height,
+                   int32_t width,
+                   int32_t inWidthStride,
+                   const uint8_t *in,
+                   int32_t outWidthStride,
+                   uint32_t *out)
+{
+    constexpr int channels = 4;
+
+    int32_t outWidth = width + 1;
+    memset(out, 0, sizeof(uint32_t) * outWidth * channels);
+
+    for (int32_t h = 0; h < height; h++) {
+        memset(out + (h + 1) * outWidthStride, 0, sizeof(uint32_t) * channels);
+        
+        int32_t w = 0;
+        int32_t sum[channels] = {0};
+        for (; w <= width - 16; w += 16) {
+            prefetch(in + h * inWidthStride + w * channels);
+            uint8x16x4_t vInData0 = vld4q_u8(in + h * inWidthStride + w * channels);
+
+            uint16x8x4_t vUhInData0, vUhInData1;
+            vUhInData0.val[0] = vmovl_u8(vget_low_u8(vInData0.val[0]));
+            vUhInData1.val[0] = vmovl_high_u8(vInData0.val[0]);
+            vUhInData0.val[1] = vmovl_u8(vget_low_u8(vInData0.val[1]));
+            vUhInData1.val[1] = vmovl_high_u8(vInData0.val[1]);
+            vUhInData0.val[2] = vmovl_u8(vget_low_u8(vInData0.val[2]));
+            vUhInData1.val[2] = vmovl_high_u8(vInData0.val[2]);
+            vUhInData0.val[3] = vmovl_u8(vget_low_u8(vInData0.val[3]));
+            vUhInData1.val[3] = vmovl_high_u8(vInData0.val[3]);
+
+            uint16x8x4_t vUhScanRes0, vUhScanRes1;
+            vUhScanRes0.val[0] = neon_scan_across_vector_u16x8(vUhInData0.val[0]);
+            vUhScanRes1.val[0] = neon_scan_across_vector_u16x8(vUhInData1.val[0]);
+            vUhScanRes0.val[1] = neon_scan_across_vector_u16x8(vUhInData0.val[1]);
+            vUhScanRes1.val[1] = neon_scan_across_vector_u16x8(vUhInData1.val[1]);
+            vUhScanRes0.val[2] = neon_scan_across_vector_u16x8(vUhInData0.val[2]);
+            vUhScanRes1.val[2] = neon_scan_across_vector_u16x8(vUhInData1.val[2]);
+            vUhScanRes0.val[3] = neon_scan_across_vector_u16x8(vUhInData0.val[3]);
+            vUhScanRes1.val[3] = neon_scan_across_vector_u16x8(vUhInData1.val[3]);
+
+            uint32x4x4_t vScanRes0, vScanRes1, vScanRes2, vScanRes3;
+            vScanRes0.val[0] = vaddw_u16(vdupq_n_u32(sum[0]), vget_low_u16(vUhScanRes0.val[0]));
+            vScanRes1.val[0] = vaddw_u16(vdupq_n_u32(sum[0]), vget_high_u16(vUhScanRes0.val[0]));
+            vScanRes2.val[0] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[0], 3), vget_low_u16(vUhScanRes1.val[0]));
+            vScanRes3.val[0] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[0], 3), vget_high_u16(vUhScanRes1.val[0]));
+            vScanRes0.val[1] = vaddw_u16(vdupq_n_u32(sum[1]), vget_low_u16(vUhScanRes0.val[1]));
+            vScanRes1.val[1] = vaddw_u16(vdupq_n_u32(sum[1]), vget_high_u16(vUhScanRes0.val[1]));
+            vScanRes2.val[1] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[1], 3), vget_low_u16(vUhScanRes1.val[1]));
+            vScanRes3.val[1] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[1], 3), vget_high_u16(vUhScanRes1.val[1]));
+            vScanRes0.val[2] = vaddw_u16(vdupq_n_u32(sum[2]), vget_low_u16(vUhScanRes0.val[2]));
+            vScanRes1.val[2] = vaddw_u16(vdupq_n_u32(sum[2]), vget_high_u16(vUhScanRes0.val[2]));
+            vScanRes2.val[2] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[2], 3), vget_low_u16(vUhScanRes1.val[2]));
+            vScanRes3.val[2] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[2], 3), vget_high_u16(vUhScanRes1.val[2]));
+            vScanRes0.val[3] = vaddw_u16(vdupq_n_u32(sum[3]), vget_low_u16(vUhScanRes0.val[3]));
+            vScanRes1.val[3] = vaddw_u16(vdupq_n_u32(sum[3]), vget_high_u16(vUhScanRes0.val[3]));
+            vScanRes2.val[3] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[3], 3), vget_low_u16(vUhScanRes1.val[3]));
+            vScanRes3.val[3] = vaddw_u16(vdupq_laneq_u32(vScanRes1.val[3], 3), vget_high_u16(vUhScanRes1.val[3]));
+
+            sum[0] = vgetq_lane_u32(vScanRes3.val[0], 3);
+            sum[1] = vgetq_lane_u32(vScanRes3.val[1], 3);
+            sum[2] = vgetq_lane_u32(vScanRes3.val[2], 3);
+            sum[3] = vgetq_lane_u32(vScanRes3.val[3], 3);
+
+            uint32x4x4_t vRes0, vRes1, vRes2, vRes3;
+
+            prefetch(out + h * outWidthStride + (w + 1 + 0) * channels);
+            uint32x4x4_t vInData1_0 = vld4q_u32(out + h * outWidthStride + (w + 1 + 0) * channels);
+            vRes0.val[0] = vaddq_u32(vInData1_0.val[0], vScanRes0.val[0]);
+            vRes0.val[1] = vaddq_u32(vInData1_0.val[1], vScanRes0.val[1]);
+            vRes0.val[2] = vaddq_u32(vInData1_0.val[2], vScanRes0.val[2]);
+            vRes0.val[3] = vaddq_u32(vInData1_0.val[3], vScanRes0.val[3]);
+            vst4q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 0) * channels), vRes0);
+
+            prefetch(out + h * outWidthStride + (w + 1 + 4) * channels);
+            uint32x4x4_t vInData1_1 = vld4q_u32(out + h * outWidthStride + (w + 1 + 4) * channels);
+            vRes1.val[0] = vaddq_u32(vInData1_1.val[0], vScanRes1.val[0]);
+            vRes1.val[1] = vaddq_u32(vInData1_1.val[1], vScanRes1.val[1]);
+            vRes1.val[2] = vaddq_u32(vInData1_1.val[2], vScanRes1.val[2]);
+            vRes1.val[3] = vaddq_u32(vInData1_1.val[3], vScanRes1.val[3]);
+            vst4q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 4) * channels), vRes1);
+            
+            prefetch(out + h * outWidthStride + (w + 1 + 8) * channels);
+            uint32x4x4_t vInData1_2 = vld4q_u32(out + h * outWidthStride + (w + 1 + 8) * channels);
+            vRes2.val[0] = vaddq_u32(vInData1_2.val[0], vScanRes2.val[0]);
+            vRes2.val[1] = vaddq_u32(vInData1_2.val[1], vScanRes2.val[1]);
+            vRes2.val[2] = vaddq_u32(vInData1_2.val[2], vScanRes2.val[2]);
+            vRes2.val[3] = vaddq_u32(vInData1_2.val[3], vScanRes2.val[3]);
+            vst4q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 8) * channels), vRes2);
+
+            prefetch(out + h * outWidthStride + (w + 1 + 12) * channels);
+            uint32x4x4_t vInData1_3 = vld4q_u32(out + h * outWidthStride + (w + 1 + 12) * channels);
+            vRes3.val[0] = vaddq_u32(vInData1_3.val[0], vScanRes3.val[0]);
+            vRes3.val[1] = vaddq_u32(vInData1_3.val[1], vScanRes3.val[1]);
+            vRes3.val[2] = vaddq_u32(vInData1_3.val[2], vScanRes3.val[2]);
+            vRes3.val[3] = vaddq_u32(vInData1_3.val[3], vScanRes3.val[3]);
+            vst4q_u32((uint32_t *)(out + (h + 1) * outWidthStride + (w + 1 + 12) * channels), vRes3);
         }
 
         for (; w < width; w++) {
