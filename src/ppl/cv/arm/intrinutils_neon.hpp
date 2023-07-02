@@ -219,5 +219,29 @@ static inline void neon_rotate270_u8_8x8(uint8x8_t &va,
     std::swap(vd, ve);
 }
 
+static inline uint32x4_t neon_scan_across_vector_u32x4(uint32x4_t vIn) {
+    uint32x4_t vZero = vdupq_n_u32(0);
+
+    uint32x4_t vResShft1 = vextq_u32(vZero, vIn, 3);
+    uint32x4_t vResStep1 = vaddq_u32(vIn, vResShft1);
+    
+    uint32x4_t vResShft2 = vextq_u32(vZero, vResStep1, 2);
+    uint32x4_t vResStep2 = vaddq_u32(vResStep1, vResShft2);
+
+    return vResStep2;
+}
+
+static inline float32x4_t neon_scan_across_vector_f32x4(float32x4_t vIn) {
+    float32x4_t vZero = vdupq_n_f32(0);
+
+    float32x4_t vResShft1 = vextq_f32(vZero, vIn, 3);
+    float32x4_t vResStep1 = vaddq_f32(vIn, vResShft1);
+    
+    float32x4_t vResShft2 = vextq_f32(vZero, vResStep1, 2);
+    float32x4_t vResStep2 = vaddq_f32(vResStep1, vResShft2);
+
+    return vResStep2;
+}
+
 } // namespace ppl::cv::arm
 #endif
