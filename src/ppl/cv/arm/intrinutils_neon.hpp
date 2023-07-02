@@ -243,5 +243,20 @@ static inline float32x4_t neon_scan_across_vector_f32x4(float32x4_t vIn) {
     return vResStep2;
 }
 
+static inline uint16x8_t neon_scan_across_vector_u16x8(uint16x8_t vIn) {
+    uint16x8_t vZero = vdupq_n_u16(0);
+
+    uint16x8_t vResShft1 = vextq_u16(vZero, vIn, 7);
+    uint16x8_t vResStep1 = vaddq_u16(vIn, vResShft1);
+    
+    uint16x8_t vResShft2 = vextq_u16(vZero, vResStep1, 6);
+    uint16x8_t vResStep2 = vaddq_u16(vResStep1, vResShft2);
+
+    uint16x8_t vResShft3 = vextq_u16(vZero, vResStep2, 4);
+    uint16x8_t vResStep3 = vaddq_u16(vResStep2, vResShft3);
+
+    return vResStep3;
+}
+
 } // namespace ppl::cv::arm
 #endif
