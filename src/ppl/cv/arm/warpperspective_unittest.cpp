@@ -161,13 +161,9 @@ bool PplCvArmWarpPerspectiveTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = EPSILON_2F;
+        epsilon = EPSILON_1F;
     } else {
-        if (channels == 1 || channels == 4) {
-            epsilon = EPSILON_E2;
-        } else {
-            epsilon = EPSILON_E4;
-        }
+        epsilon = EPSILON_E6;
     }
     bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
 
