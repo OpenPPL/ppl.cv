@@ -24,6 +24,7 @@
 #include <vector>
 #include <limits.h>
 #include <arm_neon.h>
+#include <cstdio>
 
 namespace ppl::cv::arm {
 
@@ -184,16 +185,27 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
             double w = (M[2][0] * j + baseW);
             double x = M[0][0] * j + baseX;
             double y = M[1][0] * j + baseY;
-            y = y / w;
-            x = x / w;
-            int32_t sx0 = (int32_t)x;
-            int32_t sy0 = (int32_t)y;
-            double u = x - sx0;
-            double v = y - sy0;
 
-            double tab[4];
-            double taby[2], tabx[2];
-            double v0, v1, v2, v3;
+            // y = y / w;
+            // x = x / w;
+            // int32_t sx0 = (int32_t)x;
+            // int32_t sy0 = (int32_t)y;
+            // float u = x - sx0;
+            // float v = y - sy0;
+
+            // opencv fixed point speed up
+            y = 32 * y / w;
+            x = 32 * x / w;
+            int32_t sx0 = std::round(x);
+            int32_t sy0 = std::round(y);
+            float u = (sx0 & 31) / 32.0f;
+            float v = (sy0 & 31) / 32.0f;
+            sx0 = sx0 >> 5;
+            sy0 = sy0 >> 5;
+
+            float tab[4];
+            float taby[2], tabx[2];
+            float v0, v1, v2, v3;
             taby[0] = 1.0f - 1.0f * v;
             taby[1] = v;
             tabx[0] = 1.0f - u;
@@ -218,7 +230,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                     v1 = flag1 ? src[position1 + nc + k] : delta;
                     v2 = flag2 ? src[position2 + k] : delta;
                     v3 = flag3 ? src[position2 + nc + k] : delta;
-                    double sum = 0;
+                    float sum = 0;
                     sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                     // dst[idxDst + k] = static_cast<T>(sum);
                     dst[idxDst + k] = (std::is_same<float, T>::value) ? static_cast<T>(sum) : sat_cast(std::round(sum));
@@ -235,7 +247,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                 const T* t2 = src + sy1 * inWidthStride + sx0 * nc;
                 const T* t3 = src + sy1 * inWidthStride + sx1 * nc;
                 for (int32_t k = 0; k < nc; ++k) {
-                    double sum = 0;
+                    float sum = 0;
                     sum += t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3];
                     // dst[idxDst + k] = static_cast<T>(sum);
                     dst[idxDst + k] = (std::is_same<float, T>::value) ? static_cast<T>(sum) : sat_cast(std::round(sum));
@@ -253,7 +265,7 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                         v1 = src[position1 + nc + k];
                         v2 = src[position2 + k];
                         v3 = src[position2 + nc + k];
-                        double sum = 0;
+                        float sum = 0;
                         sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
                         // dst[idxDst + k] = static_cast<T>(sum);
                         dst[idxDst + k] = (std::is_same<float, T>::value) ? static_cast<T>(sum) : sat_cast(std::round(sum));
