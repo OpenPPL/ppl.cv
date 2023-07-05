@@ -26,6 +26,8 @@
 #include <arm_neon.h>
 #include <cstdio>
 
+#define BLOCK_SIZE (64)
+
 namespace ppl::cv::arm {
 
 template <typename T>
@@ -100,6 +102,166 @@ inline uint8_t bilinear_sample<uint8_t, uint8_t>(uint8_t t[][2], float u, float 
                     255);
 }
 
+void WarpPerspective_CoordCompute_Nearest_Line(const double *M, int16_t *coord_map, int bw, double X0, double Y0, double W0) {
+    float64x2_t v_baseXd = {0.0, 1.0};
+    const float64x2_t v_2d = vdupq_n_f64(2.0);
+    const float64x2_t v_W0d_c = vdupq_n_f64(W0);
+    const float64x2_t v_X0d_c = vdupq_n_f64(X0);
+    const float64x2_t v_Y0d_c = vdupq_n_f64(Y0);
+    const float64x2_t v_M0d = vdupq_n_f64(M[0]);
+    const float64x2_t v_M3d = vdupq_n_f64(M[3]);
+    const float64x2_t v_M6d = vdupq_n_f64(M[6]);
+    const float32x4_t v_shrtmaxf = vdupq_n_f32((float)SHRT_MAX);
+    const float32x4_t v_shrtminf = vdupq_n_f32((float)SHRT_MIN);
+    
+    int jj = 0;
+    for (; jj <= bw - 16; jj += 16) {
+        // 0 1 2 3
+        int32x4_t vCoordX0123i, vCoordY0123i;
+        {
+            float64x2_t v_W0d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X0d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y0d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            float64x2_t v_W1d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X1d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y1d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            // for NEON, fdiv produces 0 when divisor is 0
+            v_X0d = vdivq_f64(v_X0d, v_W0d);
+            v_Y0d = vdivq_f64(v_Y0d, v_W0d);
+            v_X1d = vdivq_f64(v_X1d, v_W1d);
+            v_Y1d = vdivq_f64(v_Y1d, v_W1d);
+
+            // assume that the number won't overflow float
+            // this almost always holds and permits less clip
+            float32x2_t v_X0f = vcvtx_f32_f64(v_X0d);
+            float32x4_t v_X01f = vcvtx_high_f32_f64(v_X0f, v_X1d);
+            float32x2_t v_Y0f = vcvtx_f32_f64(v_Y0d);
+            float32x4_t v_Y01f = vcvtx_high_f32_f64(v_Y0f, v_Y1d);
+            v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
+            v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
+
+            vCoordX0123i = vcvtaq_s32_f32(v_X01f);
+            vCoordY0123i = vcvtaq_s32_f32(v_Y01f);
+        }
+
+        // 4 5 6 7
+        int32x4_t vCoordX4567i, vCoordY4567i;
+        {
+            float64x2_t v_W0d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X0d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y0d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            float64x2_t v_W1d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X1d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y1d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            v_X0d = vdivq_f64(v_X0d, v_W0d);
+            v_Y0d = vdivq_f64(v_Y0d, v_W0d);
+            v_X1d = vdivq_f64(v_X1d, v_W1d);
+            v_Y1d = vdivq_f64(v_Y1d, v_W1d);
+
+            float32x2_t v_X0f = vcvtx_f32_f64(v_X0d);
+            float32x4_t v_X01f = vcvtx_high_f32_f64(v_X0f, v_X1d);
+            float32x2_t v_Y0f = vcvtx_f32_f64(v_Y0d);
+            float32x4_t v_Y01f = vcvtx_high_f32_f64(v_Y0f, v_Y1d);
+            v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
+            v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
+
+            vCoordX4567i = vcvtaq_s32_f32(v_X01f);
+            vCoordY4567i = vcvtaq_s32_f32(v_Y01f);
+        }
+
+        // 8 9 10 11
+        int32x4_t vCoordX89abi, vCoordY89abi;
+        {
+            float64x2_t v_W0d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X0d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y0d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            float64x2_t v_W1d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X1d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y1d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            v_X0d = vdivq_f64(v_X0d, v_W0d);
+            v_Y0d = vdivq_f64(v_Y0d, v_W0d);
+            v_X1d = vdivq_f64(v_X1d, v_W1d);
+            v_Y1d = vdivq_f64(v_Y1d, v_W1d);
+
+            float32x2_t v_X0f = vcvtx_f32_f64(v_X0d);
+            float32x4_t v_X01f = vcvtx_high_f32_f64(v_X0f, v_X1d);
+            float32x2_t v_Y0f = vcvtx_f32_f64(v_Y0d);
+            float32x4_t v_Y01f = vcvtx_high_f32_f64(v_Y0f, v_Y1d);
+            v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
+            v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
+
+            vCoordX89abi = vcvtaq_s32_f32(v_X01f);
+            vCoordY89abi = vcvtaq_s32_f32(v_Y01f);
+        }
+
+        // 12 13 14 15
+        int32x4_t vCoordXcdefi, vCoordYcdefi;
+        {
+            float64x2_t v_W0d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X0d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y0d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            float64x2_t v_W1d = vmlaq_f64(v_W0d_c, v_baseXd, v_M6d);
+            float64x2_t v_X1d = vmlaq_f64(v_X0d_c, v_baseXd, v_M0d);
+            float64x2_t v_Y1d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
+            v_baseXd = vaddq_f64(v_baseXd, v_2d);
+
+            v_X0d = vdivq_f64(v_X0d, v_W0d);
+            v_Y0d = vdivq_f64(v_Y0d, v_W0d);
+            v_X1d = vdivq_f64(v_X1d, v_W1d);
+            v_Y1d = vdivq_f64(v_Y1d, v_W1d);
+
+            float32x2_t v_X0f = vcvtx_f32_f64(v_X0d);
+            float32x4_t v_X01f = vcvtx_high_f32_f64(v_X0f, v_X1d);
+            float32x2_t v_Y0f = vcvtx_f32_f64(v_Y0d);
+            float32x4_t v_Y01f = vcvtx_high_f32_f64(v_Y0f, v_Y1d);
+            v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
+            v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
+
+            vCoordXcdefi = vcvtaq_s32_f32(v_X01f);
+            vCoordYcdefi = vcvtaq_s32_f32(v_Y01f);
+        }
+
+        int16x8x2_t vCoord0, vCoord1;
+        int16x4_t vCoord0XHalf = vmovn_s32(vCoordX0123i);
+        vCoord0.val[0] = vmovn_high_s32(vCoord0XHalf, vCoordX4567i);
+        int16x4_t vCoord0YHalf = vmovn_s32(vCoordY0123i);
+        vCoord0.val[1] = vmovn_high_s32(vCoord0YHalf, vCoordY4567i);
+        vst2q_s16(coord_map + jj * 2, vCoord0);
+
+        int16x4_t vCoord1XHalf = vmovn_s32(vCoordX89abi);
+        vCoord1.val[0] = vmovn_high_s32(vCoord1XHalf, vCoordXcdefi);
+        int16x4_t vCoord1YHalf = vmovn_s32(vCoordY89abi);
+        vCoord1.val[1] = vmovn_high_s32(vCoord1YHalf, vCoordYcdefi);
+        vst2q_s16(coord_map + jj * 2 + 16, vCoord1);
+    }
+
+    for (; jj < bw; jj++) {
+        double W = W0 + M[6] * jj;
+        W = W ? 1./W : 0;
+        double X = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (X0 + M[0] * jj) * W));
+        double Y = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (Y0 + M[3] * jj) * W));
+        int16_t Xh = std::round(X);
+        int16_t Yh = std::round(Y);
+
+        coord_map[jj * 2] = Xh;
+        coord_map[jj * 2 + 1] = Yh;
+    }
+}
+
 template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 ::ppl::common::RetCode warpperspective_nearest(int32_t inHeight,
                                                int32_t inWidth,
@@ -112,44 +274,53 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                                                const double M[][3],
                                                T delta = 0)
 {
-    for (int32_t i = 0; i < outHeight; i++) {
-        double baseW = M[2][1] * i + M[2][2];
-        double baseX = M[0][1] * i + M[0][2];
-        double baseY = M[1][1] * i + M[1][2];
-        for (int32_t j = 0; j < outWidth; j++) {
-            double w = M[2][0] * j + baseW;
-            double x = M[0][0] * j + baseX;
-            double y = M[1][0] * j + baseY;
+    int16_t coord_data[BLOCK_SIZE * BLOCK_SIZE * 2];
+    int16_t *coord_map = (int16_t *)&coord_data[0];
+    
+    for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
+        for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
+            int bh = std::min(BLOCK_SIZE, outHeight - i);
+            int bw = std::min(BLOCK_SIZE, outWidth - j);
+            double baseWb = M[2][0] * j + M[2][1] * i + M[2][2];
+            double baseXb = M[0][0] * j + M[0][1] * i + M[0][2];
+            double baseYb = M[1][0] * j + M[1][1] * i + M[1][2];
+            for (int32_t bi = 0; bi < bh; bi++) {
+                double baseW = M[2][1] * bi + baseWb;
+                double baseX = M[0][1] * bi + baseXb;
+                double baseY = M[1][1] * bi + baseYb;
+                WarpPerspective_CoordCompute_Nearest_Line(&M[0][0], coord_map + BLOCK_SIZE * bi * 2, bw, baseX, baseY, baseW);
+            }
 
-            int32_t sy = static_cast<int32_t>(std::round(y / w));
-            int32_t sx = static_cast<int32_t>(std::round(x / w));
-            if (borderMode == ppl::cv::BORDER_CONSTANT) {
-                int32_t idxSrc = sy * inWidthStride + sx * nc;
-                int32_t idxDst = i * outWidthStride + j * nc;
-                if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    for (int32_t i = 0; i < nc; i++)
-                        dst[idxDst + i] = src[idxSrc + i];
-                } else {
-                    for (int32_t i = 0; i < nc; i++) {
-                        dst[idxDst + i] = delta;
+            for (int32_t bi = 0; bi < bh; bi++) {
+                for (int32_t bj = 0; bj < bw; bj++) {
+                    int ii = i + bi;
+                    int jj = j + bj;
+                    int32_t sx = coord_map[bi * BLOCK_SIZE * 2 + bj * 2];
+                    int32_t sy = coord_map[bi * BLOCK_SIZE * 2 + bj * 2 + 1];
+                    if (borderMode == ppl::cv::BORDER_CONSTANT) {
+                        int32_t idxSrc = sy * inWidthStride + sx * nc;
+                        int32_t idxDst = ii * outWidthStride + jj * nc;
+                        bool cond = (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight);
+                        for (int32_t k = 0; k < nc; k++) {
+                            dst[idxDst + k] = cond ? src[idxSrc + k] : delta;
+                        }
+                    } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
+                        sx = clip(sx, 0, inWidth - 1);
+                        sy = clip(sy, 0, inHeight - 1);
+                        int32_t idxSrc = sy * inWidthStride + sx * nc;
+                        int32_t idxDst = ii * outWidthStride + jj * nc;
+                        for (int32_t k = 0; k < nc; k++) {
+                            dst[idxDst + k] = src[idxSrc + k];
+                        }
+                    } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
+                        if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
+                            int32_t idxSrc = sy * inWidthStride + sx * nc;
+                            int32_t idxDst = ii * outWidthStride + jj * nc;
+                            for (int32_t k = 0; k < nc; k++) {
+                                dst[idxDst + k] = src[idxSrc + k];
+                            }
+                        }
                     }
-                }
-            } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
-                sx = clip(sx, 0, inWidth - 1);
-                sy = clip(sy, 0, inHeight - 1);
-                int32_t idxSrc = sy * inWidthStride + sx * nc;
-                int32_t idxDst = i * outWidthStride + j * nc;
-                for (int32_t i = 0; i < nc; i++) {
-                    dst[idxDst + i] = src[idxSrc + i];
-                }
-            } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
-                if (sx >= 0 && sx < inWidth && sy >= 0 && sy < inHeight) {
-                    int32_t idxSrc = sy * inWidthStride + sx * nc;
-                    int32_t idxDst = i * outWidthStride + j * nc;
-                    for (int32_t i = 0; i < nc; i++)
-                        dst[idxDst + i] = src[idxSrc + i];
-                } else {
-                    continue;
                 }
             }
         }
