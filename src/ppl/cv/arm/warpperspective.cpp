@@ -207,7 +207,7 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
     const float64x2_t v_M3d = vdupq_n_f64(M[3]);
     const float64x2_t v_M6d = vdupq_n_f64(M[6]);
     const float64x2_t v_interTblSzd = vdupq_n_f64((double)INTER_TABLE_SIZE);
-    const int32x4_t v_interTblMaski = vdupq_n_s32(INTER_TABLE_SIZE - 1);
+    const int16x8_t v_interTblMaski = vdupq_n_s16(INTER_TABLE_SIZE - 1);
     const float32x4_t v_intmaxf = vdupq_n_f32((float)INT_MAX);
     const float32x4_t v_intminf = vdupq_n_f32((float)INT_MIN);
     
@@ -332,39 +332,37 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
             vCoordYcdefi = vcvtaq_s32_f32(v_Y01f);
         }
 
-        int32x4_t v_Alpha0i = vaddq_s32(vshlq_n_s32(vandq_s32(vCoordY0123i, v_interTblMaski), INTER_TABLE_BITS), vandq_s32(vCoordX0123i, v_interTblMaski));
-        int32x4_t v_Alpha1i = vaddq_s32(vshlq_n_s32(vandq_s32(vCoordY4567i, v_interTblMaski), INTER_TABLE_BITS), vandq_s32(vCoordX4567i, v_interTblMaski));
-        int32x4_t v_Alpha2i = vaddq_s32(vshlq_n_s32(vandq_s32(vCoordY89abi, v_interTblMaski), INTER_TABLE_BITS), vandq_s32(vCoordX89abi, v_interTblMaski));
-        int32x4_t v_Alpha3i = vaddq_s32(vshlq_n_s32(vandq_s32(vCoordYcdefi, v_interTblMaski), INTER_TABLE_BITS), vandq_s32(vCoordXcdefi, v_interTblMaski));
-        
-        int16x4_t v_Alpha01Halfh = vmovn_s32(v_Alpha0i);
-        int16x8_t v_Alpha01h = vmovn_high_s32(v_Alpha01Halfh, v_Alpha1i);
-        int16x4_t v_Alpha23Halfh = vmovn_s32(v_Alpha2i);
-        int16x8_t v_Alpha23h = vmovn_high_s32(v_Alpha23Halfh, v_Alpha3i);
-        
-        vst1q_s16(alpha_map + jj, v_Alpha01h);
-        vst1q_s16(alpha_map + jj + 8, v_Alpha23h);
+        // construct alpha vector
+        // truncate as needed value is less than 16
+        int16x4_t v_AlphaX0Halfh = vmovn_s32(vCoordX0123i);
+        int16x8_t v_AlphaX0h = vmovn_high_s32(v_AlphaX0Halfh, vCoordX4567i);
+        int16x4_t v_AlphaY0Halfh = vmovn_s32(vCoordY0123i);
+        int16x8_t v_AlphaY0h = vmovn_high_s32(v_AlphaY0Halfh, vCoordY4567i);
+        int16x4_t v_AlphaX1Halfh = vmovn_s32(vCoordX89abi);
+        int16x8_t v_AlphaX1h = vmovn_high_s32(v_AlphaX1Halfh, vCoordXcdefi);
+        int16x4_t v_AlphaY1Halfh = vmovn_s32(vCoordY89abi);
+        int16x8_t v_AlphaY1h = vmovn_high_s32(v_AlphaY1Halfh, vCoordYcdefi);
+        // Use SHLI to do shift and combine in single instruction
+        v_AlphaY0h = vandq_s16(v_AlphaY0h, v_interTblMaski);
+        v_AlphaY1h = vandq_s16(v_AlphaY1h, v_interTblMaski);
+        int16x8_t v_Alpha0h = vsliq_n_s16(v_AlphaX0h, v_AlphaY0h, INTER_TABLE_BITS);
+        int16x8_t v_Alpha1h = vsliq_n_s16(v_AlphaX1h, v_AlphaY1h, INTER_TABLE_BITS);
+        // store to alpha map
+        vst1q_s16(alpha_map + jj, v_Alpha0h);
+        vst1q_s16(alpha_map + jj + 8, v_Alpha1h);
 
-        vCoordX0123i = vshrq_n_s32(vCoordX0123i, INTER_TABLE_BITS);
-        vCoordX4567i = vshrq_n_s32(vCoordX4567i, INTER_TABLE_BITS);
-        vCoordX89abi = vshrq_n_s32(vCoordX89abi, INTER_TABLE_BITS);
-        vCoordXcdefi = vshrq_n_s32(vCoordXcdefi, INTER_TABLE_BITS);
-        vCoordY0123i = vshrq_n_s32(vCoordY0123i, INTER_TABLE_BITS);
-        vCoordY4567i = vshrq_n_s32(vCoordY4567i, INTER_TABLE_BITS);
-        vCoordY89abi = vshrq_n_s32(vCoordY89abi, INTER_TABLE_BITS);
-        vCoordYcdefi = vshrq_n_s32(vCoordYcdefi, INTER_TABLE_BITS);
-
+        // use RSHRN to do shift and narrow in single instruction
         int16x8x2_t vCoord0, vCoord1;
-        int16x4_t vCoord0XHalf = vqmovn_s32(vCoordX0123i);
-        vCoord0.val[0] = vqmovn_high_s32(vCoord0XHalf, vCoordX4567i);
-        int16x4_t vCoord0YHalf = vqmovn_s32(vCoordY0123i);
-        vCoord0.val[1] = vqmovn_high_s32(vCoord0YHalf, vCoordY4567i);
+        int16x4_t vCoord0XHalf = vqshrn_n_s32(vCoordX0123i, INTER_TABLE_BITS);
+        vCoord0.val[0] = vqshrn_high_n_s32(vCoord0XHalf, vCoordX4567i, INTER_TABLE_BITS);
+        int16x4_t vCoord0YHalf = vqshrn_n_s32(vCoordY0123i, INTER_TABLE_BITS);
+        vCoord0.val[1] = vqshrn_high_n_s32(vCoord0YHalf, vCoordY4567i, INTER_TABLE_BITS);
         vst2q_s16(coord_map + jj * 2, vCoord0);
 
-        int16x4_t vCoord1XHalf = vqmovn_s32(vCoordX89abi);
-        vCoord1.val[0] = vqmovn_high_s32(vCoord1XHalf, vCoordXcdefi);
-        int16x4_t vCoord1YHalf = vqmovn_s32(vCoordY89abi);
-        vCoord1.val[1] = vqmovn_high_s32(vCoord1YHalf, vCoordYcdefi);
+        int16x4_t vCoord1XHalf = vqshrn_n_s32(vCoordX89abi, INTER_TABLE_BITS);
+        vCoord1.val[0] = vqshrn_high_n_s32(vCoord1XHalf, vCoordXcdefi, INTER_TABLE_BITS);
+        int16x4_t vCoord1YHalf = vqshrn_n_s32(vCoordY89abi, INTER_TABLE_BITS);
+        vCoord1.val[1] = vqshrn_high_n_s32(vCoord1YHalf, vCoordYcdefi, INTER_TABLE_BITS);
         vst2q_s16(coord_map + jj * 2 + 16, vCoord1);
     }
 
