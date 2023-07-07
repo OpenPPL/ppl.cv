@@ -25,7 +25,7 @@
 #include <limits.h>
 #include <arm_neon.h>
 
-#define BLOCK_SIZE (64)
+#define BLOCK_SIZE (32)
 #define INTER_TABLE_BITS (5)
 #define INTER_TABLE_SIZE (32)
 
@@ -227,10 +227,10 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
             v_baseXd = vaddq_f64(v_baseXd, v_2d);
 
             // for NEON, fdiv produces 0 when divisor is 0
-            v_X0d = vmulq_f64(vdivq_f64(v_X0d, v_W0d), v_interTblSzd);
-            v_Y0d = vmulq_f64(vdivq_f64(v_Y0d, v_W0d), v_interTblSzd);
-            v_X1d = vmulq_f64(vdivq_f64(v_X1d, v_W1d), v_interTblSzd);
-            v_Y1d = vmulq_f64(vdivq_f64(v_Y1d, v_W1d), v_interTblSzd);
+            v_X0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_X0d);
+            v_Y0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_Y0d);
+            v_X1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_X1d);
+            v_Y1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_Y1d);
 
             // assume that the number won't overflow float
             // this almost always holds and permits less clip
@@ -258,10 +258,10 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
             float64x2_t v_Y1d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
             v_baseXd = vaddq_f64(v_baseXd, v_2d);
 
-            v_X0d = vmulq_f64(vdivq_f64(v_X0d, v_W0d), v_interTblSzd);
-            v_Y0d = vmulq_f64(vdivq_f64(v_Y0d, v_W0d), v_interTblSzd);
-            v_X1d = vmulq_f64(vdivq_f64(v_X1d, v_W1d), v_interTblSzd);
-            v_Y1d = vmulq_f64(vdivq_f64(v_Y1d, v_W1d), v_interTblSzd);
+            v_X0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_X0d);
+            v_Y0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_Y0d);
+            v_X1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_X1d);
+            v_Y1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_Y1d);
 
             float32x2_t v_X0f = vcvtx_f32_f64(v_X0d);
             float32x4_t v_X01f = vcvtx_high_f32_f64(v_X0f, v_X1d);
@@ -287,10 +287,10 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
             float64x2_t v_Y1d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
             v_baseXd = vaddq_f64(v_baseXd, v_2d);
 
-            v_X0d = vmulq_f64(vdivq_f64(v_X0d, v_W0d), v_interTblSzd);
-            v_Y0d = vmulq_f64(vdivq_f64(v_Y0d, v_W0d), v_interTblSzd);
-            v_X1d = vmulq_f64(vdivq_f64(v_X1d, v_W1d), v_interTblSzd);
-            v_Y1d = vmulq_f64(vdivq_f64(v_Y1d, v_W1d), v_interTblSzd);
+            v_X0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_X0d);
+            v_Y0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_Y0d);
+            v_X1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_X1d);
+            v_Y1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_Y1d);
 
             float32x2_t v_X0f = vcvtx_f32_f64(v_X0d);
             float32x4_t v_X01f = vcvtx_high_f32_f64(v_X0f, v_X1d);
@@ -316,10 +316,10 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
             float64x2_t v_Y1d = vmlaq_f64(v_Y0d_c, v_baseXd, v_M3d);
             v_baseXd = vaddq_f64(v_baseXd, v_2d);
 
-            v_X0d = vmulq_f64(vdivq_f64(v_X0d, v_W0d), v_interTblSzd);
-            v_Y0d = vmulq_f64(vdivq_f64(v_Y0d, v_W0d), v_interTblSzd);
-            v_X1d = vmulq_f64(vdivq_f64(v_X1d, v_W1d), v_interTblSzd);
-            v_Y1d = vmulq_f64(vdivq_f64(v_Y1d, v_W1d), v_interTblSzd);
+            v_X0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_X0d);
+            v_Y0d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W0d), v_Y0d);
+            v_X1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_X1d);
+            v_Y1d = vmulq_f64(vdivq_f64(v_interTblSzd, v_W1d), v_Y1d);
 
             float32x2_t v_X0f = vcvtx_f32_f64(v_X0d);
             float32x4_t v_X01f = vcvtx_high_f32_f64(v_X0f, v_X1d);
