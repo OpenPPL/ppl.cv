@@ -27,7 +27,25 @@
 
 using namespace ppl::cv::debug;
 
-static cv::Mat M = createSourceImage(3, 3, CV_64FC1);
+cv::Mat getRandomPerspectiveMat(cv::Mat src, cv::Mat dst) {
+    constexpr int offset = 16;
+    cv::Point2f srcPoints[4];
+    cv::Point2f dstPoints[4];
+
+    srcPoints[0] = cv::Point2f(0 + offset, 0 + offset);
+    srcPoints[1] = cv::Point2f(src.rows - 1 - offset, 0);
+    srcPoints[2] = cv::Point2f(src.rows - 1 - offset, src.cols - 1 - offset);
+    srcPoints[3] = cv::Point2f(0 + offset, src.cols - 1 - offset);
+
+    dstPoints[0] = cv::Point2f(0 + offset, 0 + offset);
+    dstPoints[1] = cv::Point2f(dst.rows - 1 - offset, 0);
+    dstPoints[2] = cv::Point2f(dst.rows - 1 - offset, dst.cols - 1 - offset);
+    dstPoints[3] = cv::Point2f(0 + offset, dst.cols - 1 - offset);
+
+    // inverse map
+    cv::Mat M = getPerspectiveTransform(dstPoints, srcPoints);
+    return M;
+}
 
 template <typename T, int channels, ppl::cv::InterpolationType inter_type, ppl::cv::BorderType border_type>
 void BM_WarpPerspective_ppl_aarch64(benchmark::State &state)
@@ -38,6 +56,7 @@ void BM_WarpPerspective_ppl_aarch64(benchmark::State &state)
     int dst_height = state.range(3);
     cv::Mat src = createSourceImage(src_height, src_width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
     cv::Mat dst(dst_height, dst_width, src.type());
+    cv::Mat M = getRandomPerspectiveMat(src, dst);
 
     int warmup_iters = 5;
     int perf_iters = 50;
@@ -148,6 +167,7 @@ void BM_WarpPerspective_opencv_aarch64(benchmark::State &state)
     int dst_height = state.range(3);
     cv::Mat src = createSourceImage(src_height, src_width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
     cv::Mat dst(dst_height, dst_width, src.type());
+    cv::Mat M = getRandomPerspectiveMat(src, dst);
 
     int cv_iterpolation;
     if (inter_type == ppl::cv::INTERPOLATION_LINEAR) {
