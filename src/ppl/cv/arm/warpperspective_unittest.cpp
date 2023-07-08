@@ -189,7 +189,7 @@ bool PplCvArmWarpPerspectiveTest<T, channels>::apply()
     } else {
         epsilon = EPSILON_E6;
     }
-    bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon, true);
+    bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
 
     return identity;
 }
