@@ -19,6 +19,7 @@
 
 #include <tuple>
 #include <sstream>
+#include <random>
 
 #include "opencv2/imgproc.hpp"
 #include "gtest/gtest.h"
@@ -102,6 +103,29 @@ private:
     cv::Size size;
 };
 
+cv::Mat getRandomPerspectiveMat(cv::Mat src, cv::Mat dst) {
+    constexpr int offsetLimit = 32;
+    cv::Point2f srcPoints[4];
+    cv::Point2f dstPoints[4];
+
+    srcPoints[0] = cv::Point2f(0 + rand() % offsetLimit, 0 + rand() % offsetLimit);
+    srcPoints[1] = cv::Point2f(src.rows - 1 - rand() % offsetLimit, 0 + rand() % offsetLimit);
+    srcPoints[2] = cv::Point2f(src.rows - 1 - rand() % offsetLimit, src.cols - 1 - rand() % offsetLimit);
+    srcPoints[3] = cv::Point2f(0 + rand() % offsetLimit, src.cols - 1 - rand() % offsetLimit);
+
+    dstPoints[0] = cv::Point2f(0 + rand() % offsetLimit, 0 + rand() % offsetLimit);
+    dstPoints[1] = cv::Point2f(dst.rows - 1 - rand() % offsetLimit, 0 + rand() % offsetLimit);
+    dstPoints[2] = cv::Point2f(dst.rows - 1 - rand() % offsetLimit, dst.cols - 1 - rand() % offsetLimit);
+    dstPoints[3] = cv::Point2f(0 + rand() % offsetLimit, dst.cols - 1 - rand() % offsetLimit);
+
+    std::mt19937 rng(rand());
+    std::shuffle(&dstPoints[0], &dstPoints[0] + 4, rng);
+
+    // inverse map
+    cv::Mat M = getPerspectiveTransform(dstPoints, srcPoints);
+    return M;
+}
+
 template <typename T, int channels>
 bool PplCvArmWarpPerspectiveTest<T, channels>::apply()
 {
@@ -116,9 +140,9 @@ bool PplCvArmWarpPerspectiveTest<T, channels>::apply()
     int dst_height = size.height * scale_coeff;
     int dst_width = size.width * scale_coeff;
     cv::Mat src = createSourceImage(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    cv::Mat dst(dst_height, dst_width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    cv::Mat cv_dst(dst_height, dst_width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
-    cv::Mat M = createSourceImage(3, 3, CV_64FC1);
+    cv::Mat dst = createSourceImage(dst_height, dst_width, CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::Mat cv_dst = dst.clone();
+    cv::Mat M = getRandomPerspectiveMat(src, dst);
 
     int cv_iterpolation;
     if (inter_type == ppl::cv::INTERPOLATION_LINEAR) {
@@ -161,37 +185,38 @@ bool PplCvArmWarpPerspectiveTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = EPSILON_1F;
+        epsilon = EPSILON_0I;
     } else {
         epsilon = EPSILON_E6;
     }
-    bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
+    bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon, true);
 
     return identity;
 }
 
-#define UNITTEST(T, channels)                                                                                      \
-    using PplCvArmWarpPerspectiveTest_##T##_##channels = PplCvArmWarpPerspectiveTest<T, channels>;                 \
-    TEST_P(PplCvArmWarpPerspectiveTest_##T##_##channels, Standard)                                                 \
-    {                                                                                                              \
-        bool identity = this->apply();                                                                             \
-        EXPECT_TRUE(identity);                                                                                     \
-    }                                                                                                              \
-                                                                                                                   \
-    INSTANTIATE_TEST_CASE_P(                                                                                       \
-        IsEqual,                                                                                                   \
-        PplCvArmWarpPerspectiveTest_##T##_##channels,                                                              \
-        ::testing::Combine(::testing::Values(kHalfSize, kSameSize, kDoubleSize),                                   \
-                           ::testing::Values(ppl::cv::INTERPOLATION_LINEAR, ppl::cv::INTERPOLATION_NEAREST_POINT), \
-                           ::testing::Values(ppl::cv::BORDER_CONSTANT, ppl::cv::BORDER_REPLICATE),                 \
-                           ::testing::Values(cv::Size{321, 240},                                                   \
-                                             cv::Size{321, 245},                                                   \
-                                             cv::Size{647, 493},                                                   \
-                                             cv::Size{654, 486},                                                   \
-                                             cv::Size{1280, 720},                                                  \
-                                             cv::Size{1920, 1080})),                                               \
-        [](const testing::TestParamInfo<PplCvArmWarpPerspectiveTest_##T##_##channels::ParamType>& info) {          \
-            return convertToStringWarpPerspect(info.param);                                                        \
+#define UNITTEST(T, channels)                                                                                    \
+    using PplCvArmWarpPerspectiveTest_##T##_##channels = PplCvArmWarpPerspectiveTest<T, channels>;               \
+    TEST_P(PplCvArmWarpPerspectiveTest_##T##_##channels, Standard)                                               \
+    {                                                                                                            \
+        bool identity = this->apply();                                                                           \
+        EXPECT_TRUE(identity);                                                                                   \
+    }                                                                                                            \
+                                                                                                                 \
+    INSTANTIATE_TEST_CASE_P(                                                                                     \
+        IsEqual,                                                                                                 \
+        PplCvArmWarpPerspectiveTest_##T##_##channels,                                                            \
+        ::testing::Combine(                                                                                      \
+            ::testing::Values(kHalfSize, kSameSize, kDoubleSize),                                                \
+            ::testing::Values(ppl::cv::INTERPOLATION_LINEAR, ppl::cv::INTERPOLATION_NEAREST_POINT),              \
+            ::testing::Values(ppl::cv::BORDER_CONSTANT, ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_TRANSPARENT), \
+            ::testing::Values(cv::Size{321, 240},                                                                \
+                              cv::Size{321, 245},                                                                \
+                              cv::Size{647, 493},                                                                \
+                              cv::Size{654, 486},                                                                \
+                              cv::Size{1280, 720},                                                               \
+                              cv::Size{1920, 1080})),                                                            \
+        [](const testing::TestParamInfo<PplCvArmWarpPerspectiveTest_##T##_##channels::ParamType>& info) {        \
+            return convertToStringWarpPerspect(info.param);                                                      \
         });
 
 UNITTEST(uint8_t, 1)
