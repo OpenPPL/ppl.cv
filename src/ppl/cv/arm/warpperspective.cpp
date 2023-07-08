@@ -31,10 +31,220 @@
 
 namespace ppl::cv::arm {
 
+static float BilinearTab_f[INTER_TABLE_SIZE * INTER_TABLE_SIZE][2][2];
+static short BilinearTab_i[INTER_TABLE_SIZE * INTER_TABLE_SIZE][2][2];
+const int32_t INTER_REMAP_COEF_BITS = 15;
+const int32_t INTER_REMAP_COEF_SCALE = 1 << INTER_REMAP_COEF_BITS;
+
 template <typename T>
 static inline T clip(T x, T a, T b)
 {
     return std::max(a, std::min(x, b));
+}
+
+inline static uint8_t saturate_cast_u8(int32_t x)
+{
+    return static_cast<uint8_t>(clip(x, 0, 255));
+}
+
+template <typename T>
+inline static short saturate_cast_short(T x)
+{
+    return x > SHRT_MIN ? x < SHRT_MAX ? x : SHRT_MAX : SHRT_MIN;
+}
+
+static inline void interpolateLinear(float x, float* coeffs)
+{
+    coeffs[0] = 1.f - x;
+    coeffs[1] = x;
+}
+
+static void initInterTab1D(float* tab, int32_t tabsz)
+{
+    float scale = 1.f / tabsz;
+    for (int32_t i = 0; i < tabsz; i++, tab += 2)
+        interpolateLinear(i * scale, tab);
+}
+
+static void initInterTab2D()
+{
+    static bool is_inited = false;
+    if (is_inited) {
+        return;
+    }
+    float* tab = BilinearTab_f[0][0];
+    short* itab = BilinearTab_i[0][0];
+    int32_t ksize = 2;
+
+    float* _tab = new float[8 * INTER_TABLE_SIZE];
+    int32_t i, j, k1, k2;
+    initInterTab1D(_tab, INTER_TABLE_SIZE);
+    for (i = 0; i < INTER_TABLE_SIZE; i++) {
+        for (j = 0; j < INTER_TABLE_SIZE; j++, tab += ksize * ksize, itab += ksize * ksize) {
+            int32_t isum = 0;
+
+            for (k1 = 0; k1 < ksize; k1++) {
+                float vy = _tab[i * ksize + k1];
+                for (k2 = 0; k2 < ksize; k2++) {
+                    float v = vy * _tab[j * ksize + k2];
+                    tab[k1 * ksize + k2] = v;
+                    isum += itab[k1 * ksize + k2] = saturate_cast_short(v * INTER_REMAP_COEF_SCALE);
+                }
+            }
+
+            if (isum != INTER_REMAP_COEF_SCALE) {
+                int32_t diff = isum - INTER_REMAP_COEF_SCALE;
+                int32_t ksize2 = ksize / 2, Mk1 = ksize2, Mk2 = ksize2, mk1 = ksize2, mk2 = ksize2;
+                for (k1 = ksize2; k1 < ksize2 + 2; k1++)
+                    for (k2 = ksize2; k2 < ksize2 + 2; k2++) {
+                        if (itab[k1 * ksize + k2] < itab[mk1 * ksize + mk2])
+                            mk1 = k1, mk2 = k2;
+                        else if (itab[k1 * ksize + k2] > itab[Mk1 * ksize + Mk2])
+                            Mk1 = k1, Mk2 = k2;
+                    }
+                if (diff < 0)
+                    itab[Mk1 * ksize + Mk2] = (short)(itab[Mk1 * ksize + Mk2] - diff);
+                else
+                    itab[mk1 * ksize + mk2] = (short)(itab[mk1 * ksize + mk2] - diff);
+            }
+        }
+    }
+    is_inited = true;
+}
+
+template<typename T, typename WT>
+T remapLinearCast(WT val) {
+    return (T)val;
+}
+
+template<>
+uint8_t remapLinearCast<uint8_t, int32_t>(int32_t val) {
+    constexpr uint32_t SHIFT = INTER_REMAP_COEF_BITS;
+    constexpr uint32_t DELTA = 1 << (INTER_REMAP_COEF_BITS - 1);
+    return saturate_cast_u8((val + DELTA) >> SHIFT);
+}
+
+template<typename T, typename AT, typename WT, int32_t nc, ppl::cv::BorderType borderMode>
+void remapBilinear(const T* src,
+                        int32_t inHeight,
+                        int32_t inWidth,
+                        int32_t inWidthStride,
+                        T* dst,
+                        int32_t outHeight,
+                        int32_t outWidth,
+                        int32_t outWidthStride,
+                        int16_t *coord_map,
+                        int16_t *alpha_map,
+                        AT *interTable,
+                        T delta = 0) {
+    T deltaArr[4] = {delta, delta, delta, delta};
+    initInterTab2D();
+
+    // cval: borderVal: delta
+    // safe area to proceed without considering border
+    uint32_t uwidth_m = std::max(inWidth - 1, 0);
+    uint32_t uheight_m = std::max(inHeight - 1, 0);
+    // if( _src.type() == CV_8UC3 && SIMD ) width1 = std::max(ssize.width-2, 0);
+
+    for (int i = 0; i < outHeight; i++) {
+        T *dstLine = dst + outWidthStride * i;
+        const int16_t *coordMapLine = coord_map + BLOCK_SIZE * 2 * i;
+        const int16_t *alphaMapLine = alpha_map + BLOCK_SIZE * i;
+
+        int prevJ = 0;
+        bool prevInSafeArea = false;
+
+        for (int j = 0; j <= outWidth; j++) {
+            // last time: must process previous items
+            // non-last time: process previous items if from safe to unsafe area or vice versa
+            // unsigned comparation: filter out less than 0 and more than val in the same time
+            bool curInSafeArea = (j == outWidth) ? (!prevInSafeArea) : (((unsigned)coordMapLine[j * 2] < uwidth_m) && ((unsigned)coordMapLine[j * 2 + 1] < uheight_m));
+            if (curInSafeArea == prevInSafeArea) {
+                continue;
+            }
+
+            int jSegmentEnd = j;
+            j = prevJ;
+
+            prevJ = jSegmentEnd;
+            prevInSafeArea = curInSafeArea;
+
+            if (!curInSafeArea) {
+                for (; j < jSegmentEnd; j++) {
+                    int sx = coordMapLine[j * 2];
+                    int sy = coordMapLine[j * 2 + 1];
+                    const AT *w = interTable + 4 * alphaMapLine[j];
+                    const T *s = src + sy * inWidthStride + sx * nc;
+
+                    for(int k = 0; k < nc; k++) {
+                        T s00 = s[k];
+                        T s01 = s[k + nc];
+                        T s10 = s[k + inWidthStride];
+                        T s11 = s[k + inWidthStride + nc];
+                        WT data = s00 * w[0] + s01 * w[1] + s10 * w[2] + s11 * w[3];
+                        dstLine[j * nc + k] = remapLinearCast<T, WT>(data);
+                    }
+                }
+            } else {
+                for (; j < jSegmentEnd; j++) {
+                    int sx = coordMapLine[j * 2];
+                    int sy = coordMapLine[j * 2 + 1];
+
+                    // fastpath 1: use delta if transparent and fully outside border
+                    bool allInOutArea = (sx >= inWidth || (sx + 1) < 0 || sy >= inHeight || (sx + 1) < 0);
+                    if (borderMode == ppl::cv::BORDER_CONSTANT && allInOutArea) {
+                        for(int k = 0; k < nc; k++) {
+                            dstLine[j * nc + k] = deltaArr[k];
+                        }
+                        continue;
+                    }
+
+                    // fastpath 2: skip if transparent and partially outside
+                    bool partiallyInOutArea = ((unsigned)sx >= (unsigned)(inWidth - 1) || (unsigned)sy >= (unsigned)(inHeight - 1));
+                    if (borderMode == ppl::cv::BORDER_TRANSPARENT && partiallyInOutArea) {
+                        continue;
+                    }
+
+                    int sx0, sx1, sy0, sy1;
+                    const T *v0, *v1, *v2, *v3;
+                    const AT *w = interTable + 4 * alphaMapLine[j];
+                    sx0 = sx;
+                    sx1 = sx + 1;
+                    sy0 = sy;
+                    sy1 = sy + 1;
+                    if(borderMode == ppl::cv::BORDER_REPLICATE) {
+                        sx0 = clip(sx0, 0, inWidth - 1);
+                        sx1 = clip(sx1, 0, inWidth - 1);
+                        sy0 = clip(sy0, 0, inHeight - 1);
+                        sy1 = clip(sy1, 0, inHeight - 1);
+                        v0 = src + sy0 * inWidthStride + sx0 * nc;
+                        v1 = src + sy0 * inWidthStride + sx1 * nc;
+                        v2 = src + sy1 * inWidthStride + sx0 * nc;
+                        v3 = src + sy1 * inWidthStride + sx1 * nc;
+                    } else if (borderMode == ppl::cv::BORDER_CONSTANT) {
+                        bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
+                        bool flag1 = (sx1 >= 0 && sx1 < inWidth && sy0 >= 0 && sy0 < inHeight);
+                        bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy1 >= 0 && sy1 < inHeight);
+                        bool flag3 = (sx1 >= 0 && sx1 < inWidth && sy1 >= 0 && sy1 < inHeight);
+                        v0 = flag0 ? src + sy0 * inWidthStride + sx0 * nc : deltaArr;
+                        v1 = flag1 ? src + sy0 * inWidthStride + sx1 * nc : deltaArr;
+                        v2 = flag2 ? src + sy1 * inWidthStride + sx0 * nc : deltaArr;
+                        v3 = flag3 ? src + sy1 * inWidthStride + sx1 * nc : deltaArr;
+                    } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
+                        v0 = src + sy0 * inWidthStride + sx0 * nc;
+                        v1 = src + sy0 * inWidthStride + sx1 * nc;
+                        v2 = src + sy1 * inWidthStride + sx0 * nc;
+                        v3 = src + sy1 * inWidthStride + sx1 * nc;
+                    }
+
+                    for(int k = 0; k < nc; k++) {
+                        WT data = v0[k] * w[0] + v1[k] * w[1] + v2[k] * w[2] + v3[k] * w[3];
+                        dstLine[j * nc + k] = remapLinearCast<T, WT>(data);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void WarpPerspective_CoordCompute_Nearest_Line(const double *M, int16_t *coord_map, int bw, double X0, double Y0, double W0) {
@@ -485,90 +695,36 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                 WarpPerspective_CoordCompute_Linear_Line(&M[0][0], coord_map + BLOCK_SIZE * bi * 2, alpha_map + BLOCK_SIZE * bi, bw, baseX, baseY, baseW);
             }
 
-            for (int32_t bi = 0; bi < bh; bi++) {
-                for (int32_t bj = 0; bj < bw; bj++) {
-                    int ii = i + bi;
-                    int jj = j + bj;
-                    int32_t sx0 = coord_map[bi * BLOCK_SIZE * 2 + bj * 2];
-                    int32_t sy0 = coord_map[bi * BLOCK_SIZE * 2 + bj * 2 + 1];
-                    int32_t alpha = alpha_map[bi * BLOCK_SIZE + bj];
-                    
-                    float u = (alpha & (INTER_TABLE_SIZE - 1)) / (1.0 * INTER_TABLE_SIZE);
-                    float v = ((alpha >> INTER_TABLE_BITS) & (INTER_TABLE_SIZE - 1)) / (1.0 * INTER_TABLE_SIZE);
-                    
-                    float tab[4];
-                    float taby[2], tabx[2];
-                    taby[0] = 1.0f - 1.0f * v;
-                    taby[1] = v;
-                    tabx[0] = 1.0f - u;
-                    tabx[1] = u;
-
-                    tab[0] = taby[0] * tabx[0];
-                    tab[1] = taby[0] * tabx[1];
-                    tab[2] = taby[1] * tabx[0];
-                    tab[3] = taby[1] * tabx[1];
-
-                    int32_t idxDst = ii * outWidthStride + jj * nc;
-                    
-                    if (borderMode == ppl::cv::BORDER_CONSTANT) {
-                        bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                        bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                        bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                        bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                        for (int32_t k = 0; k < nc; k++) {
-                            int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
-                            int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                            float v0, v1, v2, v3;
-                            v0 = flag0 ? src[position1 + k] : delta;
-                            v1 = flag1 ? src[position1 + nc + k] : delta;
-                            v2 = flag2 ? src[position2 + k] : delta;
-                            v3 = flag3 ? src[position2 + nc + k] : delta;
-                            float sum = 0;
-                            sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
-                            // dst[idxDst + k] = static_cast<T>(sum);
-                            dst[idxDst + k] = (std::is_same<float, T>::value) ? static_cast<T>(sum) : sat_cast(std::round(sum));
-                        }
-                    } else if (borderMode == ppl::cv::BORDER_REPLICATE) {
-                        int32_t sx1 = sx0 + 1;
-                        int32_t sy1 = sy0 + 1;
-                        sx0 = clip(sx0, 0, inWidth - 1);
-                        sx1 = clip(sx1, 0, inWidth - 1);
-                        sy0 = clip(sy0, 0, inHeight - 1);
-                        sy1 = clip(sy1, 0, inHeight - 1);
-                        const T* t0 = src + sy0 * inWidthStride + sx0 * nc;
-                        const T* t1 = src + sy0 * inWidthStride + sx1 * nc;
-                        const T* t2 = src + sy1 * inWidthStride + sx0 * nc;
-                        const T* t3 = src + sy1 * inWidthStride + sx1 * nc;
-                        for (int32_t k = 0; k < nc; ++k) {
-                            float sum = 0;
-                            sum += t0[k] * tab[0] + t1[k] * tab[1] + t2[k] * tab[2] + t3[k] * tab[3];
-                            // dst[idxDst + k] = static_cast<T>(sum);
-                            dst[idxDst + k] = (std::is_same<float, T>::value) ? static_cast<T>(sum) : sat_cast(std::round(sum));
-                        }
-                    } else if (borderMode == ppl::cv::BORDER_TRANSPARENT) {
-                        bool flag0 = (sx0 >= 0 && sx0 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                        bool flag1 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 >= 0 && sy0 < inHeight);
-                        bool flag2 = (sx0 >= 0 && sx0 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                        bool flag3 = (sx0 + 1 >= 0 && sx0 + 1 < inWidth && sy0 + 1 >= 0 && sy0 + 1 < inHeight);
-                        if (flag0 && flag1 && flag2 && flag3) {
-                            for (int32_t k = 0; k < nc; k++) {
-                                int32_t position1 = (sy0 * inWidthStride + sx0 * nc);
-                                int32_t position2 = ((sy0 + 1) * inWidthStride + sx0 * nc);
-                                float v0, v1, v2, v3;
-                                v0 = src[position1 + k];
-                                v1 = src[position1 + nc + k];
-                                v2 = src[position2 + k];
-                                v3 = src[position2 + nc + k];
-                                float sum = 0;
-                                sum += v0 * tab[0] + v1 * tab[1] + v2 * tab[2] + v3 * tab[3];
-                                // dst[idxDst + k] = static_cast<T>(sum);
-                                dst[idxDst + k] = (std::is_same<float, T>::value) ? static_cast<T>(sum) : sat_cast(std::round(sum));
-                            }
-                        } else {
-                            continue;
-                        }
-                    }
-                }
+            if (std::is_same<T, uint8_t>::value) {
+                remapBilinear<uint8_t, int16_t, int32_t, nc, borderMode>(
+                    reinterpret_cast<const uint8_t *>(src),
+                    inHeight,
+                    inWidth,
+                    inWidthStride,
+                    reinterpret_cast<uint8_t *>(dst + i * outWidthStride + j * nc),
+                    bh,
+                    bw,
+                    outWidthStride,
+                    coord_map,
+                    alpha_map,
+                    &BilinearTab_i[0][0][0],
+                    delta
+                );
+            } else if (std::is_same<T, float>::value) {
+                remapBilinear<float, float, float, nc, borderMode>(
+                    reinterpret_cast<const float *>(src),
+                    inHeight,
+                    inWidth,
+                    inWidthStride,
+                    reinterpret_cast<float *>(dst + i * outWidthStride + j * nc),
+                    bh,
+                    bw,
+                    outWidthStride,
+                    coord_map,
+                    alpha_map,
+                    &BilinearTab_f[0][0][0],
+                    delta
+                );
             }
         }
     }
