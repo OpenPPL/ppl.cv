@@ -25,7 +25,7 @@
 #include <limits.h>
 #include <arm_neon.h>
 
-#define BLOCK_SIZE (32)
+#define BLOCK_SIZE       (32)
 #define INTER_TABLE_BITS (5)
 #define INTER_TABLE_SIZE (32)
 
@@ -69,9 +69,7 @@ static void initInterTab1D(float* tab, int32_t tabsz)
 static void initInterTab2D()
 {
     static bool is_inited = false;
-    if (is_inited) {
-        return;
-    }
+    if (is_inited) { return; }
     float* tab = BilinearTab_f[0][0];
     short* itab = BilinearTab_i[0][0];
     int32_t ksize = 2;
@@ -112,31 +110,34 @@ static void initInterTab2D()
     is_inited = true;
 }
 
-template<typename T, typename WT>
-T remapLinearCast(WT val) {
+template <typename T, typename WT>
+T remapLinearCast(WT val)
+{
     return (T)val;
 }
 
-template<>
-uint8_t remapLinearCast<uint8_t, int32_t>(int32_t val) {
+template <>
+uint8_t remapLinearCast<uint8_t, int32_t>(int32_t val)
+{
     constexpr uint32_t SHIFT = INTER_REMAP_COEF_BITS;
     constexpr uint32_t DELTA = 1 << (INTER_REMAP_COEF_BITS - 1);
     return saturate_cast_u8((val + DELTA) >> SHIFT);
 }
 
-template<typename T, typename AT, typename WT, int32_t nc, ppl::cv::BorderType borderMode>
+template <typename T, typename AT, typename WT, int32_t nc, ppl::cv::BorderType borderMode>
 void remapBilinear(const T* src,
-                        int32_t inHeight,
-                        int32_t inWidth,
-                        int32_t inWidthStride,
-                        T* dst,
-                        int32_t outHeight,
-                        int32_t outWidth,
-                        int32_t outWidthStride,
-                        int16_t *coord_map,
-                        int16_t *alpha_map,
-                        AT *interTable,
-                        T delta = 0) {
+                   int32_t inHeight,
+                   int32_t inWidth,
+                   int32_t inWidthStride,
+                   T* dst,
+                   int32_t outHeight,
+                   int32_t outWidth,
+                   int32_t outWidthStride,
+                   int16_t* coord_map,
+                   int16_t* alpha_map,
+                   AT* interTable,
+                   T delta = 0)
+{
     T deltaArr[4] = {delta, delta, delta, delta};
     initInterTab2D();
 
@@ -147,9 +148,9 @@ void remapBilinear(const T* src,
     // if( _src.type() == CV_8UC3 && SIMD ) width1 = std::max(ssize.width-2, 0);
 
     for (int i = 0; i < outHeight; i++) {
-        T *dstLine = dst + outWidthStride * i;
-        const int16_t *coordMapLine = coord_map + BLOCK_SIZE * 2 * i;
-        const int16_t *alphaMapLine = alpha_map + BLOCK_SIZE * i;
+        T* dstLine = dst + outWidthStride * i;
+        const int16_t* coordMapLine = coord_map + BLOCK_SIZE * 2 * i;
+        const int16_t* alphaMapLine = alpha_map + BLOCK_SIZE * i;
 
         int prevJ = 0;
         bool prevInSafeArea = false;
@@ -158,10 +159,10 @@ void remapBilinear(const T* src,
             // last time: must process previous items
             // non-last time: process previous items if from safe to unsafe area or vice versa
             // unsigned comparation: filter out less than 0 and more than val in the same time
-            bool curInSafeArea = (j == outWidth) ? (!prevInSafeArea) : (((unsigned)coordMapLine[j * 2] < uwidth_m) && ((unsigned)coordMapLine[j * 2 + 1] < uheight_m));
-            if (curInSafeArea == prevInSafeArea) {
-                continue;
-            }
+            bool curInSafeArea = (j == outWidth) ? (!prevInSafeArea)
+                                                 : (((unsigned)coordMapLine[j * 2] < uwidth_m) &&
+                                                    ((unsigned)coordMapLine[j * 2 + 1] < uheight_m));
+            if (curInSafeArea == prevInSafeArea) { continue; }
 
             int jSegmentEnd = j;
             j = prevJ;
@@ -173,10 +174,10 @@ void remapBilinear(const T* src,
                 for (; j < jSegmentEnd; j++) {
                     int sx = coordMapLine[j * 2];
                     int sy = coordMapLine[j * 2 + 1];
-                    const AT *w = interTable + 4 * alphaMapLine[j];
-                    const T *s = src + sy * inWidthStride + sx * nc;
+                    const AT* w = interTable + 4 * alphaMapLine[j];
+                    const T* s = src + sy * inWidthStride + sx * nc;
 
-                    for(int k = 0; k < nc; k++) {
+                    for (int k = 0; k < nc; k++) {
                         T s00 = s[k];
                         T s01 = s[k + nc];
                         T s10 = s[k + inWidthStride];
@@ -193,26 +194,25 @@ void remapBilinear(const T* src,
                     // fastpath 1: use delta if transparent and fully outside border
                     bool allInOutArea = (sx >= inWidth || (sx + 1) < 0 || sy >= inHeight || (sx + 1) < 0);
                     if (borderMode == ppl::cv::BORDER_CONSTANT && allInOutArea) {
-                        for(int k = 0; k < nc; k++) {
+                        for (int k = 0; k < nc; k++) {
                             dstLine[j * nc + k] = deltaArr[k];
                         }
                         continue;
                     }
 
                     // fastpath 2: skip if transparent and partially outside
-                    bool partiallyInOutArea = ((unsigned)sx >= (unsigned)(inWidth - 1) || (unsigned)sy >= (unsigned)(inHeight - 1));
-                    if (borderMode == ppl::cv::BORDER_TRANSPARENT && partiallyInOutArea) {
-                        continue;
-                    }
+                    bool partiallyInOutArea =
+                        ((unsigned)sx >= (unsigned)(inWidth - 1) || (unsigned)sy >= (unsigned)(inHeight - 1));
+                    if (borderMode == ppl::cv::BORDER_TRANSPARENT && partiallyInOutArea) { continue; }
 
                     int sx0, sx1, sy0, sy1;
                     const T *v0, *v1, *v2, *v3;
-                    const AT *w = interTable + 4 * alphaMapLine[j];
+                    const AT* w = interTable + 4 * alphaMapLine[j];
                     sx0 = sx;
                     sx1 = sx + 1;
                     sy0 = sy;
                     sy1 = sy + 1;
-                    if(borderMode == ppl::cv::BORDER_REPLICATE) {
+                    if (borderMode == ppl::cv::BORDER_REPLICATE) {
                         sx0 = clip(sx0, 0, inWidth - 1);
                         sx1 = clip(sx1, 0, inWidth - 1);
                         sy0 = clip(sy0, 0, inHeight - 1);
@@ -237,7 +237,7 @@ void remapBilinear(const T* src,
                         v3 = src + sy1 * inWidthStride + sx1 * nc;
                     }
 
-                    for(int k = 0; k < nc; k++) {
+                    for (int k = 0; k < nc; k++) {
                         WT data = v0[k] * w[0] + v1[k] * w[1] + v2[k] * w[2] + v3[k] * w[3];
                         dstLine[j * nc + k] = remapLinearCast<T, WT>(data);
                     }
@@ -247,7 +247,13 @@ void remapBilinear(const T* src,
     }
 }
 
-void WarpPerspective_CoordCompute_Nearest_Line(const double *M, int16_t *coord_map, int bw, double X0, double Y0, double W0) {
+void WarpPerspective_CoordCompute_Nearest_Line(const double* M,
+                                               int16_t* coord_map,
+                                               int bw,
+                                               double X0,
+                                               double Y0,
+                                               double W0)
+{
     float64x2_t v_baseXd = {0.0, 1.0};
     const float64x2_t v_2d = vdupq_n_f64(2.0);
     const float64x2_t v_W0d_c = vdupq_n_f64(W0);
@@ -258,7 +264,7 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double *M, int16_t *coord_m
     const float64x2_t v_M6d = vdupq_n_f64(M[6]);
     const float32x4_t v_shrtmaxf = vdupq_n_f32((float)SHRT_MAX);
     const float32x4_t v_shrtminf = vdupq_n_f32((float)SHRT_MIN);
-    
+
     int jj = 0;
     for (; jj <= bw - 16; jj += 16) {
         // 0 1 2 3
@@ -396,7 +402,7 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double *M, int16_t *coord_m
 
     for (; jj < bw; jj++) {
         double W = W0 + M[6] * jj;
-        W = W ? 1./W : 0;
+        W = W ? 1. / W : 0;
         double X = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (X0 + M[0] * jj) * W));
         double Y = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (Y0 + M[3] * jj) * W));
         int16_t Xh = std::round(X);
@@ -407,7 +413,14 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double *M, int16_t *coord_m
     }
 }
 
-void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_map, int16_t *alpha_map, int bw, double X0, double Y0, double W0) {
+void WarpPerspective_CoordCompute_Linear_Line(const double* M,
+                                              int16_t* coord_map,
+                                              int16_t* alpha_map,
+                                              int bw,
+                                              double X0,
+                                              double Y0,
+                                              double W0)
+{
     float64x2_t v_baseXd = {0.0, 1.0};
     const float64x2_t v_2d = vdupq_n_f64(2.0);
     const float64x2_t v_W0d_c = vdupq_n_f64(W0);
@@ -420,7 +433,7 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
     const int16x8_t v_interTblMaski = vdupq_n_s16(INTER_TABLE_SIZE - 1);
     const float32x4_t v_intmaxf = vdupq_n_f32((float)INT_MAX);
     const float32x4_t v_intminf = vdupq_n_f32((float)INT_MIN);
-    
+
     int jj = 0;
     for (; jj <= bw - 16; jj += 16) {
         // 0 1 2 3
@@ -578,7 +591,7 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
 
     for (; jj < bw; jj++) {
         double W = W0 + M[6] * jj;
-        W = W ? INTER_TABLE_SIZE/W : 0;
+        W = W ? INTER_TABLE_SIZE / W : 0;
         double Xd = std::max((double)INT_MIN, std::min((double)INT_MAX, (X0 + M[0] * jj) * W));
         double Yd = std::max((double)INT_MIN, std::min((double)INT_MAX, (Y0 + M[3] * jj) * W));
         int X = std::round(Xd);
@@ -586,7 +599,7 @@ void WarpPerspective_CoordCompute_Linear_Line(const double *M, int16_t *coord_ma
 
         coord_map[jj * 2] = clip((X >> INTER_TABLE_BITS), SHRT_MIN, SHRT_MAX);
         coord_map[jj * 2 + 1] = clip((Y >> INTER_TABLE_BITS), SHRT_MIN, SHRT_MAX);
-        alpha_map[jj] = (short)(((Y & (INTER_TABLE_SIZE-1)) << INTER_TABLE_BITS) + (X & (INTER_TABLE_SIZE-1)));
+        alpha_map[jj] = (short)(((Y & (INTER_TABLE_SIZE - 1)) << INTER_TABLE_BITS) + (X & (INTER_TABLE_SIZE - 1)));
     }
 }
 
@@ -603,8 +616,8 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                                                T delta = 0)
 {
     int16_t coord_data[BLOCK_SIZE * BLOCK_SIZE * 2];
-    int16_t *coord_map = (int16_t *)&coord_data[0];
-    
+    int16_t* coord_map = (int16_t*)&coord_data[0];
+
     for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
         for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
             int bh = std::min(BLOCK_SIZE, outHeight - i);
@@ -616,7 +629,8 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                 double baseW = M[2][1] * bi + baseWb;
                 double baseX = M[0][1] * bi + baseXb;
                 double baseY = M[1][1] * bi + baseYb;
-                WarpPerspective_CoordCompute_Nearest_Line(&M[0][0], coord_map + BLOCK_SIZE * bi * 2, bw, baseX, baseY, baseW);
+                WarpPerspective_CoordCompute_Nearest_Line(
+                    &M[0][0], coord_map + BLOCK_SIZE * bi * 2, bw, baseX, baseY, baseW);
             }
 
             for (int32_t bi = 0; bi < bh; bi++) {
@@ -656,14 +670,6 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
     return ppl::common::RC_SUCCESS;
 }
 
-static uint8_t sat_cast(int32_t data)
-{
-    int32_t val;
-    val = data > 255 ? 255 : data;
-    val = data < 0 ? 0 : val;
-    return val;
-}
-
 template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 ::ppl::common::RetCode warpperspective_linear(int32_t inHeight,
                                               int32_t inWidth,
@@ -678,9 +684,9 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
 {
     int16_t coord_data[BLOCK_SIZE * BLOCK_SIZE * 2];
     int16_t alpha_data[BLOCK_SIZE * BLOCK_SIZE];
-    int16_t *coord_map = (int16_t *)&coord_data[0];
-    int16_t *alpha_map = (int16_t *)&alpha_data[0];
-    
+    int16_t* coord_map = (int16_t*)&coord_data[0];
+    int16_t* alpha_map = (int16_t*)&alpha_data[0];
+
     for (int32_t i = 0; i < outHeight; i += BLOCK_SIZE) {
         for (int32_t j = 0; j < outWidth; j += BLOCK_SIZE) {
             int bh = std::min(BLOCK_SIZE, outHeight - i);
@@ -692,39 +698,38 @@ template <typename T, int32_t nc, ppl::cv::BorderType borderMode>
                 double baseW = M[2][1] * bi + baseWb;
                 double baseX = M[0][1] * bi + baseXb;
                 double baseY = M[1][1] * bi + baseYb;
-                WarpPerspective_CoordCompute_Linear_Line(&M[0][0], coord_map + BLOCK_SIZE * bi * 2, alpha_map + BLOCK_SIZE * bi, bw, baseX, baseY, baseW);
+                WarpPerspective_CoordCompute_Linear_Line(
+                    &M[0][0], coord_map + BLOCK_SIZE * bi * 2, alpha_map + BLOCK_SIZE * bi, bw, baseX, baseY, baseW);
             }
 
             if (std::is_same<T, uint8_t>::value) {
                 remapBilinear<uint8_t, int16_t, int32_t, nc, borderMode>(
-                    reinterpret_cast<const uint8_t *>(src),
+                    reinterpret_cast<const uint8_t*>(src),
                     inHeight,
                     inWidth,
                     inWidthStride,
-                    reinterpret_cast<uint8_t *>(dst + i * outWidthStride + j * nc),
+                    reinterpret_cast<uint8_t*>(dst + i * outWidthStride + j * nc),
                     bh,
                     bw,
                     outWidthStride,
                     coord_map,
                     alpha_map,
                     &BilinearTab_i[0][0][0],
-                    delta
-                );
+                    delta);
             } else if (std::is_same<T, float>::value) {
                 remapBilinear<float, float, float, nc, borderMode>(
-                    reinterpret_cast<const float *>(src),
+                    reinterpret_cast<const float*>(src),
                     inHeight,
                     inWidth,
                     inWidthStride,
-                    reinterpret_cast<float *>(dst + i * outWidthStride + j * nc),
+                    reinterpret_cast<float*>(dst + i * outWidthStride + j * nc),
                     bh,
                     bw,
                     outWidthStride,
                     coord_map,
                     alpha_map,
                     &BilinearTab_f[0][0][0],
-                    delta
-                );
+                    delta);
             }
         }
     }
