@@ -27,7 +27,8 @@
 
 using namespace ppl::cv::debug;
 
-cv::Mat getRandomPerspectiveMat(cv::Mat src, cv::Mat dst) {
+cv::Mat getRandomPerspectiveMat(cv::Mat src, cv::Mat dst)
+{
     constexpr int offset = 16;
     cv::Point2f srcPoints[4];
     cv::Point2f dstPoints[4];
