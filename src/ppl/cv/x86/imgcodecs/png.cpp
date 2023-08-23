@@ -21,6 +21,7 @@
 #include <limits.h>
 
 #include <string.h>
+#include <immintrin.h>
 
 // #include "ppl/cv/x86/intrinutils.hpp"
 // #include <immintrin.h>
@@ -68,7 +69,15 @@ namespace x86 {
 #define HAVE_iCCP 0x20
 #define HAVE_sRGB 0x40
 
-static const uint8_t stbi__depth_scale_table[9] = { 0, 0xff, 0x55, 0, 0x11, 0,0,0, 0x01 };
+enum FilterTypes {
+    FILTER_NONE = 0,
+    FILTER_SUB = 1,
+    FILTER_UP = 2,
+    FILTER_AVERAGE = 3,
+    FILTER_PAETH = 4,
+};
+
+static const uint8_t depth_scales[9] = {0, 0xff, 0x55, 0, 0x11, 0, 0, 0, 0x01};
 
 static const uint8_t stbi__zdefault_length[STBI__ZNSYMS] = {
    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
@@ -112,7 +121,7 @@ PngDecoder::PngDecoder(BytesReader& file_data) {
     png_info_.fixed_huffman_done = false;
     png_info_.header_after_idat = false;
     png_info_.idat_count = 0;
-    // crc32_.turnOff();
+    crc32_.turnOff();
     // jpeg_ = (JpegDecodeData*) malloc(sizeof(JpegDecodeData));
     // if (jpeg_ == nullptr) {
     //    LOG(ERROR) << "No enough memory to initialize PngDecoder.";
@@ -250,13 +259,13 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
         return false;
     }
 
-    std::cout << "IHDR chunk appear." << std::endl;
-    std::cout << "width_: " << width_ << ", height_: " << height_
-              << ", bit_depth_: " << (uint32_t)bit_depth_ << ", color_type_: " << (uint32_t)color_type_
-              << ", compression_method_: " << (uint32_t)compression_method_ << ", filter_method_: "
-              << (uint32_t)filter_method_ << ", interlace_method_: " << (uint32_t)interlace_method_
-              << ", channels_: " << channels_ << ", encoded_channels_: "
-              << encoded_channels_ << std::endl;
+    // std::cout << "IHDR chunk appear." << std::endl;
+    // std::cout << "width_: " << width_ << ", height_: " << height_
+    //           << ", bit_depth_: " << (uint32_t)bit_depth_ << ", color_type_: " << (uint32_t)color_type_
+    //           << ", compression_method_: " << (uint32_t)compression_method_ << ", filter_method_: "
+    //           << (uint32_t)filter_method_ << ", interlace_method_: " << (uint32_t)interlace_method_
+    //           << ", channels_: " << channels_ << ", encoded_channels_: "
+    //           << encoded_channels_ << std::endl;
 
     return true;
 }
@@ -600,7 +609,8 @@ bool PngDecoder::parsePLTE(PngInfo& png_info) {
     //     std::cout << "palette " << (index >> 2) << ": "
     //               << (uint32_t)png_info.palette[index]
     //               << ", " << (uint32_t)png_info.palette[index + 1]
-    //               << ", " << (uint32_t)png_info.palette[index + 2] << std::endl;
+    //               << ", " << (uint32_t)png_info.palette[index + 2]
+    //               << ", " << (uint32_t)png_info.palette[index + 3] << std::endl;
     // }
 
     return true;
@@ -697,19 +707,19 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
             uint8_t* values = png_info.alpha_values;
             // for (uint32_t i = 0; i < channels_; i++) {
             //     value[i] = (file_data_->getWordBigEndian() & 0xFF) *
-            //                 stbi__depth_scale_table[bit_depth_];  // cast to 0-255
+            //                 depth_scales[bit_depth_];  // cast to 0-255
             // }
             if (color_type_ == 0) {
                 values[0] = (file_data_->getWordBigEndian() & 0xFF) *
-                             stbi__depth_scale_table[bit_depth_];
+                             depth_scales[bit_depth_];
             }
             else {  // color_type_ == 2
                 values[2] = (file_data_->getWordBigEndian() & 0xFF) *
-                             stbi__depth_scale_table[bit_depth_];
+                             depth_scales[bit_depth_];
                 values[1] = (file_data_->getWordBigEndian() & 0xFF) *
-                             stbi__depth_scale_table[bit_depth_];
+                             depth_scales[bit_depth_];
                 values[0] = (file_data_->getWordBigEndian() & 0xFF) *
-                             stbi__depth_scale_table[bit_depth_];
+                             depth_scales[bit_depth_];
             }
             // std::cout << "tRNS chunk appear, the alpha palette: " << std::endl;
             // for (uint32_t index = 0; index < channels_; index++) {
@@ -817,7 +827,9 @@ bool PngDecoder::parseIDATs(PngInfo& png_info, uint8_t* image,
     if (!succeeded) return false;
     // skipping 32 bits of the optional ADLER32 checksum in zlib data stream.
     // std::cout << "IDAT leftover: " << png_info.current_chunk.length << std::endl;
-    file_data_->skip(png_info.current_chunk.length);
+    if (png_info.current_chunk.type == png_IDAT) {
+        file_data_->skip(png_info.current_chunk.length);
+    }
 
     // process crc of the current of last IDAT chunk.
     if (png_info.current_chunk.type == png_IDAT) {
@@ -989,13 +1001,44 @@ bool PngDecoder::parseDeflateHeader() {
 }
 
 bool PngDecoder::fillBits(ZbufferInfo *z) {  // z -> zbuffer
-    // if (png_info_.current_chunk.length > 8) {
-    // }
+    uint64_t segment;
+    // std::cout << "before refill, segment: " << segment << std::endl;
+    // std::cout << "before refill, current chunk size: " << png_info_.current_chunk.length << std::endl;
+    // std::cout << "before refill, code buffer size: " << z->num_bits << std::endl;
+    if (png_info_.current_chunk.length > 8) {
+        memcpy(&segment, file_data_->getCurrentPosition(), sizeof(uint64_t));
+        // uint64_t* src = (uint64_t*)file_data_->getCurrentPosition();
+        // // segment = *src;
+        // __asm(
+        // "movq (%1), %0"
+        // : [segment] "=r" (segment)
+        // : [src] "r" (src)
+        // );
+
+        // std::cout << "in refill, segment: " << segment << std::endl;
+        z->code_buffer |= segment << z->num_bits;
+        int32_t shift = 7 - ((z->num_bits >> 3) & 7);
+        file_data_->skip(shift);
+        png_info_.current_chunk.length -= shift;
+        z->num_bits |= 56;
+
+        // std::cout << "after refill, current chunk size: " << png_info_.current_chunk.length << std::endl;
+        // std::cout << "after refill, code buffer size: " << z->num_bits << std::endl;
+
+        return true;
+    }
     // else if (png_info_.current_chunk.length > 4) {
+    //     memcpy(((uint8_t*)(&segment) + sizeof(uint32_t)),
+    //            file_data_->getCurrentPosition(), sizeof(uint32_t));
+    //     z->code_buffer |= segment << z->num_bits;
+    //     int32_t shift = 3 - ((z->num_bits >> 2) & 3);
+    //     file_data_->skip(shift);
+    //     png_info_.current_chunk.length -= shift;
+    //     z->num_bits |= 24;
     // }
     // else {
     // }
-
+// std::cout << "in fillBits, current IDAT: " << png_info_.current_chunk.length << std::endl;
     do {
         if (png_info_.current_chunk.length == 0) {
             png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
@@ -1008,19 +1051,22 @@ bool PngDecoder::fillBits(ZbufferInfo *z) {  // z -> zbuffer
                 succeeded = setCrc32();
                 if (!succeeded) return false;
             }
-            if (png_info_.current_chunk.type != png_IDAT) {
+            else {  // (png_info_.current_chunk.type != png_IDAT)
                 png_info_.header_after_idat = true;
+                // std::cout << "fillbits, png_info_.header_after_idat = true;" << std::endl;
                 std::string chunk_name = getChunkName(png_info_.current_chunk.type);
                 // LOG(INFO) << "The reached Chunk: " << chunk_name
                 //           << ", this is the last IDAT chunk.";
-                return true;
+                // return true;
+                break;
             }
         }
 
-        z->code_buffer |= (uint32_t)(file_data_->getByte() << z->num_bits);
+        z->code_buffer |= ((uint64_t)file_data_->getByte() << z->num_bits);
         z->num_bits += 8;
         png_info_.current_chunk.length -= 1;
-    } while (z->num_bits <= 24);
+    } while (z->num_bits <= SHIFT_SIZE0);
+    // std::cout << "fillBits, bits in code buffer: " << z->num_bits << std::endl;
 
     return true;
 }
@@ -1040,89 +1086,98 @@ uint32_t PngDecoder::zreceive(ZbufferInfo *z, int n) {
 
 bool PngDecoder::parseZlibUncompressedBlock(PngInfo& png_info) {
     ZbufferInfo &zlib_buffer = png_info.zbuffer;
-    // if (png_info.unprocessed_zbuffer_size == 0) {
-        uint8_t header[4];
-        uint32_t ignored_bits = zlib_buffer.num_bits & 7;
-        if (ignored_bits) {
-            zreceive(&zlib_buffer, ignored_bits);
-        }
-        uint32_t k = 0;
-        while (zlib_buffer.num_bits > 0) {
-            header[k++] = (uint8_t)(zlib_buffer.code_buffer & 255);
-            zlib_buffer.code_buffer >>= 8;
-            zlib_buffer.num_bits -= 8;
-        }
+    uint8_t header[4];
+    uint32_t ignored_bits = zlib_buffer.num_bits & 7;
+    if (ignored_bits) {
+        // std::cout << "before zreceive" << std::endl;
+        zreceive(&zlib_buffer, ignored_bits);
+    }
+    // std::cout << "before while 0 " << std::endl;
+    uint32_t k = 0;
+    while (zlib_buffer.num_bits > 0 && k < 4) {
+        // std::cout << "k: " << k << std::endl;
+        header[k++] = (uint8_t)(zlib_buffer.code_buffer & 255);
+        zlib_buffer.code_buffer >>= 8;
+        zlib_buffer.num_bits -= 8;
+    }
+    // std::cout << "bits in code buffer: " << zlib_buffer.num_bits << std::endl;
+    // std::cout << "before while 1 " << std::endl;
+    if (zlib_buffer.num_bits == 0 && k < 4) {
         while (k < 4) {
+            // std::cout << "kk: " << k << std::endl;
             header[k++] = file_data_->getByte();
             png_info_.current_chunk.length -= 1;
         }
-        uint32_t len  = header[1] * 256 + header[0];
-        uint32_t nlen = header[3] * 256 + header[2];
-        // std::cout << "uncompressed block size: " << len << std::endl;
-        if (nlen != (len ^ 0xffff)) {
-            LOG(ERROR) << "Non-compressed block in zlib is corrupt.";
-            return false;
-        }
-        if (png_info.decompressed_image + len > png_info.decompressed_image_end) {
-            LOG(ERROR) << "No space stores decompressed blocks in zlib.";
-            return false;
-        }
+    }
+    // std::cout << "after while 1 " << std::endl;
+    uint32_t len  = header[1] * 256 + header[0];
+    uint32_t nlen = header[3] * 256 + header[2];
+    // std::cout << "header[4]: " << (int)header[0] << ", " << (int)header[1] << ", "
+                            //    << (int)header[2] << ", " << (int)header[3] << std::endl;
+    // std::cout << "uncompressed block size: " << len << std::endl;
+    if (nlen != (len ^ 0xffff)) {
+        LOG(ERROR) << "Non-compressed block in zlib is corrupt.";
+        return false;
+    }
+    if (png_info.decompressed_image + len > png_info.decompressed_image_end) {
+        LOG(ERROR) << "No space stores decompressed blocks in zlib.";
+        return false;
+    }
 
-        do {
-            if (len <= png_info.current_chunk.length) {
-                file_data_->getBytes(png_info.decompressed_image, len);
-                png_info.decompressed_image += len;
-                // png_info.unprocessed_zbuffer_size = 0;  // ???
-                png_info.current_chunk.length -= len;
-                len = 0;
-                // std::cout << "end of uncompressed block in zlib." << std::endl;
-            }
-            else {
-                file_data_->getBytes(png_info.decompressed_image,
-                                     png_info.current_chunk.length);
-                png_info.decompressed_image += png_info.current_chunk.length;
-                // png_info.unprocessed_zbuffer_size = len -
-                //                                     png_info.current_chunk.length;
-                // png_info.current_chunk.length = 0;
-                len -= png_info.current_chunk.length;
+    if (zlib_buffer.num_bits > 0) {
+        uint32_t size = zlib_buffer.num_bits >> 3;
+        memcpy(png_info.decompressed_image, &(zlib_buffer.code_buffer), size);
+        png_info.decompressed_image += size;
+        zlib_buffer.code_buffer = 0;
+        zlib_buffer.num_bits = 0;
+        len -= size;
+        // std::cout << "readed bytes: " << size << std::endl;
+    }
 
-                png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
-                bool succeeded = isCrcCorrect();
+    do {
+        if (len <= png_info.current_chunk.length) {
+            file_data_->getBytes(png_info.decompressed_image, len);
+            // std::cout << "readed bytes: " << len << std::endl;
+            // std::cout << "last 6 bytes in the first zlib chunk: " << len << std::endl;
+            // for (int i = 0; i < 6; i++) {
+            //     std::cout << "byte " << i << ": " << (int)png_info.decompressed_image[i] << std::endl;
+            // }
+            png_info.decompressed_image += len;
+            // png_info.unprocessed_zbuffer_size = 0;  // ???
+            png_info.current_chunk.length -= len;
+            len = 0;
+            // std::cout << "end of uncompressed block in zlib." << std::endl;
+        }
+        else {
+            // std::cout << "else of uncompressed block in zlib." << std::endl;
+            file_data_->getBytes(png_info.decompressed_image,
+                                 png_info.current_chunk.length);
+            // std::cout << "readed bytes: " << png_info.current_chunk.length << std::endl;
+            png_info.decompressed_image += png_info.current_chunk.length;
+            // png_info.unprocessed_zbuffer_size = len -
+            //                                     png_info.current_chunk.length;
+            // png_info.current_chunk.length = 0;
+            len -= png_info.current_chunk.length;
+
+            png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
+            bool succeeded = isCrcCorrect();
+            if (!succeeded) return false;
+
+            getChunkHeader(png_info_);
+            if (png_info_.current_chunk.type == png_IDAT) {
+                // std::cout << "coming in IDAT chunk: " << ++(png_info.idat_count) << std::endl;
+                succeeded = setCrc32();
                 if (!succeeded) return false;
-
-                getChunkHeader(png_info_);
-                if (png_info_.current_chunk.type == png_IDAT) {
-                    // std::cout << "coming in IDAT chunk: " << ++(png_info.idat_count) << std::endl;
-                    succeeded = setCrc32();
-                    if (!succeeded) return false;
-                }
-                if (png_info_.current_chunk.type != png_IDAT) {
-                    png_info_.header_after_idat = true;
-                    std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-                    // LOG(INFO) << "The reached Chunk: " << chunk_name
-                    //           << ", this is the last IDAT chunk.";
-                    return true;
-                }
             }
-        } while (len > 0);
-
-    // }
-    // else {
-    //     if (png_info.unprocessed_zbuffer_size <= png_info.current_chunk.length) {
-    //         file_data_->getBytes(png_info.decompressed_image,
-    //                              png_info.unprocessed_zbuffer_size);
-    //         png_info.decompressed_image += png_info.unprocessed_zbuffer_size;
-    //         png_info.unprocessed_zbuffer_size = 0;  // ???
-    //         png_info.current_chunk.length -= png_info.unprocessed_zbuffer_size;
-    //     }
-    //     else {
-    //         file_data_->getBytes(png_info.decompressed_image,
-    //                              png_info.current_chunk.length);
-    //         png_info.decompressed_image += png_info.current_chunk.length;
-    //         png_info.unprocessed_zbuffer_size -= png_info.current_chunk.length;
-    //         png_info.current_chunk.length = 0;
-    //     }
-    // }
+            if (png_info_.current_chunk.type != png_IDAT) {
+                png_info_.header_after_idat = true;
+                std::string chunk_name = getChunkName(png_info_.current_chunk.type);
+                // LOG(INFO) << "The reached Chunk: " << chunk_name
+                //           << ", this is the last IDAT chunk.";
+                return true;
+            }
+        }
+    } while (len > 0);
 
     return true;
 }
@@ -1138,6 +1193,15 @@ static int stbi__bit_reverse(int v, int bits) {
     int value = v >> (16 - bits);
 
     return value;
+}
+
+static int stbi__bit_reverse16(uint16_t v) {
+    v = ((v & 0xAAAA) >>  1) | ((v & 0x5555) << 1);
+    v = ((v & 0xCCCC) >>  2) | ((v & 0x3333) << 2);
+    v = ((v & 0xF0F0) >>  4) | ((v & 0x0F0F) << 4);
+    v = ((v & 0xFF00) >>  8) | ((v & 0x00FF) << 8);
+
+    return v;
 }
 
 bool PngDecoder::buildHuffmanCode(stbi__zhuffman *z, const uint8_t *sizelist,
@@ -1199,7 +1263,11 @@ int PngDecoder::stbi__zhuffman_decode_slowpath(ZbufferInfo *a, stbi__zhuffman *z
    int b,s,k;
    // not resolved by fast table, so compute it the slow way
    // use jpeg approach, which requires MSbits at top
-   k = stbi__bit_reverse(a->code_buffer, 16);
+   if (SHIFT_SIZE0 == 24)
+    k = stbi__bit_reverse(a->code_buffer, 16);
+   else
+    k = stbi__bit_reverse16((uint16_t)(a->code_buffer & 0xFFFF));
+//    std::cout << "k value: " << k << std::endl;
    for (s=STBI__ZFAST_BITS+1; ; ++s)
       if (k < z->maxcode[s])
          break;
@@ -1228,6 +1296,7 @@ int PngDecoder::stbi__zhuffman_decode(ZbufferInfo *a, stbi__zhuffman *z) {
       a->num_bits -= s;
       return b & 511;
    }
+//    std::cout << "before stbi__zhuffman_decode_slowpath" << std::endl;
    return stbi__zhuffman_decode_slowpath(a, z);
 }
 
@@ -1300,10 +1369,12 @@ bool PngDecoder::computeDynamicHuffman(ZbufferInfo* a) {
    return true;
 }
 
-bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
+/* bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
    uint8_t *zout = png_info_.decompressed_image;
-   for(;;) {
+   uint32_t index = 0;
+   for (; ;) {
       int z = stbi__zhuffman_decode(a, &a->z_length);
+    //   std::cout << "z value: " << z << std::endl;
       if (z < 256) {
          if (z < 0) {
             LOG(ERROR) << "Invalid decoded literal/length code: " << z
@@ -1311,11 +1382,361 @@ bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
             return false;
          }
          *zout++ = (uint8_t) z;
+        std::cout << "literal: " << z << ", index: " << index++ << std::endl;
       } else {
          uint8_t *p;
          int len, dist;
          if (z == 256) {
             // std::cout << "end of zlib block." << std::endl;
+            // std::cout << "after zlib end, leftover of IDAT size: " << png_info_.current_chunk.length << std::endl;
+            // std::cout << "after zlib end, leftover of code buffer: " << png_info_.zbuffer.num_bits << std::endl;
+            png_info_.decompressed_image = zout;
+            return true;
+         }
+         z -= 257;
+         len = stbi__zlength_base[z];
+         if (stbi__zlength_extra[z]) len += zreceive(a, stbi__zlength_extra[z]);
+         z = stbi__zhuffman_decode(a, &a->z_distance);
+         if (z < 0) {
+            LOG(ERROR) << "Invalid decoded distance code: " << z
+                       << ", valid value: 0-31.";
+            return false;
+         }
+         dist = stbi__zdist_base[z];
+         if (stbi__zdist_extra[z]) dist += zreceive(a, stbi__zdist_extra[z]);
+         if (zout - png_info_.decompressed_image_start < dist) {
+            LOG(ERROR) << "Invalid decoded distance: " << dist
+                       << ", valid value: 0-" << zout - png_info_.decompressed_image_start;
+            return false;
+         }
+         if (zout + len > png_info_.decompressed_image_end) {
+            LOG(ERROR) << "Invalid decoded distance: " << dist
+                       << ", valid value: 0-" << png_info_.decompressed_image_end - zout;
+            return false;
+         }
+         if (dist > a->window_size) {
+            LOG(ERROR) << "Invalid decoded distance: " << dist
+                       << ", valid value: 0-" << a->window_size;
+            return false;
+         }
+         p = (uint8_t *) (zout - dist);
+        // index += len;  // debug
+        std::cout << "length/distance: " << len << ", " << dist << std::endl;
+         if (dist == 1) { // run of one byte; common in images.
+            uint8_t v = *p;
+            if (len) {
+                do {
+                    *zout++ = v;
+                    std::cout << "literal: " << (uint32_t)v << ", index: " << index++ << std::endl;
+                } while (--len);
+            }
+         } else {
+            if (len) {
+                do {
+                    std::cout << "literal: " << (uint32_t)(*p) << ", index: "
+                              << index++ << std::endl;
+                    *zout++ = *p++;
+                } while (--len);
+            }
+         }
+        //  if (dist == 1) { // run of one byte; common in images.
+        //     uint8_t v = *p;
+        //     if (len) { do *zout++ = v; while (--len); }
+        //  } else {
+        //     if (len) { do *zout++ = *p++; while (--len); }
+        //  }
+      }
+   }
+
+   return true;
+} */
+
+
+/* union M128i {
+    uint8_t uchar8[16];
+    __m128i i128;
+} __attribute__((aligned(16)));
+
+bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
+    uint8_t* zout = png_info_.decompressed_image;
+    uint8_t* zout1 = zout;
+    M128i out_buffer;
+    uint32_t count = 0, size, size1;
+    // uint32_t index = 0;
+
+    for (; ;) {
+        int z = stbi__zhuffman_decode(a, &a->z_length);
+        if (z < 256) {
+            if (z < 0) {
+                LOG(ERROR) << "Invalid decoded literal/length code: " << z
+                        << ", valid value: 0-285.";
+                return false;
+            }
+            //  *zout++ = (uint8_t) z;
+            out_buffer.uchar8[count++] = (uint8_t) z;
+            // std::cout << "literal: " << z << ", count: " << count
+            //           << ", index: " << index++ << std::endl;
+            if (count == 16) {
+                memcpy(zout, out_buffer.uchar8, 16);
+                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+                zout += 16;
+                count = 0;
+            }
+        } else {
+            zout1 = zout + count;
+            uint8_t *p;
+            int len, dist;
+            if (z == 256) {
+                // std::cout << "End of chunk, count: " << count << std::endl;
+                // png_info_.decompressed_image = zout;
+                memcpy(zout, out_buffer.uchar8, count);
+                png_info_.decompressed_image = zout1;
+                return true;
+            }
+            z -= 257;
+            len = stbi__zlength_base[z];
+            if (stbi__zlength_extra[z]) len += zreceive(a, stbi__zlength_extra[z]);
+            z = stbi__zhuffman_decode(a, &a->z_distance);
+            if (z < 0) {
+                LOG(ERROR) << "Invalid decoded distance code: " << z
+                        << ", valid value: 0-31.";
+                return false;
+            }
+            dist = stbi__zdist_base[z];
+            if (stbi__zdist_extra[z]) dist += zreceive(a, stbi__zdist_extra[z]);
+            if (zout1 - png_info_.decompressed_image_start < dist) {
+                LOG(ERROR) << "Invalid decoded distance: " << dist
+                        << ", valid value: 0-"
+                        << zout1 - png_info_.decompressed_image_start;
+                return false;
+            }
+            if (zout1 + len > png_info_.decompressed_image_end) {
+                LOG(ERROR) << "Invalid decoded distance: " << dist
+                        << ", valid value: 0-"
+                        << png_info_.decompressed_image_end - zout1;
+                return false;
+            }
+            if (dist > a->window_size) {
+                LOG(ERROR) << "Invalid decoded distance: " << dist
+                        << ", valid value: 0-" << a->window_size;
+                return false;
+            }
+            p = (uint8_t *) (zout1 - dist);
+            // index += len;  // debug
+            // std::cout << "length/distance/count/index: " << len << ", " << dist
+            //           << ", " << count << ", " << index << std::endl;
+            if (dist == 1) {  // run of one byte; common in images.
+                uint8_t v;
+                if (dist > count) {
+                    v = *p;
+                }
+                else {
+                    v = out_buffer.uchar8[count - dist];
+                }
+                while (len > 0) {
+                //    *zout++ = v;
+                //    --len;
+                    if (count == 0) {
+                        size = len < 16 ? len : 16;
+                        memset(out_buffer.uchar8, v, size);
+                        // std::cout << "literal: " << (int)v << ", count: " << "0-" << size
+                        //     << ", index: " << index << "-" << index+size << std::endl;
+                        if (size == 16) {
+                            memcpy(zout, out_buffer.uchar8, 16);
+                            // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+                            zout += 16;
+                            // zout1 = zout;
+                        }
+                        else {
+                            // memcpy(zout, out_buffer.uchar8, size);
+                            count = size;
+                            // zout1 += size;
+                        }
+                    }
+                    else {
+                        size = len < 16 - count ? len : 16 - count;
+                        memset(out_buffer.uchar8 + count, v, size);
+                        // std::cout << "literal: " << (int)v << ", count: " << count << "-"
+                        //     << count + size
+                        //     << ", index: " << index << "-" << index+size << std::endl;
+
+                        if (size == 16 - count) {
+                            memcpy(zout, out_buffer.uchar8, 16);
+                            // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+                            zout += 16;
+                            // zout1 = zout;
+                            count = 0;
+                        }
+                        else {
+                            count += size;
+                            // zout1 += size;
+                        }
+                    }
+                    len -= size;
+                    // std::cout << "  count/size/left len: " << count << ", "
+                    //           << size << ", " << len << std::endl;
+                }
+            } else {
+                // do {
+                //     *zout++ = *p++;
+                //     --len;
+                // } while (len > 0);
+                // for (int i = 0; i < len; i++)
+                //     std::cout << "**literal: " << (int)p[i] << std::endl;
+                // if (dist >= len) {
+                if (dist > 15) {
+                    while (len > 0) {
+                        // std::cout << "  ++len/size: " << len << ", "
+                        //         << size << std::endl;
+                        if (count == 0) {
+                            size = len < 16 ? len : 16;
+                            // if (dist > count + size) {}
+                            memcpy(out_buffer.uchar8, p, size);
+                            // for (int i = 0; i < size; i++)
+                            //     std::cout << "literal: " << (int)p[i] << ", count: " << i
+                            //     << ", index: " << index++ << std::endl;
+                            p += size;
+                            if (size == 16) {
+                                memcpy(zout, out_buffer.uchar8, 16);
+                                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+                                zout += 16;
+                                // zout1 = zout;
+                            }
+                            else {
+                                count = size;
+                                // zout1 += size;
+                            }
+                        }
+                        else {
+                            size = len < 16 - count ? len : 16 - count;
+                            memcpy(out_buffer.uchar8 + count, p, size);
+                            // for (int i = 0; i < size; i++)
+                            //     std::cout << " literal: " << (int)p[i] << ", count: " << count + i
+                            //     << ", index: " << index++ << std::endl;
+                            p += size;
+                            if (size == 16 - count) {
+                                memcpy(zout, out_buffer.uchar8, 16);
+                                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+                                // for (int i = 0; i < 16; i++)
+                                //   std::cout << " stored literal: " << (int)zout[i] << std::endl;
+                                zout += 16;
+                                // zout1 = zout;
+                                count = 0;
+                            }
+                            else {
+                                count += size;
+                                // zout1 += size;
+                            }
+                        }
+                        len -= size;
+                        // std::cout << "  count/size/left len: " << count << ", "
+                        //         << size << ", " << len << std::endl;
+                    }
+                }
+                else {
+                    // std::cout << "  else count/left len: " << count << ", "
+                    //           << len << std::endl;
+                    size = 16 - count;
+                    int i = 0;
+                    for (; i < size; i++) {
+                        if (dist > count) {
+                            out_buffer.uchar8[count++] = p[i];
+                        }
+                        else {
+                            out_buffer.uchar8[count] = out_buffer.uchar8[count - dist];
+                            count++;
+                        }
+                        // std::cout << "literal: " << (int)out_buffer.uchar8[count-1] << ", count: " << count-1
+                        // << ", index: " << index++ << std::endl;
+                        --len;
+                        if (len == 0) break;
+                    }
+                    if (count == 16) {
+                        memcpy(zout, out_buffer.uchar8, 16);
+                        // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+                        zout += 16;
+                        count = 0;
+                        p += i;
+                    }
+                    while (len > 0) {
+                        for (i = 0; i < dist; i++) {
+                            if (dist > count) {
+                                out_buffer.uchar8[count++] = p[i];
+                            }
+                            else {
+                                out_buffer.uchar8[count] = out_buffer.uchar8[count - dist];
+                                count++;
+                            }
+                            // std::cout << "literal: " << (int)out_buffer.uchar8[count-1] << ", count: " << count-1
+                            // << ", index: " << index++ << std::endl;
+                            if (count == 16) {
+                                memcpy(zout, out_buffer.uchar8, 16);
+                                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+                                zout += 16;
+                                p += i;
+                                count = 0;
+                            }
+                            len--;
+                            if (len == 0) break;
+                        }
+                    }
+                    // }
+                    // std::cout << "  else count/left len: " << count << ", "
+                    //           << len << std::endl;
+                }
+            }
+        }
+    }
+
+    // return true;
+}
+ */
+
+// union M64i {
+//     uint8_t uchar8[16];
+//     uint64_t i64;
+// } __attribute__((aligned(16)));
+
+bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
+   uint8_t *zout = png_info_.decompressed_image;
+//    uint32_t index = 0;
+//    int size;
+   int rounded_len;
+//    M64i out_buffer;
+//    uint32_t count = 0;
+
+   for (; ;) {
+      int z = stbi__zhuffman_decode(a, &a->z_length);
+    //   std::cout << "z value: " << z << std::endl;
+      if (z < 256) {
+         if (z < 0) {
+            LOG(ERROR) << "Invalid decoded literal/length code: " << z
+                       << ", valid value: 0-285.";
+            return false;
+         }
+         *zout++ = (uint8_t) z;
+        // out_buffer.uchar8[count++] = (uint8_t) z;
+        // if (count == 16) {
+        //     memcpy(zout, out_buffer.uchar8, 16);
+        //     // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+        //     zout += 16;
+        //     count = 0;
+        // }
+        // std::cout << "literal: " << z << ", index: " << index++ << std::endl;
+      } else {
+        // if (count > 0) {
+        //     memcpy(zout, out_buffer.uchar8, count);
+        //     // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
+        //     zout += count;
+        //     count = 0;
+        // }
+
+         uint8_t *p;
+         int len, dist;
+         if (z == 256) {
+            // std::cout << "end of zlib block." << std::endl;
+            // std::cout << "after zlib end, leftover of IDAT size: " << png_info_.current_chunk.length << std::endl;
+            // std::cout << "after zlib end, leftover of code buffer: " << png_info_.zbuffer.num_bits << std::endl;
             png_info_.decompressed_image = zout;
             return true;
          }
@@ -1348,9 +1769,54 @@ bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
          p = (uint8_t *) (zout - dist);
          if (dist == 1) { // run of one byte; common in images.
             uint8_t v = *p;
-            if (len) { do *zout++ = v; while (--len); }
+            // rounded_len = (len + 7) & -8;
+            // if (len) { do *zout++ = v; while (--len); }
+            // memset(zout, v, len);
+            // zout += len;
+            if (zout + len + 8 < png_info_.decompressed_image_end) {
+                rounded_len = (len + 7) & -8;
+                memset(zout, v, rounded_len);
+            }
+            else {
+                memset(zout, v, len);
+            }
+            zout += len;
          } else {
-            if (len) { do *zout++ = *p++; while (--len); }
+            // if (len) { do *zout++ = *p++; while (--len); }
+            // rounded_len = (len + 7) & -8;
+            if (dist >= len) {
+                if (zout + len + 8 < png_info_.decompressed_image_end) {
+                    rounded_len = (len + 7) & -8;
+                    memcpy(zout, p, rounded_len);
+                }
+                else {
+                    memcpy(zout, p, len);
+                }
+                zout += len;
+            }
+            else {  // 2 <= dist < len
+                // if (dist < 6) {
+                    if (len) { do *zout++ = *p++; while (--len); }
+                // }
+                // else {
+                //     while (len > 0) {
+                //         size = len >= dist ? dist : len;
+                //         memcpy(zout, p, size);
+                //         zout += size;
+                //         p += size;
+                //         len -= size;
+                //     }
+                // }
+                // for (; len > 1; len -= 2) {
+                //     zout[0] = p[0];
+                //     zout[1] = p[1];
+                //     zout += 2;
+                //     p += 2;
+                // }
+                // if (len == 1) {
+                //     *zout++ = *p;
+                // }
+            }
          }
       }
    }
@@ -1365,11 +1831,13 @@ bool PngDecoder::inflateImage(PngInfo& png_info, uint8_t* image,
         return false;
     }
 
-    // uint32_t block_count = 0;
+    uint32_t block_count = 0;
     bool succeeded;
     ZbufferInfo &zbuffer = png_info.zbuffer;
     do {
+        // std::cout << "before inflateimage while" << std::endl;
         zbuffer.is_final_block = zreceive(&zbuffer, 1);
+        // std::cout << "after zreceive(&zbuffer, 1)" << std::endl;
         zbuffer.encoding_method = (EncodingMethod)zreceive(&zbuffer, 2);
         // std::cout << "zlib block " << block_count++ << ": " << std::endl;
         // std::cout << "zlib is last block: " << (int)zbuffer.is_final_block << std::endl;
@@ -1377,7 +1845,9 @@ bool PngDecoder::inflateImage(PngInfo& png_info, uint8_t* image,
 
         switch (zbuffer.encoding_method) {
             case STORED_SECTION:
+                // std::cout << "before parseZlibUncompressedBlock" << std::endl;
                 succeeded = parseZlibUncompressedBlock(png_info);
+                // std::cout << "after parseZlibUncompressedBlock" << std::endl;
                 if (!succeeded) return false;
                 break;
             case STATIC_HUFFMAN:
@@ -1398,7 +1868,11 @@ bool PngDecoder::inflateImage(PngInfo& png_info, uint8_t* image,
                     succeeded = computeDynamicHuffman(&zbuffer);
                     if (!succeeded) return false;
                 // }
+                // std::cout << "after huffman, leftover of IDAT size: " << png_info.current_chunk.length << std::endl;
+                // std::cout << "after huffman, leftover of code buffer: " << png_info.zbuffer.num_bits << std::endl;
+                // std::cout << "before decodeHuffmanData" << std::endl;
                 succeeded = decodeHuffmanData(&zbuffer);
+                // std::cout << "after decodeHuffmanData" << std::endl;
                 if (!succeeded) return false;
                 break;
             default:
@@ -1408,34 +1882,115 @@ bool PngDecoder::inflateImage(PngInfo& png_info, uint8_t* image,
                 break;
         }
         // std::cout << "leftover of IDAT size: " << png_info.current_chunk.length << std::endl;
+        // std::cout << "leftover of code buffer: " << png_info.zbuffer.num_bits << std::endl;
 
     } while (!zbuffer.is_final_block);
+    // std::cout << "after while in inflateimage " << std::endl;
 
     return true;
 }
 
-#define STBI__BYTECAST(x)  ((uint8_t) ((x) & 255))  // truncate int to byte without warnings
 
-enum FilterTypes {
-    FILTER_NONE = 0,
-    FILTER_SUB = 1,
-    FILTER_UP = 2,
-    FILTER_AVERAGE = 3,
-    FILTER_PAETH = 4,
-    // synthetic filters used for first scanline to avoid needing a dummy row of 0s
-    FILTER_AVG_FIRST,
-    FILTER_PAETH_FIRST,
-};
 
-static uint8_t first_row_filter[5] = {
-    FILTER_NONE,
-    FILTER_SUB,
-    FILTER_NONE,
-    FILTER_AVG_FIRST,
-    FILTER_PAETH_FIRST,
-};
+inline
+void rowDefilter1(uint8_t* input_row, uint32_t pixel_bytes, uint32_t row_bytes,
+                  uint8_t* recon_row) {
+    uint32_t i = 0;
+    for (; i < pixel_bytes; i++) {
+        recon_row[i] = input_row[i];
+    }
 
-static int filterPaeth(int a, int b, int c) {
+    uint32_t j = 0;
+    for (; i < row_bytes; i++, j++) {
+        recon_row[i] = input_row[i] + recon_row[j];
+    }
+}
+
+inline
+void rowDefilter1C2(uint8_t* input_row, uint32_t row_bytes,
+                    uint8_t* recon_row) {
+    recon_row[0] = input_row[0];
+    recon_row[1] = input_row[1];
+
+    uint32_t i = 2;
+    uint32_t j = 0;
+    for (; i < row_bytes; i += 2, j += 2) {
+        recon_row[i]     = input_row[i] + recon_row[j];
+        recon_row[i + 1] = input_row[i + 1] + recon_row[j + 1];
+    }
+}
+
+inline
+void rowDefilter2(uint8_t* input_row, uint8_t* prior_row, uint32_t row_bytes,
+                  uint8_t* recon_row, bool overflowed) {
+    uint32_t i = 0;
+    row_bytes -= 16;
+    for (; i < row_bytes; i+= 16) {
+        __m128i input_data = _mm_loadu_si128((__m128i*)(input_row + i));
+        __m128i prior_data = _mm_loadu_si128((__m128i*)(prior_row + i));
+        __m128i current_data = _mm_add_epi8(input_data, prior_data);
+        _mm_storeu_si128((__m128i*)(recon_row + i), current_data);
+    }
+
+    if (overflowed) {
+        __m128i input_data = _mm_loadu_si128((__m128i*)(input_row + i));
+        __m128i prior_data = _mm_loadu_si128((__m128i*)(prior_row + i));
+        __m128i current_data = _mm_add_epi8(input_data, prior_data);
+        _mm_storeu_si128((__m128i*)(recon_row + i), current_data);
+    }
+    else {
+        row_bytes += 16;
+        for (; i < row_bytes; i++) {
+            recon_row[i] = input_row[i] + prior_row[i];
+        }
+    }
+}
+
+inline
+void rowDefilter3(uint8_t* input_row, uint8_t* prior_row, uint32_t pixel_bytes,
+                  uint32_t row_bytes, uint8_t* recon_row) {
+    uint32_t i = 0;
+    for (; i < pixel_bytes; i++) {
+        recon_row[i] = input_row[i] + (prior_row[i] >> 1);
+    }
+
+    uint32_t j = 0;
+    for (; i < row_bytes; i++, j++) {
+        recon_row[i] = input_row[i] + ((recon_row[j] + prior_row[i]) >> 1);
+    }
+}
+
+inline
+void rowDefilter3C2(uint8_t* input_row, uint8_t* prior_row, uint32_t row_bytes,
+                    uint8_t* recon_row) {
+    recon_row[0] = input_row[0] + (prior_row[0] >> 1);
+    recon_row[1] = input_row[1] + (prior_row[1] >> 1);
+
+    uint32_t i = 2;
+    uint32_t j = 0;
+    for (; i < row_bytes; i += 2, j += 2) {
+        recon_row[i]     = input_row[i] + ((recon_row[j] + prior_row[i]) >> 1);
+        recon_row[i + 1] = input_row[i + 1] +
+                           ((recon_row[j + 1] + prior_row[i + 1]) >> 1);
+    }
+}
+
+inline
+void row0Defilter3(uint8_t* input_row, uint32_t pixel_bytes,
+                   uint32_t row_bytes, uint8_t* recon_row) {
+    uint32_t i = 0;
+    for (; i < pixel_bytes; i++) {
+        recon_row[i] = input_row[i];
+    }
+
+    uint32_t j = 0;
+    for (; i < row_bytes; i++, j++) {
+        recon_row[i] = input_row[i] + (recon_row[j] >> 1);
+    }
+}
+
+inline
+int filterPaeth(int a, int b, int c) {
     int p = a + b - c;
     int pa = abs(p - a);
     int pb = abs(p - b);
@@ -1446,30 +2001,127 @@ static int filterPaeth(int a, int b, int c) {
     return c;
 }
 
-// process an image with color type 0/3/4, which need not rgb-> bgr transformation.
+inline
+void rowDefilter4(uint8_t* input_row, uint8_t* prior_row, uint32_t pixel_bytes,
+                  uint32_t row_bytes, uint8_t* recon_row) {
+    uint32_t i = 0;
+    for (; i < pixel_bytes; i++) {
+        recon_row[i] = input_row[i] + prior_row[i];
+    }
+
+    uint32_t j = 0;
+    for (; i < row_bytes; i++, j++) {
+        recon_row[i] = input_row[i] + filterPaeth(recon_row[j], prior_row[i],
+                       prior_row[j]);
+    }
+}
+
+inline
+void filterPaethC2(uint8_t* a, uint8_t* b, uint8_t* c, uint8_t* src,
+                   uint8_t* result) {
+    int a0 = a[0];
+    int a1 = a[1];
+    int b0 = b[0];
+    int b1 = b[1];
+    int c0 = c[0];
+    int c1 = c[1];
+    int p0 = a0 + b0 -c0;
+    int p1 = a1 + b1 -c1;
+    int pa0 = abs(p0 - a0);
+    int pa1 = abs(p1 - a1);
+    int pb0 = abs(p0 - b0);
+    int pb1 = abs(p1 - b1);
+    int pc0 = abs(p0 - c0);
+    int pc1 = abs(p1 - c1);
+    int target0, target1;
+    if (pa0 <= pb0 && pa0 <= pc0) {
+        target0 = a0;
+    }
+    else if (pb0 <= pc0) {
+        target0 = b0;
+    }
+    else {
+        target0 = c0;
+    }
+    if (pa1 <= pb1 && pa1 <= pc1) {
+        target1 = a1;
+    }
+    else if (pb1 <= pc1) {
+        target1 = b1;
+    }
+    else {
+        target1 = c1;
+    }
+
+    target0 += src[0];
+    target1 += src[1];
+
+    result[0] = target0;
+    result[1] = target1;
+}
+
+inline
+void rowDefilter4C2(uint8_t* input_row, uint8_t* prior_row,
+                    uint32_t row_bytes, uint8_t* recon_row) {
+    recon_row[0] = input_row[0] + prior_row[0];
+    recon_row[1] = input_row[1] + prior_row[1];
+
+    uint32_t i = 2;
+    uint32_t j = 0;
+    for (; i < row_bytes; i += 2, j += 2) {
+        filterPaethC2(recon_row + j, prior_row + i, prior_row + j,
+                      input_row + i, recon_row + i);
+    }
+}
+
+// process an image with color type 0/3/4, which does not need rgb-> bgr transformation.
 bool PngDecoder::deFilterImage(PngInfo& png_info, uint8_t* image,
                                uint32_t stride) {
-    std::cout << "########coming in deFilterImage#######" << std::endl;
+    // std::cout << "########coming in deFilterImage#######" << std::endl;
     int bytes = (bit_depth_ == 16 ? 2 : 1);
-    int pixel_bytes = bytes * encoded_channels_;
-    if (bit_depth_ < 8) {
-        pixel_bytes = 1;
-    }
-    int k;
-    uint32_t scanline_bytes = ((width_ * encoded_channels_ * bit_depth_) >> 3) + 1;
+    int pixel_bytes = bytes * encoded_channels_;  // 1, 2, 4
+    uint32_t scanline_bytes = ((width_ * encoded_channels_ * bit_depth_ +
+                                7) >> 3) + 1;
+    uint32_t row_bytes = scanline_bytes - 1;
     uint32_t stride_offset0 = 0;
     if (bit_depth_ < 8 || color_type_ == 3 ||
         (color_type_ == 0 && encoded_channels_ + 1 == channels_)) {
-        stride_offset0 = stride - scanline_bytes;  // align with 4 bytes?
+        stride_offset0 = stride - scanline_bytes;  // can't align with 16 bytes
     }
 
     uint8_t *input = png_info.decompressed_image_start;
-    uint8_t *current_row = image + stride_offset0;
+    uint8_t *recon_row = image + stride_offset0;
     uint8_t *prior_row;
     uint8_t filter_type;
-    int remainder_bytes = scanline_bytes - pixel_bytes - 1;
-    for (uint32_t row = 0; row < height_; ++row) {
-        prior_row = current_row - stride;
+    uint32_t aligned_bytes = (row_bytes + 15) & -16;
+
+    // process the first row.
+    filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                   << "Average(3)/Paeth(4)";
+        return false;
+    }
+    switch (filter_type) {
+        case FILTER_NONE:
+        case FILTER_UP:
+            memcpy(recon_row, input, aligned_bytes);
+            break;
+        case FILTER_SUB:
+        case FILTER_PAETH:
+            rowDefilter1(input, pixel_bytes, row_bytes, recon_row);
+            break;
+        case FILTER_AVERAGE:
+            row0Defilter3(input, pixel_bytes, row_bytes, recon_row);
+            break;
+    }
+    input += row_bytes;
+    recon_row += stride;
+
+    // process the most rows.
+    for (uint32_t row = 1; row < height_ - 1; ++row) {
+        prior_row = recon_row - stride;
         filter_type = *input++;
         if (filter_type > 4) {
             LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
@@ -1477,126 +2129,163 @@ bool PngDecoder::deFilterImage(PngInfo& png_info, uint8_t* image,
                        << "Average(3)/Paeth(4)";
             return false;
         }
-        // if first row, use special filter_type that doesn't sample previous row
-        if (row == 0) filter_type = first_row_filter[filter_type];
-        // std::cout << "row " << row << ": " << (int)filter_type << std::endl;
-
-        // handle first pixel explicitly
-        for (k = 0; k < pixel_bytes; ++k) {
-            switch (filter_type) {
-                case FILTER_NONE:
-                case FILTER_SUB:
-                case FILTER_AVG_FIRST:
-                case FILTER_PAETH_FIRST:
-                    current_row[k] = input[k];
-                    break;
-                case FILTER_UP:
-                    current_row[k] = (uint32_t)input[k] + prior_row[k];
-                    break;
-                case FILTER_AVERAGE:
-                    current_row[k] = (uint32_t)input[k] + (prior_row[k] >> 1);
-                    break;
-                case FILTER_PAETH:
-                    current_row[k] = input[k] + filterPaeth(0, prior_row[k], 0);
-                    break;
-            }
-            // std::cout << "input[" << k << "]: " << (int)input[k] << std::endl;
-        }
-        input += pixel_bytes;
-        current_row += pixel_bytes;
-        prior_row += pixel_bytes;
-
-        // this is a little gross, so that we don't switch per-pixel or per-component
-        #define STBI__CASE(f) \
-            case f:     \
-                for (k=0; k < remainder_bytes; ++k)
         switch (filter_type) {
-            // "none" filter_type turns into a memcpy here; make that explicit.
-            case FILTER_NONE:         memcpy(current_row, input, remainder_bytes);
-            // std::cout << "row " << row << ", remainder_bytes: " << remainder_bytes << std::endl;
-            break;
-            STBI__CASE(FILTER_SUB)     { current_row[k] = STBI__BYTECAST(input[k] + current_row[k-pixel_bytes]); } break;
-            STBI__CASE(FILTER_UP)      { current_row[k] = STBI__BYTECAST(input[k] + prior_row[k]); } break;
-            STBI__CASE(FILTER_AVERAGE)     { current_row[k] = STBI__BYTECAST(input[k] + ((prior_row[k] + current_row[k-pixel_bytes])>>1)); } break;
-            STBI__CASE(FILTER_PAETH)        { current_row[k] = STBI__BYTECAST(input[k] + filterPaeth(current_row[k-pixel_bytes],prior_row[k],prior_row[k-pixel_bytes])); } break;
-            STBI__CASE(FILTER_AVG_FIRST)    { current_row[k] = STBI__BYTECAST(input[k] + (current_row[k-pixel_bytes] >> 1)); } break;
-            STBI__CASE(FILTER_PAETH_FIRST)  { current_row[k] = STBI__BYTECAST(input[k] + filterPaeth(current_row[k-pixel_bytes],0,0)); } break;
+            case FILTER_NONE:
+                memcpy(recon_row, input, aligned_bytes);
+                break;
+            case FILTER_SUB:
+                if (pixel_bytes == 2) {
+                    rowDefilter1C2(input, row_bytes, recon_row);
+                }
+                else {
+                    rowDefilter1(input, pixel_bytes, row_bytes, recon_row);
+                }
+                break;
+            case FILTER_UP:
+                rowDefilter2(input, prior_row, row_bytes, recon_row,
+                             row < height_ - 15 ? true : false);
+                break;
+            case FILTER_AVERAGE:
+                if (pixel_bytes == 2) {
+                    rowDefilter3C2(input, prior_row, row_bytes, recon_row);
+                }
+                else {
+                    rowDefilter3(input, prior_row, pixel_bytes, row_bytes,
+                                 recon_row);
+                }
+                break;
+            case FILTER_PAETH:
+                if (pixel_bytes == 2) {
+                    rowDefilter4C2(input, prior_row, row_bytes, recon_row);
+                }
+                else {
+                    rowDefilter4(input, prior_row, pixel_bytes, row_bytes,
+                                 recon_row);
+                }
+                break;
         }
-        #undef STBI__CASE
-        //  for (int i = 0; i < remainder_bytes; i++) {
-        //     std::cout << "input[" << i << "]: " << (int)input[i] << std::endl;
-        //  }
-        input += remainder_bytes;
-        current_row += (stride - pixel_bytes);
+        input += row_bytes;
+        recon_row += stride;
     }
 
-    // we make a separate pass to expand bits to pixels; for performance,
-    // this could run two scanlines behind the above code, so it won't
-    // intefere with filtering but will still be in the cache.
+    // process the last row.
+    prior_row = recon_row - stride;
+    filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                   << "Average(3)/Paeth(4)";
+        return false;
+    }
+    switch (filter_type) {
+        case FILTER_NONE:
+            memcpy(recon_row, input, row_bytes);
+            break;
+        case FILTER_SUB:
+            if (pixel_bytes == 2) {
+                rowDefilter1C2(input, row_bytes, recon_row);
+            }
+            else {
+                rowDefilter1(input, pixel_bytes, row_bytes, recon_row);
+            }
+            break;
+        case FILTER_UP:
+            rowDefilter2(input, prior_row, row_bytes, recon_row, false);
+            break;
+        case FILTER_AVERAGE:
+            if (pixel_bytes == 2) {
+                rowDefilter3C2(input, prior_row, row_bytes, recon_row);
+            }
+            else {
+                rowDefilter3(input, prior_row, pixel_bytes, row_bytes,
+                             recon_row);
+            }
+            break;
+        case FILTER_PAETH:
+            if (pixel_bytes == 2) {
+                rowDefilter4C2(input, prior_row, row_bytes, recon_row);
+            }
+            else {
+                rowDefilter4(input, prior_row, pixel_bytes, row_bytes,
+                             recon_row);
+            }
+            break;
+    }
+
     uint32_t stride_offset1 = 0;
     if ((color_type_ == 0 && encoded_channels_ + 1 == channels_) ||
         color_type_ == 3) {
         stride_offset1 = stride - width_ * pixel_bytes;
     }
-    if (bit_depth_ < 8) {
+    if (bit_depth_ < 8) {  // unpack 1/2/4-bit into a 8-bit .
+        int index;
+        uint8_t scale = (color_type_ == 0) ? depth_scales[bit_depth_] : 1;
+        uint8_t value;
+        uint8_t* src = image + stride_offset0;
+        uint8_t* dst = image + stride_offset1;
         for (uint32_t row = 0; row < height_; ++row) {
-            input       = image + stride * row + stride_offset0;
-            current_row = image + stride * row + stride_offset1;
-            // unpack 1/2/4-bit into a 8-bit buffer. allows us to keep the common 8-bit path optimal at minimal cost for 1/2/4-bit
-            uint8_t scale = (color_type_ == 0) ? stbi__depth_scale_table[bit_depth_] : 1; // scale grayscale values to 0..255 range
+            input = src;
+            recon_row = dst;
 
             if (bit_depth_ == 4) {
-                for (k = width_; k >= 2; k -= 2, ++input) {
-                    *current_row++ = scale * ((*input >> 4)       );
-                    *current_row++ = scale * ((*input     ) & 0x0f);
+                for (index = width_; index >= 2; index -= 2, ++input) {
+                    value = *input;
+                    recon_row[0] = scale * ((value >> 4));
+                    recon_row[1] = scale * ((value     ) & 0x0f);
+                    recon_row += 2;
                 }
-                if (k > 0) *current_row++ = scale * ((*input >> 4));
+                if (index > 0) *recon_row++ = scale * ((*input >> 4));
             } else if (bit_depth_ == 2) {
-                for (k = width_; k >= 4; k -= 4, ++input) {
-                    *current_row++ = scale * ((*input >> 6)       );
-                    *current_row++ = scale * ((*input >> 4) & 0x03);
-                    *current_row++ = scale * ((*input >> 2) & 0x03);
-                    *current_row++ = scale * ((*input     ) & 0x03);
+                for (index = width_; index >= 4; index -= 4, ++input) {
+                    value = *input;
+                    recon_row[0] = scale * ((value >> 6));
+                    recon_row[1] = scale * ((value >> 4) & 0x03);
+                    recon_row[2] = scale * ((value >> 2) & 0x03);
+                    recon_row[3] = scale * ((value     ) & 0x03);
+                    recon_row += 4;
                 }
-                if (k > 0) *current_row++ = scale * ((*input >> 6)       );
-                if (k > 1) *current_row++ = scale * ((*input >> 4) & 0x03);
-                if (k > 2) *current_row++ = scale * ((*input >> 2) & 0x03);
+                value = *input;
+                if (index > 0) recon_row[0] = scale * ((value >> 6));
+                if (index > 1) recon_row[1] = scale * ((value >> 4) & 0x03);
+                if (index > 2) recon_row[2] = scale * ((value >> 2) & 0x03);
             } else if (bit_depth_ == 1) {
-                for (k = width_; k >= 8; k -= 8, ++input) {
-                    *current_row++ = scale * ((*input >> 7)       );
-                    *current_row++ = scale * ((*input >> 6) & 0x01);
-                    *current_row++ = scale * ((*input >> 5) & 0x01);
-                    *current_row++ = scale * ((*input >> 4) & 0x01);
-                    *current_row++ = scale * ((*input >> 3) & 0x01);
-                    *current_row++ = scale * ((*input >> 2) & 0x01);
-                    *current_row++ = scale * ((*input >> 1) & 0x01);
-                    *current_row++ = scale * ((*input     ) & 0x01);
+                for (index = width_; index >= 8; index -= 8, ++input) {
+                    value = *input;
+                    recon_row[0] = scale * ((value >> 7));
+                    recon_row[1] = scale * ((value >> 6) & 0x01);
+                    recon_row[2] = scale * ((value >> 5) & 0x01);
+                    recon_row[3] = scale * ((value >> 4) & 0x01);
+                    recon_row[4] = scale * ((value >> 3) & 0x01);
+                    recon_row[5] = scale * ((value >> 2) & 0x01);
+                    recon_row[6] = scale * ((value >> 1) & 0x01);
+                    recon_row[7] = scale * ((value     ) & 0x01);
+                    recon_row += 8;
                 }
-                if (k > 0) *current_row++ = scale * ((*input >> 7)       );
-                if (k > 1) *current_row++ = scale * ((*input >> 6) & 0x01);
-                if (k > 2) *current_row++ = scale * ((*input >> 5) & 0x01);
-                if (k > 3) *current_row++ = scale * ((*input >> 4) & 0x01);
-                if (k > 4) *current_row++ = scale * ((*input >> 3) & 0x01);
-                if (k > 5) *current_row++ = scale * ((*input >> 2) & 0x01);
-                if (k > 6) *current_row++ = scale * ((*input >> 1) & 0x01);
+                value = *input;
+                if (index > 0) recon_row[0] = scale * ((value >> 7));
+                if (index > 1) recon_row[1] = scale * ((value >> 6) & 0x01);
+                if (index > 2) recon_row[2] = scale * ((value >> 5) & 0x01);
+                if (index > 3) recon_row[3] = scale * ((value >> 4) & 0x01);
+                if (index > 4) recon_row[4] = scale * ((value >> 3) & 0x01);
+                if (index > 5) recon_row[5] = scale * ((value >> 2) & 0x01);
+                if (index > 6) recon_row[6] = scale * ((value >> 1) & 0x01);
             }
+            src += stride;
+            dst += stride;
         }
     } else if (bit_depth_ == 16) {
         // force the image data from big-endian to platform-native.
-        // this is done in a separate pass due to the decoding relying
-        // on the data being untouched, but could probably be done
-        // per-line during decode if care is taken.
         uint8_t value0, value1;
-        uint8_t *current_row = image + stride_offset0;
+        uint8_t *recon_row = image + stride_offset0;
         uint16_t *current_row16;
         for (uint32_t row = 0; row < height_; row++) {
-            current_row16 = (uint16_t*)current_row;
+            current_row16 = (uint16_t*)recon_row;
             for (uint32_t col = 0, col1 = 0; col < width_; col++, col1 += 2) {
-                value0 = current_row[col1];
-                value1 = current_row[col1 + 1];
+                value0 = recon_row[col1];
+                value1 = recon_row[col1 + 1];
                 current_row16[col] = (value0 << 8) | value1;
             }
-            current_row += stride;
+            recon_row += stride;
         }
     }
 
@@ -1610,725 +2299,1920 @@ bool PngDecoder::deFilterImage(PngInfo& png_info, uint8_t* image,
     return true;
 }
 
-// reorder channels in a pixel form RGB to BGR for truecolor or truecolor with alpha.
-bool PngDecoder::deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
-                                        uint32_t stride) {
-    std::cout << "######## coming in deFilterImageTrueColor #######" << std::endl;
-    int bytes = (bit_depth_ == 16 ? 2 : 1);
-    int pixel_bytes = bytes * encoded_channels_;
-    uint32_t scanline_bytes = width_ * pixel_bytes + 1;
-    uint32_t stride_offset = 0;  // align with 4 bytes?
-    if (png_info.chunk_status & HAVE_tRNS) {
-        stride_offset = stride - scanline_bytes;  // align with 4 bytes?
+static __m128i rgb2bgrc3_index = _mm_set_epi8(15, 12, 13, 14, 9, 10, 11,
+                                              6, 7, 8, 3, 4, 5, 0, 1, 2);
+static __m128i rgb2bgrc4_index = _mm_set_epi8(15, 12, 13, 14, 11, 8, 9, 10,
+                                              7, 4, 5, 6, 3, 0, 1, 2);
+static __m128i trunc_index = _mm_set_epi8(0, 255, 0, 255, 0, 255, 0, 255,
+                                          0, 255, 0, 255, 0, 255, 0, 255);
+static __m128i pick1_index = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0,
+                                          0, 0, 255, 255, 255, 0, 0, 0);
+static __m128i pick2_index = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 255,
+                                          255, 255, 0, 0, 0, 0, 0, 0);
+static __m128i pick3_index = _mm_set_epi8(0, 0, 0, 0, 255, 255, 255, 0,
+                                          0, 0, 0, 0, 0, 0, 0, 0);
+static __m128i pick4_index = _mm_set_epi8(0, 255, 255, 255, 0, 0, 0, 0,
+                                          0, 0, 0, 0, 0, 0, 0, 0);
+
+inline
+void rowDefilter0ColorC3(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row, bool is_last_row) {
+    __m128i input, output;
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        input  = _mm_loadu_si128((__m128i const*)input_row);
+        output = _mm_shuffle_epi8(input, rgb2bgrc3_index);
+        _mm_storeu_si128((__m128i*)recon_row, output);
+        recon_row += 15;
+        input_row += 15;
     }
 
-    uint8_t *input = png_info.decompressed_image_start;
-    uint8_t *current_row = image + stride_offset;
-    uint8_t *prior_row;
-    uint8_t filter_type;
-    int remainder_bytes = scanline_bytes - pixel_bytes - 1;
-    for (uint32_t row = 0; row < height_; ++row) {
-        prior_row = current_row - stride;
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            input  = _mm_loadu_si128((__m128i const*)input_row);
+            output = _mm_shuffle_epi8(input, rgb2bgrc3_index);
+            _mm_storeu_si128((__m128i*)recon_row, output);
 
+            return;
+        }
+        else {
+            uint32_t value0, value1, value2;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                recon_row[0] = value2;
+                recon_row[1] = value1;
+                recon_row[2] = value0;
+                recon_row += 3;
+                input_row += 3;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter0ColorC4(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row, bool is_last_row) {
+    __m128i input, output;
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        input  = _mm_loadu_si128((__m128i const*)input_row);
+        output = _mm_shuffle_epi8(input, rgb2bgrc4_index);
+        _mm_store_si128((__m128i*)recon_row, output);
+        // _mm_storeu_si128((__m128i*)recon_row, output);
+        recon_row += 16;
+        input_row += 16;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            input  = _mm_loadu_si128((__m128i const*)input_row);
+            output = _mm_shuffle_epi8(input, rgb2bgrc4_index);
+            _mm_store_si128((__m128i*)recon_row, output);
+            // _mm_storeu_si128((__m128i*)recon_row, output);
+
+            return;
+        }
+        else {
+            uint32_t value0, value1, value2, value3;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                value3 = input_row[3];
+                recon_row[0] = value2;
+                recon_row[1] = value1;
+                recon_row[2] = value0;
+                recon_row[3] = value3;
+                recon_row += 4;
+                input_row += 4;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter0ColorC6(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row) {
+    uint8_t* input_end = input_row + row_bytes;
+    uint32_t value0, value1, value2, value3, value4, value5;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        recon_row[0] = value4;
+        recon_row[1] = value5;
+        recon_row[2] = value2;
+        recon_row[3] = value3;
+        recon_row[4] = value0;
+        recon_row[5] = value1;
+        recon_row += 6;
+        input_row += 6;
+    }
+}
+
+inline
+void rowDefilter0ColorC8(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row) {
+    uint8_t* input_end = input_row + row_bytes;
+    uint32_t value0, value1, value2, value3, value4, value5, value6, value7;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        value6 = input_row[6];
+        value7 = input_row[7];
+        recon_row[0] = value4;
+        recon_row[1] = value5;
+        recon_row[2] = value2;
+        recon_row[3] = value3;
+        recon_row[4] = value0;
+        recon_row[5] = value1;
+        recon_row[6] = value6;
+        recon_row[7] = value7;
+        recon_row += 8;
+        input_row += 8;
+    }
+}
+
+inline
+void rowDefilter1ColorC3(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row, bool is_last_row) {
+    __m128i input, bgr, result, output, value;
+    __m128i index0 = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8,
+                                  7, 6, 2, 1, 0, 2, 1, 0);
+    __m128i index1 = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9,
+                                  5, 4, 3, 5, 4, 3, 2, 1, 0);
+    __m128i index2 = _mm_set_epi8(15, 14, 13, 12, 8, 7, 6, 8,
+                                  7, 6, 5, 4, 3, 2, 1, 0);
+    __m128i index3 = _mm_set_epi8(15, 11, 10, 9, 11, 10, 9, 8,
+                                  7, 6, 5, 4, 3, 2, 1, 0);
+    __m128i index4 = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8,
+                                  7, 6, 5, 4, 3, 14, 13, 12);
+    output = _mm_set1_epi8(0);
+
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        input  = _mm_loadu_si128((__m128i const*)input_row);
+        bgr    = _mm_shuffle_epi8(input, rgb2bgrc3_index);
+        result = _mm_add_epi8(bgr, output);
+        output = result;
+
+        value  = _mm_shuffle_epi8(result, index0);
+        result = _mm_add_epi8(bgr, value);
+        output = _mm_blendv_epi8(output, result, pick1_index);
+
+        value  = _mm_shuffle_epi8(result, index1);
+        result = _mm_add_epi8(bgr, value);
+        output = _mm_blendv_epi8(output, result, pick2_index);
+
+        value  = _mm_shuffle_epi8(result, index2);
+        result = _mm_add_epi8(bgr, value);
+        output = _mm_blendv_epi8(output, result, pick3_index);
+
+        value  = _mm_shuffle_epi8(result, index3);
+        result = _mm_add_epi8(bgr, value);
+        output = _mm_blendv_epi8(output, result, pick4_index);
+
+        _mm_storeu_si128((__m128i*)recon_row, output);
+        output = _mm_shuffle_epi8(result, index4);
+        recon_row += 15;
+        input_row += 15;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            input  = _mm_loadu_si128((__m128i const*)input_row);
+            bgr    = _mm_shuffle_epi8(input, rgb2bgrc3_index);
+            result = _mm_add_epi8(bgr, output);
+            output = result;
+
+            value  = _mm_shuffle_epi8(result, index0);
+            result = _mm_add_epi8(bgr, value);
+            output = _mm_blendv_epi8(output, result, pick1_index);
+
+            value  = _mm_shuffle_epi8(result, index1);
+            result = _mm_add_epi8(bgr, value);
+            output = _mm_blendv_epi8(output, result, pick2_index);
+
+            value  = _mm_shuffle_epi8(result, index2);
+            result = _mm_add_epi8(bgr, value);
+            output = _mm_blendv_epi8(output, result, pick3_index);
+
+            value  = _mm_shuffle_epi8(result, index3);
+            result = _mm_add_epi8(bgr, value);
+            output = _mm_blendv_epi8(output, result, pick4_index);
+
+            _mm_storeu_si128((__m128i*)recon_row, output);
+            output = _mm_shuffle_epi8(result, index4);
+        }
+        else {
+            uint32_t value0, value1, value2;
+            uint8_t* before_bytes = recon_row - 3;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                recon_row[0] = value2 + before_bytes[0];
+                recon_row[1] = value1 + before_bytes[1];
+                recon_row[2] = value0 + before_bytes[2];
+                recon_row    += 3;
+                input_row    += 3;
+                before_bytes += 3;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter1ColorC4(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row, bool is_last_row) {
+    __m128i input, bgr, output, a4, b4, c4, d4, value;
+    __m128i index0 = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8,
+                                  3, 2, 1, 0, 3, 2, 1, 0);
+    __m128i index1 = _mm_set_epi8(15, 14, 13, 12, 7, 6, 5, 4,
+                                  7, 6, 5, 4, 3, 2, 1, 0);
+    __m128i index2 = _mm_set_epi8(11, 10, 9, 8, 11, 10, 9, 8,
+                                  7, 6, 5, 4, 3, 2, 1, 0);
+    __m128i index3 = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8,
+                                  7, 6, 5, 4, 15, 14, 13, 12);
+    output = _mm_set1_epi8(0);
+
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        input  = _mm_loadu_si128((__m128i const*)input_row);
+        bgr    = _mm_shuffle_epi8(input, rgb2bgrc4_index);
+        a4     = _mm_add_epi8(bgr, output);
+        output = a4;
+
+        value  = _mm_shuffle_epi8(a4, index0);
+        b4     = _mm_add_epi8(bgr, value);
+        output = _mm_blend_epi16(output, b4, 12);
+
+        value  = _mm_shuffle_epi8(b4, index1);
+        c4     = _mm_add_epi8(bgr, value);
+        output = _mm_blend_epi16(output, c4, 48);
+
+        value  = _mm_shuffle_epi8(c4, index2);
+        d4     = _mm_add_epi8(bgr, value);
+        output = _mm_blend_epi16(output, d4, 192);
+
+        _mm_store_si128((__m128i*)recon_row, output);
+        // _mm_storeu_si128((__m128i*)recon_row, output);
+        output = _mm_shuffle_epi8(d4, index3);
+        recon_row += 16;
+        input_row += 16;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            input  = _mm_loadu_si128((__m128i const*)input_row);
+            bgr    = _mm_shuffle_epi8(input, rgb2bgrc4_index);
+            a4     = _mm_add_epi8(bgr, output);
+            output = a4;
+
+            value  = _mm_shuffle_epi8(a4, index0);
+            b4     = _mm_add_epi8(bgr, value);
+            output = _mm_blend_epi16(output, b4, 12);
+
+            value  = _mm_shuffle_epi8(b4, index1);
+            c4     = _mm_add_epi8(bgr, value);
+            output = _mm_blend_epi16(output, c4, 48);
+
+            value  = _mm_shuffle_epi8(c4, index2);
+            d4     = _mm_add_epi8(bgr, value);
+            output = _mm_blend_epi16(output, d4, 192);
+
+            _mm_store_si128((__m128i*)recon_row, output);
+            // _mm_storeu_si128((__m128i*)recon_row, output);
+
+            return;
+        }
+        else {
+            uint32_t value0, value1, value2, value3;
+            uint8_t* before_bytes = recon_row - 4;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                value3 = input_row[3];
+                recon_row[0] = value2 + before_bytes[0];
+                recon_row[1] = value1 + before_bytes[1];
+                recon_row[2] = value0 + before_bytes[2];
+                recon_row[3] = value3 + before_bytes[3];
+                recon_row    += 4;
+                input_row    += 4;
+                before_bytes += 4;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter1ColorC6(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    recon_row[0] = value4;
+    recon_row[1] = value5;
+    recon_row[2] = value2;
+    recon_row[3] = value3;
+    recon_row[4] = value0;
+    recon_row[5] = value1;
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 6;
+    recon_row += 6;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        recon_row[0] = value4 + before_bytes[0];
+        recon_row[1] = value5 + before_bytes[1];
+        recon_row[2] = value2 + before_bytes[2];
+        recon_row[3] = value3 + before_bytes[3];
+        recon_row[4] = value0 + before_bytes[4];
+        recon_row[5] = value1 + before_bytes[5];
+        recon_row    += 6;
+        input_row    += 6;
+        before_bytes += 6;
+    }
+}
+
+inline
+void rowDefilter1ColorC8(uint8_t* input_row, uint32_t row_bytes,
+                         uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5, value6, value7;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    value6 = input_row[6];
+    value7 = input_row[7];
+    recon_row[0] = value4;
+    recon_row[1] = value5;
+    recon_row[2] = value2;
+    recon_row[3] = value3;
+    recon_row[4] = value0;
+    recon_row[5] = value1;
+    recon_row[6] = value6;
+    recon_row[7] = value7;
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 8;
+    recon_row += 8;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        value6 = input_row[6];
+        value7 = input_row[7];
+        recon_row[0] = value4 + before_bytes[0];
+        recon_row[1] = value5 + before_bytes[1];
+        recon_row[2] = value2 + before_bytes[2];
+        recon_row[3] = value3 + before_bytes[3];
+        recon_row[4] = value0 + before_bytes[4];
+        recon_row[5] = value1 + before_bytes[5];
+        recon_row[6] = value6 + before_bytes[6];
+        recon_row[7] = value7 + before_bytes[7];
+        recon_row    += 8;
+        input_row    += 8;
+        before_bytes += 8;
+    }
+}
+
+inline
+void rowDefilter2ColorC3(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row,
+                         bool is_last_row) {
+    __m128i input0, input1, bgr, output;
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        input0  = _mm_loadu_si128((__m128i const*)input_row);
+        input1  = _mm_loadu_si128((__m128i const*)prior_row);
+        bgr     = _mm_shuffle_epi8(input0, rgb2bgrc3_index);
+        output  = _mm_add_epi8(bgr, input1);
+        _mm_storeu_si128((__m128i*)recon_row, output);
+        recon_row += 15;
+        input_row += 15;
+        prior_row += 15;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            input0  = _mm_loadu_si128((__m128i const*)input_row);
+            input1  = _mm_loadu_si128((__m128i const*)prior_row);
+            bgr     = _mm_shuffle_epi8(input0, rgb2bgrc3_index);
+            output  = _mm_add_epi8(bgr, input1);
+            _mm_storeu_si128((__m128i*)recon_row, output);
+        }
+        else {
+            uint32_t value0, value1, value2;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                recon_row[0] = value2 + prior_row[0];
+                recon_row[1] = value1 + prior_row[1];
+                recon_row[2] = value0 + prior_row[2];
+                recon_row += 3;
+                input_row += 3;
+                prior_row += 3;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter2ColorC4(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row,
+                         bool is_last_row) {
+    __m128i input0, input1, bgr, output;
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        input0  = _mm_loadu_si128((__m128i const*)input_row);
+        input1  = _mm_loadu_si128((__m128i const*)prior_row);
+        bgr     = _mm_shuffle_epi8(input0, rgb2bgrc4_index);
+        output  = _mm_add_epi8(bgr, input1);
+        _mm_store_si128((__m128i*)recon_row, output);
+        // _mm_storeu_si128((__m128i*)recon_row, output);
+        recon_row += 16;
+        input_row += 16;
+        prior_row += 16;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            input0  = _mm_loadu_si128((__m128i const*)input_row);
+            input1  = _mm_loadu_si128((__m128i const*)prior_row);
+            bgr     = _mm_shuffle_epi8(input0, rgb2bgrc4_index);
+            output  = _mm_add_epi8(bgr, input1);
+            _mm_store_si128((__m128i*)recon_row, output);
+            // _mm_storeu_si128((__m128i*)recon_row, output);
+
+            return;
+        }
+        else {
+            uint32_t value0, value1, value2, value3;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                value3 = input_row[3];
+                recon_row[0] = value2 + prior_row[0];
+                recon_row[1] = value1 + prior_row[1];
+                recon_row[2] = value0 + prior_row[2];
+                recon_row[3] = value3 + prior_row[3];
+                recon_row += 4;
+                input_row += 4;
+                prior_row += 4;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter2ColorC6(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row) {
+    uint8_t* input_end = input_row + row_bytes;
+    uint32_t value0, value1, value2, value3, value4, value5;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        recon_row[0] = value4 + prior_row[0];
+        recon_row[1] = value5 + prior_row[1];
+        recon_row[2] = value2 + prior_row[2];
+        recon_row[3] = value3 + prior_row[3];
+        recon_row[4] = value0 + prior_row[4];
+        recon_row[5] = value1 + prior_row[5];
+        recon_row += 6;
+        input_row += 6;
+        prior_row += 6;
+    }
+}
+
+inline
+void rowDefilter2ColorC8(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row) {
+    uint8_t* input_end = input_row + row_bytes;
+    uint32_t value0, value1, value2, value3, value4, value5, value6, value7;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        value6 = input_row[6];
+        value7 = input_row[7];
+        recon_row[0] = value4 + prior_row[0];
+        recon_row[1] = value5 + prior_row[1];
+        recon_row[2] = value2 + prior_row[2];
+        recon_row[3] = value3 + prior_row[3];
+        recon_row[4] = value0 + prior_row[4];
+        recon_row[5] = value1 + prior_row[5];
+        recon_row[6] = value6 + prior_row[6];
+        recon_row[7] = value7 + prior_row[7];
+        recon_row += 8;
+        input_row += 8;
+        prior_row += 8;
+    }
+}
+
+inline
+void row0Defilter3ColorC3(uint8_t* input_row, uint32_t row_bytes,
+                          uint8_t* recon_row) {
+    uint32_t value0, value1, value2;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    recon_row[0] = value2;
+    recon_row[1] = value1;
+    recon_row[2] = value0;
+
+    uint8_t* input_end    = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 3;
+    recon_row += 3;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        recon_row[0] = value2 + (before_bytes[0] >> 1);
+        recon_row[1] = value1 + (before_bytes[1] >> 1);
+        recon_row[2] = value0 + (before_bytes[2] >> 1);
+        recon_row    += 3;
+        input_row    += 3;
+        before_bytes += 3;
+    }
+}
+
+inline
+void row0Defilter3ColorC4(uint8_t* input_row, uint32_t row_bytes,
+                          uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    recon_row[0] = value2;
+    recon_row[1] = value1;
+    recon_row[2] = value0;
+    recon_row[3] = value3;
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 4;
+    recon_row += 4;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        recon_row[0] = value2 + (before_bytes[0] >> 1);
+        recon_row[1] = value1 + (before_bytes[1] >> 1);
+        recon_row[2] = value0 + (before_bytes[2] >> 1);
+        recon_row[3] = value3 + (before_bytes[3] >> 1);
+        recon_row    += 4;
+        input_row    += 4;
+        before_bytes += 4;
+    }
+}
+
+inline
+void row0Defilter3ColorC6(uint8_t* input_row, uint32_t row_bytes,
+                          uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    recon_row[0] = value4;
+    recon_row[1] = value5;
+    recon_row[2] = value2;
+    recon_row[3] = value3;
+    recon_row[4] = value0;
+    recon_row[5] = value1;
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 6;
+    recon_row += 6;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        recon_row[0] = value4 + (before_bytes[0] >> 1);
+        recon_row[1] = value5 + (before_bytes[1] >> 1);
+        recon_row[2] = value2 + (before_bytes[2] >> 1);
+        recon_row[3] = value3 + (before_bytes[3] >> 1);
+        recon_row[4] = value0 + (before_bytes[4] >> 1);
+        recon_row[5] = value1 + (before_bytes[5] >> 1);
+        recon_row    += 6;
+        input_row    += 6;
+        before_bytes += 6;
+    }
+}
+
+inline
+void row0Defilter3ColorC8(uint8_t* input_row, uint32_t row_bytes,
+                          uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5, value6, value7;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    value6 = input_row[6];
+    value7 = input_row[7];
+    recon_row[0] = value4;
+    recon_row[1] = value5;
+    recon_row[2] = value2;
+    recon_row[3] = value3;
+    recon_row[4] = value0;
+    recon_row[5] = value1;
+    recon_row[6] = value6;
+    recon_row[7] = value7;
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 8;
+    recon_row += 8;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        value6 = input_row[6];
+        value7 = input_row[7];
+        recon_row[0] = value4 + (before_bytes[0] >> 1);
+        recon_row[1] = value5 + (before_bytes[1] >> 1);
+        recon_row[2] = value2 + (before_bytes[2] >> 1);
+        recon_row[3] = value3 + (before_bytes[3] >> 1);
+        recon_row[4] = value0 + (before_bytes[4] >> 1);
+        recon_row[5] = value1 + (before_bytes[5] >> 1);
+        recon_row[6] = value6 + (before_bytes[6] >> 1);
+        recon_row[7] = value7 + (before_bytes[7] >> 1);
+        recon_row    += 8;
+        input_row    += 8;
+        before_bytes += 8;
+    }
+}
+
+inline
+__m128i caculateDefilter3(__m128i a4_i16, __m128i b4_i16, __m128i input) {
+    __m128i add_i16    = _mm_add_epi16(a4_i16, b4_i16);
+    __m128i shift_i16  = _mm_srli_epi16(add_i16, 1);
+    __m128i result_i16 = _mm_add_epi16(input, shift_i16);
+    __m128i result     = _mm_and_si128(result_i16, trunc_index);
+
+    return result;
+}
+
+// de-filter a 3-byte pixel
+inline
+void rowDefilter3ColorC3(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row,
+                         bool is_last_row) {
+    __m128i prior_pixels, current_pixels, bgr_pixels, prior_i16, current_i16;
+    __m128i a4_i16, b4_i16, input, result_i16, result_i8, output0, output1;
+    a4_i16 = _mm_set1_epi16(0);
+
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+        current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+        bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc3_index);
+        prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+        current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+        // the first 3 8-bit output
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+        // the second 3 8-bit output
+        a4_i16     = result_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+        input      = _mm_bsrli_si128(current_i16, 6);
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 3);
+        result_i8  = _mm_blendv_epi8(result_i8, output1, pick1_index);
+
+        output0     = _mm_bsrli_si128(prior_pixels, 6);
+        output1     = _mm_bsrli_si128(bgr_pixels, 6);
+        prior_i16   = _mm_cvtepu8_epi16(output0);
+        current_i16 = _mm_cvtepu8_epi16(output1);
+
+        // the third 3 8-bit output
+        a4_i16     = result_i16;
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 6);
+        result_i8  = _mm_blendv_epi8(result_i8, output1, pick2_index);
+
+        // the fourth 3 8-bit output
+        a4_i16     = result_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+        input      = _mm_bsrli_si128(current_i16, 6);
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 9);
+        result_i8  = _mm_blendv_epi8(result_i8, output1, pick3_index);
+
+        // the fifth 3 8-bit output
+        a4_i16      = result_i16;
+        output0     = _mm_bsrli_si128(prior_pixels, 12);
+        output1     = _mm_bsrli_si128(bgr_pixels, 12);
+        prior_i16   = _mm_cvtepu8_epi16(output0);
+        current_i16 = _mm_cvtepu8_epi16(output1);
+        b4_i16      = prior_i16;
+        input       = current_i16;
+        result_i16  = caculateDefilter3(a4_i16, b4_i16, input);
+        output0     = _mm_packus_epi16(result_i16, result_i16);
+        output1     = _mm_bslli_si128(output0, 12);
+        result_i8   = _mm_blendv_epi8(result_i8, output1, pick4_index);
+
+        _mm_storeu_si128((__m128i*)recon_row, result_i8);
+        a4_i16 = result_i16;
+        recon_row += 15;
+        input_row += 15;
+        prior_row += 15;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+            current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+            bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc3_index);
+            prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+            current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+            // the first 3 8-bit output
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+            // the second 3 8-bit output
+            a4_i16     = result_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+            input      = _mm_bsrli_si128(current_i16, 6);
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 3);
+            result_i8  = _mm_blendv_epi8(result_i8, output1, pick1_index);
+
+            output0     = _mm_bsrli_si128(prior_pixels, 6);
+            output1     = _mm_bsrli_si128(bgr_pixels, 6);
+            prior_i16   = _mm_cvtepu8_epi16(output0);
+            current_i16 = _mm_cvtepu8_epi16(output1);
+
+            // the third 3 8-bit output
+            a4_i16     = result_i16;
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 6);
+            result_i8  = _mm_blendv_epi8(result_i8, output1, pick2_index);
+
+            // the fourth 3 8-bit output
+            a4_i16     = result_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+            input      = _mm_bsrli_si128(current_i16, 6);
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 9);
+            result_i8  = _mm_blendv_epi8(result_i8, output1, pick3_index);
+
+            // the fifth 3 8-bit output
+            a4_i16      = result_i16;
+            output0     = _mm_bsrli_si128(prior_pixels, 12);
+            output1     = _mm_bsrli_si128(bgr_pixels, 12);
+            prior_i16   = _mm_cvtepu8_epi16(output0);
+            current_i16 = _mm_cvtepu8_epi16(output1);
+            b4_i16      = prior_i16;
+            input       = current_i16;
+            result_i16  = caculateDefilter3(a4_i16, b4_i16, input);
+            output0     = _mm_packus_epi16(result_i16, result_i16);
+            output1     = _mm_bslli_si128(output0, 12);
+            result_i8   = _mm_blendv_epi8(result_i8, output1, pick4_index);
+
+            _mm_storeu_si128((__m128i*)recon_row, result_i8);
+        }
+        else {
+            uint32_t value0, value1, value2;
+            uint8_t* before_bytes = recon_row - 3;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                recon_row[0] = value2 + ((before_bytes[0] + prior_row[0]) >> 1);
+                recon_row[1] = value1 + ((before_bytes[1] + prior_row[1]) >> 1);
+                recon_row[2] = value0 + ((before_bytes[2] + prior_row[2]) >> 1);
+                recon_row    += 3;
+                input_row    += 3;
+                before_bytes += 3;
+                prior_row    += 3;
+            }
+        }
+    }
+}
+
+// de-filter a 4-byte pixel
+inline
+void rowDefilter3ColorC4(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row,
+                         bool is_last_row) {
+    __m128i prior_pixels, current_pixels, bgr_pixels, prior_i16, current_i16;
+    __m128i a4_i16, b4_i16, input, result_i16, result_i8, output0, output1;
+    a4_i16 = _mm_set1_epi16(0);
+
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+        current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+        bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc4_index);
+        prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+        current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+        // first 4 8-bit output
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+        // second 4 8-bit output
+        a4_i16     = result_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+        input      = _mm_bsrli_si128(current_i16, 8);
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 4);
+        result_i8  = _mm_blend_epi16(result_i8, output1, 12);
+
+        output0     = _mm_bsrli_si128(prior_pixels, 8);
+        output1     = _mm_bsrli_si128(bgr_pixels, 8);
+        prior_i16   = _mm_cvtepu8_epi16(output0);
+        current_i16 = _mm_cvtepu8_epi16(output1);
+
+        // third 4 8-bit output
+        a4_i16     = result_i16;
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 8);
+        result_i8  = _mm_blend_epi16(result_i8, output1, 48);
+
+        // fourth 4 8-bit output
+        a4_i16     = result_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+        input      = _mm_bsrli_si128(current_i16, 8);
+        result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 12);
+        result_i8  = _mm_blend_epi16(result_i8, output1, 192);
+
+        _mm_store_si128((__m128i*)recon_row, result_i8);
+        // _mm_storeu_si128((__m128i*)recon_row, result_i8);
+        a4_i16 = result_i16;
+        recon_row += 16;
+        input_row += 16;
+        prior_row += 16;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+            current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+            bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc4_index);
+            prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+            current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+            // first 4 8-bit output
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+            // second 4 8-bit output
+            a4_i16     = result_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+            input      = _mm_bsrli_si128(current_i16, 8);
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 4);
+            result_i8  = _mm_blend_epi16(result_i8, output1, 12);
+
+            output0     = _mm_bsrli_si128(prior_pixels, 8);
+            output1     = _mm_bsrli_si128(bgr_pixels, 8);
+            prior_i16   = _mm_cvtepu8_epi16(output0);
+            current_i16 = _mm_cvtepu8_epi16(output1);
+
+            // third 4 8-bit output
+            a4_i16     = result_i16;
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 8);
+            result_i8  = _mm_blend_epi16(result_i8, output1, 48);
+
+            // fourth 4 8-bit output
+            a4_i16     = result_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+            input      = _mm_bsrli_si128(current_i16, 8);
+            result_i16 = caculateDefilter3(a4_i16, b4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 12);
+            result_i8  = _mm_blend_epi16(result_i8, output1, 192);
+
+            _mm_store_si128((__m128i*)recon_row, result_i8);
+            // _mm_storeu_si128((__m128i*)recon_row, result_i8);
+
+            return;
+        }
+        else {
+            uint32_t value0, value1, value2, value3;
+            uint8_t* before_bytes = recon_row - 4;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                value3 = input_row[3];
+                recon_row[0] = value2 + ((before_bytes[0] + prior_row[0]) >> 1);
+                recon_row[1] = value1 + ((before_bytes[1] + prior_row[1]) >> 1);
+                recon_row[2] = value0 + ((before_bytes[2] + prior_row[2]) >> 1);
+                recon_row[3] = value3 + ((before_bytes[3] + prior_row[3]) >> 1);
+                recon_row    += 4;
+                input_row    += 4;
+                before_bytes += 4;
+                prior_row    += 4;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter3ColorC6(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    recon_row[0] = value4 + (prior_row[0] >> 1);
+    recon_row[1] = value5 + (prior_row[1] >> 1);
+    recon_row[2] = value2 + (prior_row[2] >> 1);
+    recon_row[3] = value3 + (prior_row[3] >> 1);
+    recon_row[4] = value0 + (prior_row[4] >> 1);
+    recon_row[5] = value1 + (prior_row[5] >> 1);
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 6;
+    prior_row += 6;
+    recon_row += 6;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        recon_row[0] = value4 + ((before_bytes[0] + prior_row[0]) >> 1);
+        recon_row[1] = value5 + ((before_bytes[1] + prior_row[1]) >> 1);
+        recon_row[2] = value2 + ((before_bytes[2] + prior_row[2]) >> 1);
+        recon_row[3] = value3 + ((before_bytes[3] + prior_row[3]) >> 1);
+        recon_row[4] = value0 + ((before_bytes[4] + prior_row[4]) >> 1);
+        recon_row[5] = value1 + ((before_bytes[5] + prior_row[5]) >> 1);
+        recon_row    += 6;
+        input_row    += 6;
+        before_bytes += 6;
+        prior_row    += 6;
+    }
+}
+
+inline
+void rowDefilter3ColorC8(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5, value6, value7;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    value6 = input_row[6];
+    value7 = input_row[7];
+    recon_row[0] = value4 + (prior_row[0] >> 1);
+    recon_row[1] = value5 + (prior_row[1] >> 1);
+    recon_row[2] = value2 + (prior_row[2] >> 1);
+    recon_row[3] = value3 + (prior_row[3] >> 1);
+    recon_row[4] = value0 + (prior_row[4] >> 1);
+    recon_row[5] = value1 + (prior_row[5] >> 1);
+    recon_row[6] = value6 + (prior_row[6] >> 1);
+    recon_row[7] = value7 + (prior_row[7] >> 1);
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    input_row += 8;
+    prior_row += 8;
+    recon_row += 8;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        value6 = input_row[6];
+        value7 = input_row[7];
+        recon_row[0] = value4 + ((before_bytes[0] + prior_row[0]) >> 1);
+        recon_row[1] = value5 + ((before_bytes[1] + prior_row[1]) >> 1);
+        recon_row[2] = value2 + ((before_bytes[2] + prior_row[2]) >> 1);
+        recon_row[3] = value3 + ((before_bytes[3] + prior_row[3]) >> 1);
+        recon_row[4] = value0 + ((before_bytes[4] + prior_row[4]) >> 1);
+        recon_row[5] = value1 + ((before_bytes[5] + prior_row[5]) >> 1);
+        recon_row[6] = value6 + ((before_bytes[6] + prior_row[6]) >> 1);
+        recon_row[7] = value7 + ((before_bytes[7] + prior_row[7]) >> 1);
+        recon_row    += 8;
+        input_row    += 8;
+        before_bytes += 8;
+        prior_row    += 8;
+    }
+}
+
+inline
+__m128i caculatePaeth(__m128i a4_i16, __m128i b4_i16, __m128i c4_i16,
+                      __m128i input) {
+    __m128i pab = _mm_add_epi16(a4_i16, b4_i16);
+    __m128i pabc = _mm_sub_epi16(pab, c4_i16);
+    __m128i pa = _mm_sub_epi16(pabc, a4_i16);
+    __m128i pb = _mm_sub_epi16(pabc, b4_i16);
+    __m128i pc = _mm_sub_epi16(pabc, c4_i16);
+    __m128i pa_abs = _mm_abs_epi16(pa);
+    __m128i pb_abs = _mm_abs_epi16(pb);
+    __m128i pc_abs = _mm_abs_epi16(pc);
+    __m128i min_ab = _mm_min_epi16(pa_abs, pb_abs);
+    __m128i target_ab = _mm_blendv_epi8(b4_i16, a4_i16,
+                                        _mm_cmpeq_epi16(min_ab, pa_abs));
+    __m128i min_abc = _mm_min_epi16(min_ab, pc_abs);
+    __m128i target_abc = _mm_blendv_epi8(c4_i16, target_ab,
+                                         _mm_cmpeq_epi16(min_ab, min_abc));
+    __m128i value = _mm_add_epi16(input, target_abc);
+    __m128i result = _mm_and_si128(value, trunc_index);
+
+    return result;
+}
+
+// de-filter a 3-byte pixel
+inline
+void rowDefilter4ColorC3(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row,
+                         bool is_last_row) {
+    __m128i prior_pixels, current_pixels, bgr_pixels, prior_i16, current_i16;
+    __m128i a4_i16, b4_i16, c4_i16, input, result_i16, result_i8;
+    __m128i output0, output1;
+    a4_i16 = _mm_set1_epi16(0);
+    c4_i16 = _mm_set1_epi16(0);
+
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+        current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+        bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc3_index);
+        prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+        current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+        // the first 3 8-bit output
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+        // the second 3 8-bit output
+        a4_i16     = result_i16;
+        c4_i16     = b4_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+        input      = _mm_bsrli_si128(current_i16, 6);
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 3);
+        result_i8  = _mm_blendv_epi8(result_i8, output1, pick1_index);
+
+        output0      = _mm_bsrli_si128(prior_pixels, 6);
+        output1      = _mm_bsrli_si128(bgr_pixels, 6);
+        prior_i16   = _mm_cvtepu8_epi16(output0);
+        current_i16 = _mm_cvtepu8_epi16(output1);
+
+        // the third 3 8-bit output
+        a4_i16     = result_i16;
+        c4_i16     = b4_i16;
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 6);
+        result_i8  = _mm_blendv_epi8(result_i8, output1, pick2_index);
+
+        // the fourth 3 8-bit output
+        a4_i16     = result_i16;
+        c4_i16     = b4_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+        input      = _mm_bsrli_si128(current_i16, 6);
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 9);
+        result_i8  = _mm_blendv_epi8(result_i8, output1, pick3_index);
+
+        // the fifth 3 8-bit output
+        a4_i16      = result_i16;
+        c4_i16      = b4_i16;
+        output0     = _mm_bsrli_si128(prior_pixels, 12);
+        output1     = _mm_bsrli_si128(bgr_pixels, 12);
+        prior_i16   = _mm_cvtepu8_epi16(output0);
+        current_i16 = _mm_cvtepu8_epi16(output1);
+        b4_i16      = prior_i16;
+        input       = current_i16;
+        result_i16  = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        output0     = _mm_packus_epi16(result_i16, result_i16);
+        output1     = _mm_bslli_si128(output0, 12);
+        result_i8   = _mm_blendv_epi8(result_i8, output1, pick4_index);
+
+        _mm_storeu_si128((__m128i*)recon_row, result_i8);
+        a4_i16 = result_i16;
+        c4_i16 = b4_i16;
+        recon_row += 15;
+        input_row += 15;
+        prior_row += 15;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+            current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+            bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc3_index);
+            prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+            current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+            // the first 3 8-bit output
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+            // the second 3 8-bit output
+            a4_i16     = result_i16;
+            c4_i16     = b4_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+            input      = _mm_bsrli_si128(current_i16, 6);
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 3);
+            result_i8  = _mm_blendv_epi8(result_i8, output1, pick1_index);
+
+            output0      = _mm_bsrli_si128(prior_pixels, 6);
+            output1      = _mm_bsrli_si128(bgr_pixels, 6);
+            prior_i16   = _mm_cvtepu8_epi16(output0);
+            current_i16 = _mm_cvtepu8_epi16(output1);
+
+            // the third 3 8-bit output
+            a4_i16     = result_i16;
+            c4_i16     = b4_i16;
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 6);
+            result_i8  = _mm_blendv_epi8(result_i8, output1, pick2_index);
+
+            // the fourth 3 8-bit output
+            a4_i16     = result_i16;
+            c4_i16     = b4_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 6);
+            input      = _mm_bsrli_si128(current_i16, 6);
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 9);
+            result_i8  = _mm_blendv_epi8(result_i8, output1, pick3_index);
+
+            // the fifth 3 8-bit output
+            a4_i16      = result_i16;
+            c4_i16      = b4_i16;
+            output0     = _mm_bsrli_si128(prior_pixels, 12);
+            output1     = _mm_bsrli_si128(bgr_pixels, 12);
+            prior_i16   = _mm_cvtepu8_epi16(output0);
+            current_i16 = _mm_cvtepu8_epi16(output1);
+            b4_i16      = prior_i16;
+            input       = current_i16;
+            result_i16  = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            output0     = _mm_packus_epi16(result_i16, result_i16);
+            output1     = _mm_bslli_si128(output0, 12);
+            result_i8   = _mm_blendv_epi8(result_i8, output1, pick4_index);
+
+            _mm_storeu_si128((__m128i*)recon_row, result_i8);
+        }
+        else {
+            uint32_t value0, value1, value2;
+            uint8_t* before_bytes = recon_row - 3;
+            uint8_t* prior_before = prior_row - 3;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                recon_row[0] = value2 + filterPaeth(before_bytes[0],
+                               prior_row[0], prior_before[0]);
+                recon_row[1] = value1 + filterPaeth(before_bytes[1],
+                               prior_row[1], prior_before[1]);
+                recon_row[2] = value0 + filterPaeth(before_bytes[2],
+                               prior_row[2], prior_before[2]);
+                recon_row    += 3;
+                input_row    += 3;
+                before_bytes += 3;
+                prior_row    += 3;
+                prior_before += 3;
+            }
+        }
+    }
+}
+
+// de-filter a 4-byte pixel
+inline
+void rowDefilter4ColorC4(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row,
+                         bool is_last_row) {
+    __m128i prior_pixels, current_pixels, bgr_pixels, prior_i16, current_i16;
+    __m128i a4_i16, b4_i16, c4_i16, input, result_i16, result_i8;
+    __m128i output0, output1;
+    a4_i16 = _mm_set1_epi16(0);
+    c4_i16 = _mm_set1_epi16(0);
+
+    uint8_t* input_end = input_row + row_bytes - 16;
+    while (input_row < input_end) {
+        prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+        current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+        bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc4_index);
+        prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+        current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+        // the first 4 8-bit output
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+        // the second 4 8-bit output
+        a4_i16     = result_i16;
+        c4_i16     = b4_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+        input      = _mm_bsrli_si128(current_i16, 8);
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 4);
+        result_i8  = _mm_blend_epi16(result_i8, output1, 12);
+
+        output0      = _mm_bsrli_si128(prior_pixels, 8);
+        output1      = _mm_bsrli_si128(bgr_pixels, 8);
+        prior_i16   = _mm_cvtepu8_epi16(output0);
+        current_i16 = _mm_cvtepu8_epi16(output1);
+
+        // the third 4 8-bit output
+        a4_i16     = result_i16;
+        c4_i16     = b4_i16;
+        b4_i16     = prior_i16;
+        input      = current_i16;
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 8);
+        result_i8  = _mm_blend_epi16(result_i8, output1, 48);
+
+        // the fourth 4 8-bit output
+        a4_i16     = result_i16;
+        c4_i16     = b4_i16;
+        b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+        input      = _mm_bsrli_si128(current_i16, 8);
+        result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+        output0    = _mm_packus_epi16(result_i16, result_i16);
+        output1    = _mm_bslli_si128(output0, 12);
+        result_i8  = _mm_blend_epi16(result_i8, output1, 192);
+
+        _mm_store_si128((__m128i*)recon_row, result_i8);
+        // _mm_storeu_si128((__m128i*)recon_row, result_i8);
+        a4_i16 = result_i16;
+        c4_i16 = b4_i16;
+        recon_row += 16;
+        input_row += 16;
+        prior_row += 16;
+    }
+
+    input_end += 16;
+    if (input_row < input_end) {
+        if ((!is_last_row) || input_row + 16 == input_end) {
+            prior_pixels   = _mm_loadu_si128((__m128i const*)prior_row);
+            current_pixels = _mm_loadu_si128((__m128i const*)input_row);
+            bgr_pixels     = _mm_shuffle_epi8(current_pixels, rgb2bgrc4_index);
+            prior_i16      = _mm_cvtepu8_epi16(prior_pixels);
+            current_i16    = _mm_cvtepu8_epi16(bgr_pixels);
+
+            // the first 4 8-bit output
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            result_i8  = _mm_packus_epi16(result_i16, result_i16);
+
+            // the second 4 8-bit output
+            a4_i16     = result_i16;
+            c4_i16     = b4_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+            input      = _mm_bsrli_si128(current_i16, 8);
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 4);
+            result_i8  = _mm_blend_epi16(result_i8, output1, 12);
+
+            output0      = _mm_bsrli_si128(prior_pixels, 8);
+            output1      = _mm_bsrli_si128(bgr_pixels, 8);
+            prior_i16   = _mm_cvtepu8_epi16(output0);
+            current_i16 = _mm_cvtepu8_epi16(output1);
+
+            // the third 4 8-bit output
+            a4_i16     = result_i16;
+            c4_i16     = b4_i16;
+            b4_i16     = prior_i16;
+            input      = current_i16;
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 8);
+            result_i8  = _mm_blend_epi16(result_i8, output1, 48);
+
+            // the fourth 4 8-bit output
+            a4_i16     = result_i16;
+            c4_i16     = b4_i16;
+            b4_i16     = _mm_bsrli_si128(prior_i16, 8);
+            input      = _mm_bsrli_si128(current_i16, 8);
+            result_i16 = caculatePaeth(a4_i16, b4_i16, c4_i16, input);
+            output0    = _mm_packus_epi16(result_i16, result_i16);
+            output1    = _mm_bslli_si128(output0, 12);
+            result_i8  = _mm_blend_epi16(result_i8, output1, 192);
+
+            _mm_store_si128((__m128i*)recon_row, result_i8);
+            // _mm_storeu_si128((__m128i*)recon_row, result_i8);
+
+            return;
+        }
+        else {
+            uint32_t value0, value1, value2, value3;
+            uint8_t* before_bytes = recon_row - 4;
+            uint8_t* prior_before = prior_row - 4;
+            while (input_row < input_end) {
+                value0 = input_row[0];
+                value1 = input_row[1];
+                value2 = input_row[2];
+                value3 = input_row[3];
+                recon_row[0] = value2 + filterPaeth(before_bytes[0],
+                               prior_row[0], prior_before[0]);
+                recon_row[1] = value1 + filterPaeth(before_bytes[1],
+                               prior_row[1], prior_before[1]);
+                recon_row[2] = value0 + filterPaeth(before_bytes[2],
+                               prior_row[2], prior_before[2]);
+                recon_row[3] = value3 + filterPaeth(before_bytes[3],
+                               prior_row[3], prior_before[3]);
+                recon_row    += 4;
+                input_row    += 4;
+                before_bytes += 4;
+                prior_row    += 4;
+                prior_before += 4;
+            }
+        }
+    }
+}
+
+inline
+void rowDefilter4ColorC6(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    recon_row[0] = value4 + prior_row[0];
+    recon_row[1] = value5 + prior_row[1];
+    recon_row[2] = value2 + prior_row[2];
+    recon_row[3] = value3 + prior_row[3];
+    recon_row[4] = value0 + prior_row[4];
+    recon_row[5] = value1 + prior_row[5];
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    uint8_t* prior_before = prior_row;
+    input_row += 6;
+    prior_row += 6;
+    recon_row += 6;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        recon_row[0] = value4 + filterPaeth(before_bytes[0], prior_row[0],
+                                            prior_before[0]);
+        recon_row[1] = value5 + filterPaeth(before_bytes[1], prior_row[1],
+                                            prior_before[1]);
+        recon_row[2] = value2 + filterPaeth(before_bytes[2], prior_row[2],
+                                            prior_before[2]);
+        recon_row[3] = value3 + filterPaeth(before_bytes[3], prior_row[3],
+                                            prior_before[3]);
+        recon_row[4] = value0 + filterPaeth(before_bytes[4], prior_row[4],
+                                            prior_before[4]);
+        recon_row[5] = value1 + filterPaeth(before_bytes[5], prior_row[5],
+                                            prior_before[5]);
+        recon_row    += 6;
+        input_row    += 6;
+        before_bytes += 6;
+        prior_row    += 6;
+        prior_before += 6;
+    }
+}
+
+inline
+void rowDefilter4ColorC8(uint8_t* input_row, uint8_t* prior_row,
+                         uint32_t row_bytes, uint8_t* recon_row) {
+    uint32_t value0, value1, value2, value3, value4, value5, value6, value7;
+    value0 = input_row[0];
+    value1 = input_row[1];
+    value2 = input_row[2];
+    value3 = input_row[3];
+    value4 = input_row[4];
+    value5 = input_row[5];
+    value6 = input_row[6];
+    value7 = input_row[7];
+    recon_row[0] = value4 + prior_row[0];
+    recon_row[1] = value5 + prior_row[1];
+    recon_row[2] = value2 + prior_row[2];
+    recon_row[3] = value3 + prior_row[3];
+    recon_row[4] = value0 + prior_row[4];
+    recon_row[5] = value1 + prior_row[5];
+    recon_row[6] = value6 + prior_row[6];
+    recon_row[7] = value7 + prior_row[7];
+
+    uint8_t* input_end = input_row + row_bytes;
+    uint8_t* before_bytes = recon_row;
+    uint8_t* prior_before = prior_row;
+    input_row += 8;
+    prior_row += 8;
+    recon_row += 8;
+    while (input_row < input_end) {
+        value0 = input_row[0];
+        value1 = input_row[1];
+        value2 = input_row[2];
+        value3 = input_row[3];
+        value4 = input_row[4];
+        value5 = input_row[5];
+        value6 = input_row[6];
+        value7 = input_row[7];
+        recon_row[0] = value4 + filterPaeth(before_bytes[0], prior_row[0],
+                                            prior_before[0]);
+        recon_row[1] = value5 + filterPaeth(before_bytes[1], prior_row[1],
+                                            prior_before[1]);
+        recon_row[2] = value2 + filterPaeth(before_bytes[2], prior_row[2],
+                                            prior_before[2]);
+        recon_row[3] = value3 + filterPaeth(before_bytes[3], prior_row[3],
+                                            prior_before[3]);
+        recon_row[4] = value0 + filterPaeth(before_bytes[4], prior_row[4],
+                                            prior_before[4]);
+        recon_row[5] = value1 + filterPaeth(before_bytes[5], prior_row[5],
+                                            prior_before[5]);
+        recon_row[6] = value6 + filterPaeth(before_bytes[6], prior_row[6],
+                                            prior_before[6]);
+        recon_row[7] = value7 + filterPaeth(before_bytes[7], prior_row[7],
+                                            prior_before[7]);
+        recon_row    += 8;
+        input_row    += 8;
+        before_bytes += 8;
+        prior_row    += 8;
+        prior_before += 8;
+    }
+}
+
+bool deFilterC3TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
+                         uint32_t stride, uint8_t* recon_row) {
+    // process the first row.
+    uint8_t filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/Average(3)/"
+                   << "Paeth(4)";
+        return false;
+    }
+    switch (filter_type) {
+        case FILTER_NONE:
+            rowDefilter0ColorC3(input, row_bytes, recon_row, false);
+            break;
+        case FILTER_SUB:
+            rowDefilter1ColorC3(input, row_bytes, recon_row, false);
+            break;
+        case FILTER_UP:
+            rowDefilter0ColorC3(input, row_bytes, recon_row, false);
+            break;
+        case FILTER_PAETH:
+            row0Defilter3ColorC3(input, row_bytes, recon_row);
+            break;
+        case FILTER_AVERAGE:
+            rowDefilter1ColorC3(input, row_bytes, recon_row, false);
+            break;
+    }
+    input += row_bytes;
+    recon_row += stride;
+
+    // process the most rows.
+    uint8_t *prior_row;
+    for (uint32_t row = 1; row < height - 1; ++row) {
+        prior_row = recon_row - stride;
         filter_type = *input++;
         if (filter_type > 4) {
             LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
-                       << ", correct filter type: None(0)/Sub(1)/Up(2)/Average(3)/"
-                       << "Paeth(4)";
+                       << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                       << "Average(3)/Paeth(4)";
             return false;
         }
-        // if first row, use special filter_type that doesn't sample previous row
-        if (row == 0) filter_type = first_row_filter[filter_type];
-        // std::cout << "row " << row << ": " << (int)filter_type << std::endl;
-        // std::cout << "stride_offset: " << stride_offset << std::endl;
-        // std::cout << "pixel_bytes: " << pixel_bytes << std::endl;
-        // std::cout << "***pixel 0: ";
-        // for (int i = 0; i < pixel_bytes; i++) {
-        //     std::cout << (int)input[i] << ", ";
-        // }
-        // std::cout << std::endl;
-
-        // handle first pixel explicitly
-        uint8_t value0, value1, value2, value3, value4, value5, value6, value7;
         switch (filter_type) {
             case FILTER_NONE:
+                rowDefilter0ColorC3(input, row_bytes, recon_row, false);
+                break;
             case FILTER_SUB:
-            case FILTER_AVG_FIRST:
-            case FILTER_PAETH_FIRST:
-                if (pixel_bytes == 3) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    current_row[0] = value2;
-                    current_row[1] = value1;
-                    current_row[2] = value0;
-                }
-                else if (pixel_bytes == 4) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    current_row[0] = value2;
-                    current_row[1] = value1;
-                    current_row[2] = value0;
-                    current_row[3] = value3;
-                }
-                else if (pixel_bytes == 6) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    current_row[0] = value4;
-                    current_row[1] = value5;
-                    current_row[2] = value2;
-                    current_row[3] = value3;
-                    current_row[4] = value0;
-                    current_row[5] = value1;
-                }
-                else {  // pixel_bytes == 8
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    value6 = input[6];
-                    value7 = input[7];
-                    current_row[0] = value4;
-                    current_row[1] = value5;
-                    current_row[2] = value2;
-                    current_row[3] = value3;
-                    current_row[4] = value0;
-                    current_row[5] = value1;
-                    current_row[6] = value6;
-                    current_row[7] = value7;
-                }
+                rowDefilter1ColorC3(input, row_bytes, recon_row, false);
                 break;
             case FILTER_UP:
-                if (pixel_bytes == 3) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    current_row[0] = (uint32_t)value2 + prior_row[0];
-                    current_row[1] = (uint32_t)value1 + prior_row[1];
-                    current_row[2] = (uint32_t)value0 + prior_row[2];
-                }
-                else if (pixel_bytes == 4) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    current_row[0] = (uint32_t)value2 + prior_row[0];
-                    current_row[1] = (uint32_t)value1 + prior_row[1];
-                    current_row[2] = (uint32_t)value0 + prior_row[2];
-                    current_row[3] = (uint32_t)value3 + prior_row[3];
-                }
-                else if (pixel_bytes == 6) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    current_row[0] = (uint32_t)value4 + prior_row[0];
-                    current_row[1] = (uint32_t)value5 + prior_row[1];
-                    current_row[2] = (uint32_t)value2 + prior_row[2];
-                    current_row[3] = (uint32_t)value3 + prior_row[3];
-                    current_row[4] = (uint32_t)value0 + prior_row[4];
-                    current_row[5] = (uint32_t)value1 + prior_row[5];
-                }
-                else {  // pixel_bytes == 8
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    value6 = input[6];
-                    value7 = input[7];
-                    current_row[0] = (uint32_t)value4 + prior_row[0];
-                    current_row[1] = (uint32_t)value5 + prior_row[1];
-                    current_row[2] = (uint32_t)value2 + prior_row[2];
-                    current_row[3] = (uint32_t)value3 + prior_row[3];
-                    current_row[4] = (uint32_t)value0 + prior_row[4];
-                    current_row[5] = (uint32_t)value1 + prior_row[5];
-                    current_row[6] = (uint32_t)value6 + prior_row[6];
-                    current_row[7] = (uint32_t)value7 + prior_row[7];
-                }
+                rowDefilter2ColorC3(input, prior_row, row_bytes, recon_row,
+                                    false);
                 break;
             case FILTER_AVERAGE:
-                if (pixel_bytes == 3) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    current_row[0] = (uint32_t)value2 + (prior_row[0] >> 1);
-                    current_row[1] = (uint32_t)value1 + (prior_row[1] >> 1);
-                    current_row[2] = (uint32_t)value0 + (prior_row[2] >> 1);
-                }
-                else if (pixel_bytes == 4) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    current_row[0] = (uint32_t)value2 + (prior_row[0] >> 1);
-                    current_row[1] = (uint32_t)value1 + (prior_row[1] >> 1);
-                    current_row[2] = (uint32_t)value0 + (prior_row[2] >> 1);
-                    current_row[3] = (uint32_t)value3 + (prior_row[3] >> 1);
-                }
-                else if (pixel_bytes == 6) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    current_row[0] = (uint32_t)value4 + (prior_row[0] >> 1);
-                    current_row[1] = (uint32_t)value5 + (prior_row[1] >> 1);
-                    current_row[2] = (uint32_t)value2 + (prior_row[2] >> 1);
-                    current_row[3] = (uint32_t)value3 + (prior_row[3] >> 1);
-                    current_row[4] = (uint32_t)value0 + (prior_row[4] >> 1);
-                    current_row[5] = (uint32_t)value1 + (prior_row[5] >> 1);
-                }
-                else {  // pixel_bytes == 8
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    value6 = input[6];
-                    value7 = input[7];
-                    current_row[0] = (uint32_t)value4 + (prior_row[0] >> 1);
-                    current_row[1] = (uint32_t)value5 + (prior_row[1] >> 1);
-                    current_row[2] = (uint32_t)value2 + (prior_row[2] >> 1);
-                    current_row[3] = (uint32_t)value3 + (prior_row[3] >> 1);
-                    current_row[4] = (uint32_t)value0 + (prior_row[4] >> 1);
-                    current_row[5] = (uint32_t)value1 + (prior_row[5] >> 1);
-                    current_row[6] = (uint32_t)value6 + (prior_row[6] >> 1);
-                    current_row[7] = (uint32_t)value7 + (prior_row[7] >> 1);
-                }
+                rowDefilter3ColorC3(input, prior_row, row_bytes, recon_row,
+                                    false);
                 break;
             case FILTER_PAETH:
-                if (pixel_bytes == 3) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    current_row[0] = (uint32_t)value2 + filterPaeth(0, prior_row[0], 0);
-                    current_row[1] = (uint32_t)value1 + filterPaeth(0, prior_row[1], 0);
-                    current_row[2] = (uint32_t)value0 + filterPaeth(0, prior_row[2], 0);
-                }
-                else if (pixel_bytes == 4) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    current_row[0] = (uint32_t)value2 + filterPaeth(0, prior_row[0], 0);
-                    current_row[1] = (uint32_t)value1 + filterPaeth(0, prior_row[1], 0);
-                    current_row[2] = (uint32_t)value0 + filterPaeth(0, prior_row[2], 0);
-                    current_row[3] = (uint32_t)value3 + filterPaeth(0, prior_row[3], 0);
-                }
-                else if (pixel_bytes == 6) {
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    current_row[0] = (uint32_t)value4 + filterPaeth(0, prior_row[0], 0);
-                    current_row[1] = (uint32_t)value5 + filterPaeth(0, prior_row[1], 0);
-                    current_row[2] = (uint32_t)value2 + filterPaeth(0, prior_row[2], 0);
-                    current_row[3] = (uint32_t)value3 + filterPaeth(0, prior_row[3], 0);
-                    current_row[4] = (uint32_t)value0 + filterPaeth(0, prior_row[4], 0);
-                    current_row[5] = (uint32_t)value1 + filterPaeth(0, prior_row[5], 0);
-                }
-                else {  // pixel_bytes == 8
-                    value0 = input[0];
-                    value1 = input[1];
-                    value2 = input[2];
-                    value3 = input[3];
-                    value4 = input[4];
-                    value5 = input[5];
-                    value6 = input[6];
-                    value7 = input[7];
-                    current_row[0] = (uint32_t)value4 + filterPaeth(0, prior_row[0], 0);
-                    current_row[1] = (uint32_t)value5 + filterPaeth(0, prior_row[1], 0);
-                    current_row[2] = (uint32_t)value2 + filterPaeth(0, prior_row[2], 0);
-                    current_row[3] = (uint32_t)value3 + filterPaeth(0, prior_row[3], 0);
-                    current_row[4] = (uint32_t)value0 + filterPaeth(0, prior_row[4], 0);
-                    current_row[5] = (uint32_t)value1 + filterPaeth(0, prior_row[5], 0);
-                    current_row[6] = (uint32_t)value6 + filterPaeth(0, prior_row[6], 0);
-                    current_row[7] = (uint32_t)value7 + filterPaeth(0, prior_row[7], 0);
-                }
+                rowDefilter4ColorC3(input, prior_row, row_bytes, recon_row,
+                                    false);
                 break;
         }
-        //   std::cout << "input[" << k << "]: " << (int)input[k] << std::endl;
-        input += pixel_bytes;
-        current_row += pixel_bytes;
-        prior_row += pixel_bytes;
-        int32_t former_k;
-        // std::cout << "***pixel 0: ";
-        // for (int i = 0; i < pixel_bytes; i++) {
-        //     std::cout << (int)input[i] << ", ";
-        // }
-        // std::cout << std::endl;
+        input += row_bytes;
+        recon_row += stride;
+    }
 
-        for (int k = 0; k < remainder_bytes; k += pixel_bytes) {
-            former_k = k - pixel_bytes;
-            switch (filter_type) {
-                case FILTER_NONE:
-                    if (pixel_bytes == 3) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        current_row[k + 0] = value2;
-                        current_row[k + 1] = value1;
-                        current_row[k + 2] = value0;
-                    }
-                    else if (pixel_bytes == 4) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        current_row[k + 0] = value2;
-                        current_row[k + 1] = value1;
-                        current_row[k + 2] = value0;
-                        current_row[k + 3] = value3;
-                    }
-                    else if (pixel_bytes == 6) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        current_row[k + 0] = value4;
-                        current_row[k + 1] = value5;
-                        current_row[k + 2] = value2;
-                        current_row[k + 3] = value3;
-                        current_row[k + 4] = value0;
-                        current_row[k + 5] = value1;
-                    }
-                    else {  // pixel_bytes == 8
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        value6 = input[k + 6];
-                        value7 = input[k + 7];
-                        current_row[k + 0] = value4;
-                        current_row[k + 1] = value5;
-                        current_row[k + 2] = value2;
-                        current_row[k + 3] = value3;
-                        current_row[k + 4] = value0;
-                        current_row[k + 5] = value1;
-                        current_row[k + 6] = value6;
-                        current_row[k + 7] = value7;
-                    }
-                    break;
-                case FILTER_SUB:
-                    if (pixel_bytes == 3) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        current_row[k + 0] = (uint32_t)value2 +
-                                              current_row[former_k + 0];
-                        current_row[k + 1] = (uint32_t)value1 +
-                                              current_row[former_k + 1];
-                        current_row[k + 2] = (uint32_t)value0 +
-                                              current_row[former_k + 2];
-                    }
-                    else if (pixel_bytes == 4) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        current_row[k + 0] = (uint32_t)value2 +
-                                              current_row[former_k + 0];
-                        current_row[k + 1] = (uint32_t)value1 +
-                                              current_row[former_k + 1];
-                        current_row[k + 2] = (uint32_t)value0 +
-                                              current_row[former_k + 2];
-                        current_row[k + 3] = (uint32_t)value3 +
-                                              current_row[former_k + 3];
-                    }
-                    else if (pixel_bytes == 6) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        current_row[k + 0] = (uint32_t)value4 +
-                                              current_row[former_k + 0];
-                        current_row[k + 1] = (uint32_t)value5 +
-                                              current_row[former_k + 1];
-                        current_row[k + 2] = (uint32_t)value2 +
-                                              current_row[former_k + 2];
-                        current_row[k + 3] = (uint32_t)value3 +
-                                              current_row[former_k + 3];
-                        current_row[k + 4] = (uint32_t)value0 +
-                                              current_row[former_k + 4];
-                        current_row[k + 5] = (uint32_t)value1 +
-                                              current_row[former_k + 5];
-                    }
-                    else {  // pixel_bytes == 8
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        value6 = input[k + 6];
-                        value7 = input[k + 7];
-                        current_row[k + 0] = (uint32_t)value4 +
-                                              current_row[former_k + 0];
-                        current_row[k + 1] = (uint32_t)value5 +
-                                              current_row[former_k + 1];
-                        current_row[k + 2] = (uint32_t)value2 +
-                                              current_row[former_k + 2];
-                        current_row[k + 3] = (uint32_t)value3 +
-                                              current_row[former_k + 3];
-                        current_row[k + 4] = (uint32_t)value0 +
-                                              current_row[former_k + 4];
-                        current_row[k + 5] = (uint32_t)value1 +
-                                              current_row[former_k + 5];
-                        current_row[k + 6] = (uint32_t)value6 +
-                                              current_row[former_k + 6];
-                        current_row[k + 7] = (uint32_t)value7 +
-                                              current_row[former_k + 7];
-                    }
-                    break;
-                case FILTER_UP:
-                    if (pixel_bytes == 3) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        current_row[k + 0] = (uint32_t)value2 + prior_row[k + 0];
-                        current_row[k + 1] = (uint32_t)value1 + prior_row[k + 1];
-                        current_row[k + 2] = (uint32_t)value0 + prior_row[k + 2];
-                    }
-                    else if (pixel_bytes == 4) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        current_row[k + 0] = (uint32_t)value2 + prior_row[k + 0];
-                        current_row[k + 1] = (uint32_t)value1 + prior_row[k + 1];
-                        current_row[k + 2] = (uint32_t)value0 + prior_row[k + 2];
-                        current_row[k + 3] = (uint32_t)value3 + prior_row[k + 3];
-                    }
-                    else if (pixel_bytes == 6) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        current_row[k + 0] = (uint32_t)value4 + prior_row[k + 0];
-                        current_row[k + 1] = (uint32_t)value5 + prior_row[k + 1];
-                        current_row[k + 2] = (uint32_t)value2 + prior_row[k + 2];
-                        current_row[k + 3] = (uint32_t)value3 + prior_row[k + 3];
-                        current_row[k + 4] = (uint32_t)value0 + prior_row[k + 4];
-                        current_row[k + 5] = (uint32_t)value1 + prior_row[k + 5];
-                    }
-                    else {  // pixel_bytes == 8
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        value6 = input[k + 6];
-                        value7 = input[k + 7];
-                        current_row[k + 0] = (uint32_t)value4 + prior_row[k + 0];
-                        current_row[k + 1] = (uint32_t)value5 + prior_row[k + 1];
-                        current_row[k + 2] = (uint32_t)value2 + prior_row[k + 2];
-                        current_row[k + 3] = (uint32_t)value3 + prior_row[k + 3];
-                        current_row[k + 4] = (uint32_t)value0 + prior_row[k + 4];
-                        current_row[k + 5] = (uint32_t)value1 + prior_row[k + 5];
-                        current_row[k + 6] = (uint32_t)value6 + prior_row[k + 6];
-                        current_row[k + 7] = (uint32_t)value7 + prior_row[k + 7];
-                    }
-                    break;
-                case FILTER_AVERAGE:
-                    if (pixel_bytes == 3) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        current_row[k + 0] = (uint32_t)value2 + ((prior_row[k + 0] + current_row[former_k + 0]) >> 1);
-                        current_row[k + 1] = (uint32_t)value1 + ((prior_row[k + 1] + current_row[former_k + 1]) >> 1);
-                        current_row[k + 2] = (uint32_t)value0 + ((prior_row[k + 2] + current_row[former_k + 2]) >> 1);
-                    }
-                    else if (pixel_bytes == 4) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        current_row[k + 0] = (uint32_t)value2 + ((prior_row[k + 0] + current_row[former_k + 0]) >> 1);
-                        current_row[k + 1] = (uint32_t)value1 + ((prior_row[k + 1] + current_row[former_k + 1]) >> 1);
-                        current_row[k + 2] = (uint32_t)value0 + ((prior_row[k + 2] + current_row[former_k + 2]) >> 1);
-                        current_row[k + 3] = (uint32_t)value3 + ((prior_row[k + 3] + current_row[former_k + 3]) >> 1);
-                    }
-                    else if (pixel_bytes == 6) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        current_row[k + 0] = (uint32_t)value4 + ((prior_row[k + 0] + current_row[former_k + 0]) >> 1);
-                        current_row[k + 1] = (uint32_t)value5 + ((prior_row[k + 1] + current_row[former_k + 1]) >> 1);
-                        current_row[k + 2] = (uint32_t)value2 + ((prior_row[k + 2] + current_row[former_k + 2]) >> 1);
-                        current_row[k + 3] = (uint32_t)value3 + ((prior_row[k + 3] + current_row[former_k + 3]) >> 1);
-                        current_row[k + 4] = (uint32_t)value0 + ((prior_row[k + 4] + current_row[former_k + 4]) >> 1);
-                        current_row[k + 5] = (uint32_t)value1 + ((prior_row[k + 5] + current_row[former_k + 5]) >> 1);
-                    }
-                    else {  // pixel_bytes == 8
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        value6 = input[k + 6];
-                        value7 = input[k + 7];
-                        current_row[k + 0] = (uint32_t)value4 + ((prior_row[k + 0] + current_row[former_k + 0]) >> 1);
-                        current_row[k + 1] = (uint32_t)value5 + ((prior_row[k + 1] + current_row[former_k + 1]) >> 1);
-                        current_row[k + 2] = (uint32_t)value2 + ((prior_row[k + 2] + current_row[former_k + 2]) >> 1);
-                        current_row[k + 3] = (uint32_t)value3 + ((prior_row[k + 3] + current_row[former_k + 3]) >> 1);
-                        current_row[k + 4] = (uint32_t)value0 + ((prior_row[k + 4] + current_row[former_k + 4]) >> 1);
-                        current_row[k + 5] = (uint32_t)value1 + ((prior_row[k + 5] + current_row[former_k + 5]) >> 1);
-                        current_row[k + 6] = (uint32_t)value6 + ((prior_row[k + 6] + current_row[former_k + 6]) >> 1);
-                        current_row[k + 7] = (uint32_t)value7 + ((prior_row[k + 7] + current_row[former_k + 7]) >> 1);
-                    }
-                    break;
-                case FILTER_PAETH:
-                    if (pixel_bytes == 3) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        current_row[k + 0] = (uint32_t)value2 + filterPaeth(current_row[former_k + 0], prior_row[k + 0], prior_row[former_k + 0]);
-                        current_row[k + 1] = (uint32_t)value1 + filterPaeth(current_row[former_k + 1], prior_row[k + 1], prior_row[former_k + 1]);
-                        current_row[k + 2] = (uint32_t)value0 + filterPaeth(current_row[former_k + 2], prior_row[k + 2], prior_row[former_k + 2]);
-                    }
-                    else if (pixel_bytes == 4) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        current_row[k + 0] = (uint32_t)value2 + filterPaeth(current_row[former_k + 0], prior_row[k + 0], prior_row[former_k + 0]);
-                        current_row[k + 1] = (uint32_t)value1 + filterPaeth(current_row[former_k + 1], prior_row[k + 1], prior_row[former_k + 1]);
-                        current_row[k + 2] = (uint32_t)value0 + filterPaeth(current_row[former_k + 2], prior_row[k + 2], prior_row[former_k + 2]);
-                        current_row[k + 3] = (uint32_t)value3 + filterPaeth(current_row[former_k + 3], prior_row[k + 3], prior_row[former_k + 3]);
-                    }
-                    else if (pixel_bytes == 6) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        current_row[k + 0] = (uint32_t)value4 + filterPaeth(current_row[former_k + 0], prior_row[k + 0], prior_row[former_k + 0]);
-                        current_row[k + 1] = (uint32_t)value5 + filterPaeth(current_row[former_k + 1], prior_row[k + 1], prior_row[former_k + 1]);
-                        current_row[k + 2] = (uint32_t)value2 + filterPaeth(current_row[former_k + 2], prior_row[k + 2], prior_row[former_k + 2]);
-                        current_row[k + 3] = (uint32_t)value3 + filterPaeth(current_row[former_k + 3], prior_row[k + 3], prior_row[former_k + 3]);
-                        current_row[k + 4] = (uint32_t)value0 + filterPaeth(current_row[former_k + 4], prior_row[k + 4], prior_row[former_k + 4]);
-                        current_row[k + 5] = (uint32_t)value1 + filterPaeth(current_row[former_k + 5], prior_row[k + 5], prior_row[former_k + 5]);
-                    }
-                    else {  // pixel_bytes == 8
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        value6 = input[k + 6];
-                        value7 = input[k + 7];
-                        current_row[k + 0] = (uint32_t)value4 + filterPaeth(current_row[former_k + 0], prior_row[k + 0], prior_row[former_k + 0]);
-                        current_row[k + 1] = (uint32_t)value5 + filterPaeth(current_row[former_k + 1], prior_row[k + 1], prior_row[former_k + 1]);
-                        current_row[k + 2] = (uint32_t)value2 + filterPaeth(current_row[former_k + 2], prior_row[k + 2], prior_row[former_k + 2]);
-                        current_row[k + 3] = (uint32_t)value3 + filterPaeth(current_row[former_k + 3], prior_row[k + 3], prior_row[former_k + 3]);
-                        current_row[k + 4] = (uint32_t)value0 + filterPaeth(current_row[former_k + 4], prior_row[k + 4], prior_row[former_k + 4]);
-                        current_row[k + 5] = (uint32_t)value1 + filterPaeth(current_row[former_k + 5], prior_row[k + 5], prior_row[former_k + 5]);
-                        current_row[k + 6] = (uint32_t)value6 + filterPaeth(current_row[former_k + 6], prior_row[k + 6], prior_row[former_k + 6]);
-                        current_row[k + 7] = (uint32_t)value7 + filterPaeth(current_row[former_k + 7], prior_row[k + 7], prior_row[former_k + 7]);
-                    }
-                    break;
-                case FILTER_AVG_FIRST:
-                    if (pixel_bytes == 3) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        current_row[k + 0] = (uint32_t)value2 +
-                                              (current_row[former_k + 0] >> 1);
-                        current_row[k + 1] = (uint32_t)value1 +
-                                              (current_row[former_k + 1] >> 1);
-                        current_row[k + 2] = (uint32_t)value0 +
-                                              (current_row[former_k + 2] >> 1);
-                    }
-                    else if (pixel_bytes == 4) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        current_row[k + 0] = (uint32_t)value2 +
-                                              (current_row[former_k + 0] >> 1);
-                        current_row[k + 1] = (uint32_t)value1 +
-                                              (current_row[former_k + 1] >> 1);
-                        current_row[k + 2] = (uint32_t)value0 +
-                                              (current_row[former_k + 2] >> 1);
-                        current_row[k + 3] = (uint32_t)value3 +
-                                              (current_row[former_k + 3] >> 1);
-                    }
-                    else if (pixel_bytes == 6) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        current_row[k + 0] = (uint32_t)value4 +
-                                              (current_row[former_k + 0] >> 1);
-                        current_row[k + 1] = (uint32_t)value5 +
-                                              (current_row[former_k + 1] >> 1);
-                        current_row[k + 2] = (uint32_t)value2 +
-                                              (current_row[former_k + 2] >> 1);
-                        current_row[k + 3] = (uint32_t)value3 +
-                                              (current_row[former_k + 3] >> 1);
-                        current_row[k + 4] = (uint32_t)value0 +
-                                              (current_row[former_k + 4] >> 1);
-                        current_row[k + 5] = (uint32_t)value1 +
-                                              (current_row[former_k + 5] >> 1);
-                    }
-                    else {  // pixel_bytes == 8
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        value6 = input[k + 6];
-                        value7 = input[k + 7];
-                        current_row[k + 0] = (uint32_t)value4 +
-                                              (current_row[former_k + 0] >> 1);
-                        current_row[k + 1] = (uint32_t)value5 +
-                                              (current_row[former_k + 1] >> 1);
-                        current_row[k + 2] = (uint32_t)value2 +
-                                              (current_row[former_k + 2] >> 1);
-                        current_row[k + 3] = (uint32_t)value3 +
-                                              (current_row[former_k + 3] >> 1);
-                        current_row[k + 4] = (uint32_t)value0 +
-                                              (current_row[former_k + 4] >> 1);
-                        current_row[k + 5] = (uint32_t)value1 +
-                                              (current_row[former_k + 5] >> 1);
-                        current_row[k + 6] = (uint32_t)value6 +
-                                              (current_row[former_k + 6] >> 1);
-                        current_row[k + 7] = (uint32_t)value7 +
-                                              (current_row[former_k + 7] >> 1);
-                    }
-                    break;
-                case FILTER_PAETH_FIRST:
-                    if (pixel_bytes == 3) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        current_row[k + 0] = (uint32_t)value2 +
-                            filterPaeth(current_row[former_k + 0], 0, 0);
-                        current_row[k + 1] = (uint32_t)value1 +
-                            filterPaeth(current_row[former_k + 1], 0, 0);
-                        current_row[k + 2] = (uint32_t)value0 +
-                            filterPaeth(current_row[former_k + 2], 0, 0);
-                    }
-                    else if (pixel_bytes == 4) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        current_row[k + 0] = (uint32_t)value2 +
-                            filterPaeth(current_row[former_k + 0], 0, 0);
-                        current_row[k + 1] = (uint32_t)value1 +
-                            filterPaeth(current_row[former_k + 1], 0, 0);
-                        current_row[k + 2] = (uint32_t)value0 +
-                            filterPaeth(current_row[former_k + 2], 0, 0);
-                        current_row[k + 3] = (uint32_t)value3 +
-                            filterPaeth(current_row[former_k + 3], 0, 0);
-                    }
-                    else if (pixel_bytes == 6) {
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        current_row[k + 0] = (uint32_t)value4 +
-                            filterPaeth(current_row[former_k + 0], 0, 0);
-                        current_row[k + 1] = (uint32_t)value5 +
-                            filterPaeth(current_row[former_k + 1], 0, 0);
-                        current_row[k + 2] = (uint32_t)value2 +
-                            filterPaeth(current_row[former_k + 2], 0, 0);
-                        current_row[k + 3] = (uint32_t)value3 +
-                            filterPaeth(current_row[former_k + 3], 0, 0);
-                        current_row[k + 4] = (uint32_t)value0 +
-                            filterPaeth(current_row[former_k + 4], 0, 0);
-                        current_row[k + 5] = (uint32_t)value1 +
-                            filterPaeth(current_row[former_k + 5], 0, 0);
-                    }
-                    else {  // pixel_bytes == 8
-                        value0 = input[k + 0];
-                        value1 = input[k + 1];
-                        value2 = input[k + 2];
-                        value3 = input[k + 3];
-                        value4 = input[k + 4];
-                        value5 = input[k + 5];
-                        value6 = input[k + 6];
-                        value7 = input[k + 7];
-                        current_row[k + 0] = (uint32_t)value4 +
-                            filterPaeth(current_row[former_k + 0], 0, 0);
-                        current_row[k + 1] = (uint32_t)value5 +
-                            filterPaeth(current_row[former_k + 1], 0, 0);
-                        current_row[k + 2] = (uint32_t)value2 +
-                            filterPaeth(current_row[former_k + 2], 0, 0);
-                        current_row[k + 3] = (uint32_t)value3 +
-                            filterPaeth(current_row[former_k + 3], 0, 0);
-                        current_row[k + 4] = (uint32_t)value0 +
-                            filterPaeth(current_row[former_k + 4], 0, 0);
-                        current_row[k + 5] = (uint32_t)value1 +
-                            filterPaeth(current_row[former_k + 5], 0, 0);
-                        current_row[k + 6] = (uint32_t)value6 +
-                            filterPaeth(current_row[former_k + 6], 0, 0);
-                        current_row[k + 7] = (uint32_t)value7 +
-                            filterPaeth(current_row[former_k + 7], 0, 0);
-                    }
-                    break;
-            }
+    // process the last row.
+    prior_row = recon_row - stride;
+    filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                   << "Average(3)/Paeth(4)";
+        return false;
+    }
+    switch (filter_type) {
+        case FILTER_NONE:
+            rowDefilter0ColorC3(input, row_bytes, recon_row, true);
+            break;
+        case FILTER_SUB:
+            rowDefilter1ColorC3(input, row_bytes, recon_row, true);
+            break;
+        case FILTER_UP:
+            rowDefilter2ColorC3(input, prior_row, row_bytes, recon_row, true);
+            break;
+        case FILTER_AVERAGE:
+            rowDefilter3ColorC3(input, prior_row, row_bytes, recon_row, true);
+            break;
+        case FILTER_PAETH:
+            rowDefilter4ColorC3(input, prior_row, row_bytes, recon_row, true);
+            break;
+    }
+
+    return true;
+}
+
+bool deFilterC4TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
+                         uint32_t stride, uint8_t* recon_row) {
+    // process the first row.
+    uint8_t filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/Average(3)/"
+                   << "Paeth(4)";
+        return false;
+    }
+    switch (filter_type) {
+        case FILTER_NONE:
+            rowDefilter0ColorC4(input, row_bytes, recon_row, false);
+            break;
+        case FILTER_SUB:
+            rowDefilter1ColorC4(input, row_bytes, recon_row, false);
+            break;
+        case FILTER_UP:
+            rowDefilter0ColorC4(input, row_bytes, recon_row, false);
+            break;
+        case FILTER_AVERAGE:
+            row0Defilter3ColorC4(input, row_bytes, recon_row);
+            break;
+        case FILTER_PAETH:
+            rowDefilter1ColorC4(input, row_bytes, recon_row, false);
+            break;
+    }
+    input += row_bytes;
+    recon_row += stride;
+
+    // process the most rows.
+    uint8_t *prior_row;
+    for (uint32_t row = 1; row < height - 1; ++row) {
+        prior_row = recon_row - stride;
+        filter_type = *input++;
+        if (filter_type > 4) {
+            LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                       << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                       << "Average(3)/Paeth(4)";
+            return false;
         }
-        //  for (int i = 0; i < remainder_bytes; i++) {
-        //     std::cout << "input[" << i << "]: " << (int)input[i] << std::endl;
-        //  }
-        input += remainder_bytes;
-        current_row += (stride - pixel_bytes);
+        switch (filter_type) {
+            case FILTER_NONE:
+                rowDefilter0ColorC4(input, row_bytes, recon_row, false);
+                break;
+            case FILTER_SUB:
+                rowDefilter1ColorC4(input, row_bytes, recon_row, false);
+                break;
+            case FILTER_UP:
+                rowDefilter2ColorC4(input, prior_row, row_bytes, recon_row,
+                                    false);
+                break;
+            case FILTER_AVERAGE:
+                rowDefilter3ColorC4(input, prior_row, row_bytes, recon_row,
+                                    false);
+                break;
+            case FILTER_PAETH:
+                rowDefilter4ColorC4(input, prior_row, row_bytes, recon_row,
+                                    false);
+                break;
+        }
+        input += row_bytes;
+        recon_row += stride;
+    }
+
+    // process the last row.
+    prior_row = recon_row - stride;
+    filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                   << "Average(3)/Paeth(4)";
+        return false;
+    }
+    switch (filter_type) {
+        case FILTER_NONE:
+            rowDefilter0ColorC4(input, row_bytes, recon_row, true);
+            break;
+        case FILTER_SUB:
+            rowDefilter1ColorC4(input, row_bytes, recon_row, true);
+            break;
+        case FILTER_UP:
+            rowDefilter2ColorC4(input, prior_row, row_bytes, recon_row, true);
+            break;
+        case FILTER_AVERAGE:
+            rowDefilter3ColorC4(input, prior_row, row_bytes, recon_row, true);
+            break;
+        case FILTER_PAETH:
+            rowDefilter4ColorC4(input, prior_row, row_bytes, recon_row, true);
+            break;
+    }
+
+    return true;
+}
+
+bool deFilterC6TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
+                         uint32_t stride, uint8_t* recon_row) {
+    uint8_t filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/Average(3)/"
+                   << "Paeth(4)";
+        return false;
+    }
+
+    switch (filter_type) {
+        case FILTER_NONE:
+            rowDefilter0ColorC6(input, row_bytes, recon_row);
+            break;
+        case FILTER_SUB:
+            rowDefilter1ColorC6(input, row_bytes, recon_row);
+            break;
+        case FILTER_UP:
+            rowDefilter0ColorC6(input, row_bytes, recon_row);
+            break;
+        case FILTER_AVERAGE:
+            row0Defilter3ColorC6(input, row_bytes, recon_row);
+            break;
+        case FILTER_PAETH:
+            rowDefilter1ColorC6(input, row_bytes, recon_row);
+            break;
+    }
+    input += row_bytes;
+    recon_row += stride;
+
+    uint8_t *prior_row;
+    for (uint32_t row = 1; row < height; ++row) {
+        prior_row = recon_row - stride;
+        filter_type = *input++;
+        if (filter_type > 4) {
+            LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                       << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                       << "Average(3)/Paeth(4)";
+            return false;
+        }
+        switch (filter_type) {
+            case FILTER_NONE:
+                rowDefilter0ColorC6(input, row_bytes, recon_row);
+                break;
+            case FILTER_SUB:
+                rowDefilter1ColorC6(input, row_bytes, recon_row);
+                break;
+            case FILTER_UP:
+                rowDefilter2ColorC6(input, prior_row, row_bytes, recon_row);
+                break;
+            case FILTER_AVERAGE:
+                rowDefilter3ColorC6(input, prior_row, row_bytes, recon_row);
+                break;
+            case FILTER_PAETH:
+                rowDefilter4ColorC6(input, prior_row, row_bytes, recon_row);
+                break;
+        }
+        input += row_bytes;
+        recon_row += stride;
+    }
+
+    return true;
+}
+
+bool deFilterC8TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
+                         uint32_t stride, uint8_t* recon_row) {
+    uint8_t filter_type = *input++;
+    if (filter_type > 4) {
+        LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                   << ", correct filter type: None(0)/Sub(1)/Up(2)/Average(3)/"
+                   << "Paeth(4)";
+        return false;
+    }
+
+    switch (filter_type) {
+        case FILTER_NONE:
+            rowDefilter0ColorC8(input, row_bytes, recon_row);
+            break;
+        case FILTER_SUB:
+            rowDefilter1ColorC8(input, row_bytes, recon_row);
+            break;
+        case FILTER_UP:
+            rowDefilter0ColorC8(input, row_bytes, recon_row);
+            break;
+        case FILTER_AVERAGE:
+            row0Defilter3ColorC8(input, row_bytes, recon_row);
+            break;
+        case FILTER_PAETH:
+            rowDefilter1ColorC8(input, row_bytes, recon_row);
+            break;
+    }
+    input += row_bytes;
+    recon_row += stride;
+
+    uint8_t *prior_row;
+    for (uint32_t row = 1; row < height; ++row) {
+        prior_row = recon_row - stride;
+        filter_type = *input++;
+        if (filter_type > 4) {
+            LOG(ERROR) << "The readed filter type: " << (uint32_t)filter_type
+                       << ", correct filter type: None(0)/Sub(1)/Up(2)/"
+                       << "Average(3)/Paeth(4)";
+            return false;
+        }
+        switch (filter_type) {
+            case FILTER_NONE:
+                rowDefilter0ColorC8(input, row_bytes, recon_row);
+                break;
+            case FILTER_SUB:
+                rowDefilter1ColorC8(input, row_bytes, recon_row);
+                break;
+            case FILTER_UP:
+                rowDefilter2ColorC8(input, prior_row, row_bytes, recon_row);
+                break;
+            case FILTER_AVERAGE:
+                rowDefilter3ColorC8(input, prior_row, row_bytes, recon_row);
+                break;
+            case FILTER_PAETH:
+                rowDefilter4ColorC8(input, prior_row, row_bytes, recon_row);
+                break;
+        }
+        input += row_bytes;
+        recon_row += stride;
+    }
+
+    return true;
+}
+
+// reorder channels in a pixel form RGB to BGR for truecolor or truecolor with alpha.
+bool PngDecoder::deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
+                                        uint32_t stride) {
+    // std::cout << "######## coming in deFilterImageTrueColor #######" << std::endl;
+    int bytes = (bit_depth_ == 16 ? 2 : 1);
+    int pixel_bytes = bytes * encoded_channels_;  // 3, 4, 6, 8
+    uint32_t row_bytes = width_ * pixel_bytes;
+    uint32_t scanline_bytes = row_bytes + 1;
+    uint32_t stride_offset = 0;
+    if (png_info.chunk_status & HAVE_tRNS) {
+        stride_offset = (stride - scanline_bytes) & -16;  // align with 16 bytes
+    }
+
+    uint8_t *input = png_info.decompressed_image_start;
+    uint8_t *recon_row = image + stride_offset;
+    if (pixel_bytes == 3) {
+        deFilterC3TureColor(input, height_, row_bytes, stride, recon_row);
+    }
+    else if (pixel_bytes == 4) {
+        deFilterC4TureColor(input, height_, row_bytes, stride, recon_row);
+    }
+    else if (pixel_bytes == 6) {
+        deFilterC6TureColor(input, height_, row_bytes, stride, recon_row);
+    }
+    else if (pixel_bytes == 8) {
+        deFilterC8TureColor(input, height_, row_bytes, stride, recon_row);
+    }
+    else {
+        LOG(ERROR) << "The pixel bytes: " << pixel_bytes
+                   << ", correct value: 3/4/6/8";
+        return false;
     }
 
     if (bit_depth_ == 16) {
         // force the image data from big-endian to platform-native.
-        // this is done in a separate pass due to the decoding relying
-        // on the data being untouched, but could probably be done
-        // per-line during decode if care is taken.
         uint8_t value0, value1;
-        current_row = image + stride_offset;
+        recon_row = image + stride_offset;
         uint16_t *current_row16;
         for (uint32_t row = 0; row < height_; row++) {
-            current_row16 = (uint16_t*)current_row;
+            current_row16 = (uint16_t*)recon_row;
             for (uint32_t col = 0, col1 = 0; col < width_; col++, col1 += 2) {
-                value0 = current_row[col1];
-                value1 = current_row[col1 + 1];
+                value0 = recon_row[col1];
+                value1 = recon_row[col1 + 1];
                 current_row16[col] = (value0 << 8) | value1;
             }
-            current_row += stride;
+            recon_row += stride;
         }
     }
     png_info.defiltered_image = image + stride_offset;
@@ -2338,7 +4222,7 @@ bool PngDecoder::deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
 
 bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
                                      uint32_t stride) {
-    std::cout << "########coming in computeTransparency#######" << std::endl;
+    // std::cout << "########coming in computeTransparency#######" << std::endl;
     if (color_type_ != 0 && color_type_ != 2) {
         LOG(ERROR) << "The expected color type for expanding alpha: "
                    << "greyscale(0)/true color(2).";
@@ -2443,7 +4327,7 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
 
 bool PngDecoder::expandPalette(PngInfo& png_info, uint8_t* image,
                                uint32_t stride) {
-    std::cout << "########coming in expandPalette#######" << std::endl;
+    // std::cout << "########coming in expandPalette#######" << std::endl;
     if (color_type_ != 3) {
         LOG(ERROR) << "The expected color type for expanding palette: "
                    << "indexed-colour(3).";
@@ -2455,6 +4339,11 @@ bool PngDecoder::expandPalette(PngInfo& png_info, uint8_t* image,
     uint8_t* output_line = image;
     uint32_t index;
     uint8_t value0, value1, value2, value3;
+    // std::cout << "defiltered image address: " << (size_t)input_line << std::endl;
+    // std::cout << "output_line image address: " << (size_t)output_line << std::endl;
+    // for (int i = 0; i < width_; i++) {
+    //     std::cout << "row 0 element: " << i << ", " << (int)input_line[i] << std::endl;
+    // }
 
     if (channels_ == 3) {
         for (uint32_t row = 0; row < height_; row++) {
@@ -2474,6 +4363,7 @@ bool PngDecoder::expandPalette(PngInfo& png_info, uint8_t* image,
         }
     }
     else if (channels_ == 4) {
+        // std::cout << "########coming in channels_ == 4" << std::endl;
         for (uint32_t row = 0; row < height_; row++) {
             for (uint32_t col0 = 0, col1 = 0; col0 < width_; col0++) {
                 index = input_line[col0];
@@ -2487,6 +4377,14 @@ bool PngDecoder::expandPalette(PngInfo& png_info, uint8_t* image,
                 output_line[col1 + 2] = value2;
                 output_line[col1 + 3] = value3;
                 col1 += 4;
+                // // if (col0 == width_ - 1) {
+                // if (row == 0) {
+                //     std::cout << "row " << row << ", " << col0 << ": "
+                //              << (int)input_line[col0] << std::endl;
+                //     // std::cout << "row " << row << ", " << col0 << ": " << index / 4 << ", "
+                //     //          << (int)input_line[width_ - 1] << ", " << (int)value0 << ", "
+                //     //         << (int)value1 << ", " << (int)value2 << ", " << (int)value3 << std::endl;
+                // }
             }
             input_line  += stride;
             output_line += stride;
@@ -2617,7 +4515,7 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
                                        + 7) >> 3) + 1) * height_;
     png_info_.decompressed_image_end = image + stride * height_;
     png_info_.decompressed_image_start = png_info_.decompressed_image_end -
-                                       png_info_.decompressed_image_size;
+                                         png_info_.decompressed_image_size;
     png_info_.decompressed_image = png_info_.decompressed_image_start;
     png_info_.zbuffer.num_bits = 0;
     png_info_.zbuffer.code_buffer = 0;
@@ -2626,22 +4524,28 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
     bool succeeded;
     // int count = 0;
     while (png_info_.current_chunk.type != png_IEND) {
+        std::string chunk_name = getChunkName(png_info_.current_chunk.type);
+        // std::cout << "current chunk: " << chunk_name << std::endl;
         switch (png_info_.current_chunk.type) {
             case png_tIME:
                 succeeded = parsetIME(png_info_);
                 if (!succeeded) return false;
+                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
                 break;
             case png_zTXt:
                 succeeded = parsezTXt(png_info_);
                 if (!succeeded) return false;
+                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
                 break;
             case png_tEXt:
                 succeeded = parsetEXt(png_info_);
                 if (!succeeded) return false;
+                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
                 break;
             case png_iTXt:
                 succeeded = parseiTXt(png_info_);
                 if (!succeeded) return false;
+                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
                 break;
             case png_IDAT:
                 succeeded = parseIDATs(png_info_, image, stride);
@@ -2659,13 +4563,16 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
         if (!png_info_.header_after_idat) {
             getChunkHeader(png_info_);
         }
+
     }
+    // std::cout << "after while in decodedata() " << std::endl;
 
     succeeded = parseIEND(png_info_);
     if (!succeeded) {
         return false;
     }
 
+    // std::cout << "color_type_: " << (int)color_type_ << std::endl;
     if (color_type_ != 2 && color_type_ != 6) {  // not truecolour or truecolor with alpha
         succeeded = deFilterImage(png_info_, image, stride);
     }
@@ -2695,6 +4602,16 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
 
     return true;
 }
+
+// #include "ppl/common/x86/sysinfo.h"
+// #include "ppl/common/sys.h"
+
+
+// const ppl::common::CpuInfo* cpu_info = GetCpuInfo(0);
+// if ((cpu_info->isa & ISA_X86_AVX) || (cpu_info->isa & ISA_X86_AVX2)) {
+
+// }
+
 
 } //! namespace x86
 } //! namespace cv

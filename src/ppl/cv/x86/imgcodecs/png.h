@@ -30,10 +30,10 @@ namespace x86 {
 
 // huffman decoding acceleration
 #define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
-#define BIT_BUFFER_SIZE 32
-#define SHIFT_SIZE 24
-// #define BIT_BUFFER_SIZE 64
-// #define SHIFT_SIZE 56
+// #define BIT_BUFFER_SIZE0 32
+// #define SHIFT_SIZE0 24
+#define BIT_BUFFER_SIZE0 64
+#define SHIFT_SIZE0 56
 // fast-way is faster to check than jpeg huffman, but slow way is slower
 #define STBI__ZFAST_BITS  9 // accelerate all cases in default tables
 #define STBI__ZFAST_MASK  ((1 << STBI__ZFAST_BITS) - 1)
@@ -113,7 +113,8 @@ struct stbi__zhuffman {
 
 struct ZbufferInfo {
     int32_t num_bits;
-    uint32_t code_buffer;
+    uint64_t code_buffer;
+    // uint32_t code_buffer;
 
     // deflate stream/zlib block info
     bool is_final_block;
