@@ -122,8 +122,9 @@ RetCode Imread(const char* file_name, int* height, int* width, int* channels,
     *width    = decoder->width();
     *channels = decoder->channels();
     if (image_format == PNG) {
-        *stride = (decoder->width() * decoder->channels() *
-                   (decoder->depth() >> 3) + 1 + 3) & -4;
+        int bytes = (decoder->depth() == 16 ? 2 : 1);
+        *stride = (decoder->width() * decoder->channels() * bytes + 1 + 15) &
+                   -16;
     }
     else {
         *stride = (decoder->width() * decoder->channels() + 3) & -4;
