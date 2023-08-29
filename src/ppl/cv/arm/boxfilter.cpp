@@ -71,7 +71,7 @@ static uint8_t saturate_cast(float val)
 
 template <typename ST, typename T>
 struct ColumnSum {
-    ColumnSum(int32_t _ksize, float _scale)
+    ColumnSum(int32_t _ksize, double _scale)
     {
         ksize = _ksize;
         scale = _scale;
@@ -155,13 +155,13 @@ struct ColumnSum {
     }
     int32_t ksize;
     int32_t sumCount;
-    float scale;
+    double scale;
     std::vector<ST> sum;
 };
 
 template <>
 struct ColumnSum<int32_t, uint8_t> {
-    ColumnSum(int32_t _ksize, float _scale)
+    ColumnSum(int32_t _ksize, double _scale)
     {
         ksize = _ksize;
         scale = _scale;
@@ -222,7 +222,7 @@ struct ColumnSum<int32_t, uint8_t> {
         }
     }
     int32_t ksize;
-    float scale;
+    double scale;
     int32_t sumCount;
     std::vector<int32_t> sum;
 };
@@ -247,28 +247,32 @@ void boxFilter_f(int32_t height,
     int32_t bsrcWidth = width + 2 * radius_x;
 
     int32_t bsrcWidthStep = (bsrcWidth)*cn;
-    float* bsrc_t = (float*)malloc((bsrcHeight + 1) * bsrcWidth * cn * sizeof(float));
-    float* bsrc = bsrc_t + bsrcWidthStep;
+    float* bsrc_target_f = (float*)malloc((bsrcHeight + 1) * bsrcWidth * cn * sizeof(float));
+    float* bsrc_f = bsrc_target_f + bsrcWidthStep;
     CopyMakeBorder<float, cn>(
-        height, width, inWidthStride, inData, bsrcHeight, bsrcWidth, bsrcWidthStep, bsrc, borderType, border_value);
+        height, width, inWidthStride, inData, bsrcHeight, bsrcWidth, bsrcWidthStep, bsrc_f, borderType, border_value);
 
-    RowSum<float, float> rowVecOp = RowSum<float, float>(ksize_x);
+    double *bsrc_target = (double*)malloc((bsrcHeight + 1) * bsrcWidth * cn * sizeof(double));
+
+    RowSum<float, double> rowVecOp = RowSum<float, double>(ksize_x);
     for (int32_t i = 0; i < bsrcHeight; i++) {
-        float* src = bsrc + i * bsrcWidthStep;
-        float* dst = bsrc_t + i * bsrcWidthStep;
+        float* src = bsrc_f + i * bsrcWidthStep;
+        double* dst = bsrc_target + i * bsrcWidthStep;
         rowVecOp.operator()(src, dst, width, cn);
     }
-    const float** pReRowFilter = (const float**)malloc(bsrcHeight * sizeof(bsrc_t));
+    const double** pReRowFilter = (const double**)malloc(bsrcHeight * sizeof(bsrc_target));
     for (int32_t i = 0; i < bsrcHeight; i++) {
-        pReRowFilter[i] = bsrc_t + (i)*bsrcWidthStep;
+        pReRowFilter[i] = bsrc_target + (i)*bsrcWidthStep;
     }
 
-    ColumnSum<float, float> colVecOp = ColumnSum<float, float>(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
-    colVecOp.operator()((const float**)pReRowFilter, (float*)outData, outWidthStride, height, width * cn);
+    ColumnSum<double, float> colVecOp = ColumnSum<double, float>(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
+    colVecOp.operator()((const double**)pReRowFilter, (float*)outData, outWidthStride, height, width * cn);
 
-    free(bsrc_t);
+    free(bsrc_target_f);
+    free(bsrc_target);
     free(pReRowFilter);
-    bsrc = NULL;
+    bsrc_target_f = NULL;
+    bsrc_target = NULL;
     pReRowFilter = NULL;
 }
 
