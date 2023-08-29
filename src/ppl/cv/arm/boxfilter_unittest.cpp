@@ -117,9 +117,9 @@ bool PplCvArmBoxFilterTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = normalize ? EPSILON_1F : EPSILON_E1;
+        epsilon = normalize ? EPSILON_1F : EPSILON_0I;
     } else {
-        epsilon = EPSILON_E1;
+        epsilon = EPSILON_E6;
     }
     bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
 
@@ -138,8 +138,8 @@ bool PplCvArmBoxFilterTest<T, channels>::apply()
         IsEqual,                                                                                                \
         PplCvArmBoxFilterTest_##T##_##channels,                                                                 \
         ::testing::Combine(                                                                                     \
-            ::testing::Values(1, 5, 17, 24, 43),                                                                \
-            ::testing::Values(1, 4, 17, 31, 44),                                                                \
+            ::testing::Values(1, 3, 5, 17, 24, 43),                                                                \
+            ::testing::Values(1, 3, 4, 5, 31),                                                                \
             ::testing::Values(true, false),                                                                     \
             ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_REFLECT_101), \
             ::testing::Values(cv::Size{320, 240},                                                               \
