@@ -30,14 +30,12 @@ namespace x86 {
 
 // huffman decoding acceleration
 #define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
-// #define BIT_BUFFER_SIZE0 32
-// #define SHIFT_SIZE0 24
-#define BIT_BUFFER_SIZE0 64
-#define SHIFT_SIZE0 56
+// #define BIT_BUFFER_SIZE0 64
+#define SHIFT_SIZE 56
 // fast-way is faster to check than jpeg huffman, but slow way is slower
-#define STBI__ZFAST_BITS  9 // accelerate all cases in default tables
-#define STBI__ZFAST_MASK  ((1 << STBI__ZFAST_BITS) - 1)
-#define STBI__ZNSYMS 288 // number of symbols in literal/length alphabet
+#define ZLIB_FAST_BITS  9 // accelerate all cases in default tables
+#define ZLIB_FAST_MASK  ((1 << ZLIB_FAST_BITS) - 1)
+#define SYMBOL_NUMBER 288 // number of symbols in literal/length alphabet
 
 enum ColorTypes {
     GRAY = 0,
@@ -55,17 +53,6 @@ enum FilterMethods {
     ADAPTIVE = 0,
 };
 
-// enum FilterTypes {
-//     FILTER_NONE = 0,
-//     FILTER_SUB = 1,
-//     FILTER_UP = 2,
-//     FILTER_AVERAGE = 3,
-//     FILTER_PAETH = 4,
-//     // synthetic filters used for first scanline to avoid needing a dummy row of 0s
-//     // FILTER_avg_first,
-//     // FILTER_paeth_first
-// };
-
 enum InterlaceMethods {
     NO_INTRLACE = 0,
     ADAM7 = 1,
@@ -77,12 +64,6 @@ enum EncodingMethod {
     DYNAMIC_HUFFMAN = 2,
     RESERVED = 3,
 };
-
-/* struct PlteEntry {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-}; */
 
 struct DataChunk {
     uint32_t length;
@@ -102,45 +83,37 @@ struct png_time {
 
 // zlib-style huffman encoding
 // (jpegs packs from left, zlib from right, so can't share code)
-struct stbi__zhuffman {
-   uint16_t fast[1 << STBI__ZFAST_BITS];
+struct ZlibHuffman {
+   uint16_t fast[1 << ZLIB_FAST_BITS];
    uint16_t firstcode[16];
-   int32_t maxcode[17];
    uint16_t firstsymbol[16];
-   uint8_t  size[STBI__ZNSYMS];
-   uint16_t value[STBI__ZNSYMS];
+   int32_t maxcode[17];
+   uint8_t size[SYMBOL_NUMBER];
+   uint16_t value[SYMBOL_NUMBER];
 };
 
-struct ZbufferInfo {
-    int32_t num_bits;
+struct ZlibBuffer {
+    uint32_t bit_number;
     uint64_t code_buffer;
-    // uint32_t code_buffer;
 
     // deflate stream/zlib block info
     bool is_final_block;
     EncodingMethod encoding_method;
     uint32_t window_size;
-    // uint32_t unprocessed_bytes;
-
-    stbi__zhuffman z_length, z_distance;
+    ZlibHuffman length_huffman, distance_huffman;
 };
 
 struct PngInfo {
     DataChunk current_chunk;
-    // uint8_t bit_depth;
     uint8_t* palette;
     uint32_t palette_length;
-    // uint8_t* alpha_palette;
     uint8_t alpha_values[6];
     uint8_t chunk_status;
-    uint32_t decompressed_image_size;  // remove?
     uint8_t* decompressed_image_start;
     uint8_t* decompressed_image_end;
-    uint8_t* decompressed_image;  // remove?
+    uint8_t* decompressed_image;
     uint8_t* defiltered_image;
-    // uint8_t* expand_palette_image;
-    ZbufferInfo zbuffer;
-    // uint32_t unprocessed_zbuffer_size;
+    ZlibBuffer zlib_buffer;
     bool fixed_huffman_done;
     bool header_after_idat;
     uint32_t idat_count;
@@ -182,14 +155,16 @@ class PngDecoder : public ImageDecoder {
     bool isCrcCorrect();
 
     bool parseDeflateHeader();
-    bool fillBits(ZbufferInfo *z);
-    uint32_t zreceive(ZbufferInfo *z, int n);
+    bool fillBits(ZlibBuffer *z);
+    uint32_t getNumber(ZlibBuffer *z, int n);
     bool parseZlibUncompressedBlock(PngInfo& png_info);
-    bool buildHuffmanCode(stbi__zhuffman *z, const uint8_t *sizelist, int num);
-    int stbi__zhuffman_decode_slowpath(ZbufferInfo *a, stbi__zhuffman *z);
-    int stbi__zhuffman_decode(ZbufferInfo *a, stbi__zhuffman *z);
-    bool computeDynamicHuffman(ZbufferInfo* a);
-    bool decodeHuffmanData(ZbufferInfo* a);
+    bool buildHuffmanCode(ZlibHuffman *z, const uint8_t *sizelist, int num);
+    int32_t huffmanDecodeSlowly(ZlibBuffer *zlib_buffer,
+                                ZlibHuffman *huffman_coding);
+    int32_t huffmanDecode(ZlibBuffer *zlib_buffer,
+                          ZlibHuffman *huffman_coding);
+    bool computeDynamicHuffman(ZlibBuffer* a);
+    bool decodeHuffmanData(ZlibBuffer* a);
     bool inflateImage(PngInfo& png_info, uint8_t* image, uint32_t stride);
     bool deFilterImage(PngInfo& png_info, uint8_t* image, uint32_t stride);
     bool deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,

@@ -79,7 +79,7 @@ void BytesReader::readBlock() {
     end_ = start_ + readed;
 
     if (crc_ != nullptr && crc_->isChecking()) {
-        crc_->resetBuffer(start_, readed);
+        crc_->resetData(start_, readed);
         crc_->calculateCrc();
     }
 }

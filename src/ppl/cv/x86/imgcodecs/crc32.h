@@ -26,22 +26,22 @@ namespace x86 {
 
 enum ByteOrder {
   LITTLE_ENDIAN_ORDER = 0,
-  BIG_ENDIAN_ORDER = 1,
+  BIG_ENDIAN_ORDER    = 1,
 };
 
 class Crc32 {
   public:
     Crc32();
-    Crc32(uint8_t* buffer_poiter, uint32_t buffer_size, uint32_t crc_value,
+    Crc32(uint8_t* data_poiter, uint32_t data_size, uint32_t crc_value,
           uint32_t crc_length, bool is_checking);
     ~Crc32() {}
 
     ByteOrder checkByteOrder();
-    void setCrc(uint8_t* buffer_poiter, uint32_t buffer_size, uint32_t crc_value,
-                uint32_t crc_length);
+    void setCrc(uint8_t* data_poiter, uint32_t data_size,
+                uint32_t crc_value, uint32_t crc_length);
     bool calculateCrc(uint32_t data);
     bool calculateCrc();
-    bool resetBuffer(uint8_t* buffer_poiter, uint32_t buffer_size);
+    bool resetData(uint8_t* data_poiter, uint32_t data_size);
     bool isChecking() const;
     void turnOn();
     void turnOff();
@@ -49,12 +49,12 @@ class Crc32 {
     uint32_t getCrcLength() const;
 
   private:
-    const uint8_t* buffer_poiter_;
-    uint32_t buffer_size_;
+    const uint8_t* data_poiter_;
+    uint32_t data_size_;
     uint32_t crc_value_;
     uint32_t crc_length_;
     ByteOrder byte_order_;
-    bool is_checking_; // a switch to control whether doing checksum calculataions.
+    bool is_checking_;
 };
 
 } //! namespace x86

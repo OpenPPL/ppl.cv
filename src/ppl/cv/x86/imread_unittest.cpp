@@ -671,7 +671,7 @@ bool PplCvX86ImreadPngTest1<T>::apply() {
     T* image = nullptr;
     bool identity;
     for (int i = 0; i < 17; i++) {
-    // for (int i = 11; i < 12; i++) {
+    // for (int i = 0; i < 1; i++) {
         std::string png_image = "data/pngs/png" + std::to_string(i) + ".png";
         cv::Mat cv_dst = cv::imread(png_image, cv::IMREAD_UNCHANGED);
         std::cout << "cv_dst: width: " << cv_dst.cols << ", height: " << cv_dst.rows
