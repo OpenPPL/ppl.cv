@@ -70,16 +70,16 @@ namespace x86 {
 #define HAVE_sRGB 0x40
 
 enum FilterTypes {
-    FILTER_NONE = 0,
-    FILTER_SUB = 1,
-    FILTER_UP = 2,
+    FILTER_NONE    = 0,
+    FILTER_SUB     = 1,
+    FILTER_UP      = 2,
     FILTER_AVERAGE = 3,
-    FILTER_PAETH = 4,
+    FILTER_PAETH   = 4,
 };
 
 static const uint8_t depth_scales[9] = {0, 0xff, 0x55, 0, 0x11, 0, 0, 0, 0x01};
 
-static const uint8_t stbi__zdefault_length[STBI__ZNSYMS] = {
+static const uint8_t default_length_sizes[SYMBOL_NUMBER] = {
    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
@@ -91,22 +91,22 @@ static const uint8_t stbi__zdefault_length[STBI__ZNSYMS] = {
    7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8
 };
 
-static const uint8_t stbi__zdefault_distance[32] = {
+static const uint8_t default_distance_sizes[32] = {
    5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
 };
 
-static const int stbi__zlength_base[31] = {
+static const int length_base[31] = {
    3,4,5,6,7,8,9,10,11,13,
    15,17,19,23,27,31,35,43,51,59,
    67,83,99,115,131,163,195,227,258,0,0 };
 
-static const int stbi__zlength_extra[31]=
+static const int length_extra_bits[31] =
 { 0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0,0,0 };
 
-static const int stbi__zdist_base[32] = { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,
+static const int distance_base[32] = { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,
 257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0};
 
-static const int stbi__zdist_extra[32] =
+static const int distance_extra_bits[32] =
 { 0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13};
 
 PngDecoder::PngDecoder(BytesReader& file_data) {
@@ -896,9 +896,6 @@ void PngDecoder::releaseSource() {
     if (png_info_.palette != nullptr) {
         delete [] png_info_.palette;
     }
-    // if (png_info_.alpha_palette != nullptr) {
-    //     delete [] png_info_.alpha_palette;
-    // }
 }
 
 std::string PngDecoder::getChunkName(uint32_t chunk_type) {
@@ -913,7 +910,6 @@ std::string PngDecoder::getChunkName(uint32_t chunk_type) {
 
 bool PngDecoder::setCrc32() {
     if (!crc32_.isChecking()) {
-        // LOG(INFO) << "Crc32 checksum verification is turned off.";
         return true;
     }
 
@@ -922,16 +918,14 @@ bool PngDecoder::setCrc32() {
         uint32_t buffer_size = file_data_->getValidSize();
         crc32_.setCrc(buffer, buffer_size, 0, png_info_.current_chunk.length);
 
-        // std::cout << "####png chunk type crc: " << crc32_.getCrcValue() << std::endl;
-        bool succeeded = crc32_.calculateCrc(png_info_.current_chunk.type);  // return false?
-        // std::cout << "####png chunk type crc: " << crc32_.getCrcValue() << std::endl;
+        bool succeeded = crc32_.calculateCrc(png_info_.current_chunk.type);
         if (!succeeded) return false;
         succeeded = crc32_.calculateCrc();
         if (!succeeded) return false;
     }
     else {
         crc32_.setCrc(nullptr, 0, 0, 0);
-        bool succeeded = crc32_.calculateCrc(png_info_.current_chunk.type);  // return false?
+        bool succeeded = crc32_.calculateCrc(png_info_.current_chunk.type);
         if (!succeeded) return false;
     }
 
@@ -943,15 +937,6 @@ bool PngDecoder::isCrcCorrect() {
 
     uint32_t calculated_crc = crc32_.getCrcValue();
     uint32_t transmitted_crc = png_info_.current_chunk.crc;
-    // if (png_info_.current_chunk.length != 0) {
-    // }
-
-    // debug
-    // std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-    // LOG(INFO) << "The crc of Chunk " << chunk_name
-    //           << ", calculated value: " << calculated_crc
-    //           << ", transmitted value: " << transmitted_crc;
-
     if (calculated_crc == transmitted_crc) {
         return true;
     }
@@ -962,6 +947,7 @@ bool PngDecoder::isCrcCorrect() {
                    << ", transmitted value: " << transmitted_crc;
         return false;
     }
+    // return true;
 }
 
 bool PngDecoder::parseDeflateHeader() {
@@ -969,8 +955,6 @@ bool PngDecoder::parseDeflateHeader() {
     uint8_t flags = file_data_->getByte();
     uint32_t compression_method = cmf & 15;
     uint32_t compresson_info = (cmf >> 4) & 15;
-    // std::cout << "CM: " << compression_method << std::endl;
-    // std::cout << "CINFO: " << compresson_info << std::endl;
     if (compression_method != 8 ||
         (compression_method == 8 && compresson_info > 7)) {
         LOG(ERROR) << "Only deflate compressin method with a window size "
@@ -983,62 +967,31 @@ bool PngDecoder::parseDeflateHeader() {
     }
 
     uint32_t fdict = (int)((flags >> 5) & 1);
-    // std::cout << "FCHECK: " << (int)(flags & 31) << std::endl;
-    // std::cout << "FDICT: " << fdict << std::endl;
-    // std::cout << "FLEVEL: " << (int)((flags >> 6) & 3) << std::endl;
-    // *zlib_header_length = 2;
     if (fdict) {
-        // *zlib_header_length += 4;  // debug
-        // file_data_->skip(4);      // debug
-        LOG(ERROR) << "A preset dictonary is not allowed in the PNG specification.";
+        LOG(ERROR) << "A preset dictonary is not allowed in the PNG "
+                   << "specification.";
         return false;
     }
     png_info_.current_chunk.length -= 2;
-    png_info_.zbuffer.window_size = 1 << (compresson_info + 8);
-    // std::cout << "sliding window size: " << png_info_.zbuffer.window_size << std::endl;
+    png_info_.zlib_buffer.window_size = 1 << (compresson_info + 8);
 
     return true;
 }
 
-bool PngDecoder::fillBits(ZbufferInfo *z) {  // z -> zbuffer
+bool PngDecoder::fillBits(ZlibBuffer *zlib_buffer) {
     uint64_t segment;
-    // std::cout << "before refill, segment: " << segment << std::endl;
-    // std::cout << "before refill, current chunk size: " << png_info_.current_chunk.length << std::endl;
-    // std::cout << "before refill, code buffer size: " << z->num_bits << std::endl;
     if (png_info_.current_chunk.length > 8) {
         memcpy(&segment, file_data_->getCurrentPosition(), sizeof(uint64_t));
-        // uint64_t* src = (uint64_t*)file_data_->getCurrentPosition();
-        // // segment = *src;
-        // __asm(
-        // "movq (%1), %0"
-        // : [segment] "=r" (segment)
-        // : [src] "r" (src)
-        // );
 
-        // std::cout << "in refill, segment: " << segment << std::endl;
-        z->code_buffer |= segment << z->num_bits;
-        int32_t shift = 7 - ((z->num_bits >> 3) & 7);
+        zlib_buffer->code_buffer |= segment << zlib_buffer->bit_number;
+        int32_t shift = 7 - ((zlib_buffer->bit_number >> 3) & 7);
         file_data_->skip(shift);
         png_info_.current_chunk.length -= shift;
-        z->num_bits |= 56;
-
-        // std::cout << "after refill, current chunk size: " << png_info_.current_chunk.length << std::endl;
-        // std::cout << "after refill, code buffer size: " << z->num_bits << std::endl;
+        zlib_buffer->bit_number |= 56;
 
         return true;
     }
-    // else if (png_info_.current_chunk.length > 4) {
-    //     memcpy(((uint8_t*)(&segment) + sizeof(uint32_t)),
-    //            file_data_->getCurrentPosition(), sizeof(uint32_t));
-    //     z->code_buffer |= segment << z->num_bits;
-    //     int32_t shift = 3 - ((z->num_bits >> 2) & 3);
-    //     file_data_->skip(shift);
-    //     png_info_.current_chunk.length -= shift;
-    //     z->num_bits |= 24;
-    // }
-    // else {
-    // }
-// std::cout << "in fillBits, current IDAT: " << png_info_.current_chunk.length << std::endl;
+
     do {
         if (png_info_.current_chunk.length == 0) {
             png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
@@ -1047,74 +1000,58 @@ bool PngDecoder::fillBits(ZbufferInfo *z) {  // z -> zbuffer
 
             getChunkHeader(png_info_);
             if (png_info_.current_chunk.type == png_IDAT) {
-                // std::cout << "coming in IDAT chunk: " << ++(png_info_.idat_count) << std::endl;
                 succeeded = setCrc32();
                 if (!succeeded) return false;
             }
             else {  // (png_info_.current_chunk.type != png_IDAT)
                 png_info_.header_after_idat = true;
-                // std::cout << "fillbits, png_info_.header_after_idat = true;" << std::endl;
-                std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-                // LOG(INFO) << "The reached Chunk: " << chunk_name
-                //           << ", this is the last IDAT chunk.";
-                // return true;
-                break;
+                return true;
             }
         }
 
-        z->code_buffer |= ((uint64_t)file_data_->getByte() << z->num_bits);
-        z->num_bits += 8;
+        zlib_buffer->code_buffer |= ((uint64_t)file_data_->getByte() <<
+                                     zlib_buffer->bit_number);
+        zlib_buffer->bit_number += 8;
         png_info_.current_chunk.length -= 1;
-    } while (z->num_bits <= SHIFT_SIZE0);
-    // std::cout << "fillBits, bits in code buffer: " << z->num_bits << std::endl;
+    } while (zlib_buffer->bit_number <= SHIFT_SIZE);
 
     return true;
 }
 
-uint32_t PngDecoder::zreceive(ZbufferInfo *z, int n) {
-    uint32_t k;
-    if (z->num_bits < n) {
-        bool succeeded = fillBits(z);
+uint32_t PngDecoder::getNumber(ZlibBuffer *zlib_buffer, int bit_number) {
+    if (zlib_buffer->bit_number < bit_number) {
+        bool succeeded = fillBits(zlib_buffer);
         if (!succeeded) return UINT32_MAX;
     }
-    k = z->code_buffer & ((1 << n) - 1);
-    z->code_buffer >>= n;
-    z->num_bits -= n;
 
-    return k;
+    uint32_t value = zlib_buffer->code_buffer & ((1 << bit_number) - 1);
+    zlib_buffer->code_buffer >>= bit_number;
+    zlib_buffer->bit_number   -= bit_number;
+
+    return value;
 }
 
 bool PngDecoder::parseZlibUncompressedBlock(PngInfo& png_info) {
-    ZbufferInfo &zlib_buffer = png_info.zbuffer;
+    ZlibBuffer &zlib_buffer = png_info.zlib_buffer;
     uint8_t header[4];
-    uint32_t ignored_bits = zlib_buffer.num_bits & 7;
+    uint32_t ignored_bits = zlib_buffer.bit_number & 7;
     if (ignored_bits) {
-        // std::cout << "before zreceive" << std::endl;
-        zreceive(&zlib_buffer, ignored_bits);
+        getNumber(&zlib_buffer, ignored_bits);
     }
-    // std::cout << "before while 0 " << std::endl;
-    uint32_t k = 0;
-    while (zlib_buffer.num_bits > 0 && k < 4) {
-        // std::cout << "k: " << k << std::endl;
-        header[k++] = (uint8_t)(zlib_buffer.code_buffer & 255);
+    uint32_t index = 0;
+    while (zlib_buffer.bit_number > 0 && index < 4) {
+        header[index++] = (uint8_t)(zlib_buffer.code_buffer & 255);
         zlib_buffer.code_buffer >>= 8;
-        zlib_buffer.num_bits -= 8;
+        zlib_buffer.bit_number -= 8;
     }
-    // std::cout << "bits in code buffer: " << zlib_buffer.num_bits << std::endl;
-    // std::cout << "before while 1 " << std::endl;
-    if (zlib_buffer.num_bits == 0 && k < 4) {
-        while (k < 4) {
-            // std::cout << "kk: " << k << std::endl;
-            header[k++] = file_data_->getByte();
+    if (zlib_buffer.bit_number == 0 && index < 4) {
+        while (index < 4) {
+            header[index++] = file_data_->getByte();
             png_info_.current_chunk.length -= 1;
         }
     }
-    // std::cout << "after while 1 " << std::endl;
     uint32_t len  = header[1] * 256 + header[0];
     uint32_t nlen = header[3] * 256 + header[2];
-    // std::cout << "header[4]: " << (int)header[0] << ", " << (int)header[1] << ", "
-                            //    << (int)header[2] << ", " << (int)header[3] << std::endl;
-    // std::cout << "uncompressed block size: " << len << std::endl;
     if (nlen != (len ^ 0xffff)) {
         LOG(ERROR) << "Non-compressed block in zlib is corrupt.";
         return false;
@@ -1124,39 +1061,26 @@ bool PngDecoder::parseZlibUncompressedBlock(PngInfo& png_info) {
         return false;
     }
 
-    if (zlib_buffer.num_bits > 0) {
-        uint32_t size = zlib_buffer.num_bits >> 3;
+    if (zlib_buffer.bit_number > 0) {
+        uint32_t size = zlib_buffer.bit_number >> 3;
         memcpy(png_info.decompressed_image, &(zlib_buffer.code_buffer), size);
         png_info.decompressed_image += size;
         zlib_buffer.code_buffer = 0;
-        zlib_buffer.num_bits = 0;
+        zlib_buffer.bit_number = 0;
         len -= size;
-        // std::cout << "readed bytes: " << size << std::endl;
     }
 
     do {
         if (len <= png_info.current_chunk.length) {
             file_data_->getBytes(png_info.decompressed_image, len);
-            // std::cout << "readed bytes: " << len << std::endl;
-            // std::cout << "last 6 bytes in the first zlib chunk: " << len << std::endl;
-            // for (int i = 0; i < 6; i++) {
-            //     std::cout << "byte " << i << ": " << (int)png_info.decompressed_image[i] << std::endl;
-            // }
             png_info.decompressed_image += len;
-            // png_info.unprocessed_zbuffer_size = 0;  // ???
             png_info.current_chunk.length -= len;
             len = 0;
-            // std::cout << "end of uncompressed block in zlib." << std::endl;
         }
         else {
-            // std::cout << "else of uncompressed block in zlib." << std::endl;
             file_data_->getBytes(png_info.decompressed_image,
                                  png_info.current_chunk.length);
-            // std::cout << "readed bytes: " << png_info.current_chunk.length << std::endl;
             png_info.decompressed_image += png_info.current_chunk.length;
-            // png_info.unprocessed_zbuffer_size = len -
-            //                                     png_info.current_chunk.length;
-            // png_info.current_chunk.length = 0;
             len -= png_info.current_chunk.length;
 
             png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
@@ -1165,15 +1089,11 @@ bool PngDecoder::parseZlibUncompressedBlock(PngInfo& png_info) {
 
             getChunkHeader(png_info_);
             if (png_info_.current_chunk.type == png_IDAT) {
-                // std::cout << "coming in IDAT chunk: " << ++(png_info.idat_count) << std::endl;
                 succeeded = setCrc32();
                 if (!succeeded) return false;
             }
             if (png_info_.current_chunk.type != png_IDAT) {
                 png_info_.header_after_idat = true;
-                std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-                // LOG(INFO) << "The reached Chunk: " << chunk_name
-                //           << ", this is the last IDAT chunk.";
                 return true;
             }
         }
@@ -1182,646 +1102,287 @@ bool PngDecoder::parseZlibUncompressedBlock(PngInfo& png_info) {
     return true;
 }
 
-static int stbi__bit_reverse(int v, int bits) {
-    v = ((v & 0xAAAA) >>  1) | ((v & 0x5555) << 1);
-    v = ((v & 0xCCCC) >>  2) | ((v & 0x3333) << 2);
-    v = ((v & 0xF0F0) >>  4) | ((v & 0x0F0F) << 4);
-    v = ((v & 0xFF00) >>  8) | ((v & 0x00FF) << 8);
+static int32_t reverseBits(int32_t input, int32_t bits) {
+    input = ((input & 0xAAAA) >> 1) | ((input & 0x5555) << 1);
+    input = ((input & 0xCCCC) >> 2) | ((input & 0x3333) << 2);
+    input = ((input & 0xF0F0) >> 4) | ((input & 0x0F0F) << 4);
+    input = ((input & 0xFF00) >> 8) | ((input & 0x00FF) << 8);
 
     // to bit reverse n bits, reverse 16 and shift
     // e.g. 11 bits, bit reverse and shift away 5
-    int value = v >> (16 - bits);
+    int32_t value = input >> (16 - bits);
 
     return value;
 }
 
-static int stbi__bit_reverse16(uint16_t v) {
-    v = ((v & 0xAAAA) >>  1) | ((v & 0x5555) << 1);
-    v = ((v & 0xCCCC) >>  2) | ((v & 0x3333) << 2);
-    v = ((v & 0xF0F0) >>  4) | ((v & 0x0F0F) << 4);
-    v = ((v & 0xFF00) >>  8) | ((v & 0x00FF) << 8);
+static int32_t reverse16Bits(uint16_t input) {
+    input = ((input & 0xAAAA) >> 1) | ((input & 0x5555) << 1);
+    input = ((input & 0xCCCC) >> 2) | ((input & 0x3333) << 2);
+    input = ((input & 0xF0F0) >> 4) | ((input & 0x0F0F) << 4);
+    input = ((input & 0xFF00) >> 8) | ((input & 0x00FF) << 8);
 
-    return v;
+    return input;
 }
 
-bool PngDecoder::buildHuffmanCode(stbi__zhuffman *z, const uint8_t *sizelist,
-                                  int num) {
-    int i, k=0;
-    int code, next_code[16], sizes[17];
+bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
+                                  const uint8_t *size_list, int number) {
+    int32_t i, code = 0, next_code[16], sizes[17];
 
-    // DEFLATE spec for generating codes
     memset(sizes, 0, sizeof(sizes));
-    memset(z->fast, 0, sizeof(z->fast));
-    for (i=0; i < num; ++i) {
-        ++sizes[sizelist[i]];
+    memset(huffman_coding->fast, 0, sizeof(huffman_coding->fast));
+    for (i = 0; i < number; ++i) {
+        ++sizes[size_list[i]];
     }
     sizes[0] = 0;
-    for (i=1; i < 16; ++i) {
+    for (i = 1; i < 16; ++i) {
         if (sizes[i] > (1 << i)) {
             LOG(ERROR) << "The size of code lengths in huffman is wrong.";
             return false;
         }
     }
-    code = 0;
-    for (i=1; i < 16; ++i) {
+
+    uint32_t symbol = 0;
+    for (i = 1; i < 16; ++i) {
         next_code[i] = code;
-        z->firstcode[i] = (uint16_t) code;
-        z->firstsymbol[i] = (uint16_t) k;
+        huffman_coding->firstcode[i]   = (uint16_t)code;
+        huffman_coding->firstsymbol[i] = (uint16_t)symbol;
         code = (code + sizes[i]);
         if (sizes[i]) {
-            if (code-1 >= (1 << i)) {
+            if (code - 1 >= (1 << i)) {
                 LOG(ERROR) << "The code lengths of huffman are wrong.";
                 return false;
             }
         }
-        z->maxcode[i] = code << (16-i); // preshift for inner loop
+        huffman_coding->maxcode[i] = code << (16 - i);
         code <<= 1;
-        k += sizes[i];
+        symbol += sizes[i];
     }
-    z->maxcode[16] = 0x10000; // sentinel
-    for (i=0; i < num; ++i) {
-        int s = sizelist[i];
-        if (s) {
-            int c = next_code[s] - z->firstcode[s] + z->firstsymbol[s];
-            uint16_t fastv = (uint16_t) ((s << 9) | i);
-            z->size [c] = (uint8_t) s;
-            z->value[c] = (uint16_t) i;
-            if (s <= STBI__ZFAST_BITS) {
-                int j = stbi__bit_reverse(next_code[s],s);
-                while (j < (1 << STBI__ZFAST_BITS)) {
-                    z->fast[j] = fastv;
-                    j += (1 << s);
+
+    huffman_coding->maxcode[16] = 0x10000;
+    for (i = 0; i < number; ++i) {
+        int32_t size = size_list[i];
+        if (size) {
+            int index = next_code[size] - huffman_coding->firstcode[size] +
+                        huffman_coding->firstsymbol[size];
+            uint16_t fast_value = (uint16_t) ((size << 9) | i);
+            huffman_coding->size [index] = (uint8_t)size;
+            huffman_coding->value[index] = (uint16_t)i;
+            if (size <= ZLIB_FAST_BITS) {
+                int j = reverseBits(next_code[size], size);
+                while (j < (1 << ZLIB_FAST_BITS)) {
+                    huffman_coding->fast[j] = fast_value;
+                    j += (1 << size);
                 }
             }
-            ++next_code[s];
+            ++next_code[size];
         }
     }
+
     return true;
 }
 
-int PngDecoder::stbi__zhuffman_decode_slowpath(ZbufferInfo *a, stbi__zhuffman *z) {
-   int b,s,k;
-   // not resolved by fast table, so compute it the slow way
-   // use jpeg approach, which requires MSbits at top
-   if (SHIFT_SIZE0 == 24)
-    k = stbi__bit_reverse(a->code_buffer, 16);
-   else
-    k = stbi__bit_reverse16((uint16_t)(a->code_buffer & 0xFFFF));
-//    std::cout << "k value: " << k << std::endl;
-   for (s=STBI__ZFAST_BITS+1; ; ++s)
-      if (k < z->maxcode[s])
-         break;
-   if (s >= 16) return -1; // invalid code!
-   // code size is s, so:
-   b = (k >> (16-s)) - z->firstcode[s] + z->firstsymbol[s];
-   if (b >= STBI__ZNSYMS) return -1; // some data was corrupt somewhere!
-   if (z->size[b] != s) return -1;  // was originally an assert, but report failure instead.
-   a->code_buffer >>= s;
-   a->num_bits -= s;
-   return z->value[b];
+int32_t PngDecoder::huffmanDecodeSlowly(ZlibBuffer *zlib_buffer,
+                                        ZlibHuffman *huffman_coding) {
+    int32_t bits, size, index;
+    // not resolved by fast table, so compute it the slow way
+    // use jpeg approach, which requires MSbits at top
+    bits = reverse16Bits((uint16_t)(zlib_buffer->code_buffer & 0xFFFF));
+    for (size = ZLIB_FAST_BITS + 1; ; ++size) {
+        if (bits < huffman_coding->maxcode[size]) break;
+    }
+    if (size >= 16) return -1; // invalid code!
+    index = (bits >> (16 - size)) - huffman_coding->firstcode[size] +
+            huffman_coding->firstsymbol[size];
+    if (index >= SYMBOL_NUMBER) return -1;  // some data was corrupt somewhere!
+    if (huffman_coding->size[index] != size) return -1;
+    zlib_buffer->code_buffer >>= size;
+    zlib_buffer->bit_number   -= size;
+
+    return huffman_coding->value[index];
 }
 
-int PngDecoder::stbi__zhuffman_decode(ZbufferInfo *a, stbi__zhuffman *z) {
-   int b,s;
-   if (a->num_bits < 16) {
-    //   if (stbi__zeof(a)) {
-    //      return -1;   /* report error for unexpected end of data. */
-    //   }
-      fillBits(a);
+int32_t PngDecoder::huffmanDecode(ZlibBuffer *zlib_buffer,
+                                  ZlibHuffman *huffman_coding) {
+   if (zlib_buffer->bit_number < 16) {
+      fillBits(zlib_buffer);
    }
-   b = z->fast[a->code_buffer & STBI__ZFAST_MASK];
-   if (b) {
-      s = b >> 9;
-      a->code_buffer >>= s;
-      a->num_bits -= s;
-      return b & 511;
+
+   uint32_t fast_bits, size;
+   fast_bits = huffman_coding->fast[zlib_buffer->code_buffer & ZLIB_FAST_MASK];
+   if (fast_bits) {
+      size = fast_bits >> 9;
+      zlib_buffer->code_buffer >>= size;
+      zlib_buffer->bit_number   -= size;
+      return fast_bits & 511;
    }
-//    std::cout << "before stbi__zhuffman_decode_slowpath" << std::endl;
-   return stbi__zhuffman_decode_slowpath(a, z);
+
+   int32_t value = huffmanDecodeSlowly(zlib_buffer, huffman_coding);
+
+   return value;
 }
 
-bool PngDecoder::computeDynamicHuffman(ZbufferInfo* a) {
-   static const uint8_t length_dezigzag[19] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
-   stbi__zhuffman z_codelength;
-   uint8_t lencodes[286+32+137];//padding for maximum single op
-   uint8_t codelength_sizes[19];
-   int i,n;
+bool PngDecoder::computeDynamicHuffman(ZlibBuffer* zlib_buffer) {
+    const uint8_t length_dezigzag[19] = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5,
+                                         11, 4, 12, 3, 13, 2, 14, 1, 15 };
+    uint8_t length_codes[286 + 32 + 137];  //padding for maximum single op
+    uint8_t codelength_sizes[19];
 
-   int hlit  = zreceive(a, 5) + 257;
-   int hdist = zreceive(a, 5) + 1;
-   int hclen = zreceive(a, 4) + 4;
-   int ntot  = hlit + hdist;
+    uint32_t hlit  = getNumber(zlib_buffer, 5) + 257;
+    uint32_t hdist = getNumber(zlib_buffer, 5) + 1;
+    uint32_t hclen = getNumber(zlib_buffer, 4) + 4;
+    uint32_t total_number = hlit + hdist;
 
-   memset(codelength_sizes, 0, sizeof(codelength_sizes));
-   for (i=0; i < hclen; ++i) {
-      int s = zreceive(a, 3);
-      codelength_sizes[length_dezigzag[i]] = (uint8_t) s;
-   }
-   if (!buildHuffmanCode(&z_codelength, codelength_sizes, 19)) return false;
+    memset(codelength_sizes, 0, sizeof(codelength_sizes));
+    for (uint32_t i = 0; i < hclen; ++i) {
+        uint32_t size = getNumber(zlib_buffer, 3);
+        codelength_sizes[length_dezigzag[i]] = (uint8_t)size;
+    }
 
-   n = 0;
-   while (n < ntot) {
-      int c = stbi__zhuffman_decode(a, &z_codelength);
-      if (c < 0 || c >= 19) {
-        LOG(ERROR) << "Invalid code length: " << c
-                   << ", valid value: 0-19.";
-        return false;
-      }
-      if (c < 16) {
-         lencodes[n++] = (uint8_t) c;
-      }
-      else {
-         uint8_t fill = 0;
-         if (c == 16) {
-            c = zreceive(a, 2) + 3;
-            if (n == 0) {
-                LOG(ERROR) << "Invalid code length " << c
-                           << " for the first code.";
-                return false;
-            }
-            fill = lencodes[n-1];
-         } else if (c == 17) {
-            c = zreceive(a, 3) + 3;
-         } else if (c == 18) {
-            c = zreceive(a, 7) + 11;
-         } else {
-            LOG(ERROR) << "Invalid code length: " << c
+    ZlibHuffman code_length;
+    bool succeeded = buildHuffmanCode(&code_length, codelength_sizes, 19);
+    if (!succeeded) return false;
+
+    uint32_t number = 0;
+    while (number < total_number) {
+        int32_t length = huffmanDecode(zlib_buffer, &code_length);
+        if (length < 0 || length >= 19) {
+            LOG(ERROR) << "Invalid code length: " << length
                        << ", valid value: 0-19.";
             return false;
-         }
-         if (ntot - n < c) {
-            LOG(ERROR) << "Invalid repeating count: " << c
-                       << ", valid value: " << ntot - n;
+        }
+        if (length < 16) {
+            length_codes[number++] = (uint8_t)length;
+        }
+        else {
+            uint8_t fill = 0;
+            if (length == 16) {
+                length = getNumber(zlib_buffer, 2) + 3;
+                if (number == 0) {
+                    LOG(ERROR) << "Invalid code length " << length
+                               << " for the first code.";
+                    return false;
+                }
+                fill = length_codes[number - 1];
+            } else if (length == 17) {
+                length = getNumber(zlib_buffer, 3) + 3;
+            } else if (length == 18) {
+                length = getNumber(zlib_buffer, 7) + 11;
+            } else {
+                LOG(ERROR) << "Invalid code length: " << length
+                           << ", valid value: 0-19.";
+                return false;
+            }
+            if (total_number - number < length) {
+                LOG(ERROR) << "Invalid repeating count: " << length
+                           << ", valid value: " << total_number - number;
+                return false;
+            }
+            memset(length_codes + number, fill, length);
+            number += length;
+        }
+    }
+    if (number != total_number) {
+            LOG(ERROR) << "Invalid count of code length: " << number
+                       << ", valid value: " << total_number;
             return false;
-         }
-         memset(lencodes+n, fill, c);
-         n += c;
-      }
-   }
-   if (n != ntot) {
-        LOG(ERROR) << "Invalid count of code length: " << n
-                   << ", valid value: " << ntot;
-        return false;
-   }
-   if (!buildHuffmanCode(&a->z_length, lencodes, hlit)) return false;
-   if (!buildHuffmanCode(&a->z_distance, lencodes+hlit, hdist)) return false;
+    }
 
-   return true;
+    succeeded = buildHuffmanCode(&zlib_buffer->length_huffman, length_codes,
+                                 hlit);
+    if (!succeeded) return false;
+
+    succeeded = buildHuffmanCode(&zlib_buffer->distance_huffman,
+                                 length_codes + hlit, hdist);
+    if (!succeeded) return false;
+
+    return true;
 }
 
-/* bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
-   uint8_t *zout = png_info_.decompressed_image;
-   uint32_t index = 0;
-   for (; ;) {
-      int z = stbi__zhuffman_decode(a, &a->z_length);
-    //   std::cout << "z value: " << z << std::endl;
-      if (z < 256) {
-         if (z < 0) {
-            LOG(ERROR) << "Invalid decoded literal/length code: " << z
-                       << ", valid value: 0-285.";
-            return false;
-         }
-         *zout++ = (uint8_t) z;
-        std::cout << "literal: " << z << ", index: " << index++ << std::endl;
-      } else {
-         uint8_t *p;
-         int len, dist;
-         if (z == 256) {
-            // std::cout << "end of zlib block." << std::endl;
-            // std::cout << "after zlib end, leftover of IDAT size: " << png_info_.current_chunk.length << std::endl;
-            // std::cout << "after zlib end, leftover of code buffer: " << png_info_.zbuffer.num_bits << std::endl;
-            png_info_.decompressed_image = zout;
-            return true;
-         }
-         z -= 257;
-         len = stbi__zlength_base[z];
-         if (stbi__zlength_extra[z]) len += zreceive(a, stbi__zlength_extra[z]);
-         z = stbi__zhuffman_decode(a, &a->z_distance);
-         if (z < 0) {
-            LOG(ERROR) << "Invalid decoded distance code: " << z
-                       << ", valid value: 0-31.";
-            return false;
-         }
-         dist = stbi__zdist_base[z];
-         if (stbi__zdist_extra[z]) dist += zreceive(a, stbi__zdist_extra[z]);
-         if (zout - png_info_.decompressed_image_start < dist) {
-            LOG(ERROR) << "Invalid decoded distance: " << dist
-                       << ", valid value: 0-" << zout - png_info_.decompressed_image_start;
-            return false;
-         }
-         if (zout + len > png_info_.decompressed_image_end) {
-            LOG(ERROR) << "Invalid decoded distance: " << dist
-                       << ", valid value: 0-" << png_info_.decompressed_image_end - zout;
-            return false;
-         }
-         if (dist > a->window_size) {
-            LOG(ERROR) << "Invalid decoded distance: " << dist
-                       << ", valid value: 0-" << a->window_size;
-            return false;
-         }
-         p = (uint8_t *) (zout - dist);
-        // index += len;  // debug
-        std::cout << "length/distance: " << len << ", " << dist << std::endl;
-         if (dist == 1) { // run of one byte; common in images.
-            uint8_t v = *p;
-            if (len) {
-                do {
-                    *zout++ = v;
-                    std::cout << "literal: " << (uint32_t)v << ", index: " << index++ << std::endl;
-                } while (--len);
-            }
-         } else {
-            if (len) {
-                do {
-                    std::cout << "literal: " << (uint32_t)(*p) << ", index: "
-                              << index++ << std::endl;
-                    *zout++ = *p++;
-                } while (--len);
-            }
-         }
-        //  if (dist == 1) { // run of one byte; common in images.
-        //     uint8_t v = *p;
-        //     if (len) { do *zout++ = v; while (--len); }
-        //  } else {
-        //     if (len) { do *zout++ = *p++; while (--len); }
-        //  }
-      }
-   }
+bool PngDecoder::decodeHuffmanData(ZlibBuffer* zlib_buffer) {
+    uint8_t *output = png_info_.decompressed_image;
+    uint32_t rounded_length;
 
-   return true;
-} */
-
-
-/* union M128i {
-    uint8_t uchar8[16];
-    __m128i i128;
-} __attribute__((aligned(16)));
-
-bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
-    uint8_t* zout = png_info_.decompressed_image;
-    uint8_t* zout1 = zout;
-    M128i out_buffer;
-    uint32_t count = 0, size, size1;
-    // uint32_t index = 0;
-
-    for (; ;) {
-        int z = stbi__zhuffman_decode(a, &a->z_length);
-        if (z < 256) {
-            if (z < 0) {
-                LOG(ERROR) << "Invalid decoded literal/length code: " << z
-                        << ", valid value: 0-285.";
+    while (1) {
+        int32_t value = huffmanDecode(zlib_buffer,
+                                      &zlib_buffer->length_huffman);
+        if (value < 256) {
+            if (value < 0) {
+                LOG(ERROR) << "Invalid decoded literal/length code: " << value
+                           << ", valid value: 0-285.";
                 return false;
             }
-            //  *zout++ = (uint8_t) z;
-            out_buffer.uchar8[count++] = (uint8_t) z;
-            // std::cout << "literal: " << z << ", count: " << count
-            //           << ", index: " << index++ << std::endl;
-            if (count == 16) {
-                memcpy(zout, out_buffer.uchar8, 16);
-                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-                zout += 16;
-                count = 0;
-            }
+            *output++ = (uint8_t)value;
         } else {
-            zout1 = zout + count;
-            uint8_t *p;
-            int len, dist;
-            if (z == 256) {
-                // std::cout << "End of chunk, count: " << count << std::endl;
-                // png_info_.decompressed_image = zout;
-                memcpy(zout, out_buffer.uchar8, count);
-                png_info_.decompressed_image = zout1;
+            int length, distance;
+            if (value == 256) {
+                png_info_.decompressed_image = output;
                 return true;
             }
-            z -= 257;
-            len = stbi__zlength_base[z];
-            if (stbi__zlength_extra[z]) len += zreceive(a, stbi__zlength_extra[z]);
-            z = stbi__zhuffman_decode(a, &a->z_distance);
-            if (z < 0) {
-                LOG(ERROR) << "Invalid decoded distance code: " << z
-                        << ", valid value: 0-31.";
+            value -= 257;
+            length = length_base[value];
+            if (length_extra_bits[value]) {
+                length += getNumber(zlib_buffer, length_extra_bits[value]);
+            }
+            if (png_info_.decompressed_image_end - output < length) {
+                LOG(ERROR) << "Invalid decoded length: " << length
+                           << ", valid value: 0-"
+                           << png_info_.decompressed_image_end - output;
                 return false;
             }
-            dist = stbi__zdist_base[z];
-            if (stbi__zdist_extra[z]) dist += zreceive(a, stbi__zdist_extra[z]);
-            if (zout1 - png_info_.decompressed_image_start < dist) {
-                LOG(ERROR) << "Invalid decoded distance: " << dist
-                        << ", valid value: 0-"
-                        << zout1 - png_info_.decompressed_image_start;
+            value = huffmanDecode(zlib_buffer, &zlib_buffer->distance_huffman);
+            if (value < 0) {
+                LOG(ERROR) << "Invalid decoded distance code: " << value
+                           << ", valid value: 0-31.";
                 return false;
             }
-            if (zout1 + len > png_info_.decompressed_image_end) {
-                LOG(ERROR) << "Invalid decoded distance: " << dist
-                        << ", valid value: 0-"
-                        << png_info_.decompressed_image_end - zout1;
+            distance = distance_base[value];
+            if (distance_extra_bits[value]) {
+                distance += getNumber(zlib_buffer, distance_extra_bits[value]);
+            }
+            if (output - png_info_.decompressed_image_start < distance) {
+                LOG(ERROR) << "Invalid decoded distance: " << distance
+                           << ", valid value: 0-"
+                           << output - png_info_.decompressed_image_start;
                 return false;
             }
-            if (dist > a->window_size) {
-                LOG(ERROR) << "Invalid decoded distance: " << dist
-                        << ", valid value: 0-" << a->window_size;
+            if (distance > zlib_buffer->window_size) {
+                LOG(ERROR) << "Invalid decoded distance: " << distance
+                           << ", valid value: 0-" << zlib_buffer->window_size;
                 return false;
             }
-            p = (uint8_t *) (zout1 - dist);
-            // index += len;  // debug
-            // std::cout << "length/distance/count/index: " << len << ", " << dist
-            //           << ", " << count << ", " << index << std::endl;
-            if (dist == 1) {  // run of one byte; common in images.
-                uint8_t v;
-                if (dist > count) {
-                    v = *p;
+            uint8_t *copy_address = (uint8_t *) (output - distance);
+            if (distance == 1) {  // run of one byte, common in images.
+                uint8_t source = *copy_address;
+                if (output + length + 8 < png_info_.decompressed_image_end) {
+                    rounded_length = (length + 7) & -8;
+                    memset(output, source, rounded_length);
                 }
                 else {
-                    v = out_buffer.uchar8[count - dist];
+                    memset(output, source, length);
                 }
-                while (len > 0) {
-                //    *zout++ = v;
-                //    --len;
-                    if (count == 0) {
-                        size = len < 16 ? len : 16;
-                        memset(out_buffer.uchar8, v, size);
-                        // std::cout << "literal: " << (int)v << ", count: " << "0-" << size
-                        //     << ", index: " << index << "-" << index+size << std::endl;
-                        if (size == 16) {
-                            memcpy(zout, out_buffer.uchar8, 16);
-                            // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-                            zout += 16;
-                            // zout1 = zout;
-                        }
-                        else {
-                            // memcpy(zout, out_buffer.uchar8, size);
-                            count = size;
-                            // zout1 += size;
-                        }
+                output += length;
+            } else {
+                if (distance >= length) {
+                    if (output + length + 8 <
+                        png_info_.decompressed_image_end) {
+                        rounded_length = (length + 7) & -8;
+                        memcpy(output, copy_address, rounded_length);
                     }
                     else {
-                        size = len < 16 - count ? len : 16 - count;
-                        memset(out_buffer.uchar8 + count, v, size);
-                        // std::cout << "literal: " << (int)v << ", count: " << count << "-"
-                        //     << count + size
-                        //     << ", index: " << index << "-" << index+size << std::endl;
-
-                        if (size == 16 - count) {
-                            memcpy(zout, out_buffer.uchar8, 16);
-                            // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-                            zout += 16;
-                            // zout1 = zout;
-                            count = 0;
-                        }
-                        else {
-                            count += size;
-                            // zout1 += size;
-                        }
+                        memcpy(output, copy_address, length);
                     }
-                    len -= size;
-                    // std::cout << "  count/size/left len: " << count << ", "
-                    //           << size << ", " << len << std::endl;
+                    output += length;
                 }
-            } else {
-                // do {
-                //     *zout++ = *p++;
-                //     --len;
-                // } while (len > 0);
-                // for (int i = 0; i < len; i++)
-                //     std::cout << "**literal: " << (int)p[i] << std::endl;
-                // if (dist >= len) {
-                if (dist > 15) {
-                    while (len > 0) {
-                        // std::cout << "  ++len/size: " << len << ", "
-                        //         << size << std::endl;
-                        if (count == 0) {
-                            size = len < 16 ? len : 16;
-                            // if (dist > count + size) {}
-                            memcpy(out_buffer.uchar8, p, size);
-                            // for (int i = 0; i < size; i++)
-                            //     std::cout << "literal: " << (int)p[i] << ", count: " << i
-                            //     << ", index: " << index++ << std::endl;
-                            p += size;
-                            if (size == 16) {
-                                memcpy(zout, out_buffer.uchar8, 16);
-                                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-                                zout += 16;
-                                // zout1 = zout;
-                            }
-                            else {
-                                count = size;
-                                // zout1 += size;
-                            }
-                        }
-                        else {
-                            size = len < 16 - count ? len : 16 - count;
-                            memcpy(out_buffer.uchar8 + count, p, size);
-                            // for (int i = 0; i < size; i++)
-                            //     std::cout << " literal: " << (int)p[i] << ", count: " << count + i
-                            //     << ", index: " << index++ << std::endl;
-                            p += size;
-                            if (size == 16 - count) {
-                                memcpy(zout, out_buffer.uchar8, 16);
-                                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-                                // for (int i = 0; i < 16; i++)
-                                //   std::cout << " stored literal: " << (int)zout[i] << std::endl;
-                                zout += 16;
-                                // zout1 = zout;
-                                count = 0;
-                            }
-                            else {
-                                count += size;
-                                // zout1 += size;
-                            }
-                        }
-                        len -= size;
-                        // std::cout << "  count/size/left len: " << count << ", "
-                        //         << size << ", " << len << std::endl;
+                else {  // 2 <= distance < length
+                    if (length) {
+                        do {
+                            *output++ = *copy_address++;
+                        } while (--length);
                     }
-                }
-                else {
-                    // std::cout << "  else count/left len: " << count << ", "
-                    //           << len << std::endl;
-                    size = 16 - count;
-                    int i = 0;
-                    for (; i < size; i++) {
-                        if (dist > count) {
-                            out_buffer.uchar8[count++] = p[i];
-                        }
-                        else {
-                            out_buffer.uchar8[count] = out_buffer.uchar8[count - dist];
-                            count++;
-                        }
-                        // std::cout << "literal: " << (int)out_buffer.uchar8[count-1] << ", count: " << count-1
-                        // << ", index: " << index++ << std::endl;
-                        --len;
-                        if (len == 0) break;
-                    }
-                    if (count == 16) {
-                        memcpy(zout, out_buffer.uchar8, 16);
-                        // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-                        zout += 16;
-                        count = 0;
-                        p += i;
-                    }
-                    while (len > 0) {
-                        for (i = 0; i < dist; i++) {
-                            if (dist > count) {
-                                out_buffer.uchar8[count++] = p[i];
-                            }
-                            else {
-                                out_buffer.uchar8[count] = out_buffer.uchar8[count - dist];
-                                count++;
-                            }
-                            // std::cout << "literal: " << (int)out_buffer.uchar8[count-1] << ", count: " << count-1
-                            // << ", index: " << index++ << std::endl;
-                            if (count == 16) {
-                                memcpy(zout, out_buffer.uchar8, 16);
-                                // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-                                zout += 16;
-                                p += i;
-                                count = 0;
-                            }
-                            len--;
-                            if (len == 0) break;
-                        }
-                    }
-                    // }
-                    // std::cout << "  else count/left len: " << count << ", "
-                    //           << len << std::endl;
                 }
             }
         }
     }
-
-    // return true;
-}
- */
-
-// union M64i {
-//     uint8_t uchar8[16];
-//     uint64_t i64;
-// } __attribute__((aligned(16)));
-
-bool PngDecoder::decodeHuffmanData(ZbufferInfo* a) {
-   uint8_t *zout = png_info_.decompressed_image;
-//    uint32_t index = 0;
-//    int size;
-   int rounded_len;
-//    M64i out_buffer;
-//    uint32_t count = 0;
-
-   for (; ;) {
-      int z = stbi__zhuffman_decode(a, &a->z_length);
-    //   std::cout << "z value: " << z << std::endl;
-      if (z < 256) {
-         if (z < 0) {
-            LOG(ERROR) << "Invalid decoded literal/length code: " << z
-                       << ", valid value: 0-285.";
-            return false;
-         }
-         *zout++ = (uint8_t) z;
-        // out_buffer.uchar8[count++] = (uint8_t) z;
-        // if (count == 16) {
-        //     memcpy(zout, out_buffer.uchar8, 16);
-        //     // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-        //     zout += 16;
-        //     count = 0;
-        // }
-        // std::cout << "literal: " << z << ", index: " << index++ << std::endl;
-      } else {
-        // if (count > 0) {
-        //     memcpy(zout, out_buffer.uchar8, count);
-        //     // _mm_storeu_si128((__m128i *)zout, out_buffer.i128);
-        //     zout += count;
-        //     count = 0;
-        // }
-
-         uint8_t *p;
-         int len, dist;
-         if (z == 256) {
-            // std::cout << "end of zlib block." << std::endl;
-            // std::cout << "after zlib end, leftover of IDAT size: " << png_info_.current_chunk.length << std::endl;
-            // std::cout << "after zlib end, leftover of code buffer: " << png_info_.zbuffer.num_bits << std::endl;
-            png_info_.decompressed_image = zout;
-            return true;
-         }
-         z -= 257;
-         len = stbi__zlength_base[z];
-         if (stbi__zlength_extra[z]) len += zreceive(a, stbi__zlength_extra[z]);
-         z = stbi__zhuffman_decode(a, &a->z_distance);
-         if (z < 0) {
-            LOG(ERROR) << "Invalid decoded distance code: " << z
-                       << ", valid value: 0-31.";
-            return false;
-         }
-         dist = stbi__zdist_base[z];
-         if (stbi__zdist_extra[z]) dist += zreceive(a, stbi__zdist_extra[z]);
-         if (zout - png_info_.decompressed_image_start < dist) {
-            LOG(ERROR) << "Invalid decoded distance: " << dist
-                       << ", valid value: 0-" << zout - png_info_.decompressed_image_start;
-            return false;
-         }
-         if (zout + len > png_info_.decompressed_image_end) {
-            LOG(ERROR) << "Invalid decoded distance: " << dist
-                       << ", valid value: 0-" << png_info_.decompressed_image_end - zout;
-            return false;
-         }
-         if (dist > a->window_size) {
-            LOG(ERROR) << "Invalid decoded distance: " << dist
-                       << ", valid value: 0-" << a->window_size;
-            return false;
-         }
-         p = (uint8_t *) (zout - dist);
-         if (dist == 1) { // run of one byte; common in images.
-            uint8_t v = *p;
-            // rounded_len = (len + 7) & -8;
-            // if (len) { do *zout++ = v; while (--len); }
-            // memset(zout, v, len);
-            // zout += len;
-            if (zout + len + 8 < png_info_.decompressed_image_end) {
-                rounded_len = (len + 7) & -8;
-                memset(zout, v, rounded_len);
-            }
-            else {
-                memset(zout, v, len);
-            }
-            zout += len;
-         } else {
-            // if (len) { do *zout++ = *p++; while (--len); }
-            // rounded_len = (len + 7) & -8;
-            if (dist >= len) {
-                if (zout + len + 8 < png_info_.decompressed_image_end) {
-                    rounded_len = (len + 7) & -8;
-                    memcpy(zout, p, rounded_len);
-                }
-                else {
-                    memcpy(zout, p, len);
-                }
-                zout += len;
-            }
-            else {  // 2 <= dist < len
-                // if (dist < 6) {
-                    if (len) { do *zout++ = *p++; while (--len); }
-                // }
-                // else {
-                //     while (len > 0) {
-                //         size = len >= dist ? dist : len;
-                //         memcpy(zout, p, size);
-                //         zout += size;
-                //         p += size;
-                //         len -= size;
-                //     }
-                // }
-                // for (; len > 1; len -= 2) {
-                //     zout[0] = p[0];
-                //     zout[1] = p[1];
-                //     zout += 2;
-                //     p += 2;
-                // }
-                // if (len == 1) {
-                //     *zout++ = *p;
-                // }
-            }
-         }
-      }
-   }
-
-   return true;
 }
 
 bool PngDecoder::inflateImage(PngInfo& png_info, uint8_t* image,
@@ -1831,66 +1392,49 @@ bool PngDecoder::inflateImage(PngInfo& png_info, uint8_t* image,
         return false;
     }
 
-    uint32_t block_count = 0;
     bool succeeded;
-    ZbufferInfo &zbuffer = png_info.zbuffer;
+    ZlibBuffer &zlib_buffer = png_info.zlib_buffer;
     do {
-        // std::cout << "before inflateimage while" << std::endl;
-        zbuffer.is_final_block = zreceive(&zbuffer, 1);
-        // std::cout << "after zreceive(&zbuffer, 1)" << std::endl;
-        zbuffer.encoding_method = (EncodingMethod)zreceive(&zbuffer, 2);
-        // std::cout << "zlib block " << block_count++ << ": " << std::endl;
-        // std::cout << "zlib is last block: " << (int)zbuffer.is_final_block << std::endl;
-        // std::cout << "zlib encoding method: " << (int)zbuffer.encoding_method << std::endl;
+        zlib_buffer.is_final_block = getNumber(&zlib_buffer, 1);
+        zlib_buffer.encoding_method = (EncodingMethod)getNumber(&zlib_buffer,
+                                                                2);
 
-        switch (zbuffer.encoding_method) {
+        switch (zlib_buffer.encoding_method) {
             case STORED_SECTION:
-                // std::cout << "before parseZlibUncompressedBlock" << std::endl;
                 succeeded = parseZlibUncompressedBlock(png_info);
-                // std::cout << "after parseZlibUncompressedBlock" << std::endl;
                 if (!succeeded) return false;
                 break;
             case STATIC_HUFFMAN:
                 if (!png_info.fixed_huffman_done) {
-                    succeeded = buildHuffmanCode(&zbuffer.z_length,
-                                 stbi__zdefault_length, STBI__ZNSYMS);
+                    succeeded = buildHuffmanCode(&zlib_buffer.length_huffman,
+                                  default_length_sizes, SYMBOL_NUMBER);
                     if (!succeeded) return false;
-                    succeeded = buildHuffmanCode(&zbuffer.z_distance,
-                                 stbi__zdefault_distance, 32);
+                    succeeded = buildHuffmanCode(&zlib_buffer.distance_huffman,
+                                  default_distance_sizes, 32);
                     if (!succeeded) return false;
                     png_info.fixed_huffman_done = true;
                 }
-                succeeded = decodeHuffmanData(&zbuffer);
+                succeeded = decodeHuffmanData(&zlib_buffer);
                 if (!succeeded) return false;
                 break;
             case DYNAMIC_HUFFMAN:
-                // if (png_info.unprocessed_zbuffer_size == 0) {
-                    succeeded = computeDynamicHuffman(&zbuffer);
-                    if (!succeeded) return false;
-                // }
-                // std::cout << "after huffman, leftover of IDAT size: " << png_info.current_chunk.length << std::endl;
-                // std::cout << "after huffman, leftover of code buffer: " << png_info.zbuffer.num_bits << std::endl;
-                // std::cout << "before decodeHuffmanData" << std::endl;
-                succeeded = decodeHuffmanData(&zbuffer);
-                // std::cout << "after decodeHuffmanData" << std::endl;
+                succeeded = computeDynamicHuffman(&zlib_buffer);
+                if (!succeeded) return false;
+
+                succeeded = decodeHuffmanData(&zlib_buffer);
                 if (!succeeded) return false;
                 break;
             default:
                 LOG(ERROR) << "Invalid zlib encoding method: "
-                           << (uint32_t)zbuffer.encoding_method
+                           << (uint32_t)zlib_buffer.encoding_method
                            << ", valid values: 0/1/2.";
                 break;
         }
-        // std::cout << "leftover of IDAT size: " << png_info.current_chunk.length << std::endl;
-        // std::cout << "leftover of code buffer: " << png_info.zbuffer.num_bits << std::endl;
 
-    } while (!zbuffer.is_final_block);
-    // std::cout << "after while in inflateimage " << std::endl;
+    } while (!zlib_buffer.is_final_block);
 
     return true;
 }
-
-
 
 inline
 void rowDefilter1(uint8_t* input_row, uint32_t pixel_bytes, uint32_t row_bytes,
@@ -2074,7 +1618,9 @@ void rowDefilter4C2(uint8_t* input_row, uint8_t* prior_row,
     }
 }
 
-// process an image with color type 0/3/4, which does not need rgb-> bgr transformation.
+/* process an image with color type 0/3/4, which does not need rgb-> bgr
+ * transformation.
+ */
 bool PngDecoder::deFilterImage(PngInfo& png_info, uint8_t* image,
                                uint32_t stride) {
     // std::cout << "########coming in deFilterImage#######" << std::endl;
@@ -2217,7 +1763,7 @@ bool PngDecoder::deFilterImage(PngInfo& png_info, uint8_t* image,
         color_type_ == 3) {
         stride_offset1 = stride - width_ * pixel_bytes;
     }
-    if (bit_depth_ < 8) {  // unpack 1/2/4-bit into a 8-bit .
+    if (bit_depth_ < 8) {  // unpack 1/2/4-bit into a 8-bit.
         int index;
         uint8_t scale = (color_type_ == 0) ? depth_scales[bit_depth_] : 1;
         uint8_t value;
@@ -3849,6 +3395,7 @@ void rowDefilter4ColorC8(uint8_t* input_row, uint8_t* prior_row,
     }
 }
 
+static
 bool deFilterC3TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
                          uint32_t stride, uint8_t* recon_row) {
     // process the first row.
@@ -3944,6 +3491,7 @@ bool deFilterC3TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
     return true;
 }
 
+static
 bool deFilterC4TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
                          uint32_t stride, uint8_t* recon_row) {
     // process the first row.
@@ -4039,6 +3587,7 @@ bool deFilterC4TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
     return true;
 }
 
+static
 bool deFilterC6TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
                          uint32_t stride, uint8_t* recon_row) {
     uint8_t filter_type = *input++;
@@ -4103,6 +3652,7 @@ bool deFilterC6TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
     return true;
 }
 
+static
 bool deFilterC8TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
                          uint32_t stride, uint8_t* recon_row) {
     uint8_t filter_type = *input++;
@@ -4167,7 +3717,10 @@ bool deFilterC8TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
     return true;
 }
 
-// reorder channels in a pixel form RGB to BGR for truecolor or truecolor with alpha.
+/*
+ * reorder channels in a pixel form RGB to BGR for truecolor or truecolor with
+ * alpha.
+ */
 bool PngDecoder::deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
                                         uint32_t stride) {
     // std::cout << "######## coming in deFilterImageTrueColor #######" << std::endl;
@@ -4222,7 +3775,7 @@ bool PngDecoder::deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
 
 bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
                                      uint32_t stride) {
-    // std::cout << "########coming in computeTransparency#######" << std::endl;
+    std::cout << "########coming in computeTransparency#######" << std::endl;
     if (color_type_ != 0 && color_type_ != 2) {
         LOG(ERROR) << "The expected color type for expanding alpha: "
                    << "greyscale(0)/true color(2).";
@@ -4230,30 +3783,30 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
     }
 
     if (bit_depth_ <= 8) {
-        uint8_t* input_line = png_info.defiltered_image;
-        uint8_t* output_line = image;
+        uint8_t* input_row = png_info.defiltered_image;
+        uint8_t* output_row = image;
         uint8_t value0, value1, value2, value3;
 
         if (color_type_ == 0) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_; col0++) {
-                     value0 = input_line[col0];
+                     value0 = input_row[col0];
                      value1 = value0 == png_info.alpha_values[0] ? 0 : 255;
-                     output_line[col1] = value0;
-                     output_line[col1 + 1] = value1;
+                     output_row[col1]     = value0;
+                     output_row[col1 + 1] = value1;
                      col1 += 2;
                 }
-                input_line  += stride;
-                output_line += stride;
+                input_row  += stride;
+                output_row += stride;
             }
         }
         else if (color_type_ == 2) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_ * 3;
                      col0 += 3) {
-                     value0 = input_line[col0];
-                     value1 = input_line[col0 + 1];
-                     value2 = input_line[col0 + 2];
+                     value0 = input_row[col0];
+                     value1 = input_row[col0 + 1];
+                     value2 = input_row[col0 + 2];
                      if (value0 == png_info.alpha_values[0] &&
                          value1 == png_info.alpha_values[1] &&
                          value2 == png_info.alpha_values[2]) {
@@ -4262,60 +3815,61 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
                      else {
                          value3 = 255;
                      }
-                     output_line[col1] = value0;
-                     output_line[col1 + 1] = value1;
-                     output_line[col1 + 2] = value2;
-                     output_line[col1 + 3] = value3;
+                     output_row[col1]     = value0;
+                     output_row[col1 + 1] = value1;
+                     output_row[col1 + 2] = value2;
+                     output_row[col1 + 3] = value3;
                      col1 += 4;
                 }
-                input_line  += stride;
-                output_line += stride;
+                input_row  += stride;
+                output_row += stride;
             }
         }
         else {
         }
     }
     else {  // bit_depth_ == 16
-        uint16_t* input_line = (uint16_t*)(png_info.defiltered_image);
-        uint16_t* output_line = (uint16_t*)image;
+        uint16_t* input_row = (uint16_t*)(png_info.defiltered_image);
+        uint16_t* output_row = (uint16_t*)image;
+        uint16_t* alpha_values = (uint16_t*)png_info.alpha_values;
         uint16_t value0, value1, value2, value3;
 
         if (color_type_ == 0) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_; col0++) {
-                     value0 = input_line[col0];
-                     value1 = value0 == png_info.alpha_values[0] ? 0 : 65535;
-                     output_line[col1] = value0;
-                     output_line[col1 + 1] = value1;
+                     value0 = input_row[col0];
+                     value1 = value0 == alpha_values[0] ? 0 : 65535;
+                     output_row[col1]     = value0;
+                     output_row[col1 + 1] = value1;
                      col1 += 2;
                 }
-                input_line  += stride;
-                output_line += stride;
+                input_row  += stride;
+                output_row += stride;
             }
         }
         else if (color_type_ == 2) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_ * 3;
                      col0 += 3) {
-                     value0 = input_line[col0];
-                     value1 = input_line[col0 + 1];
-                     value2 = input_line[col0 + 2];
-                     if (value0 == png_info.alpha_values[0] &&
-                         value1 == png_info.alpha_values[1] &&
-                         value2 == png_info.alpha_values[2]) {
+                     value0 = input_row[col0];
+                     value1 = input_row[col0 + 1];
+                     value2 = input_row[col0 + 2];
+                     if (value0 == alpha_values[0] &&
+                         value1 == alpha_values[1] &&
+                         value2 == alpha_values[2]) {
                          value3 = 0;
                      }
                      else {
                          value3 = 65535;
                      }
-                     output_line[col1] = value0;
-                     output_line[col1 + 1] = value1;
-                     output_line[col1 + 2] = value2;
-                     output_line[col1 + 3] = value3;
+                     output_row[col1]     = value0;
+                     output_row[col1 + 1] = value1;
+                     output_row[col1 + 2] = value2;
+                     output_row[col1 + 3] = value3;
                      col1 += 4;
                 }
-                input_line  += stride;
-                output_line += stride;
+                input_row  += stride;
+                output_row += stride;
             }
         }
         else {
@@ -4334,60 +3888,52 @@ bool PngDecoder::expandPalette(PngInfo& png_info, uint8_t* image,
         return false;
     }
 
-    uint8_t* input_line = png_info_.defiltered_image;
+    uint8_t* input_row = png_info_.defiltered_image;
     uint8_t* palette = png_info.palette;
-    uint8_t* output_line = image;
+    uint8_t* output_row = image;
     uint32_t index;
-    uint8_t value0, value1, value2, value3;
-    // std::cout << "defiltered image address: " << (size_t)input_line << std::endl;
-    // std::cout << "output_line image address: " << (size_t)output_line << std::endl;
-    // for (int i = 0; i < width_; i++) {
-    //     std::cout << "row 0 element: " << i << ", " << (int)input_line[i] << std::endl;
-    // }
 
     if (channels_ == 3) {
         for (uint32_t row = 0; row < height_; row++) {
-            for (uint32_t col0 = 0, col1 = 0; col0 < width_; col0++) {
-                index = input_line[col0];
+            uint8_t* src = input_row;
+            uint8_t* dst = output_row;
+            uint32_t col = 0;
+            for (; col < width_ - 1; col++) {
+                index = src[col];
                 index *= 4;
-                value0 = palette[index];
-                value1 = palette[index + 1];
-                value2 = palette[index + 2];
-                output_line[col1] = value0;
-                output_line[col1 + 1] = value1;
-                output_line[col1 + 2] = value2;
-                col1 += 3;
+                __m128i value = _mm_loadu_si128((__m128i*)(palette + index));
+                __m128 fvalue = _mm_castsi128_ps(value);
+                _mm_store_ss((float*)dst, fvalue);
+                dst += 3;
             }
-            input_line  += stride;
-            output_line += stride;
+
+            index = src[col];
+            index *= 4;
+            uint8_t value0 = palette[index];
+            uint8_t value1 = palette[index + 1];
+            uint8_t value2 = palette[index + 2];
+            dst[0] = value0;
+            dst[1] = value1;
+            dst[2] = value2;
+
+            input_row  += stride;
+            output_row += stride;
         }
     }
     else if (channels_ == 4) {
-        // std::cout << "########coming in channels_ == 4" << std::endl;
         for (uint32_t row = 0; row < height_; row++) {
-            for (uint32_t col0 = 0, col1 = 0; col0 < width_; col0++) {
-                index = input_line[col0];
+            uint8_t* src = input_row;
+            uint8_t* dst = output_row;
+            for (uint32_t col = 0; col < width_; col++) {
+                index = src[col];
                 index *= 4;
-                value0 = palette[index];
-                value1 = palette[index + 1];
-                value2 = palette[index + 2];
-                value3 = palette[index + 3];
-                output_line[col1] = value0;
-                output_line[col1 + 1] = value1;
-                output_line[col1 + 2] = value2;
-                output_line[col1 + 3] = value3;
-                col1 += 4;
-                // // if (col0 == width_ - 1) {
-                // if (row == 0) {
-                //     std::cout << "row " << row << ", " << col0 << ": "
-                //              << (int)input_line[col0] << std::endl;
-                //     // std::cout << "row " << row << ", " << col0 << ": " << index / 4 << ", "
-                //     //          << (int)input_line[width_ - 1] << ", " << (int)value0 << ", "
-                //     //         << (int)value1 << ", " << (int)value2 << ", " << (int)value3 << std::endl;
-                // }
+                __m128i value = _mm_loadu_si128((__m128i*)(palette + index));
+                __m128 fvalue = _mm_castsi128_ps(value);
+                _mm_store_ss((float*)dst, fvalue);
+                dst += 4;
             }
-            input_line  += stride;
-            output_line += stride;
+            input_row  += stride;
+            output_row += stride;
         }
     }
     else {
@@ -4503,7 +4049,6 @@ bool PngDecoder::readHeader() {
 }
 
 bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
-    // return true;  // debug
     if (png_info_.current_chunk.type != png_IDAT) {
         LOG(ERROR) << "encountering the chunk: "
                    << getChunkName(png_info_.current_chunk.type)
@@ -4511,41 +4056,48 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
         return false;
     }
 
-    png_info_.decompressed_image_size = (((width_ * encoded_channels_ * bit_depth_
-                                       + 7) >> 3) + 1) * height_;
+    uint32_t decompressed_image_size = (((width_ * encoded_channels_ *
+                                          bit_depth_ + 7) >> 3) + 1) * height_;
     png_info_.decompressed_image_end = image + stride * height_;
     png_info_.decompressed_image_start = png_info_.decompressed_image_end -
-                                         png_info_.decompressed_image_size;
+                                         decompressed_image_size;
     png_info_.decompressed_image = png_info_.decompressed_image_start;
-    png_info_.zbuffer.num_bits = 0;
-    png_info_.zbuffer.code_buffer = 0;
-    // png_info_.unprocessed_zbuffer_size = 0;
+    png_info_.zlib_buffer.bit_number = 0;
+    png_info_.zlib_buffer.code_buffer = 0;
 
     bool succeeded;
     // int count = 0;
     while (png_info_.current_chunk.type != png_IEND) {
-        std::string chunk_name = getChunkName(png_info_.current_chunk.type);
+        // std::string chunk_name = getChunkName(png_info_.current_chunk.type);
         // std::cout << "current chunk: " << chunk_name << std::endl;
         switch (png_info_.current_chunk.type) {
             case png_tIME:
                 succeeded = parsetIME(png_info_);
                 if (!succeeded) return false;
-                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
+                if (png_info_.header_after_idat) {
+                    png_info_.header_after_idat = false;
+                }
                 break;
             case png_zTXt:
                 succeeded = parsezTXt(png_info_);
                 if (!succeeded) return false;
-                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
+                if (png_info_.header_after_idat) {
+                    png_info_.header_after_idat = false;
+                }
                 break;
             case png_tEXt:
                 succeeded = parsetEXt(png_info_);
                 if (!succeeded) return false;
-                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
+                if (png_info_.header_after_idat) {
+                    png_info_.header_after_idat = false;
+                }
                 break;
             case png_iTXt:
                 succeeded = parseiTXt(png_info_);
                 if (!succeeded) return false;
-                if (png_info_.header_after_idat) png_info_.header_after_idat = false;
+                if (png_info_.header_after_idat) {
+                    png_info_.header_after_idat = false;
+                }
                 break;
             case png_IDAT:
                 succeeded = parseIDATs(png_info_, image, stride);
@@ -4563,55 +4115,34 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
         if (!png_info_.header_after_idat) {
             getChunkHeader(png_info_);
         }
-
     }
-    // std::cout << "after while in decodedata() " << std::endl;
 
     succeeded = parseIEND(png_info_);
-    if (!succeeded) {
-        return false;
-    }
+    if (!succeeded) return false;
 
-    // std::cout << "color_type_: " << (int)color_type_ << std::endl;
-    if (color_type_ != 2 && color_type_ != 6) {  // not truecolour or truecolor with alpha
+    if (color_type_ != 2 && color_type_ != 6) {
         succeeded = deFilterImage(png_info_, image, stride);
     }
-    else {
+    else {  // truecolour or truecolor with alpha.
         succeeded = deFilterImageTrueColor(png_info_, image, stride);
     }
-    if (!succeeded) {
-        return false;
-    }
+    if (!succeeded) return false;
 
     if (color_type_ == 0 || color_type_ == 2) {
         if (encoded_channels_ + 1 == channels_) {
             succeeded = computeTransparency(png_info_, image, stride);
-            if (!succeeded) {
-                return false;
-            }
+            if (!succeeded) return false;
         }
     }
     else if (color_type_ == 3) {
         succeeded = expandPalette(png_info_, image, stride);
-        if (!succeeded) {
-            return false;
-        }
+        if (!succeeded) return false;
     }
     else {
     }
 
     return true;
 }
-
-// #include "ppl/common/x86/sysinfo.h"
-// #include "ppl/common/sys.h"
-
-
-// const ppl::common::CpuInfo* cpu_info = GetCpuInfo(0);
-// if ((cpu_info->isa & ISA_X86_AVX) || (cpu_info->isa & ISA_X86_AVX2)) {
-
-// }
-
 
 } //! namespace x86
 } //! namespace cv
