@@ -497,7 +497,7 @@ void BM_ImreadPNG_opencv_x86(benchmark::State &state) {
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_PNG_BENCHMARK(uchar)                                              \
+#define RUN_PNG_BENCHMARK(uchar)                                               \
 BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({0});                 \
 BENCHMARK_TEMPLATE(BM_ImreadPNG_ppl_x86, uchar)->Args({0})->UseManualTime();   \
 BENCHMARK_TEMPLATE(BM_ImreadPNG_opencv_x86, uchar)->Args({1});                 \

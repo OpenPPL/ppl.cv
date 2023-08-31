@@ -19,17 +19,11 @@
 #include "codecs.h"
 
 #include <limits.h>
-
 #include <string.h>
 #include <immintrin.h>
 
-// #include "ppl/cv/x86/intrinutils.hpp"
-// #include <immintrin.h>
-
 #include "ppl/cv/types.h"
 #include "ppl/common/log.h"
-
-#include <iostream>  // debug
 
 using namespace ppl::common;
 
@@ -41,7 +35,6 @@ namespace x86 {
                                          ((uint32_t)(s1) << 16) | \
                                          ((uint32_t)(s2) << 8)  | \
                                          ((uint32_t)(s3)))
-// CHUNK_XXXX
 #define png_IHDR MAKE_CHUNK_TYPE( 73,  72,  68,  82)
 #define png_PLTE MAKE_CHUNK_TYPE( 80,  76,  84,  69)
 #define png_IDAT MAKE_CHUNK_TYPE( 73,  68,  65,  84)
@@ -80,52 +73,55 @@ enum FilterTypes {
 static const uint8_t depth_scales[9] = {0, 0xff, 0x55, 0, 0x11, 0, 0, 0, 0x01};
 
 static const uint8_t default_length_sizes[SYMBOL_NUMBER] = {
-   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
-   9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
-   9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
-   9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
-   7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8
 };
 
-static const uint8_t default_distance_sizes[32] = {
-   5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
-};
+static const uint32_t default_distance_sizes = 5;
 
 static const int length_base[31] = {
-   3,4,5,6,7,8,9,10,11,13,
-   15,17,19,23,27,31,35,43,51,59,
-   67,83,99,115,131,163,195,227,258,0,0 };
+    3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59,
+    67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0};
 
-static const int length_extra_bits[31] =
-{ 0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0,0,0 };
+static const int length_extra_bits[31] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5,
+    5, 5, 5, 0, 0 ,0};
 
-static const int distance_base[32] = { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,
-257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0};
+static const int distance_base[32] = {
+    1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513,
+    769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577, 0, 0};
 
-static const int distance_extra_bits[32] =
-{ 0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13};
+static const int distance_extra_bits[32] = {
+    0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10,
+    11, 11, 12, 12, 13, 13};
 
 PngDecoder::PngDecoder(BytesReader& file_data) {
     file_data_ = &file_data;
     png_info_.palette_length = 0;
     png_info_.palette = nullptr;
-    // png_info_.alpha_palette = nullptr;
     png_info_.chunk_status = 0;
     encoded_channels_ = 0;
 
     file_data_->setCrcChecking(&crc32_);
     png_info_.fixed_huffman_done = false;
     png_info_.header_after_idat = false;
-    png_info_.idat_count = 0;
-    crc32_.turnOff();
-    // jpeg_ = (JpegDecodeData*) malloc(sizeof(JpegDecodeData));
-    // if (jpeg_ == nullptr) {
-    //    LOG(ERROR) << "No enough memory to initialize PngDecoder.";
-    // }
+    // crc32_.turnOff();
 }
 
 PngDecoder::~PngDecoder() {
@@ -134,19 +130,11 @@ PngDecoder::~PngDecoder() {
     }
 
     file_data_->unsetCrcChecking();
-    // if (png_info_.alpha_palette != nullptr) {
-    //     delete [] png_info_.alpha_palette;
-    // }
 }
 
 void PngDecoder::getChunkHeader(PngInfo& png_info) {
-    png_info.current_chunk.length = file_data_->getDWordBigEndian1();
-    png_info.current_chunk.type = file_data_->getDWordBigEndian1();
-    // int readed = file_data_->getBytes(png_info.current_chunk.type, 4);
-    // if (readed != 4) {
-    //     LOG(ERROR) << "Invalid chunk type. It must be a sequence of 4 bytes.";
-    //     return false;
-    // }
+    png_info.current_chunk.length = file_data_->getDWordBigEndian();
+    png_info.current_chunk.type   = file_data_->getDWordBigEndian();
 }
 
 bool PngDecoder::parseIHDR(PngInfo& png_info) {
@@ -159,10 +147,11 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    width_ = file_data_->getDWordBigEndian1();
-    height_ = file_data_->getDWordBigEndian1();
+    width_  = file_data_->getDWordBigEndian();
+    height_ = file_data_->getDWordBigEndian();
     if (height_ < 1 || width_ < 1) {
-        LOG(ERROR) << "Invalid image height/width: " << height_ << ", " << width_;
+        LOG(ERROR) << "Invalid image height/width: " << height_ << ", "
+                   << width_;
         return false;
     }
 
@@ -176,56 +165,59 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
     depth_ = bit_depth_ == 16 ? 16 : 8;
 
     color_type_ = file_data_->getByte();
-    if (color_type_ != 0 && color_type_ != 2 && color_type_ != 3 &&
-        color_type_ != 4 && color_type_ != 6) {
+    if (color_type_ != GRAY && color_type_ != TRUE_COLOR &&
+        color_type_ != INDEXED_COLOR && color_type_ != GRAY_WITH_ALPHA &&
+        color_type_ != TRUE_COLOR_WITH_ALPHA) {
         LOG(ERROR) << "Invalid color type: " << color_type_
-                   << ", valid value: 0/2/3/4/6.";
+                   << ", valid value: greyscale(0)/true color(2)/"
+                   << "indexed-color(3)/greyscale with alpha(4)/"
+                   << "true color with alpha(6).";
         return false;
     }
 
     compression_method_ = file_data_->getByte();
-    if (compression_method_ != 0) {
+    if (compression_method_ != DEFLATE) {
         LOG(ERROR) << "Invalid compression method: " << compression_method_
                    << ", only deflate(0) compression is supported.";
         return false;
     }
 
     filter_method_ = file_data_->getByte();
-    if (filter_method_ != 0) {
+    if (filter_method_ != ADAPTIVE) {
         LOG(ERROR) << "Invalid filter method: " << filter_method_
                    << ", only adaptive filtering(0) is supported.";
         return false;
     }
 
     interlace_method_ = file_data_->getByte();
-    if (interlace_method_ != 0 && interlace_method_ != 1) {
+    if (interlace_method_ != NO_INTRLACE && interlace_method_ != ADAM7) {
         LOG(ERROR) << "Invalid interlace method: " << interlace_method_
                    << ", only no interlace(0) and Adam7 interlace(1) are "
                    << "supported.";
         return false;
     }
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
-    if (color_type_ == 0) {
+    if (color_type_ == GRAY) {
         channels_ = 1;
         encoded_channels_ = 1;
     }
-    else if (color_type_ == 2) {
+    else if (color_type_ == TRUE_COLOR) {
         channels_ = 3;  // further check tRNS for alpha channel
         encoded_channels_ = 3;
     }
-    else if (color_type_ == 3) {
+    else if (color_type_ == INDEXED_COLOR) {
         channels_ = 3;  // further check tRNS for alpha channel
         encoded_channels_ = 1;
     }
-    else if (color_type_ == 4) {
+    else if (color_type_ == GRAY_WITH_ALPHA) {
         channels_ = 2;
         encoded_channels_ = 2;
     }
-    else {
+    else {  // TRUE_COLOR_WITH_ALPHA
         channels_ = 4;
         encoded_channels_ = 4;
     }
@@ -236,18 +228,19 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
         return false;
     }
 
-    if (color_type_ == 2 && (bit_depth_ == 1 || bit_depth_ == 2 ||
-                             bit_depth_ == 4)) {
+    if (color_type_ == TRUE_COLOR && (bit_depth_ == 1 || bit_depth_ == 2 ||
+                                      bit_depth_ == 4)) {
         LOG(ERROR) << "Invalid bit depth for true color: " << bit_depth_
                    << ", valid value: 8/16.";
         return false;
     }
-    if (color_type_ == 3 && bit_depth_ == 16) {
+    if (color_type_ == INDEXED_COLOR && bit_depth_ == 16) {
         LOG(ERROR) << "Invalid bit depth for indexed color: " << bit_depth_
                    << ", valid value: 1/2/4/8.";
         return false;
     }
-    if ((color_type_ == 4 || color_type_ == 6) &&
+    if ((color_type_ == GRAY_WITH_ALPHA ||
+         color_type_ == TRUE_COLOR_WITH_ALPHA) &&
         (bit_depth_ == 1 || bit_depth_ == 2 || bit_depth_ == 4)) {
         LOG(ERROR) << "Invalid bit depth for greyscale/true color with alpha: "
                    << bit_depth_ << ", valid value: 8/16.";
@@ -258,14 +251,6 @@ bool PngDecoder::parseIHDR(PngInfo& png_info) {
         LOG(ERROR) << "This implementation does not support bit depth 16.";
         return false;
     }
-
-    // std::cout << "IHDR chunk appear." << std::endl;
-    // std::cout << "width_: " << width_ << ", height_: " << height_
-    //           << ", bit_depth_: " << (uint32_t)bit_depth_ << ", color_type_: " << (uint32_t)color_type_
-    //           << ", compression_method_: " << (uint32_t)compression_method_ << ", filter_method_: "
-    //           << (uint32_t)filter_method_ << ", interlace_method_: " << (uint32_t)interlace_method_
-    //           << ", channels_: " << channels_ << ", encoded_channels_: "
-    //           << encoded_channels_ << std::endl;
 
     return true;
 }
@@ -283,7 +268,7 @@ bool PngDecoder::parsetIME(PngInfo& png_info) {
     file_data_->skip(7);
     // LOG(INFO) << "The tIME chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -303,7 +288,7 @@ bool PngDecoder::parsezTXt(PngInfo& png_info) {
     file_data_->skip(png_info.current_chunk.length);
     // LOG(INFO) << "A zTXt chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -323,7 +308,7 @@ bool PngDecoder::parsetEXt(PngInfo& png_info) {
     file_data_->skip(png_info.current_chunk.length);
     // LOG(INFO) << "A tEXt chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -343,7 +328,7 @@ bool PngDecoder::parseiTXt(PngInfo& png_info) {
     file_data_->skip(png_info.current_chunk.length);
     // LOG(INFO) << "A iTXt chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -363,7 +348,7 @@ bool PngDecoder::parsepHYs(PngInfo& png_info) {
     file_data_->skip(9);
     // LOG(INFO) << "The pHYs chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -383,7 +368,7 @@ bool PngDecoder::parsesPLT(PngInfo& png_info) {
     file_data_->skip(png_info.current_chunk.length);
     // LOG(INFO) << "A sPLT chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -415,7 +400,7 @@ bool PngDecoder::parseiCCP(PngInfo& png_info) {
     png_info.chunk_status |= HAVE_iCCP;
     // LOG(INFO) << "The iCCP chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -447,7 +432,7 @@ bool PngDecoder::parsesRGB(PngInfo& png_info) {
     png_info.chunk_status |= HAVE_sRGB;
     // LOG(INFO) << "The sRGB chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -495,7 +480,7 @@ bool PngDecoder::parsesBIT(PngInfo& png_info) {
     file_data_->skip(png_info.current_chunk.length);
     // LOG(INFO) << "The sBIT chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -520,7 +505,7 @@ bool PngDecoder::parsegAMA(PngInfo& png_info) {
     file_data_->skip(4);
     // LOG(INFO) << "The gAMA chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -545,7 +530,7 @@ bool PngDecoder::parsecHRM(PngInfo& png_info) {
     file_data_->skip(32);
     // LOG(INFO) << "The cHRM chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -554,7 +539,8 @@ bool PngDecoder::parsecHRM(PngInfo& png_info) {
 
 // reorder the channels from RGB to BGR for truecolour.
 bool PngDecoder::parsePLTE(PngInfo& png_info) {
-    if (color_type_ == 4 || color_type_ == 6) {
+    if (color_type_ == GRAY_WITH_ALPHA ||
+        color_type_ == TRUE_COLOR_WITH_ALPHA) {
         LOG(ERROR) << "The PLTE chunk must not come with greyscale/greyscale "
                    << "with alpha.";
         return false;
@@ -563,7 +549,8 @@ bool PngDecoder::parsePLTE(PngInfo& png_info) {
     if ((png_info.chunk_status & HAVE_tRNS) ||
         (png_info.chunk_status & HAVE_hIST) ||
         (png_info.chunk_status & HAVE_bKGD)) {
-        LOG(ERROR) << "The PLTE chunk must come before the tRNS/hIST/bKGD chunk.";
+        LOG(ERROR) << "The PLTE chunk must come before the tRNS/hIST/bKGD "
+                   << "chunk.";
         return false;
     }
 
@@ -586,38 +573,23 @@ bool PngDecoder::parsePLTE(PngInfo& png_info) {
         value0 = file_data_->getByte();
         value1 = file_data_->getByte();
         value2 = file_data_->getByte();
-        png_info.palette[index] = value2;
+        png_info.palette[index]     = value2;
         png_info.palette[index + 1] = value1;
         png_info.palette[index + 2] = value0;
         png_info.palette[index + 3] = 255;
     }
-    // uint32_t readed = file_data_->getBytes((void*)png_info.palette,
-    //                                        png_info.current_chunk.length);
-    // if (readed != png_info.current_chunk.length) {
-    //     LOG(ERROR) << "The color palette readed bytes: " << readed
-    //                << ", correct bytes: " << png_info.current_chunk.length;
-    //     return false;
-    // }
     png_info.chunk_status |= HAVE_PLTE;
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
-
-    // std::cout << "PLTE chunk appear, the color palette: " << std::endl;
-    // for (uint32_t index = 0; index < length * 4; index += 4) {
-    //     std::cout << "palette " << (index >> 2) << ": "
-    //               << (uint32_t)png_info.palette[index]
-    //               << ", " << (uint32_t)png_info.palette[index + 1]
-    //               << ", " << (uint32_t)png_info.palette[index + 2]
-    //               << ", " << (uint32_t)png_info.palette[index + 3] << std::endl;
-    // }
 
     return true;
 }
 
 bool PngDecoder::parsetRNS(PngInfo& png_info) {
-    if (color_type_ == 4 || color_type_ == 6) {
+    if (color_type_ == GRAY_WITH_ALPHA ||
+        color_type_ == TRUE_COLOR_WITH_ALPHA) {
         LOG(ERROR) << "The tRNS chunk must not come with greyscale/truecolor "
                    << "with alpha.";
         return false;
@@ -627,7 +599,6 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
     if (!succeeded) return false;
 
     if (color_type_ == 3) {
-        // if (png_info.palette == nullptr) {
         if (!(png_info.chunk_status & HAVE_PLTE)) {
             LOG(ERROR) << "The tRNS chunk must come after the PLTE chunk.";
             return false;
@@ -641,31 +612,14 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
             return false;
         }
 
-        // png_info.alpha_palette = new uint8_t[png_info.palette_length];
-        // uint32_t readed = file_data_->getBytes((void*)png_info.alpha_palette,
-        //                                        png_info.current_chunk.length);
-        // if (readed != png_info.current_chunk.length) {
-        //     LOG(ERROR) << "The alpha palette readed bytes: " << readed
-        //                << ", correct bytes: " << png_info.current_chunk.length;
-        //     return false;
-        // }
-        // if (png_info.current_chunk.length < png_info.palette_length) {
-        //     memset(png_info.alpha_palette + png_info.current_chunk.length, 255,
-        //            png_info.palette_length - png_info.current_chunk.length);
-        // }
         for (uint32_t index = 3; index < png_info.current_chunk.length * 4;
              index += 4) {
             png_info.palette[index] = file_data_->getByte();
         }
         channels_ = 4;
-        // std::cout << "tRNS chunk appear, the alpha palette: " << std::endl;
-        // for (uint32_t index = 3; index <= png_info.palette_length * 4; index+= 4) {
-        //     std::cout << "palette " << index << ": "
-        //               << (uint32_t)png_info.palette[index] << std::endl;
-        // }
     }
     else {
-        if (color_type_ & 4) {
+        if (color_type_ & GRAY_WITH_ALPHA) {
             LOG(ERROR) << "The tRNS chunk can not come with greyscale/"
                        << "truecolor with alpha.";
             return false;
@@ -679,41 +633,23 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
         }
 
         if (bit_depth_ == 16) {
-            // uint32_t readed = file_data_->getBytes((void*)png_info.alpha_values,
-            //                     png_info.current_chunk.length);
-            // if (readed != png_info.current_chunk.length) {
-            //     LOG(ERROR) << "The alpha palette readed bytes: " << readed
-            //                << ", correct bytes: "
-            //                << png_info.current_chunk.length;
-            //     return false;
-            // }
             uint16_t* values = (uint16_t*)png_info.alpha_values;
             if (color_type_ == 0) {
                 values[0] = file_data_->getWordBigEndian();
             }
-            else {  // color_type_ == 2
+            else {  // color_type_ == TRUE_COLOR
                 values[2] = file_data_->getWordBigEndian();
                 values[1] = file_data_->getWordBigEndian();
                 values[0] = file_data_->getWordBigEndian();
             }
-            // std::cout << "tRNS chunk appear, the alpha palette: " << std::endl;
-            // uint16_t* value = (uint16_t*)png_info.alpha_values;
-            // for (uint32_t index = 0; index < channels_; index++) {
-            //     std::cout << "palette " << index << ": "
-            //               << (uint32_t)value[index] << std::endl;
-            // }
         }
         else {
             uint8_t* values = png_info.alpha_values;
-            // for (uint32_t i = 0; i < channels_; i++) {
-            //     value[i] = (file_data_->getWordBigEndian() & 0xFF) *
-            //                 depth_scales[bit_depth_];  // cast to 0-255
-            // }
             if (color_type_ == 0) {
                 values[0] = (file_data_->getWordBigEndian() & 0xFF) *
                              depth_scales[bit_depth_];
             }
-            else {  // color_type_ == 2
+            else {  // color_type_ == TRUE_COLOR
                 values[2] = (file_data_->getWordBigEndian() & 0xFF) *
                              depth_scales[bit_depth_];
                 values[1] = (file_data_->getWordBigEndian() & 0xFF) *
@@ -721,28 +657,19 @@ bool PngDecoder::parsetRNS(PngInfo& png_info) {
                 values[0] = (file_data_->getWordBigEndian() & 0xFF) *
                              depth_scales[bit_depth_];
             }
-            // std::cout << "tRNS chunk appear, the alpha palette: " << std::endl;
-            // for (uint32_t index = 0; index < channels_; index++) {
-            //     std::cout << "palette " << index << ": "
-            //               << (uint32_t)value[index] << std::endl;
-            // }
         }
         channels_++;
     }
     png_info.chunk_status |= HAVE_tRNS;
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
-
-    // std::cout << "tRNS chunk appear." << std::endl;
-    // std::cout << "in tRNS, channels_: " << channels_ << std::endl;
 
     return true;
 }
 
 bool PngDecoder::parsehIST(PngInfo& png_info) {
-    // if (png_info.palette == nullptr) {
     if (!(png_info.chunk_status & HAVE_PLTE)) {
         LOG(ERROR) << "The hIST chunk must come after the PLTE chunk.";
         return false;
@@ -758,10 +685,10 @@ bool PngDecoder::parsehIST(PngInfo& png_info) {
     if (!succeeded) return false;
 
     file_data_->skip(png_info.current_chunk.length);
-    png_info.chunk_status |= HAVE_hIST;
     // LOG(INFO) << "The hIST chunk is skipped.";
+    png_info.chunk_status |= HAVE_hIST;
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -769,22 +696,23 @@ bool PngDecoder::parsehIST(PngInfo& png_info) {
 }
 
 bool PngDecoder::parsebKGD(PngInfo& png_info) {
-    if (color_type_ == 0 || color_type_ == 4) {
+    if (color_type_ == GRAY || color_type_ == GRAY_WITH_ALPHA) {
         if (png_info.current_chunk.length != 2) {
             LOG(ERROR) << "The bKGD length: " << png_info.current_chunk.length
                        << ", correct value: 2.";
             return false;
         }
     }
-    else if (color_type_ == 2 || color_type_ == 6) {
+    else if (color_type_ == TRUE_COLOR ||
+             color_type_ == TRUE_COLOR_WITH_ALPHA) {
         if (png_info.current_chunk.length != 6) {
             LOG(ERROR) << "The bKGD length: " << png_info.current_chunk.length
                        << ", correct value: 6.";
             return false;
         }
     }
-    else {
-        if (png_info.current_chunk.length != 1) {  // indexed color
+    else {  // indexed color
+        if (png_info.current_chunk.length != 1) {
             LOG(ERROR) << "The bKGD length: " << png_info.current_chunk.length
                        << ", correct value: 1.";
             return false;
@@ -798,7 +726,7 @@ bool PngDecoder::parsebKGD(PngInfo& png_info) {
     png_info.chunk_status |= HAVE_bKGD;
     // LOG(INFO) << "The bKGD chunk is skipped.";
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -808,13 +736,15 @@ bool PngDecoder::parsebKGD(PngInfo& png_info) {
 // This function processes one or more IDAT chunk.
 bool PngDecoder::parseIDATs(PngInfo& png_info, uint8_t* image,
                             uint32_t stride) {
-    if (color_type_ == 3 && (!(png_info.chunk_status & HAVE_PLTE))) {
+    if (color_type_ == INDEXED_COLOR &&
+        (!(png_info.chunk_status & HAVE_PLTE))) {
         LOG(ERROR) << "A color palette chunk is needed for indexed color, but "
                    << " no one appears befor an IDAT chunk.";
         return false;
     }
 
-    bool succeeded = setCrc32();  // processing crc of the first or current IDAT chunk.
+    // processing crc of the first or current IDAT chunk.
+    bool succeeded = setCrc32();
     if (!succeeded) return false;
 
     if (!(png_info.chunk_status & HAVE_IDAT)) {  // first IDAT chunk
@@ -822,18 +752,16 @@ bool PngDecoder::parseIDATs(PngInfo& png_info, uint8_t* image,
         if (!succeeded) return false;
     }
 
-    // std::cout << "IDAT size: " << png_info.current_chunk.length << std::endl; //
     succeeded = inflateImage(png_info, image, stride);
     if (!succeeded) return false;
     // skipping 32 bits of the optional ADLER32 checksum in zlib data stream.
-    // std::cout << "IDAT leftover: " << png_info.current_chunk.length << std::endl;
     if (png_info.current_chunk.type == png_IDAT) {
         file_data_->skip(png_info.current_chunk.length);
     }
 
-    // process crc of the current of last IDAT chunk.
+    // process crc of the current or the last IDAT chunk.
     if (png_info.current_chunk.type == png_IDAT) {
-        png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+        png_info.current_chunk.crc = file_data_->getDWordBigEndian();
         succeeded = isCrcCorrect();
         if (!succeeded) return false;
     }
@@ -854,17 +782,11 @@ bool PngDecoder::parseIEND(PngInfo& png_info) {
                    << ", correct bytes: 0.";
         return false;
     }
-    // std::cout << "IEND chunk appear." << std::endl;
-
-    // uint32_t crc2 = crc32(0, nullptr, 0);
-    // std::cout << "$$$$IEND, chunk type crc2: " << crc2 << std::endl;
-    // crc2 = crc32(crc2, ((uint8_t*)(&png_info.current_chunk.type)), 4);
-    // std::cout << "$$$$IEND, chunk type crc2: " << crc2 << std::endl;
 
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+    png_info.current_chunk.crc = file_data_->getDWordBigEndian();
     succeeded = isCrcCorrect();
     if (!succeeded) return false;
 
@@ -881,20 +803,14 @@ bool PngDecoder::parsetUnknownChunk(PngInfo& png_info) {
         bool succeeded = setCrc32();
         if (!succeeded) return false;
 
-        // LOG(INFO) << "Encountering an unknown ancillary chunk: " << chunk_name;
         file_data_->skip(png_info.current_chunk.length);
+        // LOG(INFO) << "Encountering an unknown ancillary chunk: " << chunk_name;
 
-        png_info.current_chunk.crc = file_data_->getDWordBigEndian1();
+        png_info.current_chunk.crc = file_data_->getDWordBigEndian();
         succeeded = isCrcCorrect();
         if (!succeeded) return false;
 
         return true;
-    }
-}
-
-void PngDecoder::releaseSource() {
-    if (png_info_.palette != nullptr) {
-        delete [] png_info_.palette;
     }
 }
 
@@ -947,7 +863,6 @@ bool PngDecoder::isCrcCorrect() {
                    << ", transmitted value: " << transmitted_crc;
         return false;
     }
-    // return true;
 }
 
 bool PngDecoder::parseDeflateHeader() {
@@ -994,7 +909,7 @@ bool PngDecoder::fillBits(ZlibBuffer *zlib_buffer) {
 
     do {
         if (png_info_.current_chunk.length == 0) {
-            png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
+            png_info_.current_chunk.crc = file_data_->getDWordBigEndian();
             bool succeeded = isCrcCorrect();
             if (!succeeded) return false;
 
@@ -1013,12 +928,12 @@ bool PngDecoder::fillBits(ZlibBuffer *zlib_buffer) {
                                      zlib_buffer->bit_number);
         zlib_buffer->bit_number += 8;
         png_info_.current_chunk.length -= 1;
-    } while (zlib_buffer->bit_number <= SHIFT_SIZE);
+    } while (zlib_buffer->bit_number <= PNG_SHIFT_SIZE);
 
     return true;
 }
 
-uint32_t PngDecoder::getNumber(ZlibBuffer *zlib_buffer, int bit_number) {
+uint32_t PngDecoder::getNumber(ZlibBuffer *zlib_buffer, uint32_t bit_number) {
     if (zlib_buffer->bit_number < bit_number) {
         bool succeeded = fillBits(zlib_buffer);
         if (!succeeded) return UINT32_MAX;
@@ -1083,7 +998,7 @@ bool PngDecoder::parseZlibUncompressedBlock(PngInfo& png_info) {
             png_info.decompressed_image += png_info.current_chunk.length;
             len -= png_info.current_chunk.length;
 
-            png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
+            png_info_.current_chunk.crc = file_data_->getDWordBigEndian();
             bool succeeded = isCrcCorrect();
             if (!succeeded) return false;
 
@@ -1108,8 +1023,6 @@ static int32_t reverseBits(int32_t input, int32_t bits) {
     input = ((input & 0xF0F0) >> 4) | ((input & 0x0F0F) << 4);
     input = ((input & 0xFF00) >> 8) | ((input & 0x00FF) << 8);
 
-    // to bit reverse n bits, reverse 16 and shift
-    // e.g. 11 bits, bit reverse and shift away 5
     int32_t value = input >> (16 - bits);
 
     return value;
@@ -1125,7 +1038,7 @@ static int32_t reverse16Bits(uint16_t input) {
 }
 
 bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
-                                  const uint8_t *size_list, int number) {
+                                  const uint8_t *size_list, int32_t number) {
     int32_t i, code = 0, next_code[16], sizes[17];
 
     memset(sizes, 0, sizeof(sizes));
@@ -1168,7 +1081,7 @@ bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
             huffman_coding->size [index] = (uint8_t)size;
             huffman_coding->value[index] = (uint16_t)i;
             if (size <= ZLIB_FAST_BITS) {
-                int j = reverseBits(next_code[size], size);
+                int32_t j = reverseBits(next_code[size], size);
                 while (j < (1 << ZLIB_FAST_BITS)) {
                     huffman_coding->fast[j] = fast_value;
                     j += (1 << size);
@@ -1181,11 +1094,63 @@ bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
     return true;
 }
 
+bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
+                                  const uint32_t size, int32_t number) {
+    int32_t i, code = 0, next_code[16], sizes[17];
+
+    memset(sizes, 0, sizeof(sizes));
+    memset(huffman_coding->fast, 0, sizeof(huffman_coding->fast));
+    for (i = 0; i < number; ++i) {
+        ++sizes[size];
+    }
+    sizes[0] = 0;
+    for (i = 1; i < 16; ++i) {
+        if (sizes[i] > (1 << i)) {
+            LOG(ERROR) << "The size of code lengths in huffman is wrong.";
+            return false;
+        }
+    }
+
+    uint32_t symbol = 0;
+    for (i = 1; i < 16; ++i) {
+        next_code[i] = code;
+        huffman_coding->firstcode[i]   = (uint16_t)code;
+        huffman_coding->firstsymbol[i] = (uint16_t)symbol;
+        code = (code + sizes[i]);
+        if (sizes[i]) {
+            if (code - 1 >= (1 << i)) {
+                LOG(ERROR) << "The code lengths of huffman are wrong.";
+                return false;
+            }
+        }
+        huffman_coding->maxcode[i] = code << (16 - i);
+        code <<= 1;
+        symbol += sizes[i];
+    }
+
+    huffman_coding->maxcode[16] = 0x10000;
+    for (i = 0; i < number; ++i) {
+        int index = next_code[size] - huffman_coding->firstcode[size] +
+                    huffman_coding->firstsymbol[size];
+        uint16_t fast_value = (uint16_t) ((size << 9) | i);
+        huffman_coding->size [index] = (uint8_t)size;
+        huffman_coding->value[index] = (uint16_t)i;
+        if (size <= ZLIB_FAST_BITS) {
+            int32_t j = reverseBits(next_code[size], size);
+            while (j < (1 << ZLIB_FAST_BITS)) {
+                huffman_coding->fast[j] = fast_value;
+                j += (1 << size);
+            }
+        }
+        ++next_code[size];
+    }
+
+    return true;
+}
+
 int32_t PngDecoder::huffmanDecodeSlowly(ZlibBuffer *zlib_buffer,
                                         ZlibHuffman *huffman_coding) {
     int32_t bits, size, index;
-    // not resolved by fast table, so compute it the slow way
-    // use jpeg approach, which requires MSbits at top
     bits = reverse16Bits((uint16_t)(zlib_buffer->code_buffer & 0xFFFF));
     for (size = ZLIB_FAST_BITS + 1; ; ++size) {
         if (bits < huffman_coding->maxcode[size]) break;
@@ -1193,7 +1158,7 @@ int32_t PngDecoder::huffmanDecodeSlowly(ZlibBuffer *zlib_buffer,
     if (size >= 16) return -1; // invalid code!
     index = (bits >> (16 - size)) - huffman_coding->firstcode[size] +
             huffman_coding->firstsymbol[size];
-    if (index >= SYMBOL_NUMBER) return -1;  // some data was corrupt somewhere!
+    if (index >= SYMBOL_NUMBER) return -1;
     if (huffman_coding->size[index] != size) return -1;
     zlib_buffer->code_buffer >>= size;
     zlib_buffer->bit_number   -= size;
@@ -1272,7 +1237,7 @@ bool PngDecoder::computeDynamicHuffman(ZlibBuffer* zlib_buffer) {
                            << ", valid value: 0-19.";
                 return false;
             }
-            if (total_number - number < length) {
+            if (total_number - number < (uint32_t)length) {
                 LOG(ERROR) << "Invalid repeating count: " << length
                            << ", valid value: " << total_number - number;
                 return false;
@@ -1313,7 +1278,7 @@ bool PngDecoder::decodeHuffmanData(ZlibBuffer* zlib_buffer) {
             }
             *output++ = (uint8_t)value;
         } else {
-            int length, distance;
+            uint32_t length, distance;
             if (value == 256) {
                 png_info_.decompressed_image = output;
                 return true;
@@ -1427,7 +1392,8 @@ bool PngDecoder::inflateImage(PngInfo& png_info, uint8_t* image,
             default:
                 LOG(ERROR) << "Invalid zlib encoding method: "
                            << (uint32_t)zlib_buffer.encoding_method
-                           << ", valid values: 0/1/2.";
+                           << ", valid values: stored section(0)/"
+                           << "static huffman(1)/dynamic huffman(2).";
                 break;
         }
 
@@ -1623,7 +1589,6 @@ void rowDefilter4C2(uint8_t* input_row, uint8_t* prior_row,
  */
 bool PngDecoder::deFilterImage(PngInfo& png_info, uint8_t* image,
                                uint32_t stride) {
-    // std::cout << "########coming in deFilterImage#######" << std::endl;
     int bytes = (bit_depth_ == 16 ? 2 : 1);
     int pixel_bytes = bytes * encoded_channels_;  // 1, 2, 4
     uint32_t scanline_bytes = ((width_ * encoded_channels_ * bit_depth_ +
@@ -1907,7 +1872,6 @@ void rowDefilter0ColorC4(uint8_t* input_row, uint32_t row_bytes,
         input  = _mm_loadu_si128((__m128i const*)input_row);
         output = _mm_shuffle_epi8(input, rgb2bgrc4_index);
         _mm_store_si128((__m128i*)recon_row, output);
-        // _mm_storeu_si128((__m128i*)recon_row, output);
         recon_row += 16;
         input_row += 16;
     }
@@ -1918,7 +1882,6 @@ void rowDefilter0ColorC4(uint8_t* input_row, uint32_t row_bytes,
             input  = _mm_loadu_si128((__m128i const*)input_row);
             output = _mm_shuffle_epi8(input, rgb2bgrc4_index);
             _mm_store_si128((__m128i*)recon_row, output);
-            // _mm_storeu_si128((__m128i*)recon_row, output);
 
             return;
         }
@@ -2114,7 +2077,6 @@ void rowDefilter1ColorC4(uint8_t* input_row, uint32_t row_bytes,
         output = _mm_blend_epi16(output, d4, 192);
 
         _mm_store_si128((__m128i*)recon_row, output);
-        // _mm_storeu_si128((__m128i*)recon_row, output);
         output = _mm_shuffle_epi8(d4, index3);
         recon_row += 16;
         input_row += 16;
@@ -2141,7 +2103,6 @@ void rowDefilter1ColorC4(uint8_t* input_row, uint32_t row_bytes,
             output = _mm_blend_epi16(output, d4, 192);
 
             _mm_store_si128((__m128i*)recon_row, output);
-            // _mm_storeu_si128((__m128i*)recon_row, output);
 
             return;
         }
@@ -2308,7 +2269,6 @@ void rowDefilter2ColorC4(uint8_t* input_row, uint8_t* prior_row,
         bgr     = _mm_shuffle_epi8(input0, rgb2bgrc4_index);
         output  = _mm_add_epi8(bgr, input1);
         _mm_store_si128((__m128i*)recon_row, output);
-        // _mm_storeu_si128((__m128i*)recon_row, output);
         recon_row += 16;
         input_row += 16;
         prior_row += 16;
@@ -2322,7 +2282,6 @@ void rowDefilter2ColorC4(uint8_t* input_row, uint8_t* prior_row,
             bgr     = _mm_shuffle_epi8(input0, rgb2bgrc4_index);
             output  = _mm_add_epi8(bgr, input1);
             _mm_store_si128((__m128i*)recon_row, output);
-            // _mm_storeu_si128((__m128i*)recon_row, output);
 
             return;
         }
@@ -2767,7 +2726,6 @@ void rowDefilter3ColorC4(uint8_t* input_row, uint8_t* prior_row,
         result_i8  = _mm_blend_epi16(result_i8, output1, 192);
 
         _mm_store_si128((__m128i*)recon_row, result_i8);
-        // _mm_storeu_si128((__m128i*)recon_row, result_i8);
         a4_i16 = result_i16;
         recon_row += 16;
         input_row += 16;
@@ -2822,7 +2780,6 @@ void rowDefilter3ColorC4(uint8_t* input_row, uint8_t* prior_row,
             result_i8  = _mm_blend_epi16(result_i8, output1, 192);
 
             _mm_store_si128((__m128i*)recon_row, result_i8);
-            // _mm_storeu_si128((__m128i*)recon_row, result_i8);
 
             return;
         }
@@ -3195,7 +3152,6 @@ void rowDefilter4ColorC4(uint8_t* input_row, uint8_t* prior_row,
         result_i8  = _mm_blend_epi16(result_i8, output1, 192);
 
         _mm_store_si128((__m128i*)recon_row, result_i8);
-        // _mm_storeu_si128((__m128i*)recon_row, result_i8);
         a4_i16 = result_i16;
         c4_i16 = b4_i16;
         recon_row += 16;
@@ -3254,7 +3210,6 @@ void rowDefilter4ColorC4(uint8_t* input_row, uint8_t* prior_row,
             result_i8  = _mm_blend_epi16(result_i8, output1, 192);
 
             _mm_store_si128((__m128i*)recon_row, result_i8);
-            // _mm_storeu_si128((__m128i*)recon_row, result_i8);
 
             return;
         }
@@ -3723,7 +3678,6 @@ bool deFilterC8TureColor(uint8_t* input, uint32_t height, uint32_t row_bytes,
  */
 bool PngDecoder::deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
                                         uint32_t stride) {
-    // std::cout << "######## coming in deFilterImageTrueColor #######" << std::endl;
     int bytes = (bit_depth_ == 16 ? 2 : 1);
     int pixel_bytes = bytes * encoded_channels_;  // 3, 4, 6, 8
     uint32_t row_bytes = width_ * pixel_bytes;
@@ -3775,7 +3729,6 @@ bool PngDecoder::deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
 
 bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
                                      uint32_t stride) {
-    std::cout << "########coming in computeTransparency#######" << std::endl;
     if (color_type_ != 0 && color_type_ != 2) {
         LOG(ERROR) << "The expected color type for expanding alpha: "
                    << "greyscale(0)/true color(2).";
@@ -3787,7 +3740,7 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
         uint8_t* output_row = image;
         uint8_t value0, value1, value2, value3;
 
-        if (color_type_ == 0) {
+        if (color_type_ == GRAY) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_; col0++) {
                      value0 = input_row[col0];
@@ -3800,7 +3753,7 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
                 output_row += stride;
             }
         }
-        else if (color_type_ == 2) {
+        else if (color_type_ == TRUE_COLOR) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_ * 3;
                      col0 += 3) {
@@ -3834,7 +3787,7 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
         uint16_t* alpha_values = (uint16_t*)png_info.alpha_values;
         uint16_t value0, value1, value2, value3;
 
-        if (color_type_ == 0) {
+        if (color_type_ == GRAY) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_; col0++) {
                      value0 = input_row[col0];
@@ -3847,7 +3800,7 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
                 output_row += stride;
             }
         }
-        else if (color_type_ == 2) {
+        else if (color_type_ == TRUE_COLOR) {
             for (uint32_t row = 0; row < height_; row++) {
                 for (uint32_t col0 = 0, col1 = 0; col0 < width_ * 3;
                      col0 += 3) {
@@ -3881,8 +3834,7 @@ bool PngDecoder::computeTransparency(PngInfo& png_info, uint8_t* image,
 
 bool PngDecoder::expandPalette(PngInfo& png_info, uint8_t* image,
                                uint32_t stride) {
-    // std::cout << "########coming in expandPalette#######" << std::endl;
-    if (color_type_ != 3) {
+    if (color_type_ != INDEXED_COLOR) {
         LOG(ERROR) << "The expected color type for expanding palette: "
                    << "indexed-colour(3).";
         return false;
@@ -3943,15 +3895,9 @@ bool PngDecoder::expandPalette(PngInfo& png_info, uint8_t* image,
 }
 
 bool PngDecoder::readHeader() {
-    // file_data_->skip(8);
     getChunkHeader(png_info_);
     if (png_info_.current_chunk.type != png_IHDR) {
         std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-        // std::string chunk_name = getChunkName(png_IHDR);
-        // for (auto c : chunk_name) {
-        //     std::cout << (uint32_t)c << ", ";
-        // }
-        // std::cout << "string size: " << chunk_name.size() << std::endl;
         LOG(ERROR) << "encountering the chunk: " << chunk_name
                    << ", expecting an IHDR chunk.";
         LOG(ERROR) << "The first chunk must be IHDR.";
@@ -3960,11 +3906,6 @@ bool PngDecoder::readHeader() {
 
     bool succeeded = parseIHDR(png_info_);
     if (!succeeded) return false;
-    // return true;  // debug
-
-    // png_info_.current_chunk.crc = file_data_->getDWordBigEndian1();
-    // crc checking.
-    // file_data_->skip(4);
 
     getChunkHeader(png_info_);
     while (png_info_.current_chunk.type != png_IDAT &&
@@ -4036,7 +3977,6 @@ bool PngDecoder::readHeader() {
                 break;
         }
 
-        // file_data_->skip(4);  // skip crc checking.
         getChunkHeader(png_info_);
     }
 
@@ -4066,10 +4006,7 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
     png_info_.zlib_buffer.code_buffer = 0;
 
     bool succeeded;
-    // int count = 0;
     while (png_info_.current_chunk.type != png_IEND) {
-        // std::string chunk_name = getChunkName(png_info_.current_chunk.type);
-        // std::cout << "current chunk: " << chunk_name << std::endl;
         switch (png_info_.current_chunk.type) {
             case png_tIME:
                 succeeded = parsetIME(png_info_);
@@ -4102,7 +4039,6 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
             case png_IDAT:
                 succeeded = parseIDATs(png_info_, image, stride);
                 if (!succeeded) return false;
-                // std::cout << "processing IDAT chunk: " << count++ << std::endl;
                 break;
             default:
                 succeeded = parsetUnknownChunk(png_info_);
@@ -4110,8 +4046,6 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
                 break;
         }
 
-        // file_data_->skip(png_info_.current_chunk.length);
-        // file_data_->skip(4);  // skip crc checking.
         if (!png_info_.header_after_idat) {
             getChunkHeader(png_info_);
         }
@@ -4120,7 +4054,7 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
     succeeded = parseIEND(png_info_);
     if (!succeeded) return false;
 
-    if (color_type_ != 2 && color_type_ != 6) {
+    if (color_type_ != TRUE_COLOR && color_type_ != TRUE_COLOR_WITH_ALPHA) {
         succeeded = deFilterImage(png_info_, image, stride);
     }
     else {  // truecolour or truecolor with alpha.
@@ -4128,13 +4062,13 @@ bool PngDecoder::decodeData(uint32_t stride, uint8_t* image) {
     }
     if (!succeeded) return false;
 
-    if (color_type_ == 0 || color_type_ == 2) {
+    if (color_type_ == GRAY || color_type_ == TRUE_COLOR) {
         if (encoded_channels_ + 1 == channels_) {
             succeeded = computeTransparency(png_info_, image, stride);
             if (!succeeded) return false;
         }
     }
-    else if (color_type_ == 3) {
+    else if (color_type_ == INDEXED_COLOR) {
         succeeded = expandPalette(png_info_, image, stride);
         if (!succeeded) return false;
     }
