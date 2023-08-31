@@ -32,9 +32,9 @@ namespace x86 {
 // huffman decoding acceleration
 #define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
 #define BIT_BUFFER_SIZE 32
-#define SHIFT_SIZE 24
+#define JPEG_SHIFT_SIZE 24
 // #define BIT_BUFFER_SIZE 64
-// #define SHIFT_SIZE 56
+// #define JPEG_SHIFT_SIZE 56
 
 typedef uint8_t *(*resampleRow)(uint8_t *out, uint8_t *in0, uint8_t *in1,
                                 int32_t width, int32_t hs);

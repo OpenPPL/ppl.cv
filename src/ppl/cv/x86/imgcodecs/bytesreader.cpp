@@ -160,9 +160,43 @@ int BytesReader::getWord() {
     return value;
 }
 
-int BytesReader::getWordBigEndian() {
-    uchar *current = current_;
-    int value;
+int32_t BytesReader::getWordLittleEndian() {
+    uint8_t *current = current_;
+    int32_t value;
+
+    if (current + 1 < end_) {
+        value = current[0] + (current[1] << 8);
+        current_ = current + 2;
+    }
+    else {
+        value  = getByte();
+        value |= getByte() << 8;
+    }
+
+    // std::cout << "getWord: " << std::dec << value << std::endl;
+    return value;
+}
+
+// int BytesReader::getWordBigEndian() {
+//     uchar *current = current_;
+//     int value;
+
+//     if (current + 1 < end_) {
+//         value = (current[0] << 8) + current[1];
+//         current_ = current + 2;
+//     }
+//     else {
+//         value = getByte() << 8;
+//         value|= getByte();
+//     }
+
+//     // std::cout << "getWordBigEndian: " << std::dec << value << std::endl;
+//     return value;
+// }
+
+int32_t BytesReader::getWordBigEndian() {
+    uint8_t *current = current_;
+    int32_t value;
 
     if (current + 1 < end_) {
         value = (current[0] << 8) + current[1];
@@ -197,29 +231,49 @@ int BytesReader::getDWord() {
     return value;
 }
 
-int BytesReader::getDWordBigEndian() {
-    uchar *current = current_;
-    int value;
+int32_t BytesReader::getDWordLittleEndian() {
+    uint8_t *current = current_;
+    int32_t value;
 
     if (current + 3 < end_) {
-        value = (current[0] << 24) + (current[1] << 16) + (current[2] << 8) +
-                current[3];
+        value = current[0] + (current[1] << 8) + (current[2] << 16) +
+                (current[3] << 24);
         current_ = current + 4;
     }
     else {
-        value  = getByte() << 24;
-        value |= getByte() << 16;
+        value = getByte();
         value |= getByte() << 8;
-        value |= getByte();
+        value |= getByte() << 16;
+        value |= getByte() << 24;
     }
 
-    // std::cout << "getDWordBigEndian: " << std::dec << value << std::endl;
+    // std::cout << "getDWord: " << std::dec << value << std::endl;
     return value;
 }
 
-uint32_t BytesReader::getDWordBigEndian1() {
-    uchar *current = current_;
-    uint32_t value;
+// int BytesReader::getDWordBigEndian() {
+//     uchar *current = current_;
+//     int value;
+
+//     if (current + 3 < end_) {
+//         value = (current[0] << 24) + (current[1] << 16) + (current[2] << 8) +
+//                 current[3];
+//         current_ = current + 4;
+//     }
+//     else {
+//         value  = getByte() << 24;
+//         value |= getByte() << 16;
+//         value |= getByte() << 8;
+//         value |= getByte();
+//     }
+
+//     // std::cout << "getDWordBigEndian: " << std::dec << value << std::endl;
+//     return value;
+// }
+
+int32_t BytesReader::getDWordBigEndian() {
+    uint8_t *current = current_;
+    int32_t value;
 
     if (current + 3 < end_) {
         value = (current[0] << 24) + (current[1] << 16) + (current[2] << 8) +

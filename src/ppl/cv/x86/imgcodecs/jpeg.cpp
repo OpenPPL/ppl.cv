@@ -1150,11 +1150,11 @@ inline void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
             }
         }
         // jpeg->code_buffer |= ((size_t)byte) << 32;
-        jpeg->code_buffer |= ((size_t)byte) << (SHIFT_SIZE - jpeg->code_bits);
+        jpeg->code_buffer |= ((size_t)byte) << (JPEG_SHIFT_SIZE - jpeg->code_bits);
         jpeg->code_bits += 8;
         std::cout << "in growbitbuffer, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
         std::cout << "in growbitbuffer, jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::noshowbase << std::endl;
-    } while (jpeg->code_bits <= SHIFT_SIZE);
+    } while (jpeg->code_bits <= JPEG_SHIFT_SIZE);
     growbuffer_count++;
 }
 
@@ -1173,9 +1173,9 @@ inline void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
                 return;
             }
         }
-        jpeg->code_buffer |= byte << (SHIFT_SIZE - jpeg->code_bits);
+        jpeg->code_buffer |= byte << (JPEG_SHIFT_SIZE - jpeg->code_bits);
         jpeg->code_bits += 8;
-    } while (jpeg->code_bits <= SHIFT_SIZE);
+    } while (jpeg->code_bits <= JPEG_SHIFT_SIZE);
 } */
 
 // if there's a pending marker from the entropy stream, return that
@@ -1845,7 +1845,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
 
                     // every data block is an MCU, so countdown the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < SHIFT_SIZE) {
+                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
                             growBitBuffer(file_data_, jpeg);
                         }
                         // if it's NOT a restart, then just bail, so we get corrupt data
@@ -1899,7 +1899,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                     // after all interleaved components, that's an interleaved MCU,
                     // so now count down the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < SHIFT_SIZE) {
+                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
                             growBitBuffer(file_data_, jpeg);
                         }
                         if (!DRI_RESTART(jpeg->marker)) return true;
@@ -1939,7 +1939,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                     }
                     // every data block is an MCU, so countdown the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < SHIFT_SIZE) {
+                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
                             growBitBuffer(file_data_, jpeg);
                         }
                         if (!DRI_RESTART(jpeg->marker)) return true;
@@ -1977,7 +1977,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                     // after all interleaved components, that's an interleaved MCU,
                     // so now count down the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < SHIFT_SIZE) {
+                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
                             growBitBuffer(file_data_, jpeg);
                         }
                         if (!DRI_RESTART(jpeg->marker)) return true;

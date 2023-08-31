@@ -28,14 +28,10 @@ namespace ppl {
 namespace cv {
 namespace x86 {
 
-// huffman decoding acceleration
-#define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
-// #define BIT_BUFFER_SIZE0 64
-#define SHIFT_SIZE 56
-// fast-way is faster to check than jpeg huffman, but slow way is slower
-#define ZLIB_FAST_BITS  9 // accelerate all cases in default tables
-#define ZLIB_FAST_MASK  ((1 << ZLIB_FAST_BITS) - 1)
-#define SYMBOL_NUMBER 288 // number of symbols in literal/length alphabet
+#define PNG_SHIFT_SIZE 56
+#define ZLIB_FAST_BITS 9
+#define ZLIB_FAST_MASK ((1 << ZLIB_FAST_BITS) - 1)
+#define SYMBOL_NUMBER 288
 
 enum ColorTypes {
     GRAY = 0,
@@ -65,24 +61,16 @@ enum EncodingMethod {
     RESERVED = 3,
 };
 
-struct DataChunk {
-    uint32_t length;
-    uint32_t type;
-    // uint8_t type[4];
-    uint32_t crc;
+struct PngTime {
+   uint16_t year;   // full year, as in, 1995
+   uint8_t month;   // month of year, 1 - 12
+   uint8_t day;     // day of month, 1 - 31
+   uint8_t hour;    // hour of day, 0 - 23
+   uint8_t minute;  // minute of hour, 0 - 59
+   uint8_t second;  // second of minute, 0 - 60 (for leap seconds)
 };
 
-struct png_time {
-   uint16_t year; /* full year, as in, 1995 */
-   uint8_t month;   /* month of year, 1 - 12 */
-   uint8_t day;     /* day of month, 1 - 31 */
-   uint8_t hour;    /* hour of day, 0 - 23 */
-   uint8_t minute;  /* minute of hour, 0 - 59 */
-   uint8_t second;  /* second of minute, 0 - 60 (for leap seconds) */
-};
-
-// zlib-style huffman encoding
-// (jpegs packs from left, zlib from right, so can't share code)
+// zlib-style huffman encoding, jpegs packs from left, zlib from right
 struct ZlibHuffman {
    uint16_t fast[1 << ZLIB_FAST_BITS];
    uint16_t firstcode[16];
@@ -96,11 +84,16 @@ struct ZlibBuffer {
     uint32_t bit_number;
     uint64_t code_buffer;
 
-    // deflate stream/zlib block info
     bool is_final_block;
     EncodingMethod encoding_method;
     uint32_t window_size;
     ZlibHuffman length_huffman, distance_huffman;
+};
+
+struct DataChunk {
+    uint32_t length;
+    uint32_t type;
+    uint32_t crc;
 };
 
 struct PngInfo {
@@ -116,7 +109,6 @@ struct PngInfo {
     ZlibBuffer zlib_buffer;
     bool fixed_huffman_done;
     bool header_after_idat;
-    uint32_t idat_count;
 };
 
 class PngDecoder : public ImageDecoder {
@@ -149,27 +141,30 @@ class PngDecoder : public ImageDecoder {
     bool parseIEND(PngInfo& png_info);
     bool parsetUnknownChunk(PngInfo& png_info);
 
-    void releaseSource();
     std::string getChunkName(uint32_t chunk_type);
     bool setCrc32();
     bool isCrcCorrect();
 
     bool parseDeflateHeader();
-    bool fillBits(ZlibBuffer *z);
-    uint32_t getNumber(ZlibBuffer *z, int n);
+    bool fillBits(ZlibBuffer *zlib_buffer);
+    uint32_t getNumber(ZlibBuffer *zlib_buffer, uint32_t bit_number);
     bool parseZlibUncompressedBlock(PngInfo& png_info);
-    bool buildHuffmanCode(ZlibHuffman *z, const uint8_t *sizelist, int num);
+    bool buildHuffmanCode(ZlibHuffman *huffman_coding, const uint8_t *sizelist,
+                          int32_t number);
+    bool buildHuffmanCode(ZlibHuffman *huffman_coding, const uint32_t size,
+                          int32_t number);
     int32_t huffmanDecodeSlowly(ZlibBuffer *zlib_buffer,
                                 ZlibHuffman *huffman_coding);
     int32_t huffmanDecode(ZlibBuffer *zlib_buffer,
                           ZlibHuffman *huffman_coding);
-    bool computeDynamicHuffman(ZlibBuffer* a);
-    bool decodeHuffmanData(ZlibBuffer* a);
+    bool computeDynamicHuffman(ZlibBuffer *zlib_buffer);
+    bool decodeHuffmanData(ZlibBuffer *zlib_buffer);
     bool inflateImage(PngInfo& png_info, uint8_t* image, uint32_t stride);
     bool deFilterImage(PngInfo& png_info, uint8_t* image, uint32_t stride);
     bool deFilterImageTrueColor(PngInfo& png_info, uint8_t* image,
                                 uint32_t stride);
-    bool computeTransparency(PngInfo& png_info, uint8_t* image, uint32_t stride);
+    bool computeTransparency(PngInfo& png_info, uint8_t* image,
+                             uint32_t stride);
     bool expandPalette(PngInfo& png_info, uint8_t* image, uint32_t stride);
 
   private:
@@ -181,7 +176,7 @@ class PngDecoder : public ImageDecoder {
     uint8_t compression_method_;
     uint8_t filter_method_;
     uint8_t interlace_method_;
-    uint32_t encoded_channels_;  // ?
+    uint32_t encoded_channels_;
 };
 
 } //! namespace x86

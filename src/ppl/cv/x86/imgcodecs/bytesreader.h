@@ -43,10 +43,13 @@ class BytesReader {
     int getByte();
     int getBytes(void* buffer, int count);
     int getWord();
-    int getWordBigEndian();
+    int32_t getWordLittleEndian();
+    // int getWordBigEndian();
+    int32_t getWordBigEndian();
     int getDWord();
-    int getDWordBigEndian();
-    uint32_t getDWordBigEndian1();
+    int32_t getDWordLittleEndian();
+    // int getDWordBigEndian();
+    int32_t getDWordBigEndian();
     uchar* getCurrentPosition() const;
     uint32_t getValidSize() const;
     void setCrcChecking(Crc32* crc);
