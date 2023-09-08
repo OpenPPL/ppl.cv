@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "filter_engine.hpp"
+
 namespace ppl::cv::arm {
 
 template <typename T, typename ST>
@@ -45,17 +47,84 @@ struct RowSum {
         int32_t i = 0, k, ksz_cn = ksize * cn;
 
         width = (width - 1) * cn;
-        for (k = 0; k < cn; k++, S++, D++) {
+
+        if( cn == 1 )
+        {
             ST s = 0;
-            for (i = 0; i < ksz_cn; i += cn)
+            for( i = 0; i < ksz_cn; i++ ) {
                 s += (ST)S[i];
+            }                
             D[0] = s;
-            for (i = 0; i < width; i += cn) {
+            for( i = 0; i < width; i++ )
+            {
                 s += (ST)S[i + ksz_cn] - (ST)S[i];
-                D[i + cn] = s;
+                D[i+1] = s;
+            }
+        }
+        else if( cn == 3 )
+        {
+            ST s0 = 0, s1 = 0, s2 = 0;
+            for( i = 0; i < ksz_cn; i += 3 )
+            {
+                s0 += (ST)S[i];
+                s1 += (ST)S[i+1];
+                s2 += (ST)S[i+2];
+            }
+            D[0] = s0;
+            D[1] = s1;
+            D[2] = s2;
+            for( i = 0; i < width; i += 3 )
+            {
+                s0 += (ST)S[i + ksz_cn] - (ST)S[i];
+                s1 += (ST)S[i + ksz_cn + 1] - (ST)S[i + 1];
+                s2 += (ST)S[i + ksz_cn + 2] - (ST)S[i + 2];
+                D[i+3] = s0;
+                D[i+4] = s1;
+                D[i+5] = s2;
+            }
+        }
+        else if( cn == 4 )
+        {
+            ST s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+            for( i = 0; i < ksz_cn; i += 4 )
+            {
+                s0 += (ST)S[i];
+                s1 += (ST)S[i+1];
+                s2 += (ST)S[i+2];
+                s3 += (ST)S[i+3];
+            }
+            D[0] = s0;
+            D[1] = s1;
+            D[2] = s2;
+            D[3] = s3;
+            for( i = 0; i < width; i += 4 )
+            {
+                s0 += (ST)S[i + ksz_cn] - (ST)S[i];
+                s1 += (ST)S[i + ksz_cn + 1] - (ST)S[i + 1];
+                s2 += (ST)S[i + ksz_cn + 2] - (ST)S[i + 2];
+                s3 += (ST)S[i + ksz_cn + 3] - (ST)S[i + 3];
+                D[i+4] = s0;
+                D[i+5] = s1;
+                D[i+6] = s2;
+                D[i+7] = s3;
+            }
+        }
+        else {
+            for( k = 0; k < cn; k++, S++, D++ )
+            {
+                ST s = 0;
+                for( i = 0; i < ksz_cn; i += cn )
+                    s += (ST)S[i];
+                D[0] = s;
+                for( i = 0; i < width; i += cn )
+                {
+                    s += (ST)S[i + ksz_cn] - (ST)S[i];
+                    D[i+cn] = s;
+                }
             }
         }
     }
+    
     int32_t ksize;
 };
 
@@ -83,7 +152,7 @@ struct ColumnSum {
         sumCount = 0;
     }
 
-    void operator()(const ST** src, T* dst, int32_t dststep, int32_t count, int32_t width)
+    void operator()(const ST* const* src, T* dst, int32_t dststep, int32_t count, int32_t width)
     {
         int32_t i;
         ST* SUM;
@@ -173,7 +242,7 @@ struct ColumnSum<int32_t, uint8_t> {
         sumCount = 0;
     }
 
-    void operator()(const int32_t** src, uint8_t* dst, int32_t dststep, int32_t count, int32_t width)
+    void operator()(const int32_t* const* src, uint8_t* dst, int32_t dststep, int32_t count, int32_t width)
     {
         int32_t i;
         int32_t* SUM;
@@ -240,40 +309,21 @@ void boxFilter_f(int32_t height,
                  BorderType borderType,
                  float border_value = 0)
 {
-    int32_t radius_x = ksize_x / 2;
-    int32_t radius_y = ksize_y / 2;
-
-    int32_t bsrcHeight = height + 2 * radius_y;
-    int32_t bsrcWidth = width + 2 * radius_x;
-
-    int32_t bsrcWidthStep = (bsrcWidth)*cn;
-    float* bsrc_target_f = (float*)malloc((bsrcHeight + 1) * bsrcWidth * cn * sizeof(float));
-    float* bsrc_f = bsrc_target_f + bsrcWidthStep;
-    CopyMakeBorder<float, cn>(
-        height, width, inWidthStride, inData, bsrcHeight, bsrcWidth, bsrcWidthStep, bsrc_f, borderType, border_value);
-
-    double *bsrc_target = (double*)malloc((bsrcHeight + 1) * bsrcWidth * cn * sizeof(double));
-
-    RowSum<float, double> rowVecOp = RowSum<float, double>(ksize_x);
-    for (int32_t i = 0; i < bsrcHeight; i++) {
-        float* src = bsrc_f + i * bsrcWidthStep;
-        double* dst = bsrc_target + i * bsrcWidthStep;
-        rowVecOp.operator()(src, dst, width, cn);
-    }
-    const double** pReRowFilter = (const double**)malloc(bsrcHeight * sizeof(bsrc_target));
-    for (int32_t i = 0; i < bsrcHeight; i++) {
-        pReRowFilter[i] = bsrc_target + (i)*bsrcWidthStep;
-    }
-
-    ColumnSum<double, float> colVecOp = ColumnSum<double, float>(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
-    colVecOp.operator()((const double**)pReRowFilter, (float*)outData, outWidthStride, height, width * cn);
-
-    free(bsrc_target_f);
-    free(bsrc_target);
-    free(pReRowFilter);
-    bsrc_target_f = NULL;
-    bsrc_target = NULL;
-    pReRowFilter = NULL;
+    RowSum<float, double> rowSum(ksize_x);
+    ColumnSum<double, float> columnSum(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
+    SeparableFilterEngine<float, double, float, RowSum<float, double>, ColumnSum<double, float>> engine(
+        height,
+        width,
+        cn,
+        ksize_y,
+        ksize_x,
+        borderType,
+        border_value,
+        rowSum,
+        columnSum
+    );
+    
+    engine.process(inData, inWidthStride, outData, outWidthStride);
 }
 
 template <int32_t cn>
@@ -289,40 +339,21 @@ void boxFilter_b(int32_t height,
                  BorderType borderType,
                  uint8_t border_value = 0)
 {
-    int32_t radius_x = ksize_x / 2;
-    int32_t radius_y = ksize_y / 2;
-
-    int32_t bsrcHeight = height + 2 * radius_y;
-    int32_t bsrcWidth = width + 2 * radius_x;
-
-    int32_t bsrcWidthStep = (bsrcWidth)*cn;
-    int32_t rfstep = width * cn;
-    uint8_t* bsrc =
-        (uint8_t*)malloc(bsrcHeight * bsrcWidth * cn * sizeof(uint8_t) + bsrcHeight * width * cn * sizeof(int32_t));
-    CopyMakeBorder<uint8_t, cn>(
-        height, width, inWidthStride, inData, bsrcHeight, bsrcWidth, bsrcWidthStep, bsrc, borderType, border_value);
-
-    int32_t* resultRowFilter = (int32_t*)(bsrc + bsrcHeight * bsrcWidth * cn * sizeof(uint8_t));
-
-    RowSum<uint8_t, int32_t> rowVecOp = RowSum<uint8_t, int32_t>(ksize_x);
-    for (int32_t i = 0; i < bsrcHeight; i++) {
-        uint8_t* src = bsrc + i * bsrcWidthStep;
-        int32_t* dst = resultRowFilter + i * rfstep;
-        rowVecOp.operator()(src, dst, width, cn);
-    }
-
-    ColumnSum<int32_t, uint8_t> colVecOp =
-        ColumnSum<int32_t, uint8_t>(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
-    const int32_t** pReRowFilter = (const int32_t**)malloc(bsrcHeight * sizeof(resultRowFilter));
-    for (int32_t i = 0; i < bsrcHeight; i++) {
-        pReRowFilter[i] = resultRowFilter + (i)*rfstep;
-    }
-    colVecOp.operator()(pReRowFilter, outData, outWidthStride, height, width * cn);
-
-    free(bsrc);
-    free(pReRowFilter);
-    bsrc = NULL;
-    pReRowFilter = NULL;
+    RowSum<uint8_t, int32_t> rowSum(ksize_x);
+    ColumnSum<int32_t, uint8_t> columnSum(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
+    SeparableFilterEngine<uint8_t, int32_t, uint8_t, RowSum<uint8_t, int32_t>, ColumnSum<int32_t, uint8_t>> engine(
+        height,
+        width,
+        cn,
+        ksize_y,
+        ksize_x,
+        borderType,
+        border_value,
+        rowSum,
+        columnSum
+    );
+    
+    engine.process(inData, inWidthStride, outData, outWidthStride);
 }
 
 template <>
