@@ -128,13 +128,20 @@ struct RowSum {
     int32_t ksize;
 };
 
-static uint8_t saturate_cast(float val)
+static uint8_t saturate_cast(double val)
 {
     int32_t v = roundf(val);
     if (v > 255)
         return 255;
     else if (v < 0)
         return 0;
+    return (uint8_t)v;
+}
+
+static uint8_t saturate_cast(uint32_t v)
+{
+    if (v > 255)
+        return 255;
     return (uint8_t)v;
 }
 
@@ -229,7 +236,7 @@ struct ColumnSum {
 };
 
 template <>
-struct ColumnSum<int32_t, uint8_t> {
+struct ColumnSum<uint32_t, uint8_t> {
     ColumnSum(int32_t _ksize, double _scale)
     {
         ksize = _ksize;
@@ -242,10 +249,10 @@ struct ColumnSum<int32_t, uint8_t> {
         sumCount = 0;
     }
 
-    void operator()(const int32_t* const* src, uint8_t* dst, int32_t dststep, int32_t count, int32_t width)
+    void operator()(const uint32_t* const* src, uint8_t* dst, int32_t dststep, int32_t count, int32_t width)
     {
         int32_t i;
-        int32_t* SUM;
+        uint32_t* SUM;
         bool haveScale = scale != 1;
         float _scale = scale;
 
@@ -256,9 +263,9 @@ struct ColumnSum<int32_t, uint8_t> {
 
         SUM = &sum[0];
         if (sumCount == 0) {
-            memset((void*)SUM, 0, width * sizeof(int32_t));
+            memset((void*)SUM, 0, width * sizeof(uint32_t));
             for (; sumCount < ksize - 1; sumCount++, src++) {
-                const int32_t* Sp = (const int32_t*)src[0];
+                const uint32_t* Sp = (const uint32_t*)src[0];
                 i = 0;
                 for (; i < width; i++)
                     SUM[i] += Sp[i];
@@ -269,20 +276,20 @@ struct ColumnSum<int32_t, uint8_t> {
         }
 
         for (; count--; src++) {
-            const int32_t* Sp = (const int32_t*)src[0];
-            const int32_t* Sm = (const int32_t*)src[1 - ksize];
+            const uint32_t* Sp = (const uint32_t*)src[0];
+            const uint32_t* Sm = (const uint32_t*)src[1 - ksize];
             uint8_t* D = (uint8_t*)dst;
             if (haveScale) {
                 i = 0;
                 for (; i < width; i++) {
-                    int32_t s0 = SUM[i] + Sp[i];
+                    uint32_t s0 = SUM[i] + Sp[i];
                     D[i] = saturate_cast(s0 * _scale);
                     SUM[i] = s0 - Sm[i];
                 }
             } else {
                 i = 0;
                 for (; i < width; i++) {
-                    int32_t s0 = SUM[i] + Sp[i];
+                    uint32_t s0 = SUM[i] + Sp[i];
                     D[i] = saturate_cast(s0);
                     SUM[i] = s0 - Sm[i];
                 }
@@ -293,8 +300,9 @@ struct ColumnSum<int32_t, uint8_t> {
     int32_t ksize;
     double scale;
     int32_t sumCount;
-    std::vector<int32_t> sum;
+    std::vector<uint32_t> sum;
 };
+
 
 template <int32_t cn>
 void boxFilter_f(int32_t height,
@@ -339,9 +347,9 @@ void boxFilter_b(int32_t height,
                  BorderType borderType,
                  uint8_t border_value = 0)
 {
-    RowSum<uint8_t, int32_t> rowSum(ksize_x);
-    ColumnSum<int32_t, uint8_t> columnSum(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
-    SeparableFilterEngine<uint8_t, int32_t, uint8_t, RowSum<uint8_t, int32_t>, ColumnSum<int32_t, uint8_t>> engine(
+    RowSum<uint8_t, uint32_t> rowSum(ksize_x);
+    ColumnSum<uint32_t, uint8_t> columnSum(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
+    SeparableFilterEngine<uint8_t, uint32_t, uint8_t, RowSum<uint8_t, uint32_t>, ColumnSum<uint32_t, uint8_t>> engine(
         height,
         width,
         cn,
