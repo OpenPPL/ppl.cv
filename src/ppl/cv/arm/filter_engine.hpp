@@ -120,10 +120,7 @@ private:
     int fill_x_left;
     int fill_x_right;
     int rowCount;
-    int dstY;
     int startY;
-    int startY0;
-    int endY;
 
     RowFilterType rowFilter;
     ColumnFilterType columnFilter;
@@ -191,10 +188,7 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::init()
 
     // setup varibles
     rowCount = 0;
-    dstY = 0;
     startY = 0;
-    startY0 = 0;
-    endY = height;
 }
 
 template <typename ST, typename MT, typename DT, typename RowFilterType, typename ColumnFilterType>
@@ -221,13 +215,12 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
         dcount = std::min(dcount, count);
         count -= dcount;
         for(; dcount-- > 0; src += inWidthStride) {
-            int bufRowIdx = (startY - startY0 + rowCount) % bufRows;
+            int bufRowIdx = (startY + rowCount) % bufRows;
             uint8_t *brow = alignedRingBufPtr + bufRowIdx * bufStep;
             ST *row = srcRowBuf.data();
 
-            // rowCount: bufRow里面有多少行
-            // startY: bufRow的行从哪里开始
-            // startY0: 可能是上一次的startY
+            // rowCount: Rows in bufRows
+            // startY: where bufRows Start
             if (++rowCount > bufRows) {
                 --rowCount;
                 ++startY;
@@ -249,9 +242,9 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
 
         // setup bufRowsPtrs
         MT **bufRowsPtr_data = reinterpret_cast<MT **>(bufRowsPtrs.data());
-        int max_i = std::min(bufRows, height - (dstY + dy) + (kHeight - 1));
+        int max_i = std::min(bufRows, height - dy + (kHeight - 1));
         for (i = 0; i < max_i; i++) {
-            int srcY = borderInterpolate(dstY + dy + i - anchor_y, height, borderType);
+            int srcY = borderInterpolate(dy + i - anchor_y, height, borderType);
             if (srcY < 0) {
                 // can happen only with constant border type
                 bufRowsPtr_data[i] = constBorderRow.data();
@@ -260,7 +253,7 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
                 if (srcY >= startY + rowCount) {
                     break;
                 }
-                int bi = (srcY - startY0) % bufRows;
+                int bi = srcY % bufRows;
                 bufRowsPtr_data[i] = reinterpret_cast<MT *>(alignedRingBufPtr + bi * bufStep);
             }
         }
@@ -272,8 +265,6 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
 
         columnFilter.operator()(bufRowsPtr_data, dst, outWidthStride, i, width * channels);
     }
-
-    dstY += dy;
 
     return;
 }
