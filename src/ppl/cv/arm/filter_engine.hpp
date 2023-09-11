@@ -157,7 +157,6 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::init()
 
     // set up fill info
     int anchor_x = kWidth / 2;
-    int anchor_y = kHeight / 2;
     fill_x_left = anchor_x;
     fill_x_right = kWidth - anchor_x - 1;
 
@@ -198,12 +197,10 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
                                                                                    int outWidthStride)
 {
     int count = height;
-    int anchor_x = kWidth / 2;
     int anchor_y = kHeight / 2;
     const int *btab = borderTab.data();
     int esz = channels * sizeof(ST);
     int rowFilterInputSize = width + kWidth - 1;
-    int btab_esz = channels;
     int bufRows = bufRowsPtrs.size();
     bool makeBorder = (fill_x_left > 0 || fill_x_right > 0) && borderType != ppl::cv::BORDER_CONSTANT;
     
