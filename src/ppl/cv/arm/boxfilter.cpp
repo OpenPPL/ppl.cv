@@ -138,13 +138,6 @@ static uint8_t saturate_cast(double val)
     return (uint8_t)v;
 }
 
-static uint8_t saturate_cast(uint32_t v)
-{
-    if (v > 255)
-        return 255;
-    return (uint8_t)v;
-}
-
 template <typename ST, typename T>
 struct ColumnSum {
     ColumnSum(int32_t _ksize, double _scale)
@@ -251,11 +244,8 @@ struct ColumnSum<uint32_t, uint8_t> {
 
     void operator()(const uint32_t* const* src, uint8_t* dst, int32_t dststep, int32_t count, int32_t width)
     {
-        int32_t i;
         uint32_t* SUM;
         bool haveScale = scale != 1;
-        float _scale = scale;
-
         if (width != (int32_t)sum.size()) {
             sum.resize(width);
             sumCount = 0;
@@ -264,45 +254,331 @@ struct ColumnSum<uint32_t, uint8_t> {
         SUM = &sum[0];
         if (sumCount == 0) {
             memset((void*)SUM, 0, width * sizeof(uint32_t));
+
+            int i = 0;
             for (; sumCount < ksize - 1; sumCount++, src++) {
                 const uint32_t* Sp = (const uint32_t*)src[0];
-                i = 0;
-                for (; i < width; i++)
+                for (i = 0; i <= width - 16; i += 16) {
+                    prefetch(SUM + i);
+                    uint32x4_t vSum0 = vld1q_u32(SUM + i);
+                    uint32x4_t vSum1 = vld1q_u32(SUM + i + 4);
+                    prefetch(SUM + i + 8);
+                    uint32x4_t vSum2 = vld1q_u32(SUM + i + 8);
+                    uint32x4_t vSum3 = vld1q_u32(SUM + i + 12);
+
+                    prefetch(Sp + i);
+                    uint32x4_t vSource0 = vld1q_u32(Sp + i);
+                    uint32x4_t vSource1 = vld1q_u32(Sp + i + 4);
+                    prefetch(Sp + i + 8);
+                    uint32x4_t vSource2 = vld1q_u32(Sp + i + 8);
+                    uint32x4_t vSource3 = vld1q_u32(Sp + i + 12);
+
+                    uint32x4_t vRes0 = vaddq_u32(vSum0, vSource0);
+                    uint32x4_t vRes1 = vaddq_u32(vSum1, vSource1);
+                    uint32x4_t vRes2 = vaddq_u32(vSum2, vSource2);
+                    uint32x4_t vRes3 = vaddq_u32(vSum3, vSource3);
+
+                    vst1q_u32(SUM + i, vRes0);
+                    vst1q_u32(SUM + i + 4, vRes1);
+                    vst1q_u32(SUM + i + 8, vRes2);
+                    vst1q_u32(SUM + i + 12, vRes3);
+                }
+
+                for (; i < width; i++) {
                     SUM[i] += Sp[i];
+                }
             }
         } else {
             // assert( sumCount == ksize-1 );
             src += ksize - 1;
         }
 
-        for (; count--; src++) {
-            const uint32_t* Sp = (const uint32_t*)src[0];
-            const uint32_t* Sm = (const uint32_t*)src[1 - ksize];
-            uint8_t* D = (uint8_t*)dst;
-            if (haveScale) {
-                i = 0;
+        if (haveScale) {
+            // opencv also use float32 for ColumnSum<int32_t, uint8_t> SIMD, so it's safe here in terms of precision
+            float32x4_t vScale = vdupq_n_f32(static_cast<float>(scale));
+            for (; count--; src++) {
+                const uint32_t* Sp = (const uint32_t*)src[0];
+                const uint32_t* Sm = (const uint32_t*)src[1 - ksize];
+                uint8_t* D = (uint8_t*)dst;
+
+                int i = 0;
+                for (; i <= width - 16; i += 16) {
+                    prefetch(SUM + i);
+                    uint32x4_t vSum0 = vld1q_u32(SUM + i);
+                    uint32x4_t vSum1 = vld1q_u32(SUM + i + 4);
+                    prefetch(SUM + i + 8);
+                    uint32x4_t vSum2 = vld1q_u32(SUM + i + 8);
+                    uint32x4_t vSum3 = vld1q_u32(SUM + i + 12);
+
+                    prefetch(Sp + i);
+                    uint32x4_t vSource0 = vld1q_u32(Sp + i);
+                    uint32x4_t vSource1 = vld1q_u32(Sp + i + 4);
+                    prefetch(Sp + i + 8);
+                    uint32x4_t vSource2 = vld1q_u32(Sp + i + 8);
+                    uint32x4_t vSource3 = vld1q_u32(Sp + i + 12);
+
+                    prefetch(Sm + i);
+                    uint32x4_t vSourcePrev0 = vld1q_u32(Sm + i);
+                    uint32x4_t vSourcePrev1 = vld1q_u32(Sm + i + 4);
+                    prefetch(Sm + i + 8);
+                    uint32x4_t vSourcePrev2 = vld1q_u32(Sm + i + 8);
+                    uint32x4_t vSourcePrev3 = vld1q_u32(Sm + i + 12);
+
+                    // s0 = SUM[i] + Sp[i]
+                    uint32x4_t vSumPlus0 = vaddq_u32(vSum0, vSource0);
+                    uint32x4_t vSumPlus1 = vaddq_u32(vSum1, vSource1);
+                    uint32x4_t vSumPlus2 = vaddq_u32(vSum2, vSource2);
+                    uint32x4_t vSumPlus3 = vaddq_u32(vSum3, vSource3);
+                    
+                    // D[i] = s0 * scale;
+                    float32x4_t vResF0 = vmulq_f32(vcvtq_f32_u32(vSumPlus0), vScale);
+                    float32x4_t vResF1 = vmulq_f32(vcvtq_f32_u32(vSumPlus1), vScale);
+                    float32x4_t vResF2 = vmulq_f32(vcvtq_f32_u32(vSumPlus2), vScale);
+                    float32x4_t vResF3 = vmulq_f32(vcvtq_f32_u32(vSumPlus3), vScale);
+                    // saturating convert to uint8_t
+                    uint32x4_t vResUi0 = vcvtq_u32_f32(vResF0);
+                    uint32x4_t vResUi1 = vcvtq_u32_f32(vResF1);
+                    uint32x4_t vResUi2 = vcvtq_u32_f32(vResF2);
+                    uint32x4_t vResUi3 = vcvtq_u32_f32(vResF3);
+
+                    uint16x8_t vResUh0 = vqmovn_high_u32(vqmovn_u32(vResUi0), vResUi1);
+                    uint16x8_t vResUh1 = vqmovn_high_u32(vqmovn_u32(vResUi2), vResUi3);
+
+                    uint8x16_t vRes = vqmovn_high_u16(vqmovn_u16(vResUh0), vResUh1);
+                    vst1q_u8(D + i, vRes);
+
+                    // SUM[i] = s0 - Sm[i];
+                    uint32x4_t vNewSum0 = vsubq_u32(vSumPlus0, vSourcePrev0);
+                    uint32x4_t vNewSum1 = vsubq_u32(vSumPlus1, vSourcePrev1);
+                    uint32x4_t vNewSum2 = vsubq_u32(vSumPlus2, vSourcePrev2);
+                    uint32x4_t vNewSum3 = vsubq_u32(vSumPlus3, vSourcePrev3);
+                    vst1q_u32(SUM + i, vNewSum0);
+                    vst1q_u32(SUM + i + 4, vNewSum1);
+                    vst1q_u32(SUM + i + 8, vNewSum2);
+                    vst1q_u32(SUM + i + 12, vNewSum3);
+                }
+
                 for (; i < width; i++) {
-                    uint32_t s0 = SUM[i] + Sp[i];
-                    D[i] = saturate_cast(s0 * _scale);
+                    double s0 = SUM[i] + Sp[i];
+                    D[i] = saturate_cast(s0 * scale);
                     SUM[i] = s0 - Sm[i];
                 }
-            } else {
-                i = 0;
+                
+                dst += dststep;
+            }
+        } else {
+            for (; count--; src++) {
+                const uint32_t* Sp = (const uint32_t*)src[0];
+                const uint32_t* Sm = (const uint32_t*)src[1 - ksize];
+                uint8_t* D = (uint8_t*)dst;
+
+                int i = 0;
+                for (; i <= width - 16; i += 16) {
+                    prefetch(SUM + i);
+                    uint32x4_t vSum0 = vld1q_u32(SUM + i);
+                    uint32x4_t vSum1 = vld1q_u32(SUM + i + 4);
+                    prefetch(SUM + i + 8);
+                    uint32x4_t vSum2 = vld1q_u32(SUM + i + 8);
+                    uint32x4_t vSum3 = vld1q_u32(SUM + i + 12);
+
+                    prefetch(Sp + i);
+                    uint32x4_t vSource0 = vld1q_u32(Sp + i);
+                    uint32x4_t vSource1 = vld1q_u32(Sp + i + 4);
+                    prefetch(Sp + i + 8);
+                    uint32x4_t vSource2 = vld1q_u32(Sp + i + 8);
+                    uint32x4_t vSource3 = vld1q_u32(Sp + i + 12);
+
+                    prefetch(Sm + i);
+                    uint32x4_t vSourcePrev0 = vld1q_u32(Sm + i);
+                    uint32x4_t vSourcePrev1 = vld1q_u32(Sm + i + 4);
+                    prefetch(Sm + i + 8);
+                    uint32x4_t vSourcePrev2 = vld1q_u32(Sm + i + 8);
+                    uint32x4_t vSourcePrev3 = vld1q_u32(Sm + i + 12);
+
+                    // s0 = SUM[i] + Sp[i]
+                    uint32x4_t vSumPlus0 = vaddq_u32(vSum0, vSource0);
+                    uint32x4_t vSumPlus1 = vaddq_u32(vSum1, vSource1);
+                    uint32x4_t vSumPlus2 = vaddq_u32(vSum2, vSource2);
+                    uint32x4_t vSumPlus3 = vaddq_u32(vSum3, vSource3);
+                    
+                    // D[i] = s0;
+                    // saturating convert to uint8_t
+                    uint16x8_t vResUh0 = vqmovn_high_u32(vqmovn_u32(vSumPlus0), vSumPlus1);
+                    uint16x8_t vResUh1 = vqmovn_high_u32(vqmovn_u32(vSumPlus2), vSumPlus3);
+
+                    uint8x16_t vRes = vqmovn_high_u16(vqmovn_u16(vResUh0), vResUh1);
+                    vst1q_u8(D + i, vRes);
+
+                    // SUM[i] = s0 - Sm[i];
+                    uint32x4_t vNewSum0 = vsubq_u32(vSumPlus0, vSourcePrev0);
+                    uint32x4_t vNewSum1 = vsubq_u32(vSumPlus1, vSourcePrev1);
+                    uint32x4_t vNewSum2 = vsubq_u32(vSumPlus2, vSourcePrev2);
+                    uint32x4_t vNewSum3 = vsubq_u32(vSumPlus3, vSourcePrev3);
+                    vst1q_u32(SUM + i, vNewSum0);
+                    vst1q_u32(SUM + i + 4, vNewSum1);
+                    vst1q_u32(SUM + i + 8, vNewSum2);
+                    vst1q_u32(SUM + i + 12, vNewSum3);
+                }
+
                 for (; i < width; i++) {
-                    uint32_t s0 = SUM[i] + Sp[i];
+                    double s0 = SUM[i] + Sp[i];
                     D[i] = saturate_cast(s0);
                     SUM[i] = s0 - Sm[i];
                 }
+                
+                dst += dststep;
             }
-            dst += dststep;
         }
     }
     int32_t ksize;
-    double scale;
     int32_t sumCount;
+    double scale;
     std::vector<uint32_t> sum;
 };
 
+template <>
+struct ColumnSum<double, float> {
+    ColumnSum(int32_t _ksize, double _scale)
+    {
+        ksize = _ksize;
+        scale = _scale;
+        sumCount = 0;
+    }
+
+    void reset()
+    {
+        sumCount = 0;
+    }
+
+    void operator()(const double* const* src, float* dst, int32_t dststep, int32_t count, int32_t width)
+    {
+        double* SUM;
+        bool haveScale = scale != 1;
+        if (width != (int32_t)sum.size()) {
+            sum.resize(width);
+            sumCount = 0;
+        }
+
+        SUM = &sum[0];
+        if (sumCount == 0) {
+            memset((void*)SUM, 0, width * sizeof(double));
+
+            int i = 0;
+            for (; sumCount < ksize - 1; sumCount++, src++) {
+                const double* Sp = (const double*)src[0];
+                for (i = 0; i <= width - 4; i += 4) {
+                    prefetch(SUM + i);
+                    float64x2_t vSum0 = vld1q_f64(SUM + i);
+                    float64x2_t vSum1 = vld1q_f64(SUM + i + 2);
+
+                    prefetch(Sp + i);
+                    float64x2_t vSource0 = vld1q_f64(Sp + i);
+                    float64x2_t vSource1 = vld1q_f64(Sp + i + 2);
+
+                    float64x2_t vRes0 = vaddq_f64(vSum0, vSource0);
+                    float64x2_t vRes1 = vaddq_f64(vSum1, vSource1);
+
+                    vst1q_f64(SUM + i, vRes0);
+                    vst1q_f64(SUM + i + 2, vRes1);
+                }
+
+                for (; i < width; i++) {
+                    SUM[i] += Sp[i];
+                }
+            }
+        } else {
+            // assert( sumCount == ksize-1 );
+            src += ksize - 1;
+        }
+
+        if (haveScale) {
+            float64x2_t vScale = vdupq_n_f64(scale);
+            for (; count--; src++) {
+                const double* Sp = (const double*)src[0];
+                const double* Sm = (const double*)src[1 - ksize];
+                float* D = (float*)dst;
+
+                int i = 0;
+                for (; i <= width - 4; i += 4) {
+                    prefetch(SUM + i);
+                    float64x2_t vSum0 = vld1q_f64(SUM + i);
+                    float64x2_t vSum1 = vld1q_f64(SUM + i + 2);
+                    prefetch(Sp + i);
+                    float64x2_t vSource0 = vld1q_f64(Sp + i);
+                    float64x2_t vSource1 = vld1q_f64(Sp + i + 2);
+                    prefetch(Sm + i);
+                    float64x2_t vSourcePrev0 = vld1q_f64(Sm + i);
+                    float64x2_t vSourcePrev1 = vld1q_f64(Sm + i + 2);
+
+                    // s0 = SUM[i] + Sp[i]
+                    float64x2_t vSumPlus0 = vaddq_f64(vSum0, vSource0);
+                    float64x2_t vSumPlus1 = vaddq_f64(vSum1, vSource1);
+                    // D[i] = s0 * scale;
+                    float64x2_t vRes0 = vmulq_f64(vSumPlus0, vScale);
+                    float64x2_t vRes1 = vmulq_f64(vSumPlus1, vScale);
+                    float32x4_t vOut0 = vcvt_high_f32_f64(vcvt_f32_f64(vRes0), vRes1);
+                    vst1q_f32(D + i, vOut0);
+                    // SUM[i] = s0 - Sm[i];
+                    float64x2_t vNewSum0 = vsubq_f64(vSumPlus0, vSourcePrev0);
+                    float64x2_t vNewSum1 = vsubq_f64(vSumPlus1, vSourcePrev1);
+                    vst1q_f64(SUM + i, vNewSum0);
+                    vst1q_f64(SUM + i + 2, vNewSum1);
+                }
+
+                for (; i < width; i++) {
+                    double s0 = SUM[i] + Sp[i];
+                    D[i] = s0 * scale;
+                    SUM[i] = s0 - Sm[i];
+                }
+                
+                dst += dststep;
+            }
+        } else {
+            for (; count--; src++) {
+                const double* Sp = (const double*)src[0];
+                const double* Sm = (const double*)src[1 - ksize];
+                float* D = (float*)dst;
+
+                int i = 0;
+                for (; i <= width - 4; i += 4) {
+                    prefetch(SUM + i);
+                    float64x2_t vSum0 = vld1q_f64(SUM + i);
+                    float64x2_t vSum1 = vld1q_f64(SUM + i + 2);
+                    prefetch(Sp + i);
+                    float64x2_t vSource0 = vld1q_f64(Sp + i);
+                    float64x2_t vSource1 = vld1q_f64(Sp + i + 2);
+                    prefetch(Sm + i);
+                    float64x2_t vSourcePrev0 = vld1q_f64(Sm + i);
+                    float64x2_t vSourcePrev1 = vld1q_f64(Sm + i + 2);
+
+                    // s0 = SUM[i] + Sp[i]
+                    float64x2_t vSumPlus0 = vaddq_f64(vSum0, vSource0);
+                    float64x2_t vSumPlus1 = vaddq_f64(vSum1, vSource1);
+                    // D[i] = s0;
+                    float32x4_t vOut0 = vcvt_high_f32_f64(vcvt_f32_f64(vSumPlus0), vSumPlus1);
+                    vst1q_f32(D + i, vOut0);
+                    // s0 -= Sm[i]; SUM[i] = s0;
+                    float64x2_t vNewSum0 = vsubq_f64(vSumPlus0, vSourcePrev0);
+                    float64x2_t vNewSum1 = vsubq_f64(vSumPlus1, vSourcePrev1);
+                    vst1q_f64(SUM + i, vNewSum0);
+                    vst1q_f64(SUM + i + 2, vNewSum1);
+                }
+
+                for (; i < width; i++) {
+                    double s0 = SUM[i] + Sp[i];
+                    D[i] = s0;
+                    SUM[i] = s0 - Sm[i];
+                }
+                
+                dst += dststep;
+            }
+        }
+    }
+    int32_t ksize;
+    int32_t sumCount;
+    double scale;
+    std::vector<double> sum;
+};
 
 template <int32_t cn>
 void boxFilter_f(int32_t height,
