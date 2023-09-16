@@ -29,36 +29,6 @@
 
 namespace ppl::cv::arm {
 
-static std::vector<float> getGaussianKernel(float sigma, int32_t n)
-{
-    const int32_t SMALL_GAUSSIAN_SIZE = 7;
-    static const float small_gaussian_tab[][SMALL_GAUSSIAN_SIZE] = {
-        {1.f},
-        {0.25f, 0.5f, 0.25f},
-        {0.0625f, 0.25f, 0.375f, 0.25f, 0.0625f},
-        {0.03125f, 0.109375f, 0.21875f, 0.28125f, 0.21875f, 0.109375f, 0.03125f}};
-    bool fix = n % 2 == 1 && n <= SMALL_GAUSSIAN_SIZE && sigma <= 0;
-    const float *fixed_kernel = fix ? small_gaussian_tab[n >> 1] : 0;
-    std::vector<float> kernel(n);
-    float sigmaX = sigma > 0 ? sigma : ((n - 1) * 0.5 - 1) * 0.3 + 0.8;
-    float scale2X = -0.5 / (sigmaX * sigmaX);
-    float sum = 0;
-
-    int32_t i;
-    for (i = 0; i < n; i++) {
-        float x = i - (n - 1) * 0.5;
-        float t = fixed_kernel ? (float)fixed_kernel[i] : std::exp(scale2X * x * x);
-        kernel[i] = (float)t;
-        sum += kernel[i];
-    }
-
-    sum = 1. / sum;
-    for (i = 0; i < n; i++) {
-        kernel[i] = float(kernel[i] * sum);
-    }
-    return kernel;
-}
-
 static std::vector<double> getGaussianKernel_double(float sigma, int32_t n)
 {
     const int32_t SMALL_GAUSSIAN_SIZE = 7;
@@ -85,6 +55,16 @@ static std::vector<double> getGaussianKernel_double(float sigma, int32_t n)
     sum = 1. / sum;
     for (i = 0; i < n; i++) {
         kernel[i] = static_cast<double>(kernel[i] * sum);
+    }
+    return kernel;
+}
+
+static std::vector<float> getGaussianKernel(float sigma, int32_t n)
+{
+    std::vector<float> kernel(n);
+    std::vector<double> doubleKernel = getGaussianKernel_double(sigma, n);
+    for (int i = 0; i < n; i++) {
+        kernel[i] = static_cast<float>(doubleKernel[i]);
     }
     return kernel;
 }
