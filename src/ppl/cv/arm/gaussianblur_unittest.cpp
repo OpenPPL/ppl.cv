@@ -112,9 +112,9 @@ bool PplCvArmGaussianBlurTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = EPSILON_2F;
+        epsilon = EPSILON_0I;
     } else {
-        epsilon = EPSILON_E4;
+        epsilon = EPSILON_E6;
     }
     bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
 
@@ -133,16 +133,14 @@ bool PplCvArmGaussianBlurTest<T, channels>::apply()
         IsEqual,                                                                                                \
         PplCvArmGaussianBlurTest_##T##_##channels,                                                              \
         ::testing::Combine(                                                                                     \
-            ::testing::Values(1, 5, 13, 31, 43),                                                                \
-            ::testing::Values(0, 1, 7, 10, 43),                                                                 \
+            ::testing::Values(1, 3, 5, 13, 31),                                                                \
+            ::testing::Values(0, 1, 7, 43),                                                                 \
             ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_REFLECT_101), \
-            ::testing::Values(cv::Size{321, 240},                                                               \
-                              cv::Size{320, 243},                                                               \
-                              cv::Size{321, 243},                                                               \
-                              cv::Size{642, 480},                                                               \
-                              cv::Size{1283, 720},                                                              \
-                              cv::Size{1934, 1080},                                                             \
-                              cv::Size{320, 240},                                                               \
+            ::testing::Values(cv::Size{321, 240},                                                                \
+                              cv::Size{321, 245},                                                                \
+                              cv::Size{647, 493},                                                                \
+                              cv::Size{654, 486},                                                                \
+                              cv::Size{1280, 720},                                                               \
                               cv::Size{1920, 1080})),                                                           \
         [](const testing::TestParamInfo<PplCvArmGaussianBlurTest_##T##_##channels::ParamType>& info) {          \
             return convertToStringGaussianBlur(info.param);                                                     \
