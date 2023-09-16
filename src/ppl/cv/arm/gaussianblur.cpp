@@ -360,6 +360,13 @@ using ufixedpoint16 = uint16_t;
 using ufixedpoint32 = uint32_t;
 static const int fixedShift = 8;
 static const int fixedShift_ufix32 = 16;
+ufixedpoint16 fixed_convert_u8_to_ufix16(uint8_t v) {
+    return (static_cast<uint16_t>(v) << fixedShift);
+}
+
+ufixedpoint32 fixed_convert_ufix16_to_ufix32(ufixedpoint16 v) {
+    return (static_cast<uint32_t>(v) << (fixedShift_ufix32 - fixedShift));
+}
 ufixedpoint16 fixed_fn_mul(ufixedpoint16 a, uint32_t b) {
     return saturate_cast_u32_u16(static_cast<uint32_t>(a) * b);
 }
@@ -555,6 +562,106 @@ struct FixedPointSymmColumnFilter {
     int ksize;
 };
 
+struct FixedPointSymmRowFilter3N121 {
+    FixedPointSymmRowFilter3N121() {}
+
+    void operator()(const uint8_t *_src, ufixedpoint16 *_dst, int width, int cn) const
+    {
+        const uint8_t *src0 = _src + cn;
+        uint16_t *dst = _dst;
+
+        width *= cn;
+
+        int i = 0;
+        for (; i <= width - 16; i += 16) {
+            const uint8_t *src = src0 + i;
+            prefetch(src);
+            uint8x16_t vIn = vld1q_u8(src);
+            prefetch(src - cn);
+            uint8x16_t vInNegCn = vld1q_u8(src - cn);
+            prefetch(src + cn);
+            uint8x16_t vInCn = vld1q_u8(src + cn);
+
+            uint16x8_t vIn0 = vshll_n_u8(vget_low_u8(vIn), fixedShift - 1);
+            uint16x8_t vIn1 = vshll_high_n_u8(vIn, fixedShift - 1);
+            uint16x8_t vInNegCn0 = vshll_n_u8(vget_low_u8(vInNegCn), fixedShift - 2);
+            uint16x8_t vInNegCn1 = vshll_high_n_u8(vInNegCn, fixedShift - 2);
+            uint16x8_t vInCn0 = vshll_n_u8(vget_low_u8(vInCn), fixedShift - 2);
+            uint16x8_t vInCn1 = vshll_high_n_u8(vInCn, fixedShift - 2);
+
+            uint16x8_t vOut0 = vqaddq_u16(vIn0, vInNegCn0);
+            uint16x8_t vOut1 = vqaddq_u16(vIn1, vInNegCn1);
+            vOut0 = vqaddq_u16(vOut0, vInCn0);
+            vOut1 = vqaddq_u16(vOut1, vInCn1);
+            
+            vst1q_u16(dst + i, vOut0);
+            vst1q_u16(dst + i + 8, vOut1);
+        }
+        for (; i < width; i++) {
+            const uint8_t *src = src0 + i;
+            ufixedpoint16 s = fixed_ff_sat_add(fixed_convert_u8_to_ufix16(src[0]) >> 1, fixed_convert_u8_to_ufix16(src[cn]) >> 2);
+            s = fixed_ff_sat_add(s, fixed_convert_u8_to_ufix16(src[-cn]) >> 2);
+            dst[i] = s;
+        }
+    }
+};
+
+struct FixedPointSymmColumnFilter3N121 {
+    FixedPointSymmColumnFilter3N121() {}
+
+    void operator()(const ufixedpoint16* const* src, uint8_t* dst, int dststep, int count, int width)
+    {
+        src += 1;
+
+        for( ; count--; dst += dststep, src++ )
+        {
+            int i = 0;
+
+            for (; i <= width - 16; i += 16) {
+                prefetch(src[0] + i);
+                uint16x8_t vIn0 = vld1q_u16(src[0] + i);
+                uint16x8_t vIn1 = vld1q_u16(src[0] + i + 8);
+                prefetch(src[-1] + i);
+                uint16x8_t vInNegOne0 = vld1q_u16(src[-1] + i);
+                uint16x8_t vInNegOne1 = vld1q_u16(src[-1] + i + 8);
+                prefetch(src[1] + i);
+                uint16x8_t vInOne0 = vld1q_u16(src[1] + i);
+                uint16x8_t vInOne1 = vld1q_u16(src[1] + i + 8);
+
+                uint32x4_t vOut00 = vaddl_u16(vget_low_u16(vIn0), vget_low_u16(vIn0));
+                uint32x4_t vOut01 = vaddl_high_u16(vIn0, vIn0);
+                uint32x4_t vOut10 = vaddl_u16(vget_low_u16(vIn1), vget_low_u16(vIn1));
+                uint32x4_t vOut11 = vaddl_high_u16(vIn1, vIn1);
+
+                vOut00 = vqaddq_u32(vOut00, vaddl_u16(vget_low_u16(vInNegOne0), vget_low_u16(vInOne0)));
+                vOut01 = vqaddq_u32(vOut01, vaddl_high_u16(vInNegOne0, vInOne0));
+                vOut10 = vqaddq_u32(vOut10, vaddl_u16(vget_low_u16(vInNegOne1), vget_low_u16(vInOne1)));
+                vOut11 = vqaddq_u32(vOut11, vaddl_high_u16(vInNegOne1, vInOne1));
+
+                // use vqrshrn_n_u32 for shift and satruating cast process
+                // originally ufix16, but shr-ed 2 bit in add (0.25 * a + 0.5 * b + 0.25 * c = ((a+b+b+c) >> 2))
+                int shiftVal = fixedShift_ufix32 - fixedShift + 2;
+                uint16x4_t vOutU16_00 = vqrshrn_n_u32(vOut00, shiftVal);
+                uint16x8_t vOutU16_0 = vqrshrn_high_n_u32(vOutU16_00, vOut01, shiftVal);
+                uint16x4_t vOutU16_10 = vqrshrn_n_u32(vOut10, shiftVal);
+                uint16x8_t vOutU16_1 = vqrshrn_high_n_u32(vOutU16_10, vOut11, shiftVal);
+
+                uint8x8_t vOutU8_00 = vqmovn_u16(vOutU16_0);
+                uint8x16_t vOutU8_0 = vqmovn_high_u16(vOutU8_00, vOutU16_1);
+
+                vst1q_u8(dst + i, vOutU8_0);
+            }
+
+            for( ; i < width; i++ )
+            {
+                ufixedpoint32 s0 = fixed_convert_ufix16_to_ufix32(src[0][i]) >> 1;
+                s0 = fixed_ff_sat_add_32(s0, fixed_convert_ufix16_to_ufix32(src[1][i]) >> 2);
+                s0 = fixed_ff_sat_add_32(s0, fixed_convert_ufix16_to_ufix32(src[-1][i]) >> 2);
+                dst[i] = fixed_sat_cast_ufix32_to_u8(s0);
+            }
+        }
+    }
+};
 
 static void getGaussianKernelFixedPoint_ED(std::vector<int64_t>& result, const std::vector<double> kernel, int fractionBits)
 {
@@ -642,24 +749,45 @@ void GaussianBlur_b(int32_t height,
                     uint8_t *outData,
                     ppl::cv::BorderType border_type)
 {
-    std::vector<ufixedpoint16> kernel;
-    getFixedpointGaussianKernel(kernel, kernel_len, sigma);
+    if (kernel_len == 3 and sigma == 0.0f) {
+        std::vector<ufixedpoint16> kernel;
+        getFixedpointGaussianKernel(kernel, kernel_len, sigma);
 
-    FixedPointSymmRowFilter  rowFilter = FixedPointSymmRowFilter(kernel);
-    FixedPointSymmColumnFilter colFilter = FixedPointSymmColumnFilter(kernel);
-    SeparableFilterEngine<uint8_t, ufixedpoint16, uint8_t, FixedPointSymmRowFilter, FixedPointSymmColumnFilter> engine(
-        height,
-        width,
-        cn,
-        kernel_len,
-        kernel_len,
-        border_type,
-        0,
-        rowFilter,
-        colFilter
-    );
-    
-    engine.process(inData, inWidthStride, outData, outWidthStride);
+        FixedPointSymmRowFilter3N121 rowFilter = FixedPointSymmRowFilter3N121();
+        FixedPointSymmColumnFilter3N121 colFilter = FixedPointSymmColumnFilter3N121();
+        SeparableFilterEngine<uint8_t, ufixedpoint16, uint8_t, FixedPointSymmRowFilter3N121, FixedPointSymmColumnFilter3N121> engine(
+            height,
+            width,
+            cn,
+            kernel_len,
+            kernel_len,
+            border_type,
+            0,
+            rowFilter,
+            colFilter
+        );
+
+        engine.process(inData, inWidthStride, outData, outWidthStride);
+    } else {
+        std::vector<ufixedpoint16> kernel;
+        getFixedpointGaussianKernel(kernel, kernel_len, sigma);
+
+        FixedPointSymmRowFilter  rowFilter = FixedPointSymmRowFilter(kernel);
+        FixedPointSymmColumnFilter colFilter = FixedPointSymmColumnFilter(kernel);
+        SeparableFilterEngine<uint8_t, ufixedpoint16, uint8_t, FixedPointSymmRowFilter, FixedPointSymmColumnFilter> engine(
+            height,
+            width,
+            cn,
+            kernel_len,
+            kernel_len,
+            border_type,
+            0,
+            rowFilter,
+            colFilter
+        );
+        
+        engine.process(inData, inWidthStride, outData, outWidthStride);
+    }
 }
 
 template <>
