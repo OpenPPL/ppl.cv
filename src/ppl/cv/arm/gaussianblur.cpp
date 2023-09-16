@@ -367,6 +367,7 @@ ufixedpoint16 fixed_convert_u8_to_ufix16(uint8_t v) {
 ufixedpoint32 fixed_convert_ufix16_to_ufix32(ufixedpoint16 v) {
     return (static_cast<uint32_t>(v) << (fixedShift_ufix32 - fixedShift));
 }
+
 ufixedpoint16 fixed_fn_mul(ufixedpoint16 a, uint32_t b) {
     return saturate_cast_u32_u16(static_cast<uint32_t>(a) * b);
 }
@@ -560,6 +561,75 @@ struct FixedPointSymmColumnFilter {
 
     std::vector<ufixedpoint16> kernel;
     int ksize;
+};
+
+struct FixedPointSymmGaussianRowFilter {
+    // specilized for Gaussian, since all kernel values sum up to 1, so we can ignore overflow
+    FixedPointSymmGaussianRowFilter(const std::vector<ufixedpoint16> &_kernel)
+    {
+        kernel = _kernel;
+    }
+
+    void operator()(const uint8_t *_src, ufixedpoint16 *_dst, int width, int cn) const
+    {
+        int ksize = kernel.size();
+        int ksize2 = ksize / 2;
+        const ufixedpoint16 *kx = kernel.data() + ksize2;
+        const uint8_t *src0 = _src + ksize2 * cn;
+        uint16_t *dst = _dst;
+
+        width *= cn;
+
+        int i = 0;
+        for (; i <= width - 16; i += 16) {
+            const uint8_t *src = src0 + i;
+            prefetch(src);
+
+            uint8x16_t vInU8 = vld1q_u8(src);
+            uint16x8_t vIn0 = vmovl_u8(vget_low_u8(vInU8));
+            uint16x8_t vIn1 = vmovl_high_u8(vInU8);
+            uint16x8_t vScale = vdupq_n_u16(kx[0]);
+
+            // ufixedpoint16 s = fixed_fn_mul(kx[0], src[0]);
+            // vIn0 is less than 0xff, vScale is less than 0x10000, so no overflow
+            uint16x8_t vOut0 = vmulq_u16(vScale, vIn0);
+            uint16x8_t vOut1 = vmulq_u16(vScale, vIn1);
+            
+            for (int k = 1; k <= ksize2; k++) {
+                // s = fixed_ff_sat_add(s, fixed_fn_mul(kx[k], static_cast<uint16_t>(src[k * cn]) + src[-k * cn]));
+                vScale = vdupq_n_u16(kx[k]);
+
+                prefetch(src - k * cn);
+                uint8x16_t vInNegKU8 = vld1q_u8(src - k * cn);
+                uint16x8_t vInNegK0 = vmovl_u8(vget_low_u8(vInNegKU8));
+                uint16x8_t vInNegK1 = vmovl_high_u8(vInNegKU8);
+                prefetch(src + k * cn);
+                uint8x16_t vInKU8 = vld1q_u8(src + k * cn);
+
+                // surely won't overflow here
+                vIn0 = vaddw_u8(vInNegK0, vget_low_u8(vInKU8));
+                vIn1 = vaddw_high_u8(vInNegK1, vInKU8);
+                
+                uint16x8_t vMulRes0 = vmulq_u16(vScale, vIn0);
+                uint16x8_t vMulRes1 = vmulq_u16(vScale, vIn1);
+
+                vOut0 = vqaddq_u16(vOut0, vMulRes0);
+                vOut1 = vqaddq_u16(vOut1, vMulRes1);
+            }
+            vst1q_u16(dst + i, vOut0);
+            vst1q_u16(dst + i + 8, vOut1);
+        }
+
+        for (; i < width; i++) {
+            const uint8_t *src = src0 + i;
+            ufixedpoint16 s = fixed_fn_mul(kx[0], src[0]);
+            for (int k = 1; k <= ksize2; k++) {
+                s = fixed_ff_sat_add(s, fixed_fn_mul(kx[k], static_cast<uint16_t>(src[k * cn]) + src[-k * cn]));
+            }
+            dst[i] = s;
+        }
+    }
+    std::vector<ufixedpoint16> kernel;
 };
 
 struct FixedPointSymmRowFilter3N121 {
@@ -772,9 +842,9 @@ void GaussianBlur_b(int32_t height,
         std::vector<ufixedpoint16> kernel;
         getFixedpointGaussianKernel(kernel, kernel_len, sigma);
 
-        FixedPointSymmRowFilter  rowFilter = FixedPointSymmRowFilter(kernel);
+        FixedPointSymmGaussianRowFilter  rowFilter = FixedPointSymmGaussianRowFilter(kernel);
         FixedPointSymmColumnFilter colFilter = FixedPointSymmColumnFilter(kernel);
-        SeparableFilterEngine<uint8_t, ufixedpoint16, uint8_t, FixedPointSymmRowFilter, FixedPointSymmColumnFilter> engine(
+        SeparableFilterEngine<uint8_t, ufixedpoint16, uint8_t, FixedPointSymmGaussianRowFilter, FixedPointSymmColumnFilter> engine(
             height,
             width,
             cn,
