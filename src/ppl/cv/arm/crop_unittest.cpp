@@ -99,7 +99,7 @@ bool PplCvArmCropTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = EPSILON_1F;
+        epsilon = EPSILON_0I;
     } else {
         epsilon = EPSILON_E6;
     }

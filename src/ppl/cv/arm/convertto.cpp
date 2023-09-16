@@ -128,10 +128,10 @@ template <>
             vFRes2 = vfmaq_f32(vFRes2, vFData.val[2], vScale);
             vFRes3 = vfmaq_f32(vFRes3, vFData.val[3], vScale);
 
-            int32x4_t vSiData0 = vcvtaq_s32_f32(vFRes0);
-            int32x4_t vSiData1 = vcvtaq_s32_f32(vFRes1);
-            int32x4_t vSiData2 = vcvtaq_s32_f32(vFRes2);
-            int32x4_t vSiData3 = vcvtaq_s32_f32(vFRes3);
+            int32x4_t vSiData0 = vcvtnq_s32_f32(vFRes0);
+            int32x4_t vSiData1 = vcvtnq_s32_f32(vFRes1);
+            int32x4_t vSiData2 = vcvtnq_s32_f32(vFRes2);
+            int32x4_t vSiData3 = vcvtnq_s32_f32(vFRes3);
 
             uint16x4_t vUhData00 = vqmovun_s32(vSiData0);
             uint16x8_t vUhData0 = vqmovun_high_s32(vUhData00, vSiData1);
@@ -145,7 +145,7 @@ template <>
         }
         for (; w < row_width; ++w) {
             float value = scale * base_in[w] + delta;
-            base_out[w] = static_cast<uint8_t>(std::round(std::min(std::max(value, 0.0f), 255.0f)));
+            base_out[w] = static_cast<uint8_t>(roundeven(std::min(std::max(value, 0.0f), 255.0f)));
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -200,10 +200,10 @@ template <>
             vFRes2 = vfmaq_f32(vFRes2, vFData2, vScale);
             vFRes3 = vfmaq_f32(vFRes3, vFData3, vScale);
 
-            int32x4_t vSiData0 = vcvtaq_s32_f32(vFRes0);
-            int32x4_t vSiData1 = vcvtaq_s32_f32(vFRes1);
-            int32x4_t vSiData2 = vcvtaq_s32_f32(vFRes2);
-            int32x4_t vSiData3 = vcvtaq_s32_f32(vFRes3);
+            int32x4_t vSiData0 = vcvtnq_s32_f32(vFRes0);
+            int32x4_t vSiData1 = vcvtnq_s32_f32(vFRes1);
+            int32x4_t vSiData2 = vcvtnq_s32_f32(vFRes2);
+            int32x4_t vSiData3 = vcvtnq_s32_f32(vFRes3);
 
             uint16x4_t vUhData00 = vqmovun_s32(vSiData0);
             uint16x8_t vUhData0 = vqmovun_high_s32(vUhData00, vSiData1);
@@ -217,7 +217,7 @@ template <>
         }
         for (; w < row_width; ++w) {
             float value = scale * base_in[w] + delta;
-            base_out[w] = static_cast<uint8_t>(std::round(std::min(std::max(value, 0.0f), 255.0f)));
+            base_out[w] = static_cast<uint8_t>(roundeven(std::min(std::max(value, 0.0f), 255.0f)));
         }
     }
     return ppl::common::RC_SUCCESS;
