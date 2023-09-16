@@ -22,6 +22,7 @@
 
 #include "ppl/cv/arm/boxfilter.h"
 #include "ppl/cv/arm/gaussianblur.h"
+#include "ppl/cv/arm/convertto.h"
 
 namespace ppl::cv::arm {
 
@@ -48,7 +49,7 @@ namespace ppl::cv::arm {
     if (max_value < 0) {
         setted_value = 0;
     } else if (max_value < 255.f) {
-        setted_value = (uint8_t)max_value;
+        setted_value = static_cast<uint8_t>(roundeven(max_value));
     } else {
         setted_value = 255;
     }
@@ -57,8 +58,13 @@ namespace ppl::cv::arm {
         BoxFilter<uint8_t, 1>(
             height, width, inWidthStride, inData, ksize, ksize, true, outWidthStride, mean, ppl::cv::BORDER_REPLICATE);
     } else if (adaptive_method == ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C) {
-        GaussianBlur<uint8_t, 1>(
-            height, width, inWidthStride, inData, ksize, 0, outWidthStride, mean, ppl::cv::BORDER_REPLICATE);
+        float *pSrcF = (float *)malloc(height * width * sizeof(float));
+        // may need special ConvertTo with scale=1 and delta=0 to reach peak performance
+        ConvertTo<uint8_t, float, 1>(height, width, inWidthStride, inData, width, pSrcF, 1, 0);
+        GaussianBlur<float, 1>(
+            height, width, width, pSrcF, ksize, 0, width, pSrcF, ppl::cv::BORDER_REPLICATE);
+        ConvertTo<float, uint8_t, 1>(height, width, width, pSrcF, width, mean, 1, 0);
+        free(pSrcF);
     }
     int32_t idelta = threshold_type == ppl::cv::CV_THRESH_BINARY ? std::ceil(delta) : std::floor(delta);
     uint8_t tab[768];

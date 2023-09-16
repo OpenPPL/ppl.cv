@@ -136,10 +136,12 @@ bool PplCvArmAdaptiveThresholdTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = EPSILON_2F;
+        epsilon = EPSILON_0I;
     } else {
         epsilon = EPSILON_E6;
     }
+    // can't perfectly align, possibly because we used to binding law optimize GaussianBlur
+    // todo: maybe we should use better criteria like percentage of error pixels?
     bool identity = checkMatricesIdentity<T>(cv_dst, dst, epsilon);
 
     return identity;
