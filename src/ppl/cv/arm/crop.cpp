@@ -70,10 +70,10 @@ void crop_line_common(const uint8_t* src, uint8_t* dst, int32_t outWidth, float 
         float32x4_t vFRes2 = vmulq_f32(vFData2, vScale);
         float32x4_t vFRes3 = vmulq_f32(vFData3, vScale);
 
-        int32x4_t vSiData0 = vcvtaq_s32_f32(vFRes0);
-        int32x4_t vSiData1 = vcvtaq_s32_f32(vFRes1);
-        int32x4_t vSiData2 = vcvtaq_s32_f32(vFRes2);
-        int32x4_t vSiData3 = vcvtaq_s32_f32(vFRes3);
+        int32x4_t vSiData0 = vcvtnq_s32_f32(vFRes0);
+        int32x4_t vSiData1 = vcvtnq_s32_f32(vFRes1);
+        int32x4_t vSiData2 = vcvtnq_s32_f32(vFRes2);
+        int32x4_t vSiData3 = vcvtnq_s32_f32(vFRes3);
 
         uint16x4_t vUhData00 = vqmovun_s32(vSiData0);
         uint16x8_t vUhData0 = vqmovun_high_s32(vUhData00, vSiData1);
@@ -87,7 +87,7 @@ void crop_line_common(const uint8_t* src, uint8_t* dst, int32_t outWidth, float 
     }
     
     for (; i < outWidth; i++) {
-        int32_t val = std::round(scale * src[i]);
+        int32_t val = roundeven(scale * src[i]);
         dst[i] = sat_cast(val);
     }
 }

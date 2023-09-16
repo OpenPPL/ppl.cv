@@ -295,8 +295,8 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
 
-            vCoordX0123i = vcvtaq_s32_f32(v_X01f);
-            vCoordY0123i = vcvtaq_s32_f32(v_Y01f);
+            vCoordX0123i = vcvtnq_s32_f32(v_X01f);
+            vCoordY0123i = vcvtnq_s32_f32(v_Y01f);
         }
 
         // 4 5 6 7
@@ -324,8 +324,8 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
 
-            vCoordX4567i = vcvtaq_s32_f32(v_X01f);
-            vCoordY4567i = vcvtaq_s32_f32(v_Y01f);
+            vCoordX4567i = vcvtnq_s32_f32(v_X01f);
+            vCoordY4567i = vcvtnq_s32_f32(v_Y01f);
         }
 
         // 8 9 10 11
@@ -353,8 +353,8 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
 
-            vCoordX89abi = vcvtaq_s32_f32(v_X01f);
-            vCoordY89abi = vcvtaq_s32_f32(v_Y01f);
+            vCoordX89abi = vcvtnq_s32_f32(v_X01f);
+            vCoordY89abi = vcvtnq_s32_f32(v_Y01f);
         }
 
         // 12 13 14 15
@@ -382,8 +382,8 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_shrtminf), v_shrtmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_shrtminf), v_shrtmaxf);
 
-            vCoordXcdefi = vcvtaq_s32_f32(v_X01f);
-            vCoordYcdefi = vcvtaq_s32_f32(v_Y01f);
+            vCoordXcdefi = vcvtnq_s32_f32(v_X01f);
+            vCoordYcdefi = vcvtnq_s32_f32(v_Y01f);
         }
 
         int16x8x2_t vCoord0, vCoord1;
@@ -405,8 +405,8 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double* M,
         W = W ? 1. / W : 0;
         double X = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (X0 + M[0] * jj) * W));
         double Y = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (Y0 + M[3] * jj) * W));
-        int16_t Xh = std::round(X);
-        int16_t Yh = std::round(Y);
+        int16_t Xh = roundeven(X);
+        int16_t Yh = roundeven(Y);
 
         coord_map[jj * 2] = Xh;
         coord_map[jj * 2 + 1] = Yh;
@@ -464,8 +464,8 @@ void WarpPerspective_CoordCompute_Linear_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_intminf), v_intmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_intminf), v_intmaxf);
 
-            vCoordX0123i = vcvtaq_s32_f32(v_X01f);
-            vCoordY0123i = vcvtaq_s32_f32(v_Y01f);
+            vCoordX0123i = vcvtnq_s32_f32(v_X01f);
+            vCoordY0123i = vcvtnq_s32_f32(v_Y01f);
         }
 
         // 4 5 6 7
@@ -493,8 +493,8 @@ void WarpPerspective_CoordCompute_Linear_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_intminf), v_intmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_intminf), v_intmaxf);
 
-            vCoordX4567i = vcvtaq_s32_f32(v_X01f);
-            vCoordY4567i = vcvtaq_s32_f32(v_Y01f);
+            vCoordX4567i = vcvtnq_s32_f32(v_X01f);
+            vCoordY4567i = vcvtnq_s32_f32(v_Y01f);
         }
 
         // 8 9 10 11
@@ -522,8 +522,8 @@ void WarpPerspective_CoordCompute_Linear_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_intminf), v_intmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_intminf), v_intmaxf);
 
-            vCoordX89abi = vcvtaq_s32_f32(v_X01f);
-            vCoordY89abi = vcvtaq_s32_f32(v_Y01f);
+            vCoordX89abi = vcvtnq_s32_f32(v_X01f);
+            vCoordY89abi = vcvtnq_s32_f32(v_Y01f);
         }
 
         // 12 13 14 15
@@ -551,8 +551,8 @@ void WarpPerspective_CoordCompute_Linear_Line(const double* M,
             v_X01f = vminq_f32(vmaxq_f32(v_X01f, v_intminf), v_intmaxf);
             v_Y01f = vminq_f32(vmaxq_f32(v_Y01f, v_intminf), v_intmaxf);
 
-            vCoordXcdefi = vcvtaq_s32_f32(v_X01f);
-            vCoordYcdefi = vcvtaq_s32_f32(v_Y01f);
+            vCoordXcdefi = vcvtnq_s32_f32(v_X01f);
+            vCoordYcdefi = vcvtnq_s32_f32(v_Y01f);
         }
 
         // construct alpha vector
@@ -594,8 +594,8 @@ void WarpPerspective_CoordCompute_Linear_Line(const double* M,
         W = W ? INTER_TABLE_SIZE / W : 0;
         double Xd = std::max((double)INT_MIN, std::min((double)INT_MAX, (X0 + M[0] * jj) * W));
         double Yd = std::max((double)INT_MIN, std::min((double)INT_MAX, (Y0 + M[3] * jj) * W));
-        int X = std::round(Xd);
-        int Y = std::round(Yd);
+        int X = roundeven(Xd);
+        int Y = roundeven(Yd);
 
         coord_map[jj * 2] = clip((X >> INTER_TABLE_BITS), SHRT_MIN, SHRT_MAX);
         coord_map[jj * 2 + 1] = clip((Y >> INTER_TABLE_BITS), SHRT_MIN, SHRT_MAX);
