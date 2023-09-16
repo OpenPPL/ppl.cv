@@ -130,7 +130,7 @@ struct RowSum {
 
 static uint8_t saturate_cast(double val)
 {
-    int32_t v = roundf(val);
+    uint32_t v = roundeven(static_cast<float>(val));
     if (v > 255)
         return 255;
     else if (v < 0)
@@ -255,8 +255,8 @@ struct ColumnSum<uint32_t, uint8_t> {
         if (sumCount == 0) {
             memset((void*)SUM, 0, width * sizeof(uint32_t));
 
-            int i = 0;
             for (; sumCount < ksize - 1; sumCount++, src++) {
+                int i = 0;
                 const uint32_t* Sp = (const uint32_t*)src[0];
                 for (i = 0; i <= width - 16; i += 16) {
                     prefetch(SUM + i);
@@ -336,10 +336,10 @@ struct ColumnSum<uint32_t, uint8_t> {
                     float32x4_t vResF2 = vmulq_f32(vcvtq_f32_u32(vSumPlus2), vScale);
                     float32x4_t vResF3 = vmulq_f32(vcvtq_f32_u32(vSumPlus3), vScale);
                     // saturating convert to uint8_t
-                    uint32x4_t vResUi0 = vcvtq_u32_f32(vResF0);
-                    uint32x4_t vResUi1 = vcvtq_u32_f32(vResF1);
-                    uint32x4_t vResUi2 = vcvtq_u32_f32(vResF2);
-                    uint32x4_t vResUi3 = vcvtq_u32_f32(vResF3);
+                    uint32x4_t vResUi0 = vcvtnq_u32_f32(vResF0);
+                    uint32x4_t vResUi1 = vcvtnq_u32_f32(vResF1);
+                    uint32x4_t vResUi2 = vcvtnq_u32_f32(vResF2);
+                    uint32x4_t vResUi3 = vcvtnq_u32_f32(vResF3);
 
                     uint16x8_t vResUh0 = vqmovn_high_u32(vqmovn_u32(vResUi0), vResUi1);
                     uint16x8_t vResUh1 = vqmovn_high_u32(vqmovn_u32(vResUi2), vResUi3);
@@ -359,7 +359,7 @@ struct ColumnSum<uint32_t, uint8_t> {
                 }
 
                 for (; i < width; i++) {
-                    double s0 = SUM[i] + Sp[i];
+                    uint32_t s0 = SUM[i] + Sp[i];
                     D[i] = saturate_cast(s0 * scale);
                     SUM[i] = s0 - Sm[i];
                 }
@@ -421,7 +421,7 @@ struct ColumnSum<uint32_t, uint8_t> {
                 }
 
                 for (; i < width; i++) {
-                    double s0 = SUM[i] + Sp[i];
+                    uint32_t s0 = SUM[i] + Sp[i];
                     D[i] = saturate_cast(s0);
                     SUM[i] = s0 - Sm[i];
                 }
