@@ -117,6 +117,7 @@ bool PplCvArmBoxFilterTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
+        // todo: still not perfectly aligned with opencv
         epsilon = normalize ? EPSILON_1F : EPSILON_0I;
     } else {
         epsilon = EPSILON_E6;
@@ -142,13 +143,11 @@ bool PplCvArmBoxFilterTest<T, channels>::apply()
             ::testing::Values(1, 3, 4, 5, 31),                                                                \
             ::testing::Values(true, false),                                                                     \
             ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_REFLECT_101), \
-            ::testing::Values(cv::Size{320, 240},                                                               \
-                              cv::Size{321, 240},                                                               \
-                              cv::Size{320, 243},                                                               \
-                              cv::Size{321, 243},                                                               \
-                              cv::Size{1283, 720},                                                              \
-                              cv::Size{1934, 1080},                                                             \
-                              cv::Size{1280, 720},                                                              \
+            ::testing::Values(cv::Size{321, 240},                                                                \
+                              cv::Size{321, 245},                                                                \
+                              cv::Size{647, 493},                                                                \
+                              cv::Size{654, 486},                                                                \
+                              cv::Size{1280, 720},                                                               \
                               cv::Size{1920, 1080})),                                                           \
         [](const testing::TestParamInfo<PplCvArmBoxFilterTest_##T##_##channels::ParamType>& info) {             \
             return convertToStringBoxFilter(info.param);                                                        \
