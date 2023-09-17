@@ -25,6 +25,245 @@ namespace ppl {
 namespace cv {
 namespace arm {
 
+//fzx add
+template <typename T>
+::ppl::common::RetCode BGR2RGB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGRA2RGB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGR2RGBA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGRA2RGBA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+template <typename T>
+::ppl::common::RetCode RGB2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGBA2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGB2BGRA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGBA2BGRA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGB2RGBA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGBA2RGB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGR2BGRA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGRA2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+
+template <typename T>
+::ppl::common::RetCode RGB2YCrCb(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGBA2YCrCb(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGR2YCrCb(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGRA2YCrCb(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode YCrCb2RGB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode YCrCb2RGBA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode YCrCb2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode YCrCb2BGRA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+//need to add 
+
+template <typename T>
+::ppl::common::RetCode RGB2HSV(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+//need to add 
+
+template <typename T>
+::ppl::common::RetCode NV122I420(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode NV212I420(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode NV212I420(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode I4202NV21(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode I4202NV12(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+//fzx end
+
+
 /**
  * @brief Convert BGR images to BGRA images
  * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
@@ -69,14 +308,14 @@ namespace arm {
  * }
  * @endcode
  ****************************************************************************************************/
-template <typename T>
-::ppl::common::RetCode BGR2BGRA(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
+// template <typename T>
+// ::ppl::common::RetCode BGR2BGRA(
+//     int32_t height,
+//     int32_t width,
+//     int32_t inWidthStride,
+//     const T* inData,
+//     int32_t outWidthStride,
+//     T* outData);
 
 /**
  * @brief Convert BGRA images to BGR images
@@ -122,14 +361,14 @@ template <typename T>
  * }
  * @endcode
  ****************************************************************************************************/
-template <typename T>
-::ppl::common::RetCode BGRA2BGR(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
+// template <typename T>
+// ::ppl::common::RetCode BGRA2BGR(
+//     int32_t height,
+//     int32_t width,
+//     int32_t inWidthStride,
+//     const T* inData,
+//     int32_t outWidthStride,
+//     T* outData);
 
 /**
  * @brief Convert RGB images to GRAY images
