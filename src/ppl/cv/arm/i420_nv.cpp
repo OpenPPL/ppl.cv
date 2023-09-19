@@ -112,13 +112,15 @@ void i420_to_nv_uchar_video_range(
             uint8x8_t v_src = vld1_u8(vptr);
             // nv12 uvuv; nv21 vuvu
             if (YUV_NV12 == yuvType) {
-                uint8x8x2_t interleaved = vzip_u8(u_src, v_src);
-                vstx_u8_f32<1, uint8_t, uint8x8_t>(dst_uv_ptr, interleaved.val[0]);
-                vstx_u8_f32<1, uint8_t, uint8x8_t>(dst_uv_ptr + 8, interleaved.val[1]);
+                uint8x8x2_t uv;
+                uv.val[0] = u_src;
+                uv.val[1] = v_src;
+                vst2_u8(dst_uv_ptr, uv);
             } else {
-                uint8x8x2_t interleaved = vzip_u8(v_src, u_src);
-                vstx_u8_f32<1, uint8_t, uint8x8_t>(dst_uv_ptr, interleaved.val[0]);
-                vstx_u8_f32<1, uint8_t, uint8x8_t>(dst_uv_ptr + 8, interleaved.val[1]);
+                uint8x8x2_t vu;
+                vu.val[0] = v_src;
+                vu.val[1] = u_src;
+                vst2_u8(dst_uv_ptr, vu);
             }
             dst_uv_ptr += 16;
             uptr += 8;
