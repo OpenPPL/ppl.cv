@@ -27,6 +27,83 @@
 namespace ppl::cv::arm {
 
 template <typename TSrc, typename TDst>
+::ppl::common::RetCode ChangeDataType(int32_t height,
+                                                              int32_t width,
+                                                              int32_t nc,
+                                                              int32_t inWidthStride,
+                                                              const TSrc* inData,
+                                                              int32_t outWidthStride,
+                                                              TDst* outData)
+{
+    if (nullptr == inData) { return ppl::common::RC_INVALID_VALUE; }
+    if (nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
+    if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    int32_t row_width = width * nc;
+    for (int32_t h = 0; h < height; ++h) {
+        const TSrc* base_in = inData + h * inWidthStride;
+        TDst* base_out = outData + h * outWidthStride;
+        int32_t w = 0;
+        for (; w < row_width; ++w) {
+            base_out[w] = static_cast<TDst>(base_in[w]);
+        }
+    }
+    return ppl::common::RC_SUCCESS;
+}
+
+template<>
+::ppl::common::RetCode ChangeDataType<float, uint8_t>(int32_t height,
+                                                              int32_t width,
+                                                              int32_t nc,
+                                                              int32_t inWidthStride,
+                                                              const float* inData,
+                                                              int32_t outWidthStride,
+                                                              uint8_t* outData)
+{
+    if (nullptr == inData) { return ppl::common::RC_INVALID_VALUE; }
+    if (nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
+    if (width == 0 || height == 0 || inWidthStride == 0 || outWidthStride == 0) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    int32_t row_width = width * nc;
+    for (int32_t h = 0; h < height; ++h) {
+        const float* base_in = inData + h * inWidthStride;
+        uint8_t* base_out = outData + h * outWidthStride;
+        int32_t w = 0;
+        for (; w <= row_width - 16; w += 16) {
+            prefetch(base_in + w);
+            float32x4x4_t vFData = vld1q_f32_x4(base_in + w);
+
+            float32x4_t vFRes0 = vFData.val[0];
+            float32x4_t vFRes1 = vFData.val[1];
+            float32x4_t vFRes2 = vFData.val[2];
+            float32x4_t vFRes3 = vFData.val[3];
+
+            int32x4_t vSiData0 = vcvtnq_s32_f32(vFRes0);
+            int32x4_t vSiData1 = vcvtnq_s32_f32(vFRes1);
+            int32x4_t vSiData2 = vcvtnq_s32_f32(vFRes2);
+            int32x4_t vSiData3 = vcvtnq_s32_f32(vFRes3);
+
+            uint16x4_t vUhData00 = vqmovun_s32(vSiData0);
+            uint16x8_t vUhData0 = vqmovun_high_s32(vUhData00, vSiData1);
+            uint16x4_t vUhData10 = vqmovun_s32(vSiData2);
+            uint16x8_t vUhData1 = vqmovun_high_s32(vUhData10, vSiData3);
+
+            uint8x8_t vOutData0 = vqmovn_u16(vUhData0);
+            uint8x8_t vOutData1 = vqmovn_u16(vUhData1);
+            vst1_u8(base_out + w, vOutData0);
+            vst1_u8(base_out + w + 8, vOutData1);
+        }
+        for (; w < row_width; ++w) {
+            float value = base_in[w];
+            base_out[w] = static_cast<uint8_t>(roundeven(std::min(std::max(value, 0.0f), 255.0f)));
+        }
+    }
+    return ppl::common::RC_SUCCESS;
+}
+
+template <typename TSrc, typename TDst>
 ::ppl::common::RetCode ChangeDataTypeAndScale(int32_t height,
                                               int32_t width,
                                               int32_t nc,
@@ -233,6 +310,11 @@ template <>
                                                     float scale,
                                                     float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<float, uint8_t>(
+            height, width, 1, inWidthStride, inData, outWidthStride, outData);
+    }
+    
     return ChangeDataTypeAndScale<float, uint8_t>(
         height, width, 1, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -247,6 +329,11 @@ template <>
                                                     float scale,
                                                     float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<float, uint8_t>(
+            height, width, 3, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<float, uint8_t>(
         height, width, 3, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -261,6 +348,11 @@ template <>
                                                     float scale,
                                                     float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<float, uint8_t>(
+            height, width, 4, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<float, uint8_t>(
         height, width, 4, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -275,6 +367,11 @@ template <>
                                                       float scale,
                                                       float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<uint8_t, uint8_t>(
+            height, width, 1, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<uint8_t, uint8_t>(
         height, width, 1, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -289,6 +386,11 @@ template <>
                                                       float scale,
                                                       float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<uint8_t, uint8_t>(
+            height, width, 3, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<uint8_t, uint8_t>(
         height, width, 3, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -303,6 +405,11 @@ template <>
                                                       float scale,
                                                       float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<uint8_t, uint8_t>(
+            height, width, 4, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<uint8_t, uint8_t>(
         height, width, 4, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -317,6 +424,11 @@ template <>
                                                     float scale,
                                                     float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<uint8_t, float>(
+            height, width, 1, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<uint8_t, float>(
         height, width, 1, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -331,6 +443,11 @@ template <>
                                                     float scale,
                                                     float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<uint8_t, float>(
+            height, width, 3, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<uint8_t, float>(
         height, width, 3, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -345,6 +462,11 @@ template <>
                                                     float scale,
                                                     float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<uint8_t, float>(
+            height, width, 4, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<uint8_t, float>(
         height, width, 4, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -359,6 +481,11 @@ template <>
                                                   float scale,
                                                   float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<float, float>(
+            height, width, 1, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<float, float>(
         height, width, 1, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -373,6 +500,11 @@ template <>
                                                   float scale,
                                                   float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<float, float>(
+            height, width, 3, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<float, float>(
         height, width, 3, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
@@ -387,6 +519,11 @@ template <>
                                                   float scale,
                                                   float delta)
 {
+    if (scale == 1 && delta == 0) {
+        return ChangeDataType<float, float>(
+            height, width, 4, inWidthStride, inData, outWidthStride, outData);
+    }
+
     return ChangeDataTypeAndScale<float, float>(
         height, width, 4, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
