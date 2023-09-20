@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_HPC_PPL_CV_ARM_CONVERTTO_H_
-#define __ST_HPC_PPL_CV_ARM_CONVERTTO_H_
+#ifndef __ST_HPC_PPL_CV_AARCH64_CONVERTTO_H_
+#define __ST_HPC_PPL_CV_AARCH64_CONVERTTO_H_
 
 #include "ppl/common/retcode.h"
 
@@ -106,4 +106,4 @@ ppl::common::RetCode Crop(
 }
 }  // namespace ppl::cv::arm
 
-#endif  // _ST_HPC_PPL_CV_ARM_CROP_H_
+#endif  // __ST_HPC_PPL_CV_AARCH64_CROP_H_

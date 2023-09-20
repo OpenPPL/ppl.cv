@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_HPC_PPL_CV_ARM_ABS_H_
-#define __ST_HPC_PPL_CV_ARM_ABS_H_
+#ifndef __ST_HPC_PPL_CV_AARCH64_ABS_H_
+#define __ST_HPC_PPL_CV_AARCH64_ABS_H_
 
 #include "ppl/common/retcode.h"
 
@@ -82,4 +82,4 @@ template <typename T, int32_t nc>
 }
 }
 } // namespace ppl::cv::arm
-#endif //! __ST_HPC_PPL_CV_ARM_ABS_H_
+#endif //! __ST_HPC_PPL_CV_AARCH64_ABS_H_

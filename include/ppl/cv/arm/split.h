@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_HPC_PPL_CV_ARM_SPLIT_H_
-#define __ST_HPC_PPL_CV_ARM_SPLIT_H_
+#ifndef __ST_HPC_PPL_CV_AARCH64_SPLIT_H_
+#define __ST_HPC_PPL_CV_AARCH64_SPLIT_H_
 
 #include "ppl/common/retcode.h"
 
@@ -148,4 +148,4 @@ template <typename T>
 }
 } // namespace ppl::cv::arm
 
-#endif //!__ST_HPC_PPL_CV_ARM_SPLIT_H_
+#endif //!__ST_HPC_PPL_CV_AARCH64_SPLIT_H_

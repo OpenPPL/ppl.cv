@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_HPC_PPL_CV_ARM_GAUSSIANBLUR_H_
-#define __ST_HPC_PPL_CV_ARM_GAUSSIANBLUR_H_
+#ifndef __ST_HPC_PPL_CV_AARCH64_GAUSSIANBLUR_H_
+#define __ST_HPC_PPL_CV_AARCH64_GAUSSIANBLUR_H_
 
 #include "ppl/common/retcode.h"
 #include "ppl/cv/types.h"
@@ -89,4 +89,4 @@ template <typename T, int32_t numChannels>
 }
 }
 } // namespace ppl::cv::arm
-#endif //! __ST_HPC_PPL_CV_ARM_GAUSSIANBLUR_H_
+#endif //! __ST_HPC_PPL_CV_AARCH64_GAUSSIANBLUR_H_
