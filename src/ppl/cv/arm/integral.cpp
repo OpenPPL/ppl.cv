@@ -43,7 +43,8 @@ void IntegralImage(int32_t height,
             for (int32_t c = 0; c < channels; c++) {
                 TSrc in_v = in[h * inWidthStride + w * channels + c];
                 sum[c] += in_v;
-                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] =
+                    sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
             }
         }
     }
@@ -51,11 +52,11 @@ void IntegralImage(int32_t height,
 
 template <>
 void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
-                   int32_t width,
-                   int32_t inWidthStride,
-                   const uint8_t *in,
-                   int32_t outWidthStride,
-                   uint32_t *out)
+                                         int32_t width,
+                                         int32_t inWidthStride,
+                                         const uint8_t *in,
+                                         int32_t outWidthStride,
+                                         uint32_t *out)
 {
     constexpr int channels = 1;
 
@@ -64,7 +65,7 @@ void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
 
     for (int32_t h = 0; h < height; h++) {
         memset(out + (h + 1) * outWidthStride, 0, sizeof(uint32_t) * channels);
-        
+
         int32_t w = 0;
         int32_t sum[channels] = {0};
         for (; w <= width - 16; w += 16) {
@@ -76,7 +77,7 @@ void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
             uint32x4_t vInData1_1 = vld1q_u32(out + h * outWidthStride + (w + 1 + 4) * channels);
             uint32x4_t vInData1_2 = vld1q_u32(out + h * outWidthStride + (w + 1 + 8) * channels);
             uint32x4_t vInData1_3 = vld1q_u32(out + h * outWidthStride + (w + 1 + 12) * channels);
-            
+
             uint16x8_t vUhInData0 = vmovl_u8(vget_low_u8(vInData0));
             uint16x8_t vUhInData1 = vmovl_high_u8(vInData0);
 
@@ -105,7 +106,8 @@ void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
             for (int32_t c = 0; c < channels; c++) {
                 uint8_t in_v = in[h * inWidthStride + w * channels + c];
                 sum[c] += in_v;
-                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] =
+                    sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
             }
         }
     }
@@ -113,11 +115,11 @@ void IntegralImage<uint8_t, uint32_t, 1>(int32_t height,
 
 template <>
 void IntegralImage<uint8_t, uint32_t, 3>(int32_t height,
-                   int32_t width,
-                   int32_t inWidthStride,
-                   const uint8_t *in,
-                   int32_t outWidthStride,
-                   uint32_t *out)
+                                         int32_t width,
+                                         int32_t inWidthStride,
+                                         const uint8_t *in,
+                                         int32_t outWidthStride,
+                                         uint32_t *out)
 {
     constexpr int channels = 3;
 
@@ -126,7 +128,7 @@ void IntegralImage<uint8_t, uint32_t, 3>(int32_t height,
 
     for (int32_t h = 0; h < height; h++) {
         memset(out + (h + 1) * outWidthStride, 0, sizeof(uint32_t) * channels);
-        
+
         int32_t w = 0;
         int32_t sum[channels] = {0};
         for (; w <= width - 16; w += 16) {
@@ -200,7 +202,8 @@ void IntegralImage<uint8_t, uint32_t, 3>(int32_t height,
             for (int32_t c = 0; c < channels; c++) {
                 uint8_t in_v = in[h * inWidthStride + w * channels + c];
                 sum[c] += in_v;
-                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] =
+                    sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
             }
         }
     }
@@ -208,11 +211,11 @@ void IntegralImage<uint8_t, uint32_t, 3>(int32_t height,
 
 template <>
 void IntegralImage<uint8_t, uint32_t, 4>(int32_t height,
-                   int32_t width,
-                   int32_t inWidthStride,
-                   const uint8_t *in,
-                   int32_t outWidthStride,
-                   uint32_t *out)
+                                         int32_t width,
+                                         int32_t inWidthStride,
+                                         const uint8_t *in,
+                                         int32_t outWidthStride,
+                                         uint32_t *out)
 {
     constexpr int channels = 4;
 
@@ -221,12 +224,12 @@ void IntegralImage<uint8_t, uint32_t, 4>(int32_t height,
 
     for (int32_t h = 0; h < height; h++) {
         memset(out + (h + 1) * outWidthStride, 0, sizeof(uint32_t) * channels);
-        
+
         int32_t w = 0;
         int32_t sum[channels] = {0};
         for (; w <= width - 8; w += 8) {
             prefetch(in + h * inWidthStride + w * channels);
-            uint8x8x4_t vInData0 = vld4_u8(in + h * inWidthStride + w * channels);\
+            uint8x8x4_t vInData0 = vld4_u8(in + h * inWidthStride + w * channels);
 
             uint16x8x4_t vUhInData0;
             vUhInData0.val[0] = vmovl_u8(vInData0.val[0]);
@@ -280,7 +283,8 @@ void IntegralImage<uint8_t, uint32_t, 4>(int32_t height,
             for (int32_t c = 0; c < channels; c++) {
                 uint8_t in_v = in[h * inWidthStride + w * channels + c];
                 sum[c] += in_v;
-                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] =
+                    sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
             }
         }
     }
@@ -289,15 +293,15 @@ void IntegralImage<uint8_t, uint32_t, 4>(int32_t height,
 #ifdef PPLCV_ARM_FASTMODE
 
 // floating point error introduced by application of associative law and commutative law during vectorization
-// 1. During handling serval chunks of data to exploit ILP 
+// 1. During handling serval chunks of data to exploit ILP
 // 2. During parallel reduction inside data chunk itself
 template <>
 void IntegralImage<float, float, 1>(int32_t height,
-                   int32_t width,
-                   int32_t inWidthStride,
-                   const float *in,
-                   int32_t outWidthStride,
-                   float *out)
+                                    int32_t width,
+                                    int32_t inWidthStride,
+                                    const float *in,
+                                    int32_t outWidthStride,
+                                    float *out)
 {
     constexpr int channels = 1;
 
@@ -306,7 +310,7 @@ void IntegralImage<float, float, 1>(int32_t height,
 
     for (int32_t h = 0; h < height; h++) {
         memset(out + (h + 1) * outWidthStride, 0, sizeof(float) * channels);
-        
+
         int32_t w = 0;
         float sum[channels] = {0};
         for (; w <= width - 8; w += 8) {
@@ -334,7 +338,8 @@ void IntegralImage<float, float, 1>(int32_t height,
             for (int32_t c = 0; c < channels; c++) {
                 float in_v = in[h * inWidthStride + w * channels + c];
                 sum[c] += in_v;
-                out[(h + 1) * outWidthStride + (w + 1) * channels + c] = sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
+                out[(h + 1) * outWidthStride + (w + 1) * channels + c] =
+                    sum[c] + out[h * outWidthStride + (w + 1) * channels + c];
             }
         }
     }
@@ -435,9 +440,11 @@ template <>
                                                      int32_t *outData)
 {
     if ((outHeight == inHeight) && (outWidth == inWidth)) {
-        IntegralImageDeprecate<uint8_t, uint32_t, 1>(inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
+        IntegralImageDeprecate<uint8_t, uint32_t, 1>(
+            inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
     } else if ((outHeight == (inHeight + 1)) && (outWidth == (inWidth + 1))) {
-        IntegralImage<uint8_t, uint32_t, 1>(inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
+        IntegralImage<uint8_t, uint32_t, 1>(
+            inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
     } else {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -455,9 +462,11 @@ template <>
                                                      int32_t *outData)
 {
     if ((outHeight == inHeight) && (outWidth == inWidth)) {
-        IntegralImageDeprecate<uint8_t, uint32_t, 3>(inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
+        IntegralImageDeprecate<uint8_t, uint32_t, 3>(
+            inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
     } else if ((outHeight == (inHeight + 1)) && (outWidth == (inWidth + 1))) {
-        IntegralImage<uint8_t, uint32_t, 3>(inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
+        IntegralImage<uint8_t, uint32_t, 3>(
+            inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
     } else {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -475,9 +484,11 @@ template <>
                                                      int32_t *outData)
 {
     if ((outHeight == inHeight) && (outWidth == inWidth)) {
-        IntegralImageDeprecate<uint8_t, uint32_t, 4>(inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
+        IntegralImageDeprecate<uint8_t, uint32_t, 4>(
+            inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
     } else if ((outHeight == (inHeight + 1)) && (outWidth == (inWidth + 1))) {
-        IntegralImage<uint8_t, uint32_t, 4>(inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
+        IntegralImage<uint8_t, uint32_t, 4>(
+            inHeight, inWidth, inWidthStride, inData, outWidthStride, (uint32_t *)outData);
     } else {
         return ppl::common::RC_INVALID_VALUE;
     }

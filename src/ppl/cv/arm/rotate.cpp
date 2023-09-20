@@ -571,13 +571,13 @@ inline void rotate270_inner_block(const T* src,
 
 template <>
 inline void rotate270_inner_block<float, 1, 32, 32>(const float* src,
-                                                   int obi,
-                                                   int obj,
-                                                   int outHeight,
-                                                   int outWidth,
-                                                   int inWidthStride,
-                                                   int outWidthStride,
-                                                   float* dst)
+                                                    int obi,
+                                                    int obj,
+                                                    int outHeight,
+                                                    int outWidth,
+                                                    int inWidthStride,
+                                                    int outWidthStride,
+                                                    float* dst)
 {
     constexpr int CHANNELS = 1;
     constexpr int OUT_BLOCKDIM_R = 32;
@@ -605,13 +605,13 @@ inline void rotate270_inner_block<float, 1, 32, 32>(const float* src,
 
 template <>
 inline void rotate270_inner_block<float, 3, 32, 32>(const float* src,
-                                                   int obi,
-                                                   int obj,
-                                                   int outHeight,
-                                                   int outWidth,
-                                                   int inWidthStride,
-                                                   int outWidthStride,
-                                                   float* dst)
+                                                    int obi,
+                                                    int obj,
+                                                    int outHeight,
+                                                    int outWidth,
+                                                    int inWidthStride,
+                                                    int outWidthStride,
+                                                    float* dst)
 {
     constexpr int CHANNELS = 3;
     constexpr int OUT_BLOCKDIM_R = 32;
@@ -645,13 +645,13 @@ inline void rotate270_inner_block<float, 3, 32, 32>(const float* src,
 
 template <>
 inline void rotate270_inner_block<float, 4, 32, 32>(const float* src,
-                                                   int obi,
-                                                   int obj,
-                                                   int outHeight,
-                                                   int outWidth,
-                                                   int inWidthStride,
-                                                   int outWidthStride,
-                                                   float* dst)
+                                                    int obi,
+                                                    int obj,
+                                                    int outHeight,
+                                                    int outWidth,
+                                                    int inWidthStride,
+                                                    int outWidthStride,
+                                                    float* dst)
 {
     constexpr int CHANNELS = 4;
     constexpr int OUT_BLOCKDIM_R = 32;
@@ -686,13 +686,13 @@ inline void rotate270_inner_block<float, 4, 32, 32>(const float* src,
 
 template <>
 inline void rotate270_inner_block<uint8_t, 1, 64, 64>(const uint8_t* src,
-                                                     int obi,
-                                                     int obj,
-                                                     int outHeight,
-                                                     int outWidth,
-                                                     int inWidthStride,
-                                                     int outWidthStride,
-                                                     uint8_t* dst)
+                                                      int obi,
+                                                      int obj,
+                                                      int outHeight,
+                                                      int outWidth,
+                                                      int inWidthStride,
+                                                      int outWidthStride,
+                                                      uint8_t* dst)
 {
     constexpr int CHANNELS = 1;
     constexpr int OUT_BLOCKDIM_R = 64;
@@ -732,13 +732,13 @@ inline void rotate270_inner_block<uint8_t, 1, 64, 64>(const uint8_t* src,
 
 template <>
 inline void rotate270_inner_block<uint8_t, 3, 64, 64>(const uint8_t* src,
-                                                     int obi,
-                                                     int obj,
-                                                     int outHeight,
-                                                     int outWidth,
-                                                     int inWidthStride,
-                                                     int outWidthStride,
-                                                     uint8_t* dst)
+                                                      int obi,
+                                                      int obj,
+                                                      int outHeight,
+                                                      int outWidth,
+                                                      int inWidthStride,
+                                                      int outWidthStride,
+                                                      uint8_t* dst)
 {
     constexpr int CHANNELS = 3;
     constexpr int OUT_BLOCKDIM_R = 64;
@@ -783,13 +783,13 @@ inline void rotate270_inner_block<uint8_t, 3, 64, 64>(const uint8_t* src,
 
 template <>
 inline void rotate270_inner_block<uint8_t, 4, 64, 64>(const uint8_t* src,
-                                                     int obi,
-                                                     int obj,
-                                                     int outHeight,
-                                                     int outWidth,
-                                                     int inWidthStride,
-                                                     int outWidthStride,
-                                                     uint8_t* dst)
+                                                      int obi,
+                                                      int obj,
+                                                      int outHeight,
+                                                      int outWidth,
+                                                      int inWidthStride,
+                                                      int outWidthStride,
+                                                      uint8_t* dst)
 {
     // little trick here: use uint32_t for uint8_t * 4 channel to avoid register overflow
     constexpr int CHANNELS = 4;

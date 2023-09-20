@@ -48,83 +48,70 @@ struct RowSum {
 
         width = (width - 1) * cn;
 
-        if( cn == 1 )
-        {
+        if (cn == 1) {
             ST s = 0;
-            for( i = 0; i < ksz_cn; i++ ) {
+            for (i = 0; i < ksz_cn; i++) {
                 s += (ST)S[i];
-            }                
-            D[0] = s;
-            for( i = 0; i < width; i++ )
-            {
-                s += (ST)S[i + ksz_cn] - (ST)S[i];
-                D[i+1] = s;
             }
-        }
-        else if( cn == 3 )
-        {
+            D[0] = s;
+            for (i = 0; i < width; i++) {
+                s += (ST)S[i + ksz_cn] - (ST)S[i];
+                D[i + 1] = s;
+            }
+        } else if (cn == 3) {
             ST s0 = 0, s1 = 0, s2 = 0;
-            for( i = 0; i < ksz_cn; i += 3 )
-            {
+            for (i = 0; i < ksz_cn; i += 3) {
                 s0 += (ST)S[i];
-                s1 += (ST)S[i+1];
-                s2 += (ST)S[i+2];
+                s1 += (ST)S[i + 1];
+                s2 += (ST)S[i + 2];
             }
             D[0] = s0;
             D[1] = s1;
             D[2] = s2;
-            for( i = 0; i < width; i += 3 )
-            {
+            for (i = 0; i < width; i += 3) {
                 s0 += (ST)S[i + ksz_cn] - (ST)S[i];
                 s1 += (ST)S[i + ksz_cn + 1] - (ST)S[i + 1];
                 s2 += (ST)S[i + ksz_cn + 2] - (ST)S[i + 2];
-                D[i+3] = s0;
-                D[i+4] = s1;
-                D[i+5] = s2;
+                D[i + 3] = s0;
+                D[i + 4] = s1;
+                D[i + 5] = s2;
             }
-        }
-        else if( cn == 4 )
-        {
+        } else if (cn == 4) {
             ST s0 = 0, s1 = 0, s2 = 0, s3 = 0;
-            for( i = 0; i < ksz_cn; i += 4 )
-            {
+            for (i = 0; i < ksz_cn; i += 4) {
                 s0 += (ST)S[i];
-                s1 += (ST)S[i+1];
-                s2 += (ST)S[i+2];
-                s3 += (ST)S[i+3];
+                s1 += (ST)S[i + 1];
+                s2 += (ST)S[i + 2];
+                s3 += (ST)S[i + 3];
             }
             D[0] = s0;
             D[1] = s1;
             D[2] = s2;
             D[3] = s3;
-            for( i = 0; i < width; i += 4 )
-            {
+            for (i = 0; i < width; i += 4) {
                 s0 += (ST)S[i + ksz_cn] - (ST)S[i];
                 s1 += (ST)S[i + ksz_cn + 1] - (ST)S[i + 1];
                 s2 += (ST)S[i + ksz_cn + 2] - (ST)S[i + 2];
                 s3 += (ST)S[i + ksz_cn + 3] - (ST)S[i + 3];
-                D[i+4] = s0;
-                D[i+5] = s1;
-                D[i+6] = s2;
-                D[i+7] = s3;
+                D[i + 4] = s0;
+                D[i + 5] = s1;
+                D[i + 6] = s2;
+                D[i + 7] = s3;
             }
-        }
-        else {
-            for( k = 0; k < cn; k++, S++, D++ )
-            {
+        } else {
+            for (k = 0; k < cn; k++, S++, D++) {
                 ST s = 0;
-                for( i = 0; i < ksz_cn; i += cn )
+                for (i = 0; i < ksz_cn; i += cn)
                     s += (ST)S[i];
                 D[0] = s;
-                for( i = 0; i < width; i += cn )
-                {
+                for (i = 0; i < width; i += cn) {
                     s += (ST)S[i + ksz_cn] - (ST)S[i];
-                    D[i+cn] = s;
+                    D[i + cn] = s;
                 }
             }
         }
     }
-    
+
     int32_t ksize;
 };
 
@@ -329,7 +316,7 @@ struct ColumnSum<uint32_t, uint8_t> {
                     uint32x4_t vSumPlus1 = vaddq_u32(vSum1, vSource1);
                     uint32x4_t vSumPlus2 = vaddq_u32(vSum2, vSource2);
                     uint32x4_t vSumPlus3 = vaddq_u32(vSum3, vSource3);
-                    
+
                     // D[i] = s0 * scale;
                     float32x4_t vResF0 = vmulq_f32(vcvtq_f32_u32(vSumPlus0), vScale);
                     float32x4_t vResF1 = vmulq_f32(vcvtq_f32_u32(vSumPlus1), vScale);
@@ -363,7 +350,7 @@ struct ColumnSum<uint32_t, uint8_t> {
                     D[i] = saturate_cast(s0 * scale);
                     SUM[i] = s0 - Sm[i];
                 }
-                
+
                 dst += dststep;
             }
         } else {
@@ -400,7 +387,7 @@ struct ColumnSum<uint32_t, uint8_t> {
                     uint32x4_t vSumPlus1 = vaddq_u32(vSum1, vSource1);
                     uint32x4_t vSumPlus2 = vaddq_u32(vSum2, vSource2);
                     uint32x4_t vSumPlus3 = vaddq_u32(vSum3, vSource3);
-                    
+
                     // D[i] = s0;
                     // saturating convert to uint8_t
                     uint16x8_t vResUh0 = vqmovn_high_u32(vqmovn_u32(vSumPlus0), vSumPlus1);
@@ -425,7 +412,7 @@ struct ColumnSum<uint32_t, uint8_t> {
                     D[i] = saturate_cast(s0);
                     SUM[i] = s0 - Sm[i];
                 }
-                
+
                 dst += dststep;
             }
         }
@@ -530,7 +517,7 @@ struct ColumnSum<double, float> {
                     D[i] = s0 * scale;
                     SUM[i] = s0 - Sm[i];
                 }
-                
+
                 dst += dststep;
             }
         } else {
@@ -569,7 +556,7 @@ struct ColumnSum<double, float> {
                     D[i] = s0;
                     SUM[i] = s0 - Sm[i];
                 }
-                
+
                 dst += dststep;
             }
         }
@@ -596,17 +583,8 @@ void boxFilter_f(int32_t height,
     RowSum<float, double> rowSum(ksize_x);
     ColumnSum<double, float> columnSum(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
     SeparableFilterEngine<float, double, float, RowSum<float, double>, ColumnSum<double, float>> engine(
-        height,
-        width,
-        cn,
-        ksize_y,
-        ksize_x,
-        borderType,
-        border_value,
-        rowSum,
-        columnSum
-    );
-    
+        height, width, cn, ksize_y, ksize_x, borderType, border_value, rowSum, columnSum);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 }
 
@@ -626,17 +604,8 @@ void boxFilter_b(int32_t height,
     RowSum<uint8_t, uint32_t> rowSum(ksize_x);
     ColumnSum<uint32_t, uint8_t> columnSum(ksize_y, normalize ? 1. / (ksize_x * ksize_y) : 1);
     SeparableFilterEngine<uint8_t, uint32_t, uint8_t, RowSum<uint8_t, uint32_t>, ColumnSum<uint32_t, uint8_t>> engine(
-        height,
-        width,
-        cn,
-        ksize_y,
-        ksize_x,
-        borderType,
-        border_value,
-        rowSum,
-        columnSum
-    );
-    
+        height, width, cn, ksize_y, ksize_x, borderType, border_value, rowSum, columnSum);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 }
 

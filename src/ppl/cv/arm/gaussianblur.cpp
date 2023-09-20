@@ -100,7 +100,8 @@ static void createGaussianKernels_double(std::vector<double> &k, int32_t ksize, 
     k = getGaussianKernel_double(sigma, ksize);
 }
 
-static uint16_t saturate_cast_u32_u16(uint32_t val) {
+static uint16_t saturate_cast_u32_u16(uint32_t val)
+{
     if (val > 65535) {
         return 65535;
     } else {
@@ -108,7 +109,8 @@ static uint16_t saturate_cast_u32_u16(uint32_t val) {
     }
 }
 
-static uint8_t saturate_cast_u32_u8(uint32_t val) {
+static uint8_t saturate_cast_u32_u8(uint32_t val)
+{
     if (val > 255) {
         return 255;
     } else {
@@ -116,7 +118,7 @@ static uint8_t saturate_cast_u32_u8(uint32_t val) {
     }
 }
 
-template<typename ST, typename DT>
+template <typename ST, typename DT>
 struct SymmRowFilter {
     SymmRowFilter(const std::vector<float> &_kernel)
     {
@@ -147,7 +149,7 @@ struct SymmRowFilter {
     std::vector<float> kernel;
 };
 
-template<>
+template <>
 struct SymmRowFilter<float, float> {
     SymmRowFilter(const std::vector<float> &_kernel)
     {
@@ -183,8 +185,8 @@ struct SymmRowFilter<float, float> {
             for (int k = 1; k <= ksize2; k++) {
                 vScale = vdupq_n_f32(kx[k]);
 
-                const float* srcNegK = src - k * cn;
-                const float* srcK = src + k * cn;
+                const float *srcNegK = src - k * cn;
+                const float *srcK = src + k * cn;
                 prefetch(srcNegK);
                 float32x4_t vInNegK0 = vld1q_f32(srcNegK + 0);
                 float32x4_t vInNegK1 = vld1q_f32(srcNegK + 4);
@@ -224,31 +226,28 @@ struct SymmRowFilter<float, float> {
     std::vector<float> kernel;
 };
 
-template<typename ST, typename DT>
-struct SymmColumnFilter
-{
-    SymmColumnFilter( const std::vector<float>& _kernel)
+template <typename ST, typename DT>
+struct SymmColumnFilter {
+    SymmColumnFilter(const std::vector<float> &_kernel)
     {
         kernel = _kernel;
         ksize = _kernel.size();
     }
 
-    void operator()(const ST* const* src, DT* dst, int dststep, int count, int width)
+    void operator()(const ST *const *src, DT *dst, int dststep, int count, int width)
     {
         int ksize2 = ksize / 2;
-        const ST* ky = kernel.data() + ksize2;
+        const ST *ky = kernel.data() + ksize2;
         int i, k;
         src += ksize2;
 
-        for( ; count--; dst += dststep, src++ )
-        {
-            DT* D = (DT*)dst;
+        for (; count--; dst += dststep, src++) {
+            DT *D = (DT *)dst;
             i = 0;
-            for( ; i < width; i++ )
-            {
-                ST s0 = ky[0]*src[0][i];
-                for( k = 1; k <= ksize2; k++ ) {
-                    s0 += ky[k]*(src[k][i] + src[-k][i]);
+            for (; i < width; i++) {
+                ST s0 = ky[0] * src[0][i];
+                for (k = 1; k <= ksize2; k++) {
+                    s0 += ky[k] * (src[k][i] + src[-k][i]);
                 }
                 // need saturate cast here for uint8_t
                 D[i] = s0;
@@ -260,25 +259,23 @@ struct SymmColumnFilter
     int ksize;
 };
 
-template<>
-struct SymmColumnFilter<float, float>
-{
-    SymmColumnFilter( const std::vector<float>& _kernel)
+template <>
+struct SymmColumnFilter<float, float> {
+    SymmColumnFilter(const std::vector<float> &_kernel)
     {
         kernel = _kernel;
         ksize = _kernel.size();
     }
 
-    void operator()(const float* const* src, float* dst, int dststep, int count, int width)
+    void operator()(const float *const *src, float *dst, int dststep, int count, int width)
     {
         int ksize2 = ksize / 2;
-        const float* ky = kernel.data() + ksize2;
+        const float *ky = kernel.data() + ksize2;
         int i, k;
         src += ksize2;
 
-        for( ; count--; dst += dststep, src++ )
-        {
-            float* D = (float*)dst;
+        for (; count--; dst += dststep, src++) {
+            float *D = (float *)dst;
             i = 0;
             for (; i <= width - 16; i += 16) {
                 float32x4_t vScale = vdupq_n_f32(ky[0]);
@@ -292,8 +289,8 @@ struct SymmColumnFilter<float, float>
                 float32x4_t vRes1 = vmulq_f32(vIn1, vScale);
                 float32x4_t vRes2 = vmulq_f32(vIn2, vScale);
                 float32x4_t vRes3 = vmulq_f32(vIn3, vScale);
-                
-                for( k = 1; k <= ksize2; k++ ) {
+
+                for (k = 1; k <= ksize2; k++) {
                     vScale = vdupq_n_f32(ky[k]);
                     prefetch(src[k] + i);
                     float32x4_t vInK0 = vld1q_f32(src[k] + i + 0);
@@ -322,11 +319,10 @@ struct SymmColumnFilter<float, float>
                 vst1q_f32(dst + i + 8, vRes2);
                 vst1q_f32(dst + i + 12, vRes3);
             }
-            for( ; i < width; i++ )
-            {
-                float s0 = ky[0]*src[0][i];
-                for( k = 1; k <= ksize2; k++ )
-                    s0 += ky[k]*(src[k][i] + src[-k][i]);
+            for (; i < width; i++) {
+                float s0 = ky[0] * src[0][i];
+                for (k = 1; k <= ksize2; k++)
+                    s0 += ky[k] * (src[k][i] + src[-k][i]);
                 D[i] = s0;
             }
         }
@@ -340,38 +336,46 @@ using ufixedpoint16 = uint16_t;
 using ufixedpoint32 = uint32_t;
 static const int fixedShift = 8;
 static const int fixedShift_ufix32 = 16;
-ufixedpoint16 fixed_convert_u8_to_ufix16(uint8_t v) {
+ufixedpoint16 fixed_convert_u8_to_ufix16(uint8_t v)
+{
     return (static_cast<uint16_t>(v) << fixedShift);
 }
 
-ufixedpoint32 fixed_convert_ufix16_to_ufix32(ufixedpoint16 v) {
+ufixedpoint32 fixed_convert_ufix16_to_ufix32(ufixedpoint16 v)
+{
     return (static_cast<uint32_t>(v) << (fixedShift_ufix32 - fixedShift));
 }
 
-ufixedpoint16 fixed_fn_mul(ufixedpoint16 a, uint32_t b) {
+ufixedpoint16 fixed_fn_mul(ufixedpoint16 a, uint32_t b)
+{
     return saturate_cast_u32_u16(static_cast<uint32_t>(a) * b);
 }
 
-ufixedpoint32 fixed_ff_mul(ufixedpoint16 a, uint32_t b) {
+ufixedpoint32 fixed_ff_mul(ufixedpoint16 a, uint32_t b)
+{
     return static_cast<uint32_t>(a) * b;
 }
 
-ufixedpoint16 fixed_ff_sat_add(ufixedpoint16 a, ufixedpoint16 b) {
+ufixedpoint16 fixed_ff_sat_add(ufixedpoint16 a, ufixedpoint16 b)
+{
     uint16_t res = a + b;
     return a > res ? static_cast<uint16_t>(0xffff) : res;
 }
 
-ufixedpoint32 fixed_ff_sat_add_32(ufixedpoint32 a, ufixedpoint32 b) {
+ufixedpoint32 fixed_ff_sat_add_32(ufixedpoint32 a, ufixedpoint32 b)
+{
     uint32_t res = a + b;
     return a > res ? static_cast<uint32_t>(0xffffffff) : res;
 }
 
-uint8_t fixed_sat_cast_ufix16_to_u8(ufixedpoint16 val) {
+uint8_t fixed_sat_cast_ufix16_to_u8(ufixedpoint16 val)
+{
     uint8_t res = saturate_cast_u32_u8((val + ((1 << fixedShift) >> 1)) >> fixedShift);
     return res;
 }
 
-uint8_t fixed_sat_cast_ufix32_to_u8(ufixedpoint32 val) {
+uint8_t fixed_sat_cast_ufix32_to_u8(ufixedpoint32 val)
+{
     // should saturate add be used here? but opencv simply used add.
     uint32_t res = (val + ((1 << fixedShift_ufix32) >> 1)) >> fixedShift_ufix32;
     return res > 255 ? 255 : res;
@@ -413,7 +417,7 @@ struct FixedPointSymmRowFilter {
             uint16x8_t vOut0 = vqmovn_high_u32(vOut0_low, vMullRes01);
             uint16x4_t vOut1_low = vqmovn_u32(vMullRes10);
             uint16x8_t vOut1 = vqmovn_high_u32(vOut1_low, vMullRes11);
-            
+
             for (int k = 1; k <= ksize2; k++) {
                 // s = fixed_ff_sat_add(s, fixed_fn_mul(kx[k], static_cast<uint16_t>(src[k * cn]) + src[-k * cn]));
                 vScale = vdupq_n_u16(kx[k]);
@@ -428,7 +432,7 @@ struct FixedPointSymmRowFilter {
                 // surely won't overflow here
                 vIn0 = vaddw_u8(vInNegK0, vget_low_u8(vInKU8));
                 vIn1 = vaddw_high_u8(vInNegK1, vInKU8);
-                
+
                 vMullRes00 = vmull_u16(vget_low_u16(vScale), vget_low_u16(vIn0));
                 vMullRes01 = vmull_high_u16(vScale, vIn0);
                 vMullRes10 = vmull_u16(vget_low_u16(vScale), vget_low_u16(vIn1));
@@ -459,36 +463,34 @@ struct FixedPointSymmRowFilter {
 };
 
 struct FixedPointSymmColumnFilter {
-    FixedPointSymmColumnFilter( const std::vector<ufixedpoint16>& _kernel)
+    FixedPointSymmColumnFilter(const std::vector<ufixedpoint16> &_kernel)
     {
         kernel = _kernel;
         ksize = _kernel.size();
     }
 
-    void operator()(const ufixedpoint16* const* src, uint8_t* dst, int dststep, int count, int width)
+    void operator()(const ufixedpoint16 *const *src, uint8_t *dst, int dststep, int count, int width)
     {
         int ksize2 = ksize / 2;
-        const ufixedpoint16* ky = kernel.data() + ksize2;
+        const ufixedpoint16 *ky = kernel.data() + ksize2;
         int i, k;
         src += ksize2;
 
-        for( ; count--; dst += dststep, src++ )
-        {
+        for (; count--; dst += dststep, src++) {
             i = 0;
-            for( ; i <= width - 16; i+=16 )
-            {
+            for (; i <= width - 16; i += 16) {
                 prefetch(src[0] + i);
                 uint16x8_t vIn0 = vld1q_u16(src[0] + i);
                 uint16x8_t vIn1 = vld1q_u16(src[0] + i + 8);
                 uint16x8_t vScale = vdupq_n_u16(ky[0]);
-                
+
                 // ufixedpoint32 s0 = fixed_ff_mul(ky[0], src[0][i]);
                 uint32x4_t vResU32_00 = vmull_u16(vget_low_u16(vScale), vget_low_u16(vIn0));
                 uint32x4_t vResU32_01 = vmull_high_u16(vScale, vIn0);
                 uint32x4_t vResU32_10 = vmull_u16(vget_low_u16(vScale), vget_low_u16(vIn1));
                 uint32x4_t vResU32_11 = vmull_high_u16(vScale, vIn1);
-                
-                for( k = 1; k <= ksize2; k++ ) {
+
+                for (k = 1; k <= ksize2; k++) {
                     // s0 = fixed_ff_sat_add_32(s0, fixed_ff_mul(ky[k], static_cast<uint32_t>(src[k][i]) + src[-k][i]));
                     uint32x4_t vScaleU32 = vdupq_n_u32(ky[k]);
 
@@ -528,10 +530,9 @@ struct FixedPointSymmColumnFilter {
                 vst1q_u8(dst + i, vOutU8_0);
             }
 
-            for( ; i < width; i++ )
-            {
+            for (; i < width; i++) {
                 ufixedpoint32 s0 = fixed_ff_mul(ky[0], src[0][i]);
-                for( k = 1; k <= ksize2; k++ ) {
+                for (k = 1; k <= ksize2; k++) {
                     s0 = fixed_ff_sat_add_32(s0, fixed_ff_mul(ky[k], static_cast<uint32_t>(src[k][i]) + src[-k][i]));
                 }
                 dst[i] = fixed_sat_cast_ufix32_to_u8(s0);
@@ -574,7 +575,7 @@ struct FixedPointSymmGaussianRowFilter {
             // vIn0 is less than 0xff, vScale is less than 0x10000, so no overflow
             uint16x8_t vOut0 = vmulq_u16(vScale, vIn0);
             uint16x8_t vOut1 = vmulq_u16(vScale, vIn1);
-            
+
             for (int k = 1; k <= ksize2; k++) {
                 // s = fixed_ff_sat_add(s, fixed_fn_mul(kx[k], static_cast<uint16_t>(src[k * cn]) + src[-k * cn]));
                 vScale = vdupq_n_u16(kx[k]);
@@ -589,7 +590,7 @@ struct FixedPointSymmGaussianRowFilter {
                 // surely won't overflow here
                 vIn0 = vaddw_u8(vInNegK0, vget_low_u8(vInKU8));
                 vIn1 = vaddw_high_u8(vInNegK1, vInKU8);
-                
+
                 uint16x8_t vMulRes0 = vmulq_u16(vScale, vIn0);
                 uint16x8_t vMulRes1 = vmulq_u16(vScale, vIn1);
 
@@ -643,13 +644,14 @@ struct FixedPointSymmRowFilter3N121 {
             uint16x8_t vOut1 = vqaddq_u16(vIn1, vInNegCn1);
             vOut0 = vqaddq_u16(vOut0, vInCn0);
             vOut1 = vqaddq_u16(vOut1, vInCn1);
-            
+
             vst1q_u16(dst + i, vOut0);
             vst1q_u16(dst + i + 8, vOut1);
         }
         for (; i < width; i++) {
             const uint8_t *src = src0 + i;
-            ufixedpoint16 s = fixed_ff_sat_add(fixed_convert_u8_to_ufix16(src[0]) >> 1, fixed_convert_u8_to_ufix16(src[cn]) >> 2);
+            ufixedpoint16 s =
+                fixed_ff_sat_add(fixed_convert_u8_to_ufix16(src[0]) >> 1, fixed_convert_u8_to_ufix16(src[cn]) >> 2);
             s = fixed_ff_sat_add(s, fixed_convert_u8_to_ufix16(src[-cn]) >> 2);
             dst[i] = s;
         }
@@ -659,12 +661,11 @@ struct FixedPointSymmRowFilter3N121 {
 struct FixedPointSymmColumnFilter3N121 {
     FixedPointSymmColumnFilter3N121() {}
 
-    void operator()(const ufixedpoint16* const* src, uint8_t* dst, int dststep, int count, int width)
+    void operator()(const ufixedpoint16 *const *src, uint8_t *dst, int dststep, int count, int width)
     {
         src += 1;
 
-        for( ; count--; dst += dststep, src++ )
-        {
+        for (; count--; dst += dststep, src++) {
             int i = 0;
 
             for (; i <= width - 16; i += 16) {
@@ -702,8 +703,7 @@ struct FixedPointSymmColumnFilter3N121 {
                 vst1q_u8(dst + i, vOutU8_0);
             }
 
-            for( ; i < width; i++ )
-            {
+            for (; i < width; i++) {
                 ufixedpoint32 s0 = fixed_convert_ufix16_to_ufix32(src[0][i]) >> 1;
                 s0 = fixed_ff_sat_add_32(s0, fixed_convert_ufix16_to_ufix32(src[1][i]) >> 2);
                 s0 = fixed_ff_sat_add_32(s0, fixed_convert_ufix16_to_ufix32(src[-1][i]) >> 2);
@@ -713,7 +713,9 @@ struct FixedPointSymmColumnFilter3N121 {
     }
 };
 
-static void getGaussianKernelFixedPoint_ED(std::vector<int64_t>& result, const std::vector<double> kernel, int fractionBits)
+static void getGaussianKernelFixedPoint_ED(std::vector<int64_t> &result,
+                                           const std::vector<double> kernel,
+                                           int fractionBits)
 {
     const int n = (int)kernel.size();
 
@@ -725,8 +727,7 @@ static void getGaussianKernelFixedPoint_ED(std::vector<int64_t>& result, const s
     int n2_ = n / 2; // n is odd
     double err = 0;
     int64_t sum = 0;
-    for (int i = 0; i < n2_; i++)
-    {
+    for (int i = 0; i < n2_; i++) {
         double adj_v = kernel[i] * fractionMultiplier_d + err;
         int64_t v0 = roundeven(adj_v);
         err = adj_v - v0;
@@ -741,7 +742,7 @@ static void getGaussianKernelFixedPoint_ED(std::vector<int64_t>& result, const s
     return;
 }
 
-static void getFixedpointGaussianKernel(std::vector<ufixedpoint16>& res, int n, double sigma)
+static void getFixedpointGaussianKernel(std::vector<ufixedpoint16> &res, int n, double sigma)
 {
     std::vector<double> res_d;
     createGaussianKernels_double(res_d, n, sigma, sense8U);
@@ -750,8 +751,7 @@ static void getFixedpointGaussianKernel(std::vector<ufixedpoint16>& res, int n, 
     getGaussianKernelFixedPoint_ED(fixed_256, res_d, 8);
 
     res.resize(n);
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
         res[i] = static_cast<ufixedpoint16>(fixed_256[i]);
     }
     return;
@@ -771,20 +771,11 @@ void GaussianBlur_f(int32_t height,
     std::vector<float> kernel;
     createGaussianKernels(kernel, kernel_len, sigma, sense32F);
 
-    SymmRowFilter<float, float>  rowFilter = SymmRowFilter<float, float>(kernel);
+    SymmRowFilter<float, float> rowFilter = SymmRowFilter<float, float>(kernel);
     SymmColumnFilter<float, float> colFilter = SymmColumnFilter<float, float>(kernel);
     SeparableFilterEngine<float, float, float, SymmRowFilter<float, float>, SymmColumnFilter<float, float>> engine(
-        height,
-        width,
-        cn,
-        kernel_len,
-        kernel_len,
-        border_type,
-        0,
-        rowFilter,
-        colFilter
-    );
-    
+        height, width, cn, kernel_len, kernel_len, border_type, 0, rowFilter, colFilter);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 }
 
@@ -805,37 +796,27 @@ void GaussianBlur_b(int32_t height,
 
         FixedPointSymmRowFilter3N121 rowFilter = FixedPointSymmRowFilter3N121();
         FixedPointSymmColumnFilter3N121 colFilter = FixedPointSymmColumnFilter3N121();
-        SeparableFilterEngine<uint8_t, ufixedpoint16, uint8_t, FixedPointSymmRowFilter3N121, FixedPointSymmColumnFilter3N121> engine(
-            height,
-            width,
-            cn,
-            kernel_len,
-            kernel_len,
-            border_type,
-            0,
-            rowFilter,
-            colFilter
-        );
+        SeparableFilterEngine<uint8_t,
+                              ufixedpoint16,
+                              uint8_t,
+                              FixedPointSymmRowFilter3N121,
+                              FixedPointSymmColumnFilter3N121>
+            engine(height, width, cn, kernel_len, kernel_len, border_type, 0, rowFilter, colFilter);
 
         engine.process(inData, inWidthStride, outData, outWidthStride);
     } else {
         std::vector<ufixedpoint16> kernel;
         getFixedpointGaussianKernel(kernel, kernel_len, sigma);
 
-        FixedPointSymmGaussianRowFilter  rowFilter = FixedPointSymmGaussianRowFilter(kernel);
+        FixedPointSymmGaussianRowFilter rowFilter = FixedPointSymmGaussianRowFilter(kernel);
         FixedPointSymmColumnFilter colFilter = FixedPointSymmColumnFilter(kernel);
-        SeparableFilterEngine<uint8_t, ufixedpoint16, uint8_t, FixedPointSymmGaussianRowFilter, FixedPointSymmColumnFilter> engine(
-            height,
-            width,
-            cn,
-            kernel_len,
-            kernel_len,
-            border_type,
-            0,
-            rowFilter,
-            colFilter
-        );
-        
+        SeparableFilterEngine<uint8_t,
+                              ufixedpoint16,
+                              uint8_t,
+                              FixedPointSymmGaussianRowFilter,
+                              FixedPointSymmColumnFilter>
+            engine(height, width, cn, kernel_len, kernel_len, border_type, 0, rowFilter, colFilter);
+
         engine.process(inData, inWidthStride, outData, outWidthStride);
     }
 }
@@ -915,8 +896,7 @@ template <>
     if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    GaussianBlur_b<3>(
-        height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
+    GaussianBlur_b<3>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
     return ppl::common::RC_SUCCESS;
 }
 template <>
@@ -934,8 +914,7 @@ template <>
     if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    GaussianBlur_b<1>(
-        height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
+    GaussianBlur_b<1>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
     return ppl::common::RC_SUCCESS;
 }
 template <>
@@ -953,8 +932,7 @@ template <>
     if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    GaussianBlur_b<4>(
-        height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
+    GaussianBlur_b<4>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
     return ppl::common::RC_SUCCESS;
 }
 

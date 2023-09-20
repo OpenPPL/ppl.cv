@@ -107,24 +107,30 @@ void BM_ConvertTo_opencv_aarch64(benchmark::State &state)
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(Tsrc, Tdst)                                                                          \
-    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c1)->Args({640, 480})->UseManualTime()->Iterations(10); \
-    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c3)->Args({640, 480})->UseManualTime()->Iterations(10); \
-    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c4)                                                    \
-        ->Args({640, 480})                                                                                             \
-        ->UseManualTime()                                                                                              \
-        ->Iterations(10);                                                                                              \
-    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c1)                                                    \
-        ->Args({1920, 1080})                                                                                           \
-        ->UseManualTime()                                                                                              \
-        ->Iterations(10);                                                                                              \
-    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c3)                                                    \
-        ->Args({1920, 1080})                                                                                           \
-        ->UseManualTime()                                                                                              \
-        ->Iterations(10);                                                                                              \
-    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c4)                                                    \
-        ->Args({1920, 1080})                                                                                           \
-        ->UseManualTime()                                                                                              \
+#define RUN_OPENCV_TYPE_FUNCTIONS(Tsrc, Tdst)                       \
+    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c1) \
+        ->Args({640, 480})                                          \
+        ->UseManualTime()                                           \
+        ->Iterations(10);                                           \
+    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c3) \
+        ->Args({640, 480})                                          \
+        ->UseManualTime()                                           \
+        ->Iterations(10);                                           \
+    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c4) \
+        ->Args({640, 480})                                          \
+        ->UseManualTime()                                           \
+        ->Iterations(10);                                           \
+    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c1) \
+        ->Args({1920, 1080})                                        \
+        ->UseManualTime()                                           \
+        ->Iterations(10);                                           \
+    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c3) \
+        ->Args({1920, 1080})                                        \
+        ->UseManualTime()                                           \
+        ->Iterations(10);                                           \
+    BENCHMARK_TEMPLATE(BM_ConvertTo_opencv_aarch64, Tsrc, Tdst, c4) \
+        ->Args({1920, 1080})                                        \
+        ->UseManualTime()                                           \
         ->Iterations(10);
 
 #define RUN_PPL_CV_TYPE_FUNCTIONS(Tsrc, Tdst)                                                                          \
