@@ -122,28 +122,25 @@ bool PplCvArmFilter2DTest<Tsrc, Tdst, channels>::apply()
     return identity;
 }
 
-#define UNITTEST(Tsrc, Tdst, channels)                                                                          \
-    using PplCvArmFilter2DTest_##Tsrc##_##channels = PplCvArmFilter2DTest<Tsrc, Tdst, channels>;                \
-    TEST_P(PplCvArmFilter2DTest_##Tsrc##_##channels, Standard)                                                  \
-    {                                                                                                           \
-        bool identity = this->apply();                                                                          \
-        EXPECT_TRUE(identity);                                                                                  \
-    }                                                                                                           \
-                                                                                                                \
-    INSTANTIATE_TEST_CASE_P(                                                                                    \
-        IsEqual,                                                                                                \
-        PplCvArmFilter2DTest_##Tsrc##_##channels,                                                               \
-        ::testing::Combine(                                                                                     \
-            ::testing::Values(1, 3, 5, 17, 25, 31, 43),                                                            \
-            ::testing::Values(0, 43),                                                                           \
-            ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_REFLECT_101), \
-            ::testing::Values(cv::Size{320, 240},                                                               \
-                              cv::Size{321, 245},                                                               \
-                              cv::Size{647, 493},                                                               \
-                              cv::Size{654, 486},                                                              \
-                              cv::Size{1280, 720})),                                                           \
-        [](const testing::TestParamInfo<PplCvArmFilter2DTest_##Tsrc##_##channels::ParamType>& info) {           \
-            return convertToStringFilter2D(info.param);                                                         \
+#define UNITTEST(Tsrc, Tdst, channels)                                                                                 \
+    using PplCvArmFilter2DTest_##Tsrc##_##channels = PplCvArmFilter2DTest<Tsrc, Tdst, channels>;                       \
+    TEST_P(PplCvArmFilter2DTest_##Tsrc##_##channels, Standard)                                                         \
+    {                                                                                                                  \
+        bool identity = this->apply();                                                                                 \
+        EXPECT_TRUE(identity);                                                                                         \
+    }                                                                                                                  \
+                                                                                                                       \
+    INSTANTIATE_TEST_CASE_P(                                                                                           \
+        IsEqual,                                                                                                       \
+        PplCvArmFilter2DTest_##Tsrc##_##channels,                                                                      \
+        ::testing::Combine(                                                                                            \
+            ::testing::Values(1, 3, 5, 17, 25, 31, 43),                                                                \
+            ::testing::Values(0, 43),                                                                                  \
+            ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_REFLECT_101),        \
+            ::testing::Values(                                                                                         \
+                cv::Size{320, 240}, cv::Size{321, 245}, cv::Size{647, 493}, cv::Size{654, 486}, cv::Size{1280, 720})), \
+        [](const testing::TestParamInfo<PplCvArmFilter2DTest_##Tsrc##_##channels::ParamType>& info) {                  \
+            return convertToStringFilter2D(info.param);                                                                \
         });
 
 UNITTEST(uint8_t, uint8_t, 1)

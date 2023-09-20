@@ -42,17 +42,29 @@ void BM_GaussianBlur_ppl_aarch64(benchmark::State &state)
 
     // Warm up the CPU.
     for (int i = 0; i < warmup_iters; i++) {
-        ppl::cv::arm::GaussianBlur<T, channels>(src.rows, src.cols,
-            src.step / sizeof(T), (T*)src.data, ksize, sigma,
-            dst.step / sizeof(T), (T*)dst.data, border_type);
+        ppl::cv::arm::GaussianBlur<T, channels>(src.rows,
+                                                src.cols,
+                                                src.step / sizeof(T),
+                                                (T *)src.data,
+                                                ksize,
+                                                sigma,
+                                                dst.step / sizeof(T),
+                                                (T *)dst.data,
+                                                border_type);
     }
 
     for (auto _ : state) {
         auto time_start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < perf_iters; i++) {
-            ppl::cv::arm::GaussianBlur<T, channels>(src.rows, src.cols,
-                src.step / sizeof(T), (T*)src.data, ksize, sigma,
-                dst.step / sizeof(T), (T*)dst.data, border_type);
+            ppl::cv::arm::GaussianBlur<T, channels>(src.rows,
+                                                    src.cols,
+                                                    src.step / sizeof(T),
+                                                    (T *)src.data,
+                                                    ksize,
+                                                    sigma,
+                                                    dst.step / sizeof(T),
+                                                    (T *)dst.data,
+                                                    border_type);
         }
         auto time_end = std::chrono::high_resolution_clock::now();
         auto duration = time_end - time_start;
@@ -63,13 +75,19 @@ void BM_GaussianBlur_ppl_aarch64(benchmark::State &state)
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, ksize, border_type)                    \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_aarch64, type, c1, ksize, border_type)->   \
-                   Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_aarch64, type, c3, ksize, border_type)->   \
-                   Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_aarch64, type, c4, ksize, border_type)->   \
-                   Args({640, 480})->UseManualTime()->Iterations(10);
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type, ksize, border_type)                       \
+    BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_aarch64, type, c1, ksize, border_type) \
+        ->Args({640, 480})                                                        \
+        ->UseManualTime()                                                         \
+        ->Iterations(10);                                                         \
+    BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_aarch64, type, c3, ksize, border_type) \
+        ->Args({640, 480})                                                        \
+        ->UseManualTime()                                                         \
+        ->Iterations(10);                                                         \
+    BENCHMARK_TEMPLATE(BM_GaussianBlur_ppl_aarch64, type, c4, ksize, border_type) \
+        ->Args({640, 480})                                                        \
+        ->UseManualTime()                                                         \
+        ->Iterations(10);
 
 RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, 3, ppl::cv::BORDER_REPLICATE)
 RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, 3, ppl::cv::BORDER_REFLECT)
@@ -111,14 +129,11 @@ void BM_GaussianBlur_opencv_aarch64(benchmark::State &state)
     cv::BorderTypes border = cv::BORDER_DEFAULT;
     if (border_type == ppl::cv::BORDER_REPLICATE) {
         border = cv::BORDER_REPLICATE;
-    }
-    else if (border_type == ppl::cv::BORDER_REFLECT) {
+    } else if (border_type == ppl::cv::BORDER_REFLECT) {
         border = cv::BORDER_REFLECT;
-    }
-    else if (border_type == ppl::cv::BORDER_REFLECT_101) {
+    } else if (border_type == ppl::cv::BORDER_REFLECT_101) {
         border = cv::BORDER_REFLECT_101;
-    }
-    else {
+    } else {
     }
 
     float sigma = 0.f;
@@ -145,13 +160,19 @@ void BM_GaussianBlur_opencv_aarch64(benchmark::State &state)
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(type, ksize, border_type)                    \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_aarch64, type, c1, ksize, border_type)->\
-                   Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_aarch64, type, c3, ksize, border_type)->\
-                   Args({640, 480})->UseManualTime()->Iterations(10);          \
-BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_aarch64, type, c4, ksize, border_type)->\
-                   Args({640, 480})->UseManualTime()->Iterations(10);
+#define RUN_OPENCV_TYPE_FUNCTIONS(type, ksize, border_type)                          \
+    BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_aarch64, type, c1, ksize, border_type) \
+        ->Args({640, 480})                                                           \
+        ->UseManualTime()                                                            \
+        ->Iterations(10);                                                            \
+    BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_aarch64, type, c3, ksize, border_type) \
+        ->Args({640, 480})                                                           \
+        ->UseManualTime()                                                            \
+        ->Iterations(10);                                                            \
+    BENCHMARK_TEMPLATE(BM_GaussianBlur_opencv_aarch64, type, c4, ksize, border_type) \
+        ->Args({640, 480})                                                           \
+        ->UseManualTime()                                                            \
+        ->Iterations(10);
 
 RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, 3, ppl::cv::BORDER_REPLICATE)
 RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, 3, ppl::cv::BORDER_REFLECT)

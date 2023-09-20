@@ -58,11 +58,10 @@ namespace ppl::cv::arm {
         BoxFilter<uint8_t, 1>(
             height, width, inWidthStride, inData, ksize, ksize, true, outWidthStride, mean, ppl::cv::BORDER_REPLICATE);
     } else if (adaptive_method == ppl::cv::ADAPTIVE_THRESH_GAUSSIAN_C) {
-        float *pSrcF = (float *)malloc(height * width * sizeof(float));
+        float* pSrcF = (float*)malloc(height * width * sizeof(float));
         // may need special ConvertTo with scale=1 and delta=0 to reach peak performance
         ConvertTo<uint8_t, float, 1>(height, width, inWidthStride, inData, width, pSrcF, 1, 0);
-        GaussianBlur<float, 1>(
-            height, width, width, pSrcF, ksize, 0, width, pSrcF, ppl::cv::BORDER_REPLICATE);
+        GaussianBlur<float, 1>(height, width, width, pSrcF, ksize, 0, width, pSrcF, ppl::cv::BORDER_REPLICATE);
         ConvertTo<float, uint8_t, 1>(height, width, width, pSrcF, width, mean, 1, 0);
         free(pSrcF);
     }

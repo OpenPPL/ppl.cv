@@ -68,7 +68,7 @@ public:
         init();
     };
 
-    void process(const ST* src,int inWidthStride, DT* dst, int outWidthStride);
+    void process(const ST *src, int inWidthStride, DT *dst, int outWidthStride);
 
 private:
     void init();
@@ -86,7 +86,7 @@ private:
     std::vector<ST> srcRowBuf;
     std::vector<MT> constBorderRow;
     std::vector<uint8_t> ringBuf;
-    std::vector<uint8_t*> bufRowsPtrs;
+    std::vector<uint8_t *> bufRowsPtrs;
     uint8_t *alignedRingBufPtr;
     int bufStep;
     int fill_x_left;
@@ -125,7 +125,7 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::init()
     ringBuf.resize(ringbuf_real_size);
     void *alignedPtr = ringBuf.data();
     std::align(VEC_ALIGN, bufStep * maxBufRows, alignedPtr, ringbuf_real_size);
-    alignedRingBufPtr = reinterpret_cast<uint8_t*>(alignedPtr);
+    alignedRingBufPtr = reinterpret_cast<uint8_t *>(alignedPtr);
 
     // set up fill info
     int anchor_x = kWidth / 2;
@@ -140,7 +140,7 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::init()
             ; // pass
         } else {
             int btab_esz = channels;
-            int* btab = borderTab.data();
+            int *btab = borderTab.data();
             for (int i = 0; i < fill_x_left; i++) {
                 int p0 = (borderInterpolate(-fill_x_left + i, width, borderType)) * btab_esz;
                 for (int j = 0; j < btab_esz; j++) {
@@ -163,10 +163,10 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::init()
 }
 
 template <typename ST, typename MT, typename DT, typename RowFilterType, typename ColumnFilterType>
-void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process(const ST* src,
-                                                                                   int inWidthStride,
-                                                                                   DT* dst,
-                                                                                   int outWidthStride)
+void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process(const ST *src,
+                                                                                 int inWidthStride,
+                                                                                 DT *dst,
+                                                                                 int outWidthStride)
 {
     int count = height;
     int anchor_y = kHeight / 2;
@@ -175,15 +175,15 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
     int rowFilterInputSize = width + kWidth - 1;
     int bufRows = bufRowsPtrs.size();
     bool makeBorder = (fill_x_left > 0 || fill_x_right > 0) && borderType != ppl::cv::BORDER_CONSTANT;
-    
+
     int dy = 0;
     int i = 0;
-    for(;; dst += outWidthStride * i, dy += i) {
+    for (;; dst += outWidthStride * i, dy += i) {
         int dcount = bufRows - anchor_y - startY - rowCount;
         dcount = dcount > 0 ? dcount : bufRows - kHeight + 1;
         dcount = std::min(dcount, count);
         count -= dcount;
-        for(; dcount-- > 0; src += inWidthStride) {
+        for (; dcount-- > 0; src += inWidthStride) {
             int bufRowIdx = (startY + rowCount) % bufRows;
             uint8_t *brow = alignedRingBufPtr + bufRowIdx * bufStep;
             ST *row = srcRowBuf.data();
@@ -195,18 +195,20 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
                 ++startY;
             }
 
-            memcpy(reinterpret_cast<void *>(row + fill_x_left * channels), src, (rowFilterInputSize - fill_x_left - fill_x_right) * esz);
-        
+            memcpy(reinterpret_cast<void *>(row + fill_x_left * channels),
+                   src,
+                   (rowFilterInputSize - fill_x_left - fill_x_right) * esz);
+
             if (makeBorder) {
-                for(int i = 0; i < fill_x_left*channels; i++ ){
+                for (int i = 0; i < fill_x_left * channels; i++) {
                     row[i] = src[btab[i]];
                 }
-                for(int i = 0; i < fill_x_right*channels; i++ ){
-                    row[i + (rowFilterInputSize - fill_x_right)*channels] = src[btab[i+fill_x_left*channels]];
+                for (int i = 0; i < fill_x_right * channels; i++) {
+                    row[i + (rowFilterInputSize - fill_x_right) * channels] = src[btab[i + fill_x_left * channels]];
                 }
             }
 
-            rowFilter.operator()(row, (MT*)brow, width, channels);
+            rowFilter.operator()(row, (MT *)brow, width, channels);
         }
 
         // setup bufRowsPtrs
@@ -219,17 +221,13 @@ void SeparableFilterEngine<ST, MT, DT, RowFilterType, ColumnFilterType>::process
                 bufRowsPtr_data[i] = constBorderRow.data();
             } else {
                 // CV_Assert(srcY >= this_.startY);
-                if (srcY >= startY + rowCount) {
-                    break;
-                }
+                if (srcY >= startY + rowCount) { break; }
                 int bi = srcY % bufRows;
                 bufRowsPtr_data[i] = reinterpret_cast<MT *>(alignedRingBufPtr + bi * bufStep);
             }
         }
 
-        if (i < kHeight) {
-            break;
-        }
+        if (i < kHeight) { break; }
         i -= kHeight - 1;
 
         columnFilter.operator()(bufRowsPtr_data, dst, outWidthStride, i, width * channels);
@@ -260,7 +258,7 @@ public:
         init();
     };
 
-    void process(const ST* src,int inWidthStride, DT* dst, int outWidthStride);
+    void process(const ST *src, int inWidthStride, DT *dst, int outWidthStride);
 
 private:
     void init();
@@ -278,7 +276,7 @@ private:
     std::vector<ST> srcRowBuf;
     std::vector<ST> constBorderRow;
     std::vector<uint8_t> ringBuf;
-    std::vector<uint8_t*> bufRowsPtrs;
+    std::vector<uint8_t *> bufRowsPtrs;
     uint8_t *alignedRingBufPtr;
     int bufStep;
     int fill_x_left;
@@ -315,7 +313,7 @@ void FilterEngine<ST, DT, FilterType>::init()
     ringBuf.resize(ringbuf_real_size);
     void *alignedPtr = ringBuf.data();
     std::align(VEC_ALIGN, bufStep * maxBufRows, alignedPtr, ringbuf_real_size);
-    alignedRingBufPtr = reinterpret_cast<uint8_t*>(alignedPtr);
+    alignedRingBufPtr = reinterpret_cast<uint8_t *>(alignedPtr);
 
     // set up fill info
     int anchor_x = kWidth / 2;
@@ -330,7 +328,7 @@ void FilterEngine<ST, DT, FilterType>::init()
             ; // not implemented!
         } else {
             int btab_esz = channels;
-            int* btab = borderTab.data();
+            int *btab = borderTab.data();
             for (int i = 0; i < fill_x_left; i++) {
                 int p0 = (borderInterpolate(-fill_x_left + i, width, borderType)) * btab_esz;
                 for (int j = 0; j < btab_esz; j++) {
@@ -353,10 +351,7 @@ void FilterEngine<ST, DT, FilterType>::init()
 }
 
 template <typename ST, typename DT, typename FilterType>
-void FilterEngine<ST, DT, FilterType>::process(const ST* src,
-                                               int inWidthStride,
-                                               DT* dst,
-                                               int outWidthStride)
+void FilterEngine<ST, DT, FilterType>::process(const ST *src, int inWidthStride, DT *dst, int outWidthStride)
 {
     int count = height;
     int anchor_y = kHeight / 2;
@@ -365,15 +360,15 @@ void FilterEngine<ST, DT, FilterType>::process(const ST* src,
     int rowFilterInputSize = width + kWidth - 1;
     int bufRows = bufRowsPtrs.size();
     bool makeBorder = (fill_x_left > 0 || fill_x_right > 0) && borderType != ppl::cv::BORDER_CONSTANT;
-    
+
     int dy = 0;
     int i = 0;
-    for(;; dst += outWidthStride * i, dy += i) {
+    for (;; dst += outWidthStride * i, dy += i) {
         int dcount = bufRows - anchor_y - startY - rowCount;
         dcount = dcount > 0 ? dcount : bufRows - kHeight + 1;
         dcount = std::min(dcount, count);
         count -= dcount;
-        for(; dcount-- > 0; src += inWidthStride) {
+        for (; dcount-- > 0; src += inWidthStride) {
             int bufRowIdx = (startY + rowCount) % bufRows;
             uint8_t *brow = alignedRingBufPtr + bufRowIdx * bufStep;
             ST *row = reinterpret_cast<ST *>(brow);
@@ -385,14 +380,16 @@ void FilterEngine<ST, DT, FilterType>::process(const ST* src,
                 ++startY;
             }
 
-            memcpy(reinterpret_cast<void *>(row + fill_x_left * channels), src, (rowFilterInputSize - fill_x_left - fill_x_right) * esz);
-        
+            memcpy(reinterpret_cast<void *>(row + fill_x_left * channels),
+                   src,
+                   (rowFilterInputSize - fill_x_left - fill_x_right) * esz);
+
             if (makeBorder) {
-                for(int i = 0; i < fill_x_left*channels; i++ ){
+                for (int i = 0; i < fill_x_left * channels; i++) {
                     row[i] = src[btab[i]];
                 }
-                for(int i = 0; i < fill_x_right*channels; i++ ){
-                    row[i + (rowFilterInputSize - fill_x_right)*channels] = src[btab[i+fill_x_left*channels]];
+                for (int i = 0; i < fill_x_right * channels; i++) {
+                    row[i + (rowFilterInputSize - fill_x_right) * channels] = src[btab[i + fill_x_left * channels]];
                 }
             }
         }
@@ -407,17 +404,13 @@ void FilterEngine<ST, DT, FilterType>::process(const ST* src,
                 bufRowsPtr_data[i] = constBorderRow.data();
             } else {
                 // CV_Assert(srcY >= this_.startY);
-                if (srcY >= startY + rowCount) {
-                    break;
-                }
+                if (srcY >= startY + rowCount) { break; }
                 int bi = srcY % bufRows;
                 bufRowsPtr_data[i] = reinterpret_cast<ST *>(alignedRingBufPtr + bi * bufStep);
             }
         }
 
-        if (i < kHeight) {
-            break;
-        }
+        if (i < kHeight) { break; }
         i -= kHeight - 1;
 
         filter.operator()(bufRowsPtr_data, dst, outWidthStride, i, width, channels);

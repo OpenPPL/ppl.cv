@@ -45,7 +45,8 @@ static uint8_t sat_cast(int32_t data)
     return (uint8_t)val;
 }
 
-static uint8_t saturate_cast_f32_u8(float val) {
+static uint8_t saturate_cast_f32_u8(float val)
+{
     if (val > 255) {
         return 255;
     } else if (val < 0) {
@@ -56,27 +57,28 @@ static uint8_t saturate_cast_f32_u8(float val) {
     return ival;
 }
 
-
 template <typename ST, typename DT, typename KT>
 struct NonSeperableFilter2D {
-    const KT* kernel;
+    const KT *kernel;
     KT delta;
     int kernel_len;
     int kernel_elem_cnt;
-    std::vector<ST*> srcKptr;
+    std::vector<ST *> srcKptr;
 
-    NonSeperableFilter2D(const KT* _kernel, int _kernel_len, float _delta) : kernel(_kernel) {
+    NonSeperableFilter2D(const KT *_kernel, int _kernel_len, float _delta) : kernel(_kernel)
+    {
         kernel_len = _kernel_len;
         kernel_elem_cnt = kernel_len * kernel_len;
         delta = static_cast<KT>(_delta);
         srcKptr.resize(kernel_len * kernel_len);
     }
 
-    void operator()(ST **src, DT* dst, int dststep, int count, int width, int cn) {
+    void operator()(ST **src, DT *dst, int dststep, int count, int width, int cn)
+    {
         width *= cn;
 
         ST **skp = srcKptr.data();
-        const KT* kval = kernel;
+        const KT *kval = kernel;
 
         for (; count > 0; count--, dst += dststep, src++) {
             for (int n = 0; n < kernel_len; n++) {
@@ -86,9 +88,9 @@ struct NonSeperableFilter2D {
             }
 
             int i = 0;
-            for (; i < width; i++ ) {
+            for (; i < width; i++) {
                 KT s0 = delta;
-                for(int k = 0; k < kernel_elem_cnt; k++ ) {
+                for (int k = 0; k < kernel_elem_cnt; k++) {
                     s0 += kval[k] * skp[k][i];
                 }
                 dst[i] = static_cast<DT>(s0);
@@ -99,24 +101,26 @@ struct NonSeperableFilter2D {
 
 template <>
 struct NonSeperableFilter2D<float, float, float> {
-    const float* kernel;
+    const float *kernel;
     float delta;
     int kernel_len;
     int kernel_elem_cnt;
-    std::vector<float*> srcKptr;
+    std::vector<float *> srcKptr;
 
-    NonSeperableFilter2D(const float* _kernel, int _kernel_len, float _delta) : kernel(_kernel) {
+    NonSeperableFilter2D(const float *_kernel, int _kernel_len, float _delta) : kernel(_kernel)
+    {
         kernel_len = _kernel_len;
         kernel_elem_cnt = kernel_len * kernel_len;
         delta = static_cast<float>(_delta);
         srcKptr.resize(kernel_len * kernel_len);
     }
 
-    void operator()(float **src, float* dst, int dststep, int count, int width, int cn) {
+    void operator()(float **src, float *dst, int dststep, int count, int width, int cn)
+    {
         width *= cn;
 
         float **skp = srcKptr.data();
-        const float* kval = kernel;
+        const float *kval = kernel;
 
         for (; count > 0; count--, dst += dststep, src++) {
             for (int n = 0; n < kernel_len; n++) {
@@ -128,7 +132,7 @@ struct NonSeperableFilter2D<float, float, float> {
             int i = 0;
             for (; i <= width - 16; i += 16) {
                 float32x4_t vKval = vdupq_n_f32(kval[0]);
-                
+
                 float32x4_t vIn0 = vld1q_f32(skp[0] + i + 0);
                 float32x4_t vIn1 = vld1q_f32(skp[0] + i + 4);
                 float32x4_t vIn2 = vld1q_f32(skp[0] + i + 8);
@@ -138,12 +142,12 @@ struct NonSeperableFilter2D<float, float, float> {
                 float32x4_t vRes1 = vdupq_n_f32(delta);
                 float32x4_t vRes2 = vdupq_n_f32(delta);
                 float32x4_t vRes3 = vdupq_n_f32(delta);
-                
+
                 vRes0 = vfmaq_f32(vRes0, vIn0, vKval);
                 vRes1 = vfmaq_f32(vRes1, vIn1, vKval);
                 vRes2 = vfmaq_f32(vRes2, vIn2, vKval);
                 vRes3 = vfmaq_f32(vRes3, vIn3, vKval);
-                
+
                 for (int k = 1; k < kernel_elem_cnt; k++) {
                     vKval = vdupq_n_f32(kval[k]);
                     vIn0 = vld1q_f32(skp[k] + i + 0);
@@ -163,9 +167,9 @@ struct NonSeperableFilter2D<float, float, float> {
                 vst1q_f32(dst + i + 12, vRes3);
             }
 
-            for (; i < width; i++ ) {
+            for (; i < width; i++) {
                 float s0 = delta;
-                for(int k = 0; k < kernel_elem_cnt; k++ ) {
+                for (int k = 0; k < kernel_elem_cnt; k++) {
                     s0 += kval[k] * skp[k][i];
                 }
                 dst[i] = static_cast<float>(s0);
@@ -174,26 +178,28 @@ struct NonSeperableFilter2D<float, float, float> {
     }
 };
 
-template<>
+template <>
 struct NonSeperableFilter2D<uint8_t, uint8_t, float> {
-    const float* kernel;
+    const float *kernel;
     float delta;
     int kernel_len;
     int kernel_elem_cnt;
-    std::vector<uint8_t*> srcKptr;
+    std::vector<uint8_t *> srcKptr;
 
-    NonSeperableFilter2D(const float* _kernel, int _kernel_len, float _delta) : kernel(_kernel) {
+    NonSeperableFilter2D(const float *_kernel, int _kernel_len, float _delta) : kernel(_kernel)
+    {
         kernel_len = _kernel_len;
         kernel_elem_cnt = kernel_len * kernel_len;
         delta = static_cast<float>(_delta);
         srcKptr.resize(kernel_len * kernel_len);
     }
 
-    void operator()(uint8_t **src, uint8_t* dst, int dststep, int count, int width, int cn) {
+    void operator()(uint8_t **src, uint8_t *dst, int dststep, int count, int width, int cn)
+    {
         width *= cn;
 
         uint8_t **skp = srcKptr.data();
-        const float* kval = kernel;
+        const float *kval = kernel;
 
         for (; count > 0; count--, dst += dststep, src++) {
             for (int n = 0; n < kernel_len; n++) {
@@ -205,7 +211,7 @@ struct NonSeperableFilter2D<uint8_t, uint8_t, float> {
             int i = 0;
             for (; i <= width - 16; i += 16) {
                 float32x4_t vKval = vdupq_n_f32(kval[0]);
-                
+
                 uint8x16_t vInU8_0 = vld1q_u8(skp[0] + i + 0);
                 uint16x8_t vInU16_0 = vmovl_u8(vget_low_u8(vInU8_0));
                 uint16x8_t vInU16_1 = vmovl_high_u8(vInU8_0);
@@ -222,12 +228,12 @@ struct NonSeperableFilter2D<uint8_t, uint8_t, float> {
                 float32x4_t vRes1 = vdupq_n_f32(delta);
                 float32x4_t vRes2 = vdupq_n_f32(delta);
                 float32x4_t vRes3 = vdupq_n_f32(delta);
-                
+
                 vRes0 = vfmaq_f32(vRes0, vIn0, vKval);
                 vRes1 = vfmaq_f32(vRes1, vIn1, vKval);
                 vRes2 = vfmaq_f32(vRes2, vIn2, vKval);
                 vRes3 = vfmaq_f32(vRes3, vIn3, vKval);
-                
+
                 for (int k = 1; k < kernel_elem_cnt; k++) {
                     vKval = vdupq_n_f32(kval[k]);
                     vInU8_0 = vld1q_u8(skp[k] + i + 0);
@@ -263,9 +269,9 @@ struct NonSeperableFilter2D<uint8_t, uint8_t, float> {
                 vst1q_u8(dst + i + 0, vRes);
             }
 
-            for (; i < width; i++ ) {
+            for (; i < width; i++) {
                 float s0 = delta;
-                for(int k = 0; k < kernel_elem_cnt; k++ ) {
+                for (int k = 0; k < kernel_elem_cnt; k++) {
                     s0 += kval[k] * skp[k][i];
                 }
                 dst[i] = saturate_cast_f32_u8(s0);
@@ -373,20 +379,13 @@ template <>
         border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    
+
     int channels = 1;
-    
+
     NonSeperableFilter2D<float, float, float> nonSeperableFilter2d(filter, kernel_len, delta);
     FilterEngine<float, float, NonSeperableFilter2D<float, float, float>> engine(
-        height,
-        width,
-        channels,
-        kernel_len,
-        border_type,
-        0,
-        nonSeperableFilter2d
-    );
-    
+        height, width, channels, kernel_len, border_type, 0, nonSeperableFilter2d);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 
     return ppl::common::RC_SUCCESS;
@@ -411,20 +410,13 @@ template <>
         border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    
+
     int channels = 3;
-    
+
     NonSeperableFilter2D<float, float, float> nonSeperableFilter2d(filter, kernel_len, delta);
     FilterEngine<float, float, NonSeperableFilter2D<float, float, float>> engine(
-        height,
-        width,
-        channels,
-        kernel_len,
-        border_type,
-        0,
-        nonSeperableFilter2d
-    );
-    
+        height, width, channels, kernel_len, border_type, 0, nonSeperableFilter2d);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 
     return ppl::common::RC_SUCCESS;
@@ -450,20 +442,13 @@ template <>
         border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    
+
     int channels = 4;
-    
+
     NonSeperableFilter2D<float, float, float> nonSeperableFilter2d(filter, kernel_len, delta);
     FilterEngine<float, float, NonSeperableFilter2D<float, float, float>> engine(
-        height,
-        width,
-        channels,
-        kernel_len,
-        border_type,
-        0,
-        nonSeperableFilter2d
-    );
-    
+        height, width, channels, kernel_len, border_type, 0, nonSeperableFilter2d);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 
     return ppl::common::RC_SUCCESS;
@@ -489,20 +474,13 @@ template <>
         border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    
+
     int channels = 1;
-    
+
     NonSeperableFilter2D<uint8_t, uint8_t, float> nonSeperableFilter2d(filter, kernel_len, delta);
     FilterEngine<uint8_t, uint8_t, NonSeperableFilter2D<uint8_t, uint8_t, float>> engine(
-        height,
-        width,
-        channels,
-        kernel_len,
-        border_type,
-        0,
-        nonSeperableFilter2d
-    );
-    
+        height, width, channels, kernel_len, border_type, 0, nonSeperableFilter2d);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 
     return ppl::common::RC_SUCCESS;
@@ -528,20 +506,13 @@ template <>
         border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    
+
     int channels = 3;
-    
+
     NonSeperableFilter2D<uint8_t, uint8_t, float> nonSeperableFilter2d(filter, kernel_len, delta);
     FilterEngine<uint8_t, uint8_t, NonSeperableFilter2D<uint8_t, uint8_t, float>> engine(
-        height,
-        width,
-        channels,
-        kernel_len,
-        border_type,
-        0,
-        nonSeperableFilter2d
-    );
-    
+        height, width, channels, kernel_len, border_type, 0, nonSeperableFilter2d);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
 
     return ppl::common::RC_SUCCESS;
@@ -567,22 +538,15 @@ template <>
         border_type != ppl::cv::BORDER_REPLICATE) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    
+
     int channels = 4;
-    
+
     NonSeperableFilter2D<uint8_t, uint8_t, float> nonSeperableFilter2d(filter, kernel_len, delta);
     FilterEngine<uint8_t, uint8_t, NonSeperableFilter2D<uint8_t, uint8_t, float>> engine(
-        height,
-        width,
-        channels,
-        kernel_len,
-        border_type,
-        0,
-        nonSeperableFilter2d
-    );
-    
+        height, width, channels, kernel_len, border_type, 0, nonSeperableFilter2d);
+
     engine.process(inData, inWidthStride, outData, outWidthStride);
-    
+
     return ppl::common::RC_SUCCESS;
 }
 

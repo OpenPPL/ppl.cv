@@ -85,7 +85,7 @@ void crop_line_common(const uint8_t* src, uint8_t* dst, int32_t outWidth, float 
         vst1_u8(dst + i, vOutData0);
         vst1_u8(dst + i + 8, vOutData1);
     }
-    
+
     for (; i < outWidth; i++) {
         int32_t val = roundeven(scale * src[i]);
         dst[i] = sat_cast(val);

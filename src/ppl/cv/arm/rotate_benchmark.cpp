@@ -150,12 +150,18 @@ void BM_Rotate_opencv_aarch64(benchmark::State &state)
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_OPENCV_TYPE_FUNCTIONS(type, degree)                                                                           \
-    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c1, degree)->Args({640, 480})->UseManualTime()->Iterations(10);    \
-    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c3, degree)->Args({640, 480})->UseManualTime()->Iterations(10);    \
-    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c4, degree)->Args({640, 480})->UseManualTime()->Iterations(10);    \
-    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c1, degree)->Args({1920, 1080})->UseManualTime()->Iterations(10);  \
-    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c3, degree)->Args({1920, 1080})->UseManualTime()->Iterations(10);  \
+#define RUN_OPENCV_TYPE_FUNCTIONS(type, degree)                                                                        \
+    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c1, degree)->Args({640, 480})->UseManualTime()->Iterations(10); \
+    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c3, degree)->Args({640, 480})->UseManualTime()->Iterations(10); \
+    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c4, degree)->Args({640, 480})->UseManualTime()->Iterations(10); \
+    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c1, degree)                                                     \
+        ->Args({1920, 1080})                                                                                           \
+        ->UseManualTime()                                                                                              \
+        ->Iterations(10);                                                                                              \
+    BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c3, degree)                                                     \
+        ->Args({1920, 1080})                                                                                           \
+        ->UseManualTime()                                                                                              \
+        ->Iterations(10);                                                                                              \
     BENCHMARK_TEMPLATE(BM_Rotate_opencv_aarch64, type, c4, degree)->Args({1920, 1080})->UseManualTime()->Iterations(10);
 
 RUN_OPENCV_TYPE_FUNCTIONS(float, 90)

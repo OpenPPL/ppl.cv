@@ -77,18 +77,18 @@ void BM_BoxFilter_ppl_aarch64(benchmark::State &state)
     state.SetItemsProcessed(state.iterations() * 1);
 }
 
-#define RUN_PPL_CV_TYPE_FUNCTIONS(type, ksize_x, ksize_y, border_type)                 \
+#define RUN_PPL_CV_TYPE_FUNCTIONS(type, ksize_x, ksize_y, border_type)                    \
     BENCHMARK_TEMPLATE(BM_BoxFilter_ppl_aarch64, type, c1, ksize_x, ksize_y, border_type) \
-        ->Args({640, 480})                                                             \
-        ->UseManualTime()                                                              \
-        ->Iterations(10);                                                              \
+        ->Args({640, 480})                                                                \
+        ->UseManualTime()                                                                 \
+        ->Iterations(10);                                                                 \
     BENCHMARK_TEMPLATE(BM_BoxFilter_ppl_aarch64, type, c3, ksize_x, ksize_y, border_type) \
-        ->Args({640, 480})                                                             \
-        ->UseManualTime()                                                              \
-        ->Iterations(10);                                                              \
+        ->Args({640, 480})                                                                \
+        ->UseManualTime()                                                                 \
+        ->Iterations(10);                                                                 \
     BENCHMARK_TEMPLATE(BM_BoxFilter_ppl_aarch64, type, c4, ksize_x, ksize_y, border_type) \
-        ->Args({640, 480})                                                             \
-        ->UseManualTime()                                                              \
+        ->Args({640, 480})                                                                \
+        ->UseManualTime()                                                                 \
         ->Iterations(10);
 
 RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, 3, 3, ppl::cv::BORDER_REPLICATE)
