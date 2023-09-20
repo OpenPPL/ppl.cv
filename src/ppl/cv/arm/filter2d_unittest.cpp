@@ -113,9 +113,9 @@ bool PplCvArmFilter2DTest<Tsrc, Tdst, channels>::apply()
 
     float epsilon;
     if (sizeof(Tsrc) == 1) {
-        epsilon = EPSILON_1F;
+        epsilon = EPSILON_0I;
     } else {
-        epsilon = EPSILON_E3;
+        epsilon = EPSILON_E3; // todo: change to E6 after implemention of FFT filter
     }
     bool identity = checkMatricesIdentity<Tdst>(cv_dst, dst, epsilon);
 
@@ -134,7 +134,7 @@ bool PplCvArmFilter2DTest<Tsrc, Tdst, channels>::apply()
         IsEqual,                                                                                                \
         PplCvArmFilter2DTest_##Tsrc##_##channels,                                                               \
         ::testing::Combine(                                                                                     \
-            ::testing::Values(1, 5, 17, 25, 31, 43),                                                            \
+            ::testing::Values(1, 3, 5, 17, 25, 31, 43),                                                            \
             ::testing::Values(0, 43),                                                                           \
             ::testing::Values(ppl::cv::BORDER_REPLICATE, ppl::cv::BORDER_REFLECT, ppl::cv::BORDER_REFLECT_101), \
             ::testing::Values(cv::Size{320, 240},                                                               \
