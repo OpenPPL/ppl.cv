@@ -16,8 +16,8 @@
  * Infrastructure functions for the convenience of unittest and benchmark.
  */
 
-#ifndef _ST_HPC_PPL_CV_ARM_INFRASTRUCTURE_HPP_
-#define _ST_HPC_PPL_CV_ARM_INFRASTRUCTURE_HPP_
+#ifndef __ST_HPC_PPL_CV_AARCH64_INFRASTRUCTURE_HPP_
+#define __ST_HPC_PPL_CV_AARCH64_INFRASTRUCTURE_HPP_
 
 #include <cstdlib>
 
@@ -461,4 +461,4 @@ bool checkMatArrayIdentity(const cv::Mat& image0, const T* image1, float epsilon
     }
 }
 
-#endif // _ST_HPC_PPL_CV_ARM_INFRASTRUCTURE_HPP_
+#endif // __ST_HPC_PPL_CV_AARCH64_INFRASTRUCTURE_HPP_
