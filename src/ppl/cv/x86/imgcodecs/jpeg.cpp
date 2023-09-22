@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "ppl/cv/x86/intrinutils.hpp"
-// #include <immintrin.h>
+#include <immintrin.h>
 
 #include "ppl/cv/types.h"
 #include "ppl/common/log.h"
@@ -50,8 +50,9 @@ namespace x86 {
 // in each scan, we'll have scan_n components, and the order
 // of the components is specified by order[], rstn marker
 #define DRI_RESTART(x) ((x) >= 0xd0 && (x) <= 0xd7)
-// #define LROT(x, y) (((x) << (y)) | ((x) >> (-(y) & 31)))
-#define LROT(x, y) (((x) << (y)) | ((x) >> (-(y) & (BIT_BUFFER_SIZE - 1))))
+// #define ROTATE_BITS(x, y) (((x) << (y)) | ((x) >> (-(y) & 31)))
+// #define ROTATE_BITS(x, y) (((x) << (y)) | ((x) >> (-(y) & (BUFFER_BITS - 1))))
+#define ROTATE_BITS(x, y) (((x) << (y)) | ((x) >> ((BUFFER_BITS - (y)))))
 
 #define FLOAT2FLOAT(x) ((int32_t) (((x) * 4096 + 0.5)))
 #define FSH(x) ((x) * 4096)
@@ -545,26 +546,26 @@ JpegDecoder::~JpegDecoder() {
 }
 
 bool JpegDecoder::buildHuffmanTable(HuffmanLookupTable *huffman_table,
-                                    int32_t *count) {
-    int32_t i, j, k = 0;
+                                    int32_t *counts) {
+    int32_t bit_number, i, j, index = 0;
     uint32_t code;
     // build code length list for each symbol (from JPEG spec)
-    for (i = 0; i < 16; ++i) {
-        for (j=0; j < count[i]; ++j) {
-            huffman_table->size[k++] = (uint8_t) (i+1);
+    for (bit_number = 1; bit_number <= 16; ++bit_number) {
+        for (j = 0; j < counts[bit_number - 1]; ++j) {
+            huffman_table->bit_lengths[index++] = (uint8_t)bit_number;
         }
     }
-    huffman_table->size[k] = 0;
+    huffman_table->bit_lengths[index] = 0;
 
-    // compute actual symbols (from jpeg spec)
+    // compute actual binary codes (from jpeg spec)
     code = 0;
-    k = 0;
+    index = 0;
     for (j = 1; j <= 16; ++j) {
         // compute delta to add to code to compute symbol id
-        huffman_table->delta[j] = k - code;
-        if (huffman_table->size[k] == j) {
-            while (huffman_table->size[k] == j) {
-                huffman_table->code[k++] = (uint16_t)(code++);
+        huffman_table->delta[j] = index - code;
+        if (huffman_table->bit_lengths[index] == j) {
+            while (huffman_table->bit_lengths[index] == j) {
+                huffman_table->codes[index++] = (uint16_t)(code++);
             }
             if (code - 1 >= (1u << j)) {
                 LOG(ERROR) << "bad code lengths, corrupt JPEG";
@@ -578,15 +579,17 @@ bool JpegDecoder::buildHuffmanTable(HuffmanLookupTable *huffman_table,
     huffman_table->maxcode[j] = 0xffffffff;
 
     // build non-spec acceleration table; 255 is flag for not-accelerated
-    memset(huffman_table->fast, 255, 1 << FAST_BITS);
-    for (i = 0; i < k; ++i) {
-        int32_t bit_length = huffman_table->size[i];
+    // store indices of tuples of symbol--code--bit length
+    memset(huffman_table->fast_indices, 255, 1 << FAST_BITS);
+    for (i = 0; i < index; ++i) {
+        int32_t bit_length = huffman_table->bit_lengths[i];
         if (bit_length <= FAST_BITS) {
-            code = huffman_table->code[i] << (FAST_BITS - bit_length);
+            code = huffman_table->codes[i] << (FAST_BITS - bit_length);
             int32_t count = 1 << (FAST_BITS - bit_length);
             for (j = 0; j < count; ++j) {
-                huffman_table->fast[code + j] = (uint8_t) i;
+                huffman_table->fast_indices[code + j] = (uint8_t) i;
             }
+            // memset(huffman_table->fast_indices + code, i, count);
         }
     }
 
@@ -598,13 +601,13 @@ bool JpegDecoder::buildHuffmanTable(HuffmanLookupTable *huffman_table,
 void JpegDecoder::buildFastAC(int16_t *fast_ac,
                               HuffmanLookupTable *huffman_data) {
     for (int32_t i = 0; i < (1 << FAST_BITS); ++i) {
-        uint8_t fast = huffman_data->fast[i];
+        uint8_t index = huffman_data->fast_indices[i];
         fast_ac[i] = 0;
-        if (fast < 255) {
-            int32_t rs = huffman_data->values[fast];
-            int32_t run = (rs >> 4) & 15;
-            int32_t magbits = rs & 15;
-            int32_t bit_length = huffman_data->size[fast];
+        if (index < 255) {
+            int32_t symbol = huffman_data->symbols[index];
+            int32_t run = (symbol >> 4) & 15; // number of 0
+            int32_t magbits = symbol & 15;    // bit length of the following number.
+            int32_t bit_length = huffman_data->bit_lengths[index]; // bit length of the code in terms of the symbol
 
             if (magbits && bit_length + magbits <= FAST_BITS) {
                 // magnitude code followed by receive_extend code
@@ -614,7 +617,8 @@ void JpegDecoder::buildFastAC(int16_t *fast_ac,
                 if (k < m) k += (~0U << magbits) + 1;
                 // if the result is small enough, we can fit it in fast_ac table
                 if (k >= -128 && k <= 127) {
-                    fast_ac[i] = (int16_t)((k * 256) + (run * 16) +
+                    // fast_ac[i] = (int16_t)((k * 256) + (run * 16) +
+                    fast_ac[i] = (int16_t)((k << 8) + (run << 4) +
                                            (bit_length + magbits));
                 }
             }
@@ -959,13 +963,13 @@ bool JpegDecoder::parseDHT(JpegDecodeData *jpeg) {
             if (!buildHuffmanTable(jpeg->huff_dc + table_id, sizes)) {
                 return false;
             }
-            symbol = jpeg->huff_dc[table_id].values;
+            symbol = jpeg->huff_dc[table_id].symbols;
         }
         else {
             if (!buildHuffmanTable(jpeg->huff_ac + table_id, sizes)) {
                 return false;
             }
-            symbol = jpeg->huff_ac[table_id].values;
+            symbol = jpeg->huff_ac[table_id].symbols;
         }
         for (int32_t i = 0; i < count; ++i) {
             symbol[i] = file_data_->getByte();
@@ -1126,36 +1130,609 @@ void JpegDecoder::resetJpegDecoder(JpegDecodeData *jpeg) {
     jpeg->eob_run = 0;
     // no more than 1<<31 MCUs if no restart_interal? that's plenty safe,
     // since we don't even allow 1<<30 pixels
+    // std::cout << "come in resetJpegDecoder()" << std::endl;
 }
 
 #define GET_BYTE() (*(file_data->current_)++)
 static int growbuffer_count = 0;
-inline void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
-    std::cout << "in growbitbuffer, jpeg->code_bits: " << jpeg->code_bits << std::endl;
-    std::cout << "in growbitbuffer, jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::noshowbase << std::endl;
+inline void growBitBuffer0(BytesReader* file_data, JpegDecodeData *jpeg) {
+    std::cout << "before, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    std::cout << "jpeg->code_buffer: "; // << std::endl;
     do {
         uint8_t byte = jpeg->nomore ? 0 : file_data->getByte();
-        std::cout << "in growbitbuffer, byte: " << std::hex << (int)byte << std::noshowbase << std::endl;
+        // std::cout << "loaded byte: " << (int)byte << std::endl;
         if (byte == 0xff) {
             uint8_t value = file_data->getByte();
+            // std::cout << "come in 0xff..., value: " << (int)value << std::endl;
             while (value == 0xff) {
+                // std::cout << "come in while" << std::endl;
                 value = file_data->getByte(); // consume fill bytes
-                std::cout << "in growbitbuffer, value: " << std::hex << (int)value << std::noshowbase << std::endl;
             }
             if (value != 0) {
+                // std::cout << "come in value != 0" << std::endl;
                 jpeg->marker = value;
                 jpeg->nomore = 1;
+                // std::cout << "jpeg->nomore = 1;" << std::endl;
 
                 return;
             }
         }
-        // jpeg->code_buffer |= ((size_t)byte) << 32;
         jpeg->code_buffer |= ((size_t)byte) << (JPEG_SHIFT_SIZE - jpeg->code_bits);
         jpeg->code_bits += 8;
-        std::cout << "in growbitbuffer, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
-        std::cout << "in growbitbuffer, jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::noshowbase << std::endl;
+        std::cout << std::showbase;
+        std::cout << std::hex << (uint)byte << ", ";
+        std::cout << std::noshowbase;
     } while (jpeg->code_bits <= JPEG_SHIFT_SIZE);
+    std::cout << std::endl;
+    std::cout << "jpeg->code_buffer: " << (uint)jpeg->code_buffer << std::endl;
+    std::cout << "after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
     growbuffer_count++;
+}
+
+static void initializeBitbuffer0(BytesReader* file_data, JpegDecodeData *jpeg) {
+    // std::cout << "jpeg->code_bits: " << jpeg->code_bits << std::endl;
+    // std::cout << "jpeg->nomore: " << jpeg->nomore << std::endl;
+    if (jpeg->code_bits > 0) return;
+
+    file_data->getBytes(&(jpeg->code_buffer), BUFFER_BYTES);
+    jpeg->code_buffer = __bswap_64(jpeg->code_buffer);
+    // jpeg->code_buffer = __bswap_32(jpeg->code_buffer);
+    jpeg->code_bits = BUFFER_BITS;
+    // std::cout << std::showbase;
+    // std::cout << "initializebuffer, jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << "initializebuffer, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::noshowbase;
+}
+
+static void initializeBitbuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
+    // std::cout << "jpeg->code_bits: " << jpeg->code_bits << std::endl;
+    // std::cout << "jpeg->nomore: " << jpeg->nomore << std::endl;
+    if (jpeg->code_bits > 0) return;
+
+    uint64_t value;
+    file_data->getBytes(&value, BUFFER_BYTES);
+    if ((value & 0xFF00000000000000) != 0xFF00000000000000 &&
+        (value & 0xFF000000000000) != 0xFF000000000000 &&
+        (value & 0xFF0000000000) != 0xFF0000000000 &&
+        (value & 0xFF00000000) != 0xFF00000000 &&
+        (value & 0xFF000000) != 0xFF000000 &&
+        (value & 0xFF0000) != 0xFF0000 &&
+        (value & 0xFF00) != 0xFF00 &&
+        (value & 0xFF) != 0xFF) {
+        jpeg->code_buffer = __bswap_64(value);
+        jpeg->code_bits = BUFFER_BITS;
+    }
+    // std::cout << std::showbase;
+    // std::cout << "initializebuffer, jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << "initializebuffer, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::noshowbase;
+}
+
+static bool global_prefix = false;
+static void growBitBuffer2(BytesReader* file_data, JpegDecodeData *jpeg) {
+    uint32_t buffer;
+    uint32_t valid_bytes = 0, invalid_bytes = 0;
+    bool prefix_ff = global_prefix;
+    // std::cout << "before, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+
+    memcpy(&buffer, file_data->getCurrentPosition(), BUFFER_BYTES);
+    buffer = __bswap_32(buffer);
+    // std::cout << std::showbase;
+    // std::cout << "growBitBuffer, buffer: " << std::hex << buffer << std::endl;
+    // std::cout << std::noshowbase;
+
+    if ((!prefix_ff) && (buffer & 0xFF000000) != 0xFF000000
+        && (buffer & 0xFF0000) != 0xFF0000 && (buffer & 0xFF00) != 0xFF00
+        && (buffer & 0xFF) != 0xFF) {
+        valid_bytes = BUFFER_BYTES;
+
+        jpeg->code_buffer |= buffer >> jpeg->code_bits;
+        jpeg->code_bits += (valid_bytes) << 3;
+        if (jpeg->code_bits > BUFFER_BITS) {
+            invalid_bytes = ((jpeg->code_bits - BUFFER_BITS) + 7) >> 3;
+            jpeg->code_bits -= (invalid_bytes << 3);
+            valid_bytes -= invalid_bytes;
+        }
+        file_data->skip(valid_bytes);
+        // std::cout << "growBitBuffer 0, after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+        // std::cout << "growBitBuffer 0, valid_bytes: " << valid_bytes << std::endl;
+    }
+    else {
+        uint32_t index = 0, processed_bytes = 0, ff00_index = 0;
+        uint8_t current_byte;
+        do {
+            if (jpeg->nomore) {
+                break;
+            }
+            if (index == 0) {
+                current_byte = (buffer & 0xFF000000) >> 24;
+                if (processed_bytes == BUFFER_BYTES - 1 && current_byte == 0xFF) break;
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF000000;
+                        prefix_ff = false;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                        // index++;
+                        // break;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        prefix_ff = true;
+                        buffer = (buffer << 8);
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 1) {
+                current_byte = (buffer & 0xFF0000) >> 16;
+                if (processed_bytes == BUFFER_BYTES - 1 && current_byte == 0xFF) break;
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFF000000) | ((buffer & 0xFFFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF0000;
+                        prefix_ff = false;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                        // index++;
+                        // break;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        prefix_ff = true;
+                        buffer = (buffer & 0xFF000000) | ((buffer & 0xFFFF) << 8);
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 2) {
+                current_byte = (buffer & 0xFF00) >> 8;
+                if (processed_bytes == BUFFER_BYTES - 1 && current_byte == 0xFF) break;
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFF0000) | ((buffer & 0xFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF00;
+                        prefix_ff = false;
+                        ff00_index = 2;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                        // index++;
+                        // break;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        prefix_ff = true;
+                        buffer = (buffer & 0xFFFF0000) | ((buffer & 0xFF) << 8);
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else {  // index == 3
+                current_byte = buffer & 0xFF;
+                if (current_byte == 0xFF) break;
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF;
+                        prefix_ff = false;
+                        ff00_index = 3;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                        // index++;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            processed_bytes++;
+
+            if (processed_bytes == BUFFER_BYTES && index == 0) {
+                file_data->skip(BUFFER_BYTES);
+                memcpy(&buffer, file_data->getCurrentPosition(), BUFFER_BYTES);
+                buffer = __bswap_32(buffer);
+                // buffer |= 0xFF000000;
+                processed_bytes == 0;
+            }
+        } while (processed_bytes < BUFFER_BYTES);
+        // std::cout << "index: " << index << std::endl;
+        // std::cout << "processed_bytes: " << processed_bytes << std::endl;
+
+        global_prefix = prefix_ff;
+        jpeg->code_buffer |= buffer >> jpeg->code_bits;
+        jpeg->code_bits += (index) << 3;
+        if (jpeg->code_bits > BUFFER_BITS) {
+            invalid_bytes = ((jpeg->code_bits - BUFFER_BITS) + 7) >> 3;
+            jpeg->code_bits -= (invalid_bytes << 3);
+            valid_bytes = index - invalid_bytes;  //remove
+            invalid_bytes = ff00_index >= valid_bytes ? invalid_bytes + 1 : invalid_bytes;
+        }
+        // std::cout << "valid_bytes: " << valid_bytes << std::endl;
+        processed_bytes -= invalid_bytes;
+        file_data->skip(processed_bytes);
+        // std::cout << "growBitBuffer 1, after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+        // std::cout << "growBitBuffer 1, processed_bytes: " << processed_bytes << std::endl;
+    }
+}
+
+static __m128i swap_index = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8,
+                                         0, 1, 2, 3, 4, 5, 6, 7);
+
+// static void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
+inline void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
+    uint64_t buffer;
+    uint32_t valid_bytes = 0, invalid_bytes = 0;
+    bool prefix_ff = global_prefix;
+
+    // memcpy(&buffer, file_data->getCurrentPosition(), BUFFER_BYTES);
+    // buffer = __bswap_64(buffer);
+
+    uint8_t* current_data = file_data->getCurrentPosition();
+    __m128i value0 = _mm_lddqu_si128((__m128i const*)current_data);
+    __m128i value1 = _mm_shuffle_epi8(value0, swap_index);
+    buffer = _mm_extract_epi64(value1, 0);
+
+    // std::cout << "before, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::showbase;
+    // std::cout << "growBitBuffer, buffer: " << std::hex << buffer << std::endl;
+    // std::cout << std::noshowbase;
+
+    if ((!prefix_ff) && (buffer & 0xFF00000000000000) != 0xFF00000000000000 &&
+                        (buffer & 0xFF000000000000) != 0xFF000000000000 &&
+                        (buffer & 0xFF0000000000) != 0xFF0000000000 &&
+                        (buffer & 0xFF00000000) != 0xFF00000000 &&
+                        (buffer & 0xFF000000) != 0xFF000000 &&
+                        (buffer & 0xFF0000) != 0xFF0000 &&
+                        (buffer & 0xFF00) != 0xFF00 &&
+                        (buffer & 0xFF) != 0xFF) {
+        valid_bytes = BUFFER_BYTES;
+
+        jpeg->code_buffer |= buffer >> jpeg->code_bits;
+        jpeg->code_bits += (valid_bytes) << 3;
+        if (jpeg->code_bits > BUFFER_BITS) {
+            invalid_bytes = ((jpeg->code_bits - BUFFER_BITS) + 7) >> 3;
+            jpeg->code_bits -= (invalid_bytes << 3);
+            valid_bytes -= invalid_bytes;
+        }
+        file_data->skip(valid_bytes);
+        // std::cout << "growBitBuffer 0, after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+        // std::cout << "growBitBuffer 0, valid_bytes: " << valid_bytes << std::endl;
+    }
+    else {
+        uint32_t index = 0, processed_bytes = 0, ff00_index = 0;
+        uint8_t current_byte;
+        do {
+            if (jpeg->nomore) {
+                break;
+            }
+            if (index == 0) {
+                current_byte = (buffer & 0xFF00000000000000) >> 56;
+                if (processed_bytes == BUFFER_BYTES - 1 &&
+                    current_byte == 0xFF) {
+                    break;
+                }
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF00000000000000;
+                        prefix_ff = false;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer << 8);
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 1) {
+                current_byte = (buffer & 0xFF000000000000) >> 48;
+                if (processed_bytes == BUFFER_BYTES - 1 &&
+                    current_byte == 0xFF) {
+                    break;
+                }
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFF00000000000000) |
+                                 ((buffer & 0xFFFFFFFFFFFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF000000000000;
+                        prefix_ff = false;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFF00000000000000) |
+                                 ((buffer & 0xFFFFFFFFFFFF) << 8);
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 2) {
+                current_byte = (buffer & 0xFF0000000000) >> 40;
+                if (processed_bytes == BUFFER_BYTES - 1 &&
+                    current_byte == 0xFF) {
+                    break;
+                }
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFF000000000000) |
+                                 ((buffer & 0xFFFFFFFFFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF0000000000;
+                        prefix_ff = false;
+                        ff00_index = 2;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFF000000000000) |
+                                 ((buffer & 0xFFFFFFFFFF) << 8);
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 3) {
+                current_byte = (buffer & 0xFF00000000) >> 32;
+                if (processed_bytes == BUFFER_BYTES - 1 &&
+                    current_byte == 0xFF) {
+                    break;
+                }
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFF0000000000) |
+                                 ((buffer & 0xFFFFFFFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF00000000;
+                        prefix_ff = false;
+                        ff00_index = 3;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFF0000000000) |
+                                 ((buffer & 0xFFFFFFFF) << 8);
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 4) {
+                current_byte = (buffer & 0xFF000000) >> 24;
+                if (processed_bytes == BUFFER_BYTES - 1 &&
+                    current_byte == 0xFF) {
+                    break;
+                }
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFFFF00000000) |
+                                 ((buffer & 0xFFFFFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF000000;
+                        prefix_ff = false;
+                        ff00_index = 4;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFFFF00000000) |
+                                 ((buffer & 0xFFFFFF) << 8);
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 5) {
+                current_byte = (buffer & 0xFF0000) >> 16;
+                if (processed_bytes == BUFFER_BYTES - 1 &&
+                    current_byte == 0xFF) {
+                    break;
+                }
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFFFFFF000000) |
+                                 ((buffer & 0xFFFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF0000;
+                        prefix_ff = false;
+                        ff00_index = 5;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFFFFFF000000) |
+                                 ((buffer & 0xFFFF) << 8);
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else if (index == 6) {
+                current_byte = (buffer & 0xFF00) >> 8;
+                if (processed_bytes == BUFFER_BYTES - 1 &&
+                    current_byte == 0xFF) {
+                    break;
+                }
+                if (prefix_ff) {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFFFFFFFF0000) |
+                                 ((buffer & 0xFF) << 8);
+                    }
+                    else if (current_byte == 0) {
+                        buffer |= 0xFF00;
+                        prefix_ff = false;
+                        ff00_index = 6;
+                        index++;
+                    }
+                    else {
+                        jpeg->marker = current_byte;
+                        jpeg->nomore = 1;
+                        prefix_ff = false;
+                    }
+                }
+                else {
+                    if (current_byte == 0xFF) {
+                        buffer = (buffer & 0xFFFFFFFFFFFF0000) |
+                                 ((buffer & 0xFF) << 8);
+                        prefix_ff = true;
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            else {  // index == 7
+                current_byte = buffer & 0xFF;
+                if (current_byte == 0xFF) {
+                    break;
+                }
+                else {
+                    if (prefix_ff) {
+                        if (current_byte == 0) {
+                            buffer |= 0xFF;
+                            prefix_ff = false;
+                            ff00_index = 7;
+                            index++;
+                        }
+                        else {
+                            jpeg->marker = current_byte;
+                            jpeg->nomore = 1;
+                            prefix_ff = false;
+                        }
+                    }
+                    else {
+                        index++;
+                    }
+                }
+            }
+            processed_bytes++;
+
+            if (processed_bytes == BUFFER_BYTES && index == 0) {
+                file_data->skip(BUFFER_BYTES);
+                // memcpy(&buffer, file_data->getCurrentPosition(), BUFFER_BYTES);
+                // buffer = __bswap_64(buffer);
+                uint8_t* current_data = file_data->getCurrentPosition();
+                __m128i value0 = _mm_lddqu_si128((__m128i const*)current_data);
+                __m128i value1 = _mm_shuffle_epi8(value0, swap_index);
+                buffer = _mm_extract_epi64(value1, 0);
+
+                processed_bytes == 0;
+            }
+        } while (processed_bytes < BUFFER_BYTES);
+        // std::cout << "index: " << index << std::endl;
+        // std::cout << "processed_bytes: " << processed_bytes << std::endl;
+
+        global_prefix = prefix_ff;
+        jpeg->code_buffer |= buffer >> jpeg->code_bits;
+        jpeg->code_bits += (index) << 3;
+        if (jpeg->code_bits > BUFFER_BITS) {
+            invalid_bytes = ((jpeg->code_bits - BUFFER_BITS) + 7) >> 3;
+            jpeg->code_bits -= (invalid_bytes << 3);
+            valid_bytes = index - invalid_bytes;
+            invalid_bytes = ff00_index >= valid_bytes ? invalid_bytes + 1 : invalid_bytes;
+        }
+        // std::cout << "valid_bytes: " << valid_bytes << std::endl;
+        processed_bytes -= invalid_bytes;
+        file_data->skip(processed_bytes);
+        // std::cout << "growBitBuffer 1, after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+        // std::cout << "growBitBuffer 1, processed_bytes: " << processed_bytes << std::endl;
+    }
 }
 
 /* void JpegDecoder::growBitBuffer(JpegDecodeData *jpeg) {
@@ -1183,21 +1760,52 @@ inline void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
 // marker, return 0xff, which is never a valid marker value
 uint8_t JpegDecoder::getMarker(JpegDecodeData *jpeg) {
     uint8_t marker;
+    // std::cout << "init, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
     if (jpeg->marker != NULL_MARKER) {
         marker = jpeg->marker;
         jpeg->marker = NULL_MARKER;
+        // std::cout << "if (jpeg->marker != NULL_MARKER), marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
         return marker;
     }
 
     marker = file_data_->getByte();
+    // std::cout << "readed, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
     if (marker != 0xFF) {
         LOG(ERROR) << "invalid segment identifier.";
-        std::cout << "marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
+        // std::cout << "if (marker != 0xFF), marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
         return 0xFF;
     }
     while (marker == 0xFF) {
         marker = file_data_->getByte();
     }
+    // std::cout << "end, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
+
+    return marker;
+}
+
+uint8_t JpegDecoder::getMarker1(JpegDecodeData *jpeg) {
+    uint8_t marker = 0;
+    std::cout << "init, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
+    if (jpeg->marker != NULL_MARKER) {
+        marker = jpeg->marker;
+        jpeg->marker = NULL_MARKER;
+        std::cout << "if (jpeg->marker != NULL_MARKER), marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
+        return marker;
+    }
+
+    marker = file_data_->getByte();
+    std::cout << "readed, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
+    // uint32_t previous0 = file_data_->getpreviousByte();
+    // std::cout << "in decodeData(), previous0: " << std::hex << previous0 << std::endl;
+    if (marker != 0xFF) {
+        LOG(ERROR) << "invalid segment identifier.";
+        return 0xFF;
+    }
+    while (marker == 0xFF) {
+        marker = file_data_->getByte();
+        std::cout << "while (marker == 0xFF), marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
+    }
+    std::cout << "end, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
 
     return marker;
 }
@@ -1207,9 +1815,10 @@ inline int32_t getBits(JpegDecodeData *jpeg, BytesReader* file_data,
                        int32_t bit_length) {
     uint32_t k;
     if (jpeg->code_bits < bit_length) {
+        // std::cout << "before growBitBuffer in getbits" << std::endl;
         growBitBuffer(file_data, jpeg);
     }
-    k = LROT(jpeg->code_buffer, bit_length);
+    k = ROTATE_BITS(jpeg->code_buffer, bit_length);
     jpeg->code_buffer = k & ~bit_mask[bit_length];
     k &= bit_mask[bit_length];
     jpeg->code_bits -= bit_length;
@@ -1219,13 +1828,14 @@ inline int32_t getBits(JpegDecodeData *jpeg, BytesReader* file_data,
 inline int32_t getBit(JpegDecodeData *jpeg, BytesReader* file_data) {
     size_t value;
     if (jpeg->code_bits < 1) {
+        // std::cout << "before growBitBuffer in getbit" << std::endl;
         growBitBuffer(file_data, jpeg);
     }
     value = jpeg->code_buffer;
     jpeg->code_buffer <<= 1;
     --jpeg->code_bits;
 
-    return value & (1 << (BIT_BUFFER_SIZE - 1));
+    return value & (1 << (BUFFER_BITS - 1));
     // return value & 0x8000000000000000;
 }
 
@@ -1251,8 +1861,8 @@ inline int32_t extendReceive(JpegDecodeData *jpeg, BytesReader* file_data,
     jpeg->code_buffer <<= value_bit_length;
     std::cout << "extendReceive, k: " << std::dec << k << std::noshowbase << std::endl;
 
-    // sign = jpeg->code_buffer >> (BIT_BUFFER_SIZE - 1); // sign bit always in MSB; 0 if MSB clear (positive), 1 if MSB set (negative)
-    // k = LROT(jpeg->code_buffer, value_bit_length);
+    // sign = jpeg->code_buffer >> (BUFFER_BITS - 1); // sign bit always in MSB; 0 if MSB clear (positive), 1 if MSB set (negative)
+    // k = ROTATE_BITS(jpeg->code_buffer, value_bit_length);
     // jpeg->code_buffer = k & ~bit_mask[value_bit_length];
     // k &= bit_mask[value_bit_length];
     // jpeg->code_bits -= value_bit_length;
@@ -1264,58 +1874,46 @@ inline int32_t extendReceive(JpegDecodeData *jpeg, BytesReader* file_data,
 // always extends everything it receives.
 inline int32_t extendReceive(JpegDecodeData *jpeg, BytesReader* file_data,
                              int32_t value_bit_length) {
-    uint32_t k;
-    int32_t sign;
     if (jpeg->code_bits < value_bit_length) {
         growBitBuffer(file_data, jpeg);
     }
-    std::cout << "value bit length: " << std::hex << (value_bit_length) << std::endl;
-    std::cout << "value bit length: " << std::hex << (-(value_bit_length)) << std::endl;
-    std::cout << "value bit length: " << std::hex << ((BIT_BUFFER_SIZE - 1)) << std::endl;
-    std::cout << "value bit length: " << std::hex << (-(value_bit_length) & (BIT_BUFFER_SIZE - 1)) << std::endl;
-    // std::cout << "value bit length: " << std::hex << (-((uint64_t)value_bit_length) & (BIT_BUFFER_SIZE - 1)) << std::endl;
 
-    sign = jpeg->code_buffer >> (BIT_BUFFER_SIZE - 1); // sign bit always in MSB; 0 if MSB clear (positive), 1 if MSB set (negative)
-    k = LROT(jpeg->code_buffer, value_bit_length);
-    // k = LROT(jpeg->code_buffer, (uint64_t)value_bit_length);
-    std::cout << "extendReceive, k: " << std::hex << k << std::noshowbase << std::dec << std::endl;
-    // jpeg->code_buffer = k & ~bit_mask[value_bit_length];
-    jpeg->code_buffer = k & (-(1 << value_bit_length));
-    // k &= bit_mask[value_bit_length];
-    k &= ((1 << value_bit_length) - 1);
+    int32_t sign = jpeg->code_buffer >> (BUFFER_BITS - 1); // sign bit always in MSB; 0 if MSB clear (positive), 1 if MSB set (negative)
+    uint64_t value = ROTATE_BITS(jpeg->code_buffer, value_bit_length);
+    // value = ROTATE_BITS(jpeg->code_buffer, (uint64_t)value_bit_length);
+    value &= ((1 << value_bit_length) - 1);
+    value += (((-(1 << value_bit_length)) + 1) & (sign - 1));
+
+    jpeg->code_buffer <<= value_bit_length;
     jpeg->code_bits -= value_bit_length;
 
-    k += (((-(1 << value_bit_length)) + 1) & (sign - 1));
-    return k;
-    // return k + (jbias[value_bit_length] & (sign - 1));
+    return value;
 }
 
 
-/* static int huffman_count = 0;
-#define decodeHuffmanData(jpeg, huffman_table, value) {  \
+// static int huffman_count = 0;
+/* #define decodeHuffmanData(jpeg, huffman_table, value) {  \
     uint32_t temp; \
     int32_t code, code_index; \
-      shortcode++;                              \
     if (jpeg->code_bits < 9) {    \
         growBitBuffer(file_data_, jpeg); \
     } \
-     huffman_count++; \
-    code = (jpeg->code_buffer >> (BIT_BUFFER_SIZE - FAST_BITS)) & ((1 << FAST_BITS)-1); \
-    code_index = huffman_table->fast[code]; \
+    code = (jpeg->code_buffer >> (BUFFER_BITS - FAST_BITS)) & ((1 << FAST_BITS)-1); \
+    code_index = huffman_table->fast_indices[code]; \
     if (code_index < 255) {   \
-        int32_t bit_length = huffman_table->size[code_index]; \
+        int32_t bit_length = huffman_table->bit_lengths[code_index]; \
         if (bit_length > jpeg->code_bits) { \
             return false; \
         } \
         jpeg->code_buffer <<= bit_length; \
         jpeg->code_bits -= bit_length; \
-        value = huffman_table->values[code_index]; \
+        value = huffman_table->symbols[code_index]; \
     }  \
     else { \
         if (jpeg->code_bits < 16) {  \
             growBitBuffer(file_data_, jpeg); \
         } \
-        temp = jpeg->code_buffer >> (BIT_BUFFER_SIZE - 16); \
+        temp = jpeg->code_buffer >> (BUFFER_BITS - 16); \
         int32_t bit_length;  \
         for (bit_length = FAST_BITS + 1; ; ++bit_length) { \
             if (temp < huffman_table->maxcode[bit_length]) { \
@@ -1331,126 +1929,61 @@ inline int32_t extendReceive(JpegDecodeData *jpeg, BytesReader* file_data,
             return false; \
         }  \
             \
-        code = ((jpeg->code_buffer >> (BIT_BUFFER_SIZE - bit_length)) &  \
+        code = ((jpeg->code_buffer >> (BUFFER_BITS - bit_length)) &  \
                 bit_mask[bit_length]) +  \
                 huffman_table->delta[bit_length]; \
-        assert((((jpeg->code_buffer) >> (BIT_BUFFER_SIZE - huffman_table->size[code])) &  \
-                bit_mask[huffman_table->size[code]]) == \
-                huffman_table->code[code]); \
+        assert((((jpeg->code_buffer) >> (BUFFER_BITS - huffman_table->bit_lengths[code])) &  \
+                bit_mask[huffman_table->bit_lengths[code]]) == \
+                huffman_table->codes[code]); \
          \
         jpeg->code_bits -= bit_length; \
         jpeg->code_buffer <<= bit_length; \
          \
-        value = huffman_table->values[code]; \
+        value = huffman_table->symbols[code]; \
     }  \
 } */
 
-static int huffman_count = 0;
-#define decodeHuffmanData(jpeg, huffman_table, value) {  \
-    uint32_t temp; \
-    int32_t code, code_index; \
-      shortcode++;                              \
-    if (jpeg->code_bits < 9) {    \
-        growBitBuffer(file_data_, jpeg); \
-    } \
-     huffman_count++; \
-    std::cout << "huffman_count: " << huffman_count << std::endl; \
-    std::cout << "jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl; \
-    code = (jpeg->code_buffer >> (BIT_BUFFER_SIZE - FAST_BITS)) & ((1 << FAST_BITS)-1); \
-    std::cout << "jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::noshowbase << std::endl; \
-    std::cout << "code: " << std::hex << code << std::noshowbase << std::endl; \
-    code_index = huffman_table->fast[code]; \
-    std::cout << "code_index: " << code_index << std::endl; \
-    if (code_index < 255) {   \
-        int32_t bit_length = huffman_table->size[code_index]; \
-        if (bit_length > jpeg->code_bits) { \
-            std::cout << "come 0" << std::endl; \
-            return false; \
-        } \
-        jpeg->code_buffer <<= bit_length; \
-        jpeg->code_bits -= bit_length; \
-        value = huffman_table->values[code_index]; \
-        std::cout << "bit_length: " << bit_length << std::endl; \
-        std::cout << "bit value: " << value << std::endl; \
-        std::cout << "jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl; \
-    std::cout << "jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::noshowbase << std::dec << std::endl; \
-    }  \
-    else { \
-        if (jpeg->code_bits < 16) {  \
-            growBitBuffer(file_data_, jpeg); \
-        } \
-        temp = jpeg->code_buffer >> (BIT_BUFFER_SIZE - 16); \
-        int32_t bit_length;  \
-        for (bit_length = FAST_BITS + 1; ; ++bit_length) { \
-            if (temp < huffman_table->maxcode[bit_length]) { \
-                break; \
-            } \
-        }  \
-        if (bit_length == 17) { \
-            jpeg->code_bits -= 16; \
-            std::cout << "come 1" << std::endl; \
-            return false; \
-        } \
-          \
-        if (bit_length > jpeg->code_bits) { \
-            std::cout << "come 2" << std::endl; \
-            return false; \
-        }  \
-            \
-        code = ((jpeg->code_buffer >> (BIT_BUFFER_SIZE - bit_length)) &  \
-                bit_mask[bit_length]) +  \
-                huffman_table->delta[bit_length]; \
-        assert((((jpeg->code_buffer) >> (BIT_BUFFER_SIZE - huffman_table->size[code])) &  \
-                bit_mask[huffman_table->size[code]]) == \
-                huffman_table->code[code]); \
-         \
-        jpeg->code_bits -= bit_length; \
-        jpeg->code_buffer <<= bit_length; \
-         \
-        value = huffman_table->values[code]; \
-    }  \
-}
-
-/* // decode a jpeg huffman value from the bitstream
+// decode a jpeg huffman value from the bitstream
+inline
 int32_t JpegDecoder::decodeHuffmanData(JpegDecodeData *jpeg,
                                        HuffmanLookupTable *huffman_table) {
-    uint32_t temp;
-    int32_t code, code_index;
+    uint32_t bits, index;
 
-    if (jpeg->code_bits < 9) {
-    // if (jpeg->code_bits < 16) {
+    if (jpeg->code_bits < FAST_BITS) {
         growBitBuffer(file_data_, jpeg);
     }
 
     // look at the top FAST_BITS and determine what symbol ID it is,
-    // if the code is <= FAST_BITS
-    code = (jpeg->code_buffer >> (BIT_BUFFER_SIZE - FAST_BITS)) & ((1 << FAST_BITS)-1);
-    code_index = huffman_table->fast[code];
-    if (code_index < 255) {
+    // if the bits is <= FAST_BITS
+    bits = (jpeg->code_buffer >> (BUFFER_BITS - FAST_BITS)) & ((1 << FAST_BITS)-1);
+    index = huffman_table->fast_indices[bits];
+    if (index < 255) {
         // shortcode++;
-        int32_t bit_length = huffman_table->size[code_index];
+        int32_t bit_length = huffman_table->bit_lengths[index];
         if (bit_length > jpeg->code_bits) {
             return -1;
         }
         jpeg->code_buffer <<= bit_length;
         jpeg->code_bits -= bit_length;
-        return huffman_table->values[code_index];
+        return huffman_table->symbols[index];
     }
 
-    // naive test is to shift the code_buffer down so code_index bits are
+    // naive test is to shift the code_buffer down so index bits are
     // valid, then test against maxcode. To speed this up, we've
-    // preshifted maxcode left so that it has (16-code_index) 0s at the
+    // preshifted maxcode left so that it has (16-index) 0s at the
     // end; in other words, regardless of the number of bits, it
     // wants to be compared against something shifted to have 16;
     // that way we don't need to shift inside the loop.
     if (jpeg->code_bits < 16) {
+        // std::cout << "before growBitBuffer in decodeHuffmanData2" << std::endl;
         growBitBuffer(file_data_, jpeg);
-        // longcode++;
     }
-    temp = jpeg->code_buffer >> (BIT_BUFFER_SIZE - 16);
+
+    // longcode++;
+    bits = jpeg->code_buffer >> (BUFFER_BITS - 16);
     int32_t bit_length;
     for (bit_length = FAST_BITS + 1; ; ++bit_length) {
-        if (temp < huffman_table->maxcode[bit_length]) {
+        if (bits < huffman_table->maxcode[bit_length]) {
             break;
         }
     }
@@ -1465,20 +1998,20 @@ int32_t JpegDecoder::decodeHuffmanData(JpegDecodeData *jpeg,
     }
 
     // convert the huffman code to the symbol id
-    code = ((jpeg->code_buffer >> (BIT_BUFFER_SIZE - bit_length)) &
+    index = ((jpeg->code_buffer >> (BUFFER_BITS - bit_length)) &
             bit_mask[bit_length]) +
             huffman_table->delta[bit_length];
-    assert((((jpeg->code_buffer) >> (BIT_BUFFER_SIZE - huffman_table->size[code])) &
-            bit_mask[huffman_table->size[code]]) ==
-            huffman_table->code[code]);
+    // assert((((jpeg->code_buffer) >> (BUFFER_BITS - huffman_table->bit_lengths[index])) &
+    //         bit_mask[huffman_table->bit_lengths[index]]) ==
+    //         huffman_table->codes[index]);
 
     // convert the id to a symbol
     jpeg->code_bits -= bit_length;
     jpeg->code_buffer <<= bit_length;
 
-    return huffman_table->values[code];
+    return huffman_table->symbols[index];
 }
- */
+
 bool JpegDecoder::decodeProgressiveDCBlock(JpegDecodeData *jpeg,
                                            int16_t decoded_data[64],
                                            HuffmanLookupTable *huffman_dc,
@@ -1492,14 +2025,15 @@ bool JpegDecoder::decodeProgressiveDCBlock(JpegDecodeData *jpeg,
 
     if (jpeg->code_bits < 9) {
     // if (jpeg->code_bits < 16) {
+        std::cout << "before growBitBuffer in decodeProgressiveDCBlock" << std::endl;
         growBitBuffer(file_data_, jpeg);
     }
 
     if (jpeg->succ_high == 0) {
         // first scan for DC coefficient, must be first
         memset(decoded_data, 0, 64 * sizeof(decoded_data[0]));
-        decodeHuffmanData(jpeg, huffman_dc, value);
-        // value = decodeHuffmanData(jpeg, huffman_dc);
+        // decodeHuffmanData(jpeg, huffman_dc, value);
+        value = decodeHuffmanData(jpeg, huffman_dc);
         if (value < 0 || value > 15) {
             LOG(ERROR) << "can't merge dc and ac, Corrupt JPEG";
             return false;
@@ -1545,9 +2079,10 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
             int32_t code, r, value_bit_length;
             if (jpeg->code_bits < 9) {
             // if (jpeg->code_bits < 16) {
+                std::cout << "before growBitBuffer in decodeProgressiveACBlock" << std::endl;
                 growBitBuffer(file_data_, jpeg);
             }
-            code = (jpeg->code_buffer >> (BIT_BUFFER_SIZE - FAST_BITS)) &
+            code = (jpeg->code_buffer >> (BUFFER_BITS - FAST_BITS)) &
                    ((1 << FAST_BITS) - 1);
             r = fast_ac[code];
             if (r) {  // fast-AC path
@@ -1558,9 +2093,9 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
                 zig_index = dezigzag_indices[ac_index++];
                 decoded_data[zig_index] = (int16_t) ((r >> 8) * (1 << shift));
             } else {
-                int32_t rs;
-                decodeHuffmanData(jpeg, huffman_ac, rs);
-                // int32_t rs = decodeHuffmanData(jpeg, huffman_ac);
+                // int32_t rs;
+                // decodeHuffmanData(jpeg, huffman_ac, rs);
+                int32_t rs = decodeHuffmanData(jpeg, huffman_ac);
                 if (rs < 0) {
                     LOG(ERROR) << "bad huffman code, Corrupt JPEG";
                     return false;
@@ -1611,9 +2146,9 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
             ac_index = jpeg->spec_start;
             do {
                 int32_t r, s;
-                int32_t rs;
-                decodeHuffmanData(jpeg, huffman_ac, rs); // @OPTIMIZE see if we can use the fast path here, advance-by-r is so slow, eh
-                // int32_t rs = decodeHuffmanData(jpeg, huffman_ac); // @OPTIMIZE see if we can use the fast path here, advance-by-r is so slow, eh
+                // int32_t rs;
+                // decodeHuffmanData(jpeg, huffman_ac, rs); // @OPTIMIZE see if we can use the fast path here, advance-by-r is so slow, eh
+                int32_t rs = decodeHuffmanData(jpeg, huffman_ac); // @OPTIMIZE see if we can use the fast path here, advance-by-r is so slow, eh
                 if (rs < 0) {
                     LOG(ERROR) << "bad huffman code, Corrupt JPEG";
                     return false;
@@ -1677,28 +2212,26 @@ bool JpegDecoder::decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
                               HuffmanLookupTable *huffman_dc,
                               HuffmanLookupTable *huffman_ac, int16_t *fast_ac,
                               int32_t component_id, uint16_t *dequant_table) {
-    int32_t value_diff, dc;
-    int32_t value;
+    int32_t value, value_diff, dc;
 
-    if (jpeg->code_bits < 9) {
-    // if (jpeg->code_bits < 16) {
-        growBitBuffer(file_data_, jpeg);
-    }
-    std::cout << "before dc decodeHuffmanData" << std::endl;
-    decodeHuffmanData(jpeg, huffman_dc, value);
-    // value = decodeHuffmanData(jpeg, huffman_dc);
+    // std::cout << "before dc decodeHuffmanData" << std::endl;
+    // decodeHuffmanData(jpeg, huffman_dc, value);
+    // std::cout << "jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << "jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    value = decodeHuffmanData(jpeg, huffman_dc);
+    // std::cout << "before ac decodeHuffmanData, value: " << (int)value << std::endl;
     if (value < 0 || value > 15) {
-        LOG(ERROR) << "bad huffman code, Corrupt JPEG";
+        LOG(ERROR) << "bad huffman DC code, Corrupt JPEG";
     }
-    std::cout << "before ac decodeHuffmanData" << std::endl;
-    std::cout << "7: " << std::hex << 7 << std::noshowbase << std::endl;
-    std::cout << "-7: " << std::hex << -7 << std::noshowbase << std::dec << std::endl;
+    // std::cout << "jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << "jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << std::noshowbase << std::endl;
 
     // set all the ac values to 0 now so we can do it per 32-bits at a time
     memset(decoded_data, 0, 64 * sizeof(decoded_data[0]));
 
     value_diff = value ? extendReceive(jpeg, file_data_, value) : 0;
-    std::cout << "value_diff: " << value_diff << std::endl;
+    // std::cout << "before ac decodeHuffmanData, value_diff: " << std::dec << value_diff << std::endl;
     dc = jpeg->img_comp[component_id].dc_pred + value_diff;
     jpeg->img_comp[component_id].dc_pred = dc;
     decoded_data[0] = (int16_t)(dc * dequant_table[0]);
@@ -1706,48 +2239,50 @@ bool JpegDecoder::decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
     // decode AC components, see JPEG spec
     int32_t ac_index = 1;
     uint32_t zig_index;
-    int32_t code, r, value_bit_length;
-    std::cout << "jpeg->code_bits: " << jpeg->code_bits << std::endl;
-    std::cout << "jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::noshowbase << std::endl;
+    int32_t code, value_bit_length;
+    // std::cout << "jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << "jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::endl;
     do {
-        if (jpeg->code_bits < 9) {
-        // if (jpeg->code_bits < 16) {
+        if (jpeg->code_bits < FAST_BITS) {
             growBitBuffer(file_data_, jpeg);
         }
-        code = (jpeg->code_buffer >> (BIT_BUFFER_SIZE - FAST_BITS)) & ((1 << FAST_BITS) - 1);
-        r = fast_ac[code];
-        std::cout << "code: " << code << std::endl;
-        std::cout << "r: " << r << std::endl;
-        if (r) { // fast-AC path
-            std::cout << "come in if(r) " << std::endl;
-            ac_index += (r >> 4) & 15; // run
-            value_bit_length = r & 15; // combined length
-            std::cout << "run : " << ((r >> 4) & 15) << std::endl;
-            std::cout << "bit length : " << (r & 15) << std::endl;
+        // std::cout << "huffman decoding, before, jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::endl;
+        // std::cout << "huffman decoding, before, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+        code = (jpeg->code_buffer >> (BUFFER_BITS - FAST_BITS)) & ((1 << FAST_BITS) - 1);
+        // std::cout << "in decodeBlock, code: " << (int)code << std::endl;
+        value = fast_ac[code];
+        // std::cout << "code: " << code << std::endl;
+        // std::cout << "value: " << value << std::endl;
+        if (value) { // fast-AC path
+            // std::cout << "come in if(value) " << std::endl;
+            ac_index += (value >> 4) & 15; // run
+            value_bit_length = value & 15; // combined length
+            // std::cout << "run : " << ((value >> 4) & 15) << std::endl;
+            // std::cout << "bit length : " << (value & 15) << std::endl;
             jpeg->code_buffer <<= value_bit_length;
             jpeg->code_bits -= value_bit_length;
             // decode into unzigzag'd location
             zig_index = dezigzag_indices[ac_index++];
-            decoded_data[zig_index] = (int16_t) ((r >> 8) *
+            decoded_data[zig_index] = (int16_t) ((value >> 8) *
                                                  dequant_table[zig_index]);
+            fastcode++;
         } else {
-            std::cout << "come in if(r) else " << std::endl;
-            int32_t rs;
-            decodeHuffmanData(jpeg, huffman_ac, rs);
-            // int32_t rs = decodeHuffmanData(jpeg, huffman_ac);
+            // int32_t rs;
+            // decodeHuffmanData(jpeg, huffman_ac, rs);
+            int32_t rs = decodeHuffmanData(jpeg, huffman_ac);
             if (rs < 0) {
                 LOG(ERROR) << "bad huffman code, Corrupt JPEG";
                 return false;
             }
             value_bit_length = rs & 15;
-            r = rs >> 4;
+            value = rs >> 4;
             if (value_bit_length == 0) {
                 if (rs != 0xf0) {
                     break;  // end block
                 }
                 ac_index += 16;
             } else {
-                ac_index += r;
+                ac_index += value;
                 // decode into unzigzag'd location
                 zig_index = dezigzag_indices[ac_index++];
                 decoded_data[zig_index] = (int16_t)(extendReceive(jpeg,
@@ -1756,11 +2291,13 @@ bool JpegDecoder::decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
                                                     dequant_table[zig_index]);
             }
         }
+        // std::cout << "huffman decoding, after, jpeg->code_buffer: " << std::hex << jpeg->code_buffer << std::endl;
+        // std::cout << "huffman decoding, after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
     } while (ac_index < 64);
-    std::cout << "decode data: " << std::endl;
-    for (int i = 0; i < 64; i++) {
-        std::cout << i << ": " << decoded_data[i] << std::endl;
-    }
+    // std::cout << "decode data: " << std::endl;
+    // for (int i = 0; i < 64; i++) {
+    //     std::cout << std::dec << i << ": " << decoded_data[i] << std::endl;
+    // }
 
     return true;
 }
@@ -1768,13 +2305,13 @@ bool JpegDecoder::decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
 bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
     bool succeeded;
     resetJpegDecoder(jpeg);
+    // initializeBitbuffer(file_data_, jpeg);
+    // std::cout << "come in parseEntropyCodedData(). " << std::endl;
+    // std::cout << "jpeg->todo: " << jpeg->todo << std::endl;
     if (!jpeg->progressive) {
-        // SIMD_ALIGN16(int16_t, data0[64]);
-        // SIMD_ALIGN16(int16_t, data1[64]);
-        // SIMD_ALIGN16(int16_t, data2[64]);
-        // SIMD_ALIGN16(int16_t, data3[64]);
-        // std::vector<std::thread> thread_pools;
+        // std::cout << "come in non progressive processing." << std::endl;
         if (jpeg->scan_n == 1) {
+            // std::cout << "before decodeBlock, scan_n: " << jpeg->scan_n << std::endl;
             int32_t i, j;
             SIMD_ALIGN16(int16_t, data[64]);
             int32_t n = jpeg->order[0];
@@ -1784,6 +2321,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
             // component has, independent of interleaved MCU blocking and such
             int32_t width = (jpeg->img_comp[n].x + 7) >> 3;
             int32_t height = (jpeg->img_comp[n].y + 7) >> 3;
+            // std::cout << "width: " << width << ", height: " << height << std::endl;
             for (j = 0; j < height; ++j) {
                 for (i = 0; i < width; ++i) {
                     int32_t huffman_ac_id = jpeg->img_comp[n].huffman_ac_id;
@@ -1793,67 +2331,26 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                                                      huffman_ac_id;
                     uint16_t *dequant_table =
                         jpeg->dequant[jpeg->img_comp[n].quant_id];
-                    std::cout << "before decodeBlock" << std::endl;
                     succeeded = decodeBlock(jpeg, data, huffman_dc, huffman_ac,
                         jpeg->fast_ac[huffman_ac_id], n, dequant_table);
                     if (!succeeded) return false;
-                    std::cout << "after decodeBlock" << std::endl;
+                    // std::cout << "after decodeBlock" << std::endl;
                     uint8_t *output = jpeg->img_comp[n].data +
                         jpeg->img_comp[n].w2 * j * 8 + i * 8;
                     jpeg->idctBlockKernel(output, jpeg->img_comp[n].w2, data);
-/*                     int thread_id = j % 4;
-                    if (thread_id == 0) {
-                        succeeded = decodeBlock(jpeg, data0, huffman_dc, huffman_ac,
-                            jpeg->fast_ac[huffman_ac_id], n, dequant_table);
-                        if (!succeeded) return false;
-                        uint8_t *output = jpeg->img_comp[n].data +
-                            jpeg->img_comp[n].w2 * j * 8 + i * 8;
-                        std::thread thread0(jpeg->idctBlockKernel, output, jpeg->img_comp[n].w2, data0);
-                        thread0.detach();
-                        // thread_pools.push_back(std::move(thread0));
-                    }
-                    else if (thread_id == 1) {
-                        succeeded = decodeBlock(jpeg, data1, huffman_dc, huffman_ac,
-                            jpeg->fast_ac[huffman_ac_id], n, dequant_table);
-                        if (!succeeded) return false;
-                        uint8_t *output = jpeg->img_comp[n].data +
-                            jpeg->img_comp[n].w2 * j * 8 + i * 8;
-                        std::thread thread1(jpeg->idctBlockKernel, output, jpeg->img_comp[n].w2, data0);
-                        thread1.detach();
-                        // thread_pools.push_back(std::move(thread1));
-                    }
-                    else if (thread_id == 2) {
-                        succeeded = decodeBlock(jpeg, data2, huffman_dc, huffman_ac,
-                            jpeg->fast_ac[huffman_ac_id], n, dequant_table);
-                        if (!succeeded) return false;
-                        uint8_t *output = jpeg->img_comp[n].data +
-                            jpeg->img_comp[n].w2 * j * 8 + i * 8;
-                        std::thread thread2(jpeg->idctBlockKernel, output, jpeg->img_comp[n].w2, data2);
-                        thread2.detach();
-                        // thread_pools.push_back(std::move(thread2));
-                    }
-                    else {
-                        succeeded = decodeBlock(jpeg, data3, huffman_dc, huffman_ac,
-                            jpeg->fast_ac[huffman_ac_id], n, dequant_table);
-                        if (!succeeded) return false;
-                        uint8_t *output = jpeg->img_comp[n].data +
-                            jpeg->img_comp[n].w2 * j * 8 + i * 8;
-                        std::thread thread3(jpeg->idctBlockKernel, output, jpeg->img_comp[n].w2, data3);
-                        thread3.detach();
-                        // thread_pools.push_back(std::move(thread3));
-                    } */
 
                     // every data block is an MCU, so countdown the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
-                            growBitBuffer(file_data_, jpeg);
-                        }
+                        // if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
+                        //     growBitBuffer(file_data_, jpeg);
+                        // }
                         // if it's NOT a restart, then just bail, so we get corrupt data
                         // rather than no data
                         if (!DRI_RESTART(jpeg->marker)) {
                             return true;
                         }
                         resetJpegDecoder(jpeg);
+                        // initializeBitbuffer(file_data_, jpeg);
                     }
                 }
             }
@@ -1862,6 +2359,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
             // std::cout << "come here 6." << std::endl;
             return true;
         } else {  // interleaved
+            // std::cout << "before decodeBlock, scan_n: " << jpeg->scan_n << std::endl;
             int32_t i, j, k, x, y;
             SIMD_ALIGN16(int16_t, data[64]);
             for (j = 0; j < jpeg->mcus_y; ++j) {
@@ -1885,6 +2383,8 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                                     + huffman_ac_id;
                                 uint16_t *dequant_table =
                                     jpeg->dequant[jpeg->img_comp[n].quant_id];
+                                // if (j == height - 1 && i == width - 1)
+                                //     std::cout << "j: " << j << ", i: " << i << std::endl;
                                 succeeded = decodeBlock(jpeg, data, huffman_dc,
                                     huffman_ac, jpeg->fast_ac[huffman_ac_id],
                                     n, dequant_table);
@@ -1899,17 +2399,19 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                     // after all interleaved components, that's an interleaved MCU,
                     // so now count down the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
-                            growBitBuffer(file_data_, jpeg);
-                        }
+                        // if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
+                        //     growBitBuffer(file_data_, jpeg);
+                        // }
                         if (!DRI_RESTART(jpeg->marker)) return true;
                         resetJpegDecoder(jpeg);
+                        // initializeBitbuffer(file_data_, jpeg);
                     }
                 }
             }
             return true;
         }
     } else {
+        // std::cout << "come in progressive processing." << std::endl;
         if (jpeg->scan_n == 1) {
             int32_t i, j;
             int32_t n = jpeg->order[0];
@@ -1939,11 +2441,12 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                     }
                     // every data block is an MCU, so countdown the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
-                            growBitBuffer(file_data_, jpeg);
-                        }
+                        // if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
+                        //     growBitBuffer(file_data_, jpeg);
+                        // }
                         if (!DRI_RESTART(jpeg->marker)) return true;
                         resetJpegDecoder(jpeg);
+                        // initializeBitbuffer(file_data_, jpeg);
                     }
                 }
             }
@@ -1977,11 +2480,12 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                     // after all interleaved components, that's an interleaved MCU,
                     // so now count down the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
-                            growBitBuffer(file_data_, jpeg);
-                        }
+                        // if (jpeg->code_bits < JPEG_SHIFT_SIZE) {
+                        //     growBitBuffer(file_data_, jpeg);
+                        // }
                         if (!DRI_RESTART(jpeg->marker)) return true;
                         resetJpegDecoder(jpeg);
+                        // initializeBitbuffer(file_data_, jpeg);
                     }
                 }
             }
@@ -2256,13 +2760,16 @@ bool JpegDecoder::decodeData(uint32_t stride, uint8_t* image) {
     // struct timeval start2, end2;
     // gettimeofday(&start, NULL);
     // ProfilerStart("jpeg_perf.prof");  // profiling
-    shortcode = 0;
-    longcode = 0;
+    // shortcode = 0;
+    // longcode = 0;
+    // fastcode = 0;
+    // std::cout << "come in decodeData()." << std::endl;
 
     setJpegFunctions(jpeg_);
 
     bool succeeded;
     uint8_t marker = getMarker(jpeg_);
+    // std::cout << "in decodeData(), getmarker0." << std::endl;
     while (marker != 0xD9) {  // end of image
         if (marker == 0xDA) {  // start of scan
             succeeded = parseSOS(jpeg_);
@@ -2273,6 +2780,7 @@ bool JpegDecoder::decodeData(uint32_t stride, uint8_t* image) {
 
             // gettimeofday(&start1, NULL);
             succeeded = parseEntropyCodedData(jpeg_);
+            // std::cout << "after parseEntropyCodedData." << std::endl;
             if (!succeeded) {
                 freeComponents(jpeg_, jpeg_->components);
                 LOG(ERROR) << "Failed to decode the compressed data.";
@@ -2291,7 +2799,18 @@ bool JpegDecoder::decodeData(uint32_t stride, uint8_t* image) {
             }
         }
 
+    // std::cout << "jpeg->code_bits: " << std::dec << jpeg_->code_bits << std::endl;
+    // std::cout << "jpeg->code_buffer: " << std::hex << jpeg_->code_buffer << std::endl;
+        // std::cout << "in decodeData(), berfore getmarker1." << std::endl;
+        // std::cout << "in decodeData(), marker: " << std::hex << (int)marker << std::endl;
+        // uint32_t previous0 = file_data_->getpreviousByte();
+        // std::cout << "in decodeData(), previous0: " << std::hex << previous0 << std::endl;
         marker = getMarker(jpeg_);
+        // uint32_t previous1 = file_data_->getpreviousByte();
+        // std::cout << "in decodeData(), previous1: " << std::hex << previous1 << std::endl;
+        // std::cout << "in decodeData(), marker: " << std::hex << (int)marker << std::endl;
+        // std::cout << "in decodeData(), byte after marker: " << (int)file_data_->getByte() << std::endl;
+        // std::cout << "in decodeData(), getmarker1." << std::endl;
     }
 
     if (jpeg_->progressive) {
@@ -2318,6 +2837,9 @@ bool JpegDecoder::decodeData(uint32_t stride, uint8_t* image) {
     // int time = (end.tv_sec * 1000000 + end.tv_usec) -
     //             (start.tv_sec * 1000000 + start.tv_usec);
     // std::cout << "decodeData time: " << time << " us." << std::endl;
+    // // std::cout << "shortcode: " << shortcode << std::endl;
+    // // std::cout << "longcode: " << longcode << std::endl;
+    // std::cout << "fastcode: " << fastcode << std::endl;
 
     return true;
 }

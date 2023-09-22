@@ -360,20 +360,9 @@ void BM_ImreadJPEG_ppl_x86(benchmark::State &state) {
     int width  = state.range(0);
     int height = state.range(1);
 
-    cv::Mat src;
-    if (channels == 1) {
-        src = createSourceImage(height, width,
-                                CV_MAKETYPE(cv::DataType<uchar>::depth,
-                                channels));
-    }
-    else if (channels == 3) {
-        cv::Mat bgr = createSourceImage(height, width,
-                          CV_MAKETYPE(cv::DataType<uchar>::depth, channels));
-        cv::cvtColor(bgr, src, cv::COLOR_BGR2YCrCb);
-    }
-    else {
-    }
-
+    cv::Mat src = createSourceImage(height, width,
+                                    CV_MAKETYPE(cv::DataType<uchar>::depth,
+                                    channels));
     std::string file_name("test.jpeg");
     bool succeeded = cv::imwrite(file_name.c_str(), src);
     if (succeeded == false) {
@@ -382,10 +371,8 @@ void BM_ImreadJPEG_ppl_x86(benchmark::State &state) {
     }
 
     struct timeval start, end;
-
     int height1, width1, channels1, stride;
     uchar* image;
-
     for (auto _ : state) {
         gettimeofday(&start, NULL);
         ppl::cv::x86::Imread(file_name.c_str(), &height1, &width1, &channels1,
@@ -410,29 +397,25 @@ void BM_ImreadJPEG_opencv_x86(benchmark::State &state) {
     int width  = state.range(0);
     int height = state.range(1);
 
-    cv::Mat src;
-    if (channels == 1) {
-        src = createSourceImage(height, width,
-                                CV_MAKETYPE(cv::DataType<uchar>::depth,
-                                channels));
-    }
-    else if (channels == 3) {
-        cv::Mat bgr = createSourceImage(height, width,
-                          CV_MAKETYPE(cv::DataType<uchar>::depth, channels));
-        cv::cvtColor(bgr, src, cv::COLOR_BGR2YCrCb);
-    }
-    else {
-    }
-
+    cv::Mat src = createSourceImage(height, width,
+                                    CV_MAKETYPE(cv::DataType<uchar>::depth,
+                                    channels));
     std::string file_name("test.jpeg");
+
     bool succeeded = cv::imwrite(file_name.c_str(), src);
     if (succeeded == false) {
         std::cout << "failed to write the image to test.jpeg." << std::endl;
         return;
     }
 
+    struct timeval start, end;
     for (auto _ : state) {
+        gettimeofday(&start, NULL);
         cv::Mat dst = cv::imread(file_name, cv::IMREAD_UNCHANGED);
+        gettimeofday(&end, NULL);
+        int time = (end.tv_sec * 1000000 + end.tv_usec) -
+                   (start.tv_sec * 1000000 + start.tv_usec);
+        state.SetIterationTime(time * 1e-6);
     }
     state.SetItemsProcessed(state.iterations() * 1);
 
@@ -443,18 +426,32 @@ void BM_ImreadJPEG_opencv_x86(benchmark::State &state) {
 }
 
 #define RUN_JPEG_BENCHMARK(channels)                                           \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({320, 240});      \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({320, 240})->     \
+                   UseManualTime();                                            \
 BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({320, 240})->        \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({640, 480});      \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({640, 480})->     \
+                   UseManualTime();                                            \
 BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({640, 480})->        \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({1280, 720});     \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({1280, 720})->    \
+                   UseManualTime();                                            \
 BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({1280, 720})->       \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({1920, 1080});    \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({1920, 1080})->   \
+                   UseManualTime();                                            \
 BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({1920, 1080})->      \
                    UseManualTime();
+
+// #define RUN_JPEG_BENCHMARK(channels)                                           \
+// BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({320, 240})->     \
+//                    UseManualTime();                                            \
+// BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({320, 240})->        \
+//                    UseManualTime();                                            \
+// BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({640, 480})->     \
+//                    UseManualTime();                                            \
+// BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({640, 480})->        \
+//                    UseManualTime();
 
 RUN_JPEG_BENCHMARK(1)
 RUN_JPEG_BENCHMARK(3)

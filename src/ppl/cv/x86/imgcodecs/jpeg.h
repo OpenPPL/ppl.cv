@@ -31,9 +31,13 @@ namespace x86 {
 
 // huffman decoding acceleration
 #define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
-#define BIT_BUFFER_SIZE 32
+#define BUFFER_BYTES 8
+#define BUFFER_BITS 64
+// #define BUFFER_BYTES 4
+// #define BUFFER_BITS 32
+#define SHIFT_BYTES 3
 #define JPEG_SHIFT_SIZE 24
-// #define BIT_BUFFER_SIZE 64
+// #define BUFFER_BITS 64
 // #define JPEG_SHIFT_SIZE 56
 
 typedef uint8_t *(*resampleRow)(uint8_t *out, uint8_t *in0, uint8_t *in1,
@@ -49,20 +53,20 @@ typedef struct {
 } SampleData;
 
 typedef struct {
-    uint8_t  fast[1 << FAST_BITS];
+    uint8_t  fast_indices[1 << FAST_BITS];
     // weirdly, repacking this into AoS is a 10% speed loss, instead of a win
-    uint16_t code[256];    // bit code
-    uint8_t  values[256];  // the stored symbol/code value
-    uint8_t  size[257];    // bit lengths of code
+    uint8_t  bit_lengths[257];  // bit lengths of code, remove?
+    uint16_t codes[256];        // bit code, remove?
+    uint8_t  symbols[256];      // the stored symbol/code value
     uint32_t maxcode[18];
-    int32_t  delta[17];    // old 'firstsymbol' - old 'firstcode'
+    int32_t  delta[17];         // old 'firstsymbol' - old 'firstcode'
 } HuffmanLookupTable;
 
 typedef struct {
-    HuffmanLookupTable huff_dc[4];       // 2 huffman dc tables for YCrCb
-    HuffmanLookupTable huff_ac[4];       // 2 huffman ac tables for YCrCb
-    uint16_t dequant[4][64];             // 2 quantization tables for YCrCb
-    int16_t fast_ac[4][1 << FAST_BITS];  // 1 fast ac tables for YCrCb
+    HuffmanLookupTable huff_dc[2];       // 2 huffman dc tables for YCrCb
+    HuffmanLookupTable huff_ac[2];       // 2 huffman ac tables for YCrCb
+    uint16_t dequant[2][64];             // 2 quantization tables for YCrCb
+    int16_t fast_ac[2][1 << FAST_BITS];  // 1 fast ac tables for YCrCb
 
     // sizes for components, interleaved MCUs
     int32_t img_h_max, img_v_max;
@@ -85,8 +89,8 @@ typedef struct {
         int32_t coeff_w, coeff_h; // number of 8x8 coefficient blocks
     } img_comp[4];
 
-    // uint64_t code_buffer; // jpeg entropy-coded buffer
-    uint32_t code_buffer; // jpeg entropy-coded buffer
+    uint64_t code_buffer; // jpeg entropy-coded buffer
+    // uint32_t code_buffer; // jpeg entropy-coded buffer
     int32_t code_bits;    // number of valid bits
     uint8_t marker;       // marker seen while filling entropy buffer
     int32_t nomore;       // flag if we saw a marker so must stop
@@ -168,6 +172,7 @@ class JpegDecoder : public ImageDecoder {
     void resetJpegDecoder(JpegDecodeData *jpeg);
     // void growBitBuffer(JpegDecodeData *jpeg);
     uint8_t getMarker(JpegDecodeData *jpeg);
+    uint8_t getMarker1(JpegDecodeData *jpeg);
     // int32_t getBits(JpegDecodeData *jpeg, int32_t n);
     // int32_t getBit(JpegDecodeData *jpeg);
     // int32_t extendReceive(JpegDecodeData *jpeg, int32_t value_bit_length);
@@ -195,6 +200,7 @@ class JpegDecoder : public ImageDecoder {
     YCrCb2BGR_i* ycrcb2bgr_;
     size_t shortcode;
     size_t longcode;
+    size_t fastcode;
 };
 
 } //! namespace x86
@@ -202,3 +208,4 @@ class JpegDecoder : public ImageDecoder {
 } //! namespace ppl
 
 #endif //! __ST_HPC_PPL_CV_X86_IMGCODECS_JPEG_H_
+

@@ -57,11 +57,11 @@ void BytesReader::setPosition(int position) {
         readBlock();
 }
 
-void BytesReader::skip(int bytes) {
-    // if (bytes <= FILE_BLOCK_SIZE - (current_ - start_))
-    current_ += bytes;
-    // else ...
-}
+// inline void BytesReader::skip(int bytes) {
+//     // if (bytes <= FILE_BLOCK_SIZE - (current_ - start_))
+//     current_ += bytes;
+//     // else ...
+// }
 
 void BytesReader::readBlock() {
     setPosition(getPosition());
@@ -94,6 +94,18 @@ int BytesReader::getByte() {
     // std::cout << "getByte: " << std::showbase << std::hex << value << std::noshowbase << std::endl;
     return *current_++;
 }
+
+// uint32_t BytesReader::getpreviousByte() {
+
+//     // std::cout << "getByte: " << std::showbase << std::hex << value << std::noshowbase << std::endl;
+//     uchar* previous = current_ - 3;
+
+//     uint32_t value;
+//     value = previous[3] + (previous[2] << 8) + (previous[1] << 16) +
+//                 (previous[0] << 24);
+
+//     return value;
+// }
 /*
 int BytesReader::getByte() {
     uchar* current = current_;
@@ -291,9 +303,9 @@ int32_t BytesReader::getDWordBigEndian() {
     return value;
 }
 
-uchar* BytesReader::getCurrentPosition() const {
-    return current_;
-}
+// inline uchar* BytesReader::getCurrentPosition() const {
+//     return current_;
+// }
 
 uint32_t BytesReader::getValidSize() const {
     return end_ - current_;
