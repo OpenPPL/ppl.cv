@@ -73,9 +73,9 @@ struct PngTime {
 // zlib-style huffman encoding, jpegs packs from left, zlib from right
 struct ZlibHuffman {
    uint16_t fast[1 << ZLIB_FAST_BITS];
-   uint16_t firstcode[16];
-   uint16_t firstsymbol[16];
-   int32_t maxcode[17];
+   uint16_t first_code[16];
+   uint16_t first_symbol[16];
+   int32_t max_code[17];
    uint8_t size[SYMBOL_NUMBER];
    uint16_t value[SYMBOL_NUMBER];
 };

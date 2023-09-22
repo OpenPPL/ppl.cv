@@ -1057,8 +1057,8 @@ bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
     uint32_t symbol = 0;
     for (i = 1; i < 16; ++i) {
         next_code[i] = code;
-        huffman_coding->firstcode[i]   = (uint16_t)code;
-        huffman_coding->firstsymbol[i] = (uint16_t)symbol;
+        huffman_coding->first_code[i]   = (uint16_t)code;
+        huffman_coding->first_symbol[i] = (uint16_t)symbol;
         code = (code + sizes[i]);
         if (sizes[i]) {
             if (code - 1 >= (1 << i)) {
@@ -1066,17 +1066,17 @@ bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
                 return false;
             }
         }
-        huffman_coding->maxcode[i] = code << (16 - i);
+        huffman_coding->max_code[i] = code << (16 - i);
         code <<= 1;
         symbol += sizes[i];
     }
 
-    huffman_coding->maxcode[16] = 0x10000;
+    huffman_coding->max_code[16] = 0x10000;
     for (i = 0; i < number; ++i) {
         int32_t size = size_list[i];
         if (size) {
-            int index = next_code[size] - huffman_coding->firstcode[size] +
-                        huffman_coding->firstsymbol[size];
+            int index = next_code[size] - huffman_coding->first_code[size] +
+                        huffman_coding->first_symbol[size];
             uint16_t fast_value = (uint16_t) ((size << 9) | i);
             huffman_coding->size [index] = (uint8_t)size;
             huffman_coding->value[index] = (uint16_t)i;
@@ -1114,8 +1114,8 @@ bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
     uint32_t symbol = 0;
     for (i = 1; i < 16; ++i) {
         next_code[i] = code;
-        huffman_coding->firstcode[i]   = (uint16_t)code;
-        huffman_coding->firstsymbol[i] = (uint16_t)symbol;
+        huffman_coding->first_code[i]   = (uint16_t)code;
+        huffman_coding->first_symbol[i] = (uint16_t)symbol;
         code = (code + sizes[i]);
         if (sizes[i]) {
             if (code - 1 >= (1 << i)) {
@@ -1123,15 +1123,15 @@ bool PngDecoder::buildHuffmanCode(ZlibHuffman *huffman_coding,
                 return false;
             }
         }
-        huffman_coding->maxcode[i] = code << (16 - i);
+        huffman_coding->max_code[i] = code << (16 - i);
         code <<= 1;
         symbol += sizes[i];
     }
 
-    huffman_coding->maxcode[16] = 0x10000;
+    huffman_coding->max_code[16] = 0x10000;
     for (i = 0; i < number; ++i) {
-        int index = next_code[size] - huffman_coding->firstcode[size] +
-                    huffman_coding->firstsymbol[size];
+        int index = next_code[size] - huffman_coding->first_code[size] +
+                    huffman_coding->first_symbol[size];
         uint16_t fast_value = (uint16_t) ((size << 9) | i);
         huffman_coding->size [index] = (uint8_t)size;
         huffman_coding->value[index] = (uint16_t)i;
@@ -1153,11 +1153,11 @@ int32_t PngDecoder::huffmanDecodeSlowly(ZlibBuffer *zlib_buffer,
     int32_t bits, size, index;
     bits = reverse16Bits((uint16_t)(zlib_buffer->code_buffer & 0xFFFF));
     for (size = ZLIB_FAST_BITS + 1; ; ++size) {
-        if (bits < huffman_coding->maxcode[size]) break;
+        if (bits < huffman_coding->max_code[size]) break;
     }
     if (size >= 16) return -1; // invalid code!
-    index = (bits >> (16 - size)) - huffman_coding->firstcode[size] +
-            huffman_coding->firstsymbol[size];
+    index = (bits >> (16 - size)) - huffman_coding->first_code[size] +
+            huffman_coding->first_symbol[size];
     if (index >= SYMBOL_NUMBER) return -1;
     if (huffman_coding->size[index] != size) return -1;
     zlib_buffer->code_buffer >>= size;
@@ -1168,22 +1168,22 @@ int32_t PngDecoder::huffmanDecodeSlowly(ZlibBuffer *zlib_buffer,
 
 int32_t PngDecoder::huffmanDecode(ZlibBuffer *zlib_buffer,
                                   ZlibHuffman *huffman_coding) {
-   if (zlib_buffer->bit_number < 16) {
-      fillBits(zlib_buffer);
-   }
+    if (zlib_buffer->bit_number < 16) {
+        fillBits(zlib_buffer);
+    }
 
-   uint32_t fast_bits, size;
-   fast_bits = huffman_coding->fast[zlib_buffer->code_buffer & ZLIB_FAST_MASK];
-   if (fast_bits) {
-      size = fast_bits >> 9;
-      zlib_buffer->code_buffer >>= size;
-      zlib_buffer->bit_number   -= size;
-      return fast_bits & 511;
-   }
+    uint32_t fast_bits, size;
+    fast_bits = huffman_coding->fast[zlib_buffer->code_buffer & ZLIB_FAST_MASK];
+    if (fast_bits) {
+        size = fast_bits >> 9;
+        zlib_buffer->code_buffer >>= size;
+        zlib_buffer->bit_number   -= size;
+        return fast_bits & 511;
+    }
 
-   int32_t value = huffmanDecodeSlowly(zlib_buffer, huffman_coding);
+    int32_t value = huffmanDecodeSlowly(zlib_buffer, huffman_coding);
 
-   return value;
+    return value;
 }
 
 bool PngDecoder::computeDynamicHuffman(ZlibBuffer* zlib_buffer) {

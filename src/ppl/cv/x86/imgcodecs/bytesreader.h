@@ -38,9 +38,10 @@ class BytesReader {
     uchar* data() const;
     int getPosition();
     void setPosition(int position);
-    void skip(int bytes);
+    void skip(int bytes) {current_ += bytes;}
     void readBlock();
     int getByte();
+    // uint32_t getpreviousByte();
     int getBytes(void* buffer, int count);
     int getWord();
     int32_t getWordLittleEndian();
@@ -50,7 +51,7 @@ class BytesReader {
     int32_t getDWordLittleEndian();
     // int getDWordBigEndian();
     int32_t getDWordBigEndian();
-    uchar* getCurrentPosition() const;
+    uchar* getCurrentPosition() const {return current_;}
     uint32_t getValidSize() const;
     void setCrcChecking(Crc32* crc);
     void unsetCrcChecking();
