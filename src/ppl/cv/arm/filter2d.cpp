@@ -32,18 +32,6 @@
 #include "filter_engine.hpp"
 
 namespace ppl::cv::arm {
-static int32_t senseRound_f(float value)
-{
-    return static_cast<int32_t>(roundf(value));
-}
-
-static uint8_t sat_cast(int32_t data)
-{
-    int32_t val;
-    val = data > 255 ? 255 : data;
-    val = val < 0 ? 0 : val;
-    return (uint8_t)val;
-}
 
 static uint8_t saturate_cast_f32_u8(float val)
 {
@@ -279,85 +267,6 @@ struct NonSeperableFilter2D<uint8_t, uint8_t, float> {
         }
     }
 };
-
-void convolution_b(int32_t imageInSizeX,
-                   int32_t imageInSizeY,
-                   int32_t inWidthStride,
-                   const uint8_t *imageIn,
-                   int32_t filterSize,
-                   const float *filter,
-                   float delta,
-                   int32_t outWidthStride,
-                   uint8_t *imageOut,
-                   int32_t cn)
-{
-    int32_t imageOutSizeX = imageInSizeX - filterSize + 1;
-    int32_t imageOutSizeY = imageInSizeY - filterSize + 1;
-
-    int32_t y;
-    for (y = 0; y < imageOutSizeY; y++) {
-        int32_t x = 0;
-        for (; x < imageOutSizeX * cn; x++) {
-            float sum = 0;
-            for (int32_t fx = 0; fx < filterSize; fx++) {
-                for (int32_t fy = 0; fy < filterSize; fy++) {
-                    float f = filter[fx + fy * filterSize];
-                    sum += f * imageIn[(fy + y) * inWidthStride + x + fx * cn];
-                }
-            }
-            imageOut[x + y * outWidthStride] = sat_cast(senseRound_f(sum + delta));
-        }
-    }
-}
-
-template <int32_t BX, int32_t BY>
-void convolutionSerialBlocking_f(int32_t imageInSizeX,
-                                 int32_t imageInSizeY,
-                                 int32_t inWidthStride,
-                                 const float *imageIn,
-                                 int32_t filterSize,
-                                 const float *filter,
-                                 float delta,
-                                 int32_t outWidthStride,
-                                 float *imageOut,
-                                 int32_t cn)
-{
-    int32_t imageOutSizeX = imageInSizeX - filterSize + 1;
-    int32_t imageOutSizeY = imageInSizeY - filterSize + 1;
-
-    int32_t y = 0;
-    for (; y < imageOutSizeY; y++) {
-        int32_t x = 0;
-        for (; x <= imageOutSizeX * cn - BX; x += BX) {
-            float sum[BX] = {(float)0};
-            for (int32_t fy = 0; fy < filterSize; fy++) {
-                for (int32_t fx = 0; fx < filterSize; fx++) {
-                    float filterItem = filter[fx + fy * filterSize];
-                    for (int32_t j = 0; j < BX; j++) {
-                        float imageItem = imageIn[x + j + fx * cn + (fy + y) * inWidthStride];
-                        sum[j] += filterItem * imageItem;
-                    }
-                }
-            }
-            for (int32_t j = 0; j < BX; j++) {
-                imageOut[x + j + (y)*outWidthStride] = sum[j] + delta;
-            }
-        }
-        for (; x < imageOutSizeX * cn; x++) {
-            float sum = 0;
-            for (int32_t fy = 0; fy < filterSize; fy++) {
-                for (int32_t fx = 0; fx < filterSize; fx++) {
-                    float filterItem = filter[fx + fy * filterSize];
-                    {
-                        float imageItem = imageIn[x + fx * cn + (fy + y) * inWidthStride];
-                        sum += filterItem * imageItem;
-                    }
-                }
-            }
-            imageOut[x + (y)*outWidthStride] = sum + delta;
-        }
-    }
-}
 
 template <>
 ::ppl::common::RetCode Filter2D<float, 1>(int32_t height,
