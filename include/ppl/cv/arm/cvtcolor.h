@@ -205,10 +205,71 @@ template <typename T>
     const T* inData,
     int32_t outWidthStride,
     T* outData);
-//need to add 
 
 template <typename T>
 ::ppl::common::RetCode RGB2HSV(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGBA2HSV(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGR2HSV(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGRA2HSV(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+template <typename T>
+::ppl::common::RetCode HSV2RGB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode HSV2RGBA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode HSV2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode HSV2BGRA(
     int32_t height,
     int32_t width,
     int32_t inWidthStride,
@@ -288,6 +349,79 @@ template <typename T>
     const T* inData,
     int32_t outWidthStride,
     T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGB2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode RGBA2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGR2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode BGRA2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode LAB2RGB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode LAB2RGBA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode LAB2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode LAB2BGRA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
 //fzx end
 
 
