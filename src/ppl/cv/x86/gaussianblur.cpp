@@ -32,9 +32,19 @@ namespace ppl {
 namespace cv {
 namespace x86 {
 
-int32_t borderInterpolate(int32_t p, int32_t len)
+int32_t borderInterpolate(int32_t p, int32_t len, BorderType borderType = BORDER_REFLECT_101)
 {
-    p = p < 0 ? -p : 2 * len - p - 2;
+    if (borderType == ppl::cv::BORDER_REFLECT_101) {
+        do p = p < 0 ? (-p) : 2 * len - p - 2;
+        while((unsigned)p >= (unsigned)len);
+    } else if (borderType == ppl::cv::BORDER_REFLECT) {
+        do p = p < 0 ? (-p - 1) : 2 * len - p - 1;
+        while((unsigned)p >= (unsigned)len);
+    } else if (borderType == ppl::cv::BORDER_REPLICATE) {
+        p = (p < 0) ? 0 : len - 1;
+    } else if (borderType == ppl::cv::BORDER_CONSTANT) {
+        p = -1;
+    }
     return p;
 }
 template <typename T>
@@ -808,6 +818,64 @@ void x86GaussianBlur_flarge(
     pReRowFilter = NULL;
 }
 
+template<int cn>
+void x86GaussianBlur_f_vector(
+    int32_t height,
+    int32_t width,
+    const float *inData,
+    int32_t kernel_len,
+    float sigma,
+    float *outData,
+    ppl::cv::BorderType border_type)
+{
+    std::vector<float> kernel;
+    createGaussianKernels(kernel, kernel_len, sigma, sense32F);
+
+    int32_t radius    = kernel_len / 2;
+    int32_t radius_cn = radius * cn;
+    int32_t pad_size  = 3 * radius_cn * 2;
+    float*  pad_data   = (float *) malloc(pad_size * sizeof(inData));
+
+    int32_t i, j, size = sizeof(float);
+    int32_t length     = width ^ 1 ? width : height;
+    int32_t length_cn  = length * cn;
+    // make border
+    for (i = 0; i < radius; i++) {
+        j = borderInterpolate(i - radius, length, border_type);
+        memcpy(pad_data + i * cn, inData + j * cn, cn * size);
+
+        j = borderInterpolate(length + i, length, border_type);
+        memcpy(pad_data + 5 * radius_cn + i * cn, inData + j * cn, cn * size);
+    }
+    memcpy(pad_data + radius_cn, inData, 2 * radius_cn * size);
+    memcpy(pad_data + 3 * radius_cn, inData + length_cn - 2 * radius_cn, 2 * radius_cn * size);
+
+    // do gaussianblur on pad data
+    for (i = 0; i < radius_cn; i++) {
+        float* src0 = pad_data + i;
+        float* src1 = pad_data + 3 * radius_cn + i;
+        float res0 = 0, res1 = 0;
+        for (j = 0; j < kernel_len; j++, src0 += cn, src1 += cn) {
+            res0 += src0[0] * kernel[j];
+            res1 += src1[0] * kernel[j];
+        }
+        outData[i] = res0;
+        outData[length_cn - radius_cn + i] = res1;
+    }
+
+    // do gaussianblur on src data
+    for (i = 0;i < length_cn - 2 * radius_cn; i++) {
+        const float* src = inData + i;
+        float res = 0;
+        for (j = 0; j < kernel_len; j++, src += cn) {
+            res += src[0] * kernel[j];
+        }
+        outData[radius_cn + i] = res;
+    }
+
+    free(pad_data);
+}
+
 template <int cn>
 void x86GaussianBlur_f(
     int32_t height,
@@ -820,9 +888,16 @@ void x86GaussianBlur_f(
     float *outData,
     ppl::cv::BorderType border_type)
 {
-    std::vector<float> kernel;
-    createGaussianKernels(kernel, kernel_len, sigma, sense32F);
-
+    // only one element
+    if (height == 1 && width == 1) {
+        outData[0] = inData[0];
+        return;
+    }
+    // vector
+    if (height == 1 || width == 1) {
+        x86GaussianBlur_f_vector<cn>(height, width, inData, kernel_len, sigma, outData, border_type);
+        return;
+    }
     int32_t radius = kernel_len / 2;
     if (radius == 1 && border_type == ppl::cv::BORDER_REFLECT_101)
         x86GaussianBlur_fs3(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, cn);
