@@ -18,6 +18,8 @@
 #include "ppl/cv/x86/gaussianblur.h"
 #include "ppl/cv/x86/copymakeborder.h"
 #include "ppl/cv/x86/avx/internal_avx.hpp"
+#include "ppl/common/x86/sysinfo.h"
+#include "ppl/common/sys.h"
 #include "ppl/cv/types.h"
 #include <string.h>
 #include <cmath>
@@ -30,11 +32,23 @@
 namespace ppl {
 namespace cv {
 namespace x86 {
-static int32_t borderInterpolate(int32_t p, int32_t len)
+
+static int32_t borderInterpolate(int32_t p, int32_t len, BorderType borderType = BORDER_REFLECT_101)
 {
-    p = p < 0 ? -p : 2 * len - p - 2;
+    if (borderType == ppl::cv::BORDER_REFLECT_101) {
+        do p = p < 0 ? (-p) : 2 * len - p - 2;
+        while((unsigned)p >= (unsigned)len);
+    } else if (borderType == ppl::cv::BORDER_REFLECT) {
+        do p = p < 0 ? (-p - 1) : 2 * len - p - 1;
+        while((unsigned)p >= (unsigned)len);
+    } else if (borderType == ppl::cv::BORDER_REPLICATE) {
+        p = (p < 0) ? 0 : len - 1;
+    } else if (borderType == ppl::cv::BORDER_CONSTANT) {
+        p = -1;
+    }
     return p;
 }
+
 template <typename T>
 static void makeborder_onfly(
     const T *src,
@@ -928,6 +942,100 @@ static void x86GaussianBlur_flarge(
     pReRowFilter = NULL;
 }
 
+template<int cn>
+void x86GaussianBlur_f_vector_avx(
+    int32_t height,
+    int32_t width,
+    const float *inData,
+    int32_t kernel_len,
+    float sigma,
+    float *outData,
+    ppl::cv::BorderType border_type)
+{   
+    std::vector<float> kernel;
+    createGaussianKernels(kernel, kernel_len, sigma, sense32F);
+
+    int32_t radius    = kernel_len / 2;
+    int32_t radius_cn = radius * cn;
+    int32_t pad_size  = 3 * radius_cn * 2;
+    float*  pad_data  = (float *) malloc(pad_size * sizeof(inData));
+
+    int32_t i, j, size = sizeof(float);
+    int32_t length     = width ^ 1 ? width : height;
+    int32_t length_cn  = length * cn;
+    // make border
+    for (i = 0; i < radius; i++) {
+        j = borderInterpolate(i - radius, length, border_type);
+        memcpy(pad_data + i * cn, inData + j * cn, cn * size);
+
+        j = borderInterpolate(length + i, length, border_type);
+        memcpy(pad_data + 5 * radius_cn + i * cn, inData + j * cn, cn * size);
+    }
+    memcpy(pad_data + radius_cn, inData, 2 * radius_cn * size);
+    memcpy(pad_data + 3 * radius_cn, inData + length_cn - 2 * radius_cn, 2 * radius_cn * size);
+
+    bool bSupportAVX = ppl::common::CpuSupports(ppl::common::ISA_X86_AVX);
+
+    // do gaussianblur on pad data
+    i = 0;
+    if (bSupportAVX) {
+        for (; i <= radius_cn - 8; i += 8) {
+            float* src0 = pad_data + i;                              
+            float* src1 = pad_data + 3 * radius_cn + i;
+            __m256 f, res0 = _mm256_setzero_ps(), res1 = res0, x0, x1;
+            for (j = 0; j < kernel_len; j++, src0 += cn, src1 += cn) {
+                f    = _mm256_broadcast_ss(&kernel[j]);
+                x0   = _mm256_loadu_ps(src0);
+                x1   = _mm256_loadu_ps(src1);
+                res0 = _mm256_add_ps(res0, _mm256_mul_ps(x0, f));
+                res1 = _mm256_add_ps(res1, _mm256_mul_ps(x1, f));
+            }
+
+            _mm256_storeu_ps(outData + i, res0);
+            _mm256_storeu_ps(outData + length_cn - radius_cn + i, res1);
+        }
+    }
+
+    for (; i < radius_cn; i++) {
+        float* src0 = pad_data + i;
+        float* src1 = pad_data + 3 * radius_cn + i;
+        float res0 = 0, res1 = 0;
+        for (j = 0; j < kernel_len; j++, src0 += cn, src1 += cn) {
+            res0 += src0[0] * kernel[j];
+            res1 += src1[0] * kernel[j];
+        }
+        outData[i] = res0;
+        outData[length_cn - radius_cn + i] = res1;
+    }
+
+    i = 0;
+    const int32_t rest = length_cn - 2 * radius_cn;
+    if (bSupportAVX) {
+        for (; i <= rest - 8; i += 8) {
+            const float* src = inData + i;
+            __m256 f, res = _mm256_setzero_ps(), x0;
+            for (j = 0; j < kernel_len; j++, src += cn) {
+                f   = _mm256_broadcast_ss(&kernel[j]);
+                x0  = _mm256_loadu_ps(src);
+                res = _mm256_add_ps(res, _mm256_mul_ps(x0, f));
+            }
+            _mm256_storeu_ps(outData + radius_cn + i, res);
+        }
+    }
+
+    // do gaussianblur on src data
+    for (; i < rest; i++) {
+        const float* src = inData + i;
+        float res = 0;
+        for (j = 0; j < kernel_len; j++, src += cn) {
+            res += src[0] * kernel[j];
+        }
+        outData[radius_cn + i] = res;
+    }
+
+    free(pad_data);
+}
+
 template <int cn>
 void x86GaussianBlur_f_avx(
     int32_t height,
@@ -940,9 +1048,16 @@ void x86GaussianBlur_f_avx(
     float *outData,
     ppl::cv::BorderType border_type)
 {
-    std::vector<float> kernel;
-    createGaussianKernels(kernel, kernel_len, sigma, sense32F);
-
+    // only one element
+    if (height == 1 && width == 1) {
+        outData[0] = inData[0];
+        return;
+    }
+    // vector
+    if (height == 1 || width == 1) {
+        x86GaussianBlur_f_vector_avx<cn>(height, width, inData, kernel_len, sigma, outData, border_type);
+        return;
+    }
     int32_t radius = kernel_len / 2;
     if (radius == 1 && border_type == ppl::cv::BORDER_REFLECT_101)
         x86GaussianBlur_fs3(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, cn);
