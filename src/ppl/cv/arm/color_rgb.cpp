@@ -163,31 +163,31 @@ template <int32_t ncSrc, int32_t ncDst>
     const int32_t src_step = srcStride;
     const int32_t dst_step = dstStride;
     for (int32_t k = 0; k < height; k++, srcPtr += src_step, dstPtr += dst_step) {
-        dstType v_dst0, v_dst1;
+        dstType v_dst0;
         if (ncSrc == 3 && ncDst == 4) {
-            v_dst0.val[3] = vdup_n_u8(1);
-            v_dst1.val[3] = vdup_n_u8(1);
+            v_dst0.val[3] = vdup_n_u8(255);
+            // v_dst1.val[3] = vdup_n_u8(255);
         }
 
         int32_t i = 0;
 
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src0 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * i);
-            srcType v_src1 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i + 4));
+            // srcType v_src1 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i + 4));
 
             v_dst0.val[0] = v_src0.val[2];
             v_dst0.val[1] = v_src0.val[1];
             v_dst0.val[2] = v_src0.val[0];
-            v_dst1.val[0] = v_src1.val[2];
-            v_dst1.val[1] = v_src1.val[1];
-            v_dst1.val[2] = v_src1.val[0];
+            // v_dst1.val[0] = v_src1.val[2];
+            // v_dst1.val[1] = v_src1.val[1];
+            // v_dst1.val[2] = v_src1.val[0];
             if (ncSrc == 4 && ncDst == 4) {
                 v_dst0.val[3] = v_src0.val[3];
-                v_dst1.val[3] = v_src1.val[3];
+                // v_dst1.val[3] = v_src1.val[3];
             }
 
             vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * i, v_dst0);
-            vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
+            // vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
         }
 
         for (; i < width; i++) {
@@ -299,31 +299,31 @@ template <int32_t ncSrc, int32_t ncDst>
     const int32_t src_step = srcStride;
     const int32_t dst_step = dstStride;
     for (int32_t k = 0; k < height; k++, srcPtr += src_step, dstPtr += dst_step) {
-        dstType v_dst0, v_dst1;
+        dstType v_dst0;
         if (ncSrc == 3 && ncDst == 4) {
-            v_dst0.val[3] = vdup_n_u8(1);
-            v_dst1.val[3] = vdup_n_u8(1);
+            v_dst0.val[3] = vdup_n_u8(255);
+            // v_dst1.val[3] = vdup_n_u8(255);
         }
 
         int32_t i = 0;
 
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src0 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * i);
-            srcType v_src1 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i + 4));
+            // srcType v_src1 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i + 4));
 
             v_dst0.val[0] = v_src0.val[2];
             v_dst0.val[1] = v_src0.val[1];
             v_dst0.val[2] = v_src0.val[0];
-            v_dst1.val[0] = v_src1.val[2];
-            v_dst1.val[1] = v_src1.val[1];
-            v_dst1.val[2] = v_src1.val[0];
+            // v_dst1.val[0] = v_src1.val[2];
+            // v_dst1.val[1] = v_src1.val[1];
+            // v_dst1.val[2] = v_src1.val[0];
             if (ncSrc == 4 && ncDst == 4) {
                 v_dst0.val[3] = v_src0.val[3];
-                v_dst1.val[3] = v_src1.val[3];
+                // v_dst1.val[3] = v_src1.val[3];
             }
 
             vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * i, v_dst0);
-            vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
+            // vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
         }
 
         for (; i < width; i++) {
@@ -334,7 +334,7 @@ template <int32_t ncSrc, int32_t ncDst>
             dstPtr[ncDst * i + 2] = b;
             if (ncDst == 4) {
                 if (ncSrc == 3) {
-                    dstPtr[4 * i + 3] = 1;
+                    dstPtr[4 * i + 3] = 255;
                 } else if (ncSrc == 4) {
                     dstPtr[ncDst * i + 3] = srcPtr[ncSrc * i + 3];
                 }
@@ -425,27 +425,27 @@ template <int32_t ncSrc, int32_t ncDst>
     const int32_t src_step = srcStride;
     const int32_t dst_step = dstStride;
     for (int32_t k = 0; k < height; k++, srcPtr += src_step, dstPtr += dst_step) {
-        dstType v_dst0, v_dst1;
+        dstType v_dst0;
         if (ncSrc == 3 && ncDst == 4) {
-            v_dst0.val[3] = vdup_n_u8(1);
-            v_dst1.val[3] = vdup_n_u8(1);
+            v_dst0.val[3] = vdup_n_u8(255);
+            // v_dst1.val[3] = vdup_n_u8(255);
         }
 
         int32_t i = 0;
 
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src0 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * i);
-            srcType v_src1 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i + 4));
+            // srcType v_src1 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i + 4));
 
             v_dst0.val[0] = v_src0.val[0];
             v_dst0.val[1] = v_src0.val[1];
             v_dst0.val[2] = v_src0.val[2];
-            v_dst1.val[0] = v_src1.val[0];
-            v_dst1.val[1] = v_src1.val[1];
-            v_dst1.val[2] = v_src1.val[2];
+            // v_dst1.val[0] = v_src1.val[0];
+            // v_dst1.val[1] = v_src1.val[1];
+            // v_dst1.val[2] = v_src1.val[2];
 
             vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * i, v_dst0);
-            vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
+            // vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
         }
 
         for (; i < width; i++) {
@@ -453,7 +453,7 @@ template <int32_t ncSrc, int32_t ncDst>
             dstPtr[ncDst * i + 1] = srcPtr[ncSrc * i + 1];
             dstPtr[ncDst * i + 2] = srcPtr[ncSrc * i + 2];
             if (ncDst == 4) {
-                dstPtr[4 * i + 3] = 1;
+                dstPtr[4 * i + 3] = 255;
             }
         }
     }
