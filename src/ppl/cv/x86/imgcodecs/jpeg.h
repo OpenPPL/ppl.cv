@@ -30,15 +30,18 @@ namespace cv {
 namespace x86 {
 
 // huffman decoding acceleration
-#define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
+// #define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
 #define BUFFER_BYTES 8
 #define BUFFER_BITS 64
 // #define BUFFER_BYTES 4
 // #define BUFFER_BITS 32
-#define SHIFT_BYTES 3
-#define JPEG_SHIFT_SIZE 24
+// #define SHIFT_BYTES 3
+// #define JPEG_SHIFT_SIZE 24
 // #define BUFFER_BITS 64
 // #define JPEG_SHIFT_SIZE 56
+
+#define MAX_BITS 16
+#define LOOKAHEAD_BITS 9
 
 typedef uint8_t *(*resampleRow)(uint8_t *out, uint8_t *in0, uint8_t *in1,
                                 int32_t width, int32_t hs);
@@ -53,20 +56,21 @@ typedef struct {
 } SampleData;
 
 typedef struct {
-    uint8_t  fast_indices[1 << FAST_BITS];
-    // weirdly, repacking this into AoS is a 10% speed loss, instead of a win
-    uint8_t  bit_lengths[257];  // bit lengths of code, remove?
-    uint16_t codes[256];        // bit code, remove?
+    // uint8_t bit_lengths[257];  // bit lengths of code, remove?
+    // uint16_t codes[256];        // bit code, remove?
     uint8_t  symbols[256];      // the stored symbol/code value
-    uint32_t maxcode[18];
+    uint16_t max_codes[18];
     int32_t  delta[17];         // old 'firstsymbol' - old 'firstcode'
+    uint16_t lookups[1 << LOOKAHEAD_BITS];  // bit number of symbol + symbol
 } HuffmanLookupTable;
 
 typedef struct {
     HuffmanLookupTable huff_dc[2];       // 2 huffman dc tables for YCrCb
     HuffmanLookupTable huff_ac[2];       // 2 huffman ac tables for YCrCb
+    // HuffmanLookupTable* huff_dc;       // 2 huffman dc tables for YCrCb
+    // HuffmanLookupTable* huff_ac;       // 2 huffman ac tables for YCrCb
     uint16_t dequant[2][64];             // 2 quantization tables for YCrCb
-    int16_t fast_ac[2][1 << FAST_BITS];  // 1 fast ac tables for YCrCb
+    // uint16_t* dequant[4];             // 2 quantization tables for YCrCb
 
     // sizes for components, interleaved MCUs
     int32_t img_h_max, img_v_max;
@@ -75,10 +79,10 @@ typedef struct {
 
     // definition of jpeg image component
     struct {
-        int32_t id;   // color_id, channel id
+        int32_t id;             // component id: Y(1), Cb(2), Cr(3), I(4), Q(5)
         int32_t hsampling, vsampling; // horizontal/vertical sampling rate.
-        int32_t quant_id;   // quantification table id
-        int32_t huffman_dc_id, huffman_ac_id;  // table id of huffman dc/ ac
+        int32_t quant_id;      // quantification table id
+        int32_t dc_id, ac_id;  // table id of dc/ac
         int32_t dc_pred;
 
         int32_t x, y, w2, h2;
@@ -105,7 +109,7 @@ typedef struct {
     int32_t app14_color_transform; // Adobe APP14 tag
     int32_t rgb;
 
-    int32_t components;  // z->s->img_n
+    int32_t components;        // Gray(1), YCbCr/YIQ(3), CMYK(4)
     int32_t scan_n, order[4];  // scan_n: number of components, order[]: component id
     int32_t restart_interval, todo;
 
@@ -180,14 +184,14 @@ class JpegDecoder : public ImageDecoder {
                               HuffmanLookupTable *huffman_table);
     bool decodeProgressiveDCBlock(JpegDecodeData *jpeg,
                                   int16_t decoded_data[64],
-                                  HuffmanLookupTable *huffman_dc, int32_t b);
+                                  HuffmanLookupTable *huffman_dc,
+                                  int32_t component_id);
     bool decodeProgressiveACBlock(JpegDecodeData *jpeg,
                                   int16_t decoded_data[64],
-                                  HuffmanLookupTable *huffman_ac,
-                                  int16_t *fast_ac);
+                                  HuffmanLookupTable *huffman_ac);
     bool decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
                      HuffmanLookupTable *huffman_dc,
-                     HuffmanLookupTable *huffman_ac, int16_t *fast_ac,
+                     HuffmanLookupTable *huffman_ac,
                      int32_t component_id, uint16_t *dequant_table);
     bool parseEntropyCodedData(JpegDecodeData *jpeg);
     bool sampleConvertColor(int32_t stride, uint8_t* image);
