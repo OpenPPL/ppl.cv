@@ -73,12 +73,15 @@ template<>
         int32_t w = 0;
         for (; w <= row_width - 16; w += 16) {
             prefetch(base_in + w);
-            float32x4x4_t vFData = vld1q_f32_x4(base_in + w);
+            float32x4_t vFData0 = vld1q_f32(base_in + w + 0);
+            float32x4_t vFData1 = vld1q_f32(base_in + w + 4);
+            float32x4_t vFData2 = vld1q_f32(base_in + w + 8);
+            float32x4_t vFData3 = vld1q_f32(base_in + w + 12);
 
-            float32x4_t vFRes0 = vFData.val[0];
-            float32x4_t vFRes1 = vFData.val[1];
-            float32x4_t vFRes2 = vFData.val[2];
-            float32x4_t vFRes3 = vFData.val[3];
+            float32x4_t vFRes0 = vFData0;
+            float32x4_t vFRes1 = vFData1;
+            float32x4_t vFRes2 = vFData2;
+            float32x4_t vFRes3 = vFData3;
 
             int32x4_t vSiData0 = vcvtnq_s32_f32(vFRes0);
             int32x4_t vSiData1 = vcvtnq_s32_f32(vFRes1);
@@ -136,7 +139,7 @@ template <>
         float* base_out = outData + h * outWidthStride;
         int32_t w = 0;
         for (; w < row_width; ++w) {
-            base_out[w] = scale * static_cast<float>(base_in[w]) + delta;
+            base_out[w] = std::fma(scale, static_cast<float>(base_in[w]), delta);
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -164,7 +167,7 @@ template <>
         float* base_out = outData + h * outWidthStride;
         int32_t w = 0;
         for (; w < row_width; ++w) {
-            base_out[w] = scale * base_in[w] + delta;
+            base_out[w] = std::fma(scale, base_in[w], delta);
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -193,17 +196,20 @@ template <>
         int32_t w = 0;
         for (; w <= row_width - 16; w += 16) {
             prefetch(base_in + w);
-            float32x4x4_t vFData = vld1q_f32_x4(base_in + w);
+            float32x4_t vFData0 = vld1q_f32(base_in + w + 0);
+            float32x4_t vFData1 = vld1q_f32(base_in + w + 4);
+            float32x4_t vFData2 = vld1q_f32(base_in + w + 8);
+            float32x4_t vFData3 = vld1q_f32(base_in + w + 12);
 
             float32x4_t vScale = vdupq_n_f32(scale);
             float32x4_t vFRes0 = vdupq_n_f32(delta);
             float32x4_t vFRes1 = vdupq_n_f32(delta);
             float32x4_t vFRes2 = vdupq_n_f32(delta);
             float32x4_t vFRes3 = vdupq_n_f32(delta);
-            vFRes0 = vfmaq_f32(vFRes0, vFData.val[0], vScale);
-            vFRes1 = vfmaq_f32(vFRes1, vFData.val[1], vScale);
-            vFRes2 = vfmaq_f32(vFRes2, vFData.val[2], vScale);
-            vFRes3 = vfmaq_f32(vFRes3, vFData.val[3], vScale);
+            vFRes0 = vfmaq_f32(vFRes0, vFData0, vScale);
+            vFRes1 = vfmaq_f32(vFRes1, vFData1, vScale);
+            vFRes2 = vfmaq_f32(vFRes2, vFData2, vScale);
+            vFRes3 = vfmaq_f32(vFRes3, vFData3, vScale);
 
             int32x4_t vSiData0 = vcvtnq_s32_f32(vFRes0);
             int32x4_t vSiData1 = vcvtnq_s32_f32(vFRes1);

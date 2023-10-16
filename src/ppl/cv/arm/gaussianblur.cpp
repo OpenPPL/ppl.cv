@@ -334,8 +334,8 @@ struct SymmColumnFilter<float, float> {
 
 using ufixedpoint16 = uint16_t;
 using ufixedpoint32 = uint32_t;
-static const int fixedShift = 8;
-static const int fixedShift_ufix32 = 16;
+static constexpr int fixedShift = 8;
+static constexpr int fixedShift_ufix32 = 16;
 ufixedpoint16 fixed_convert_u8_to_ufix16(uint8_t v)
 {
     return (static_cast<uint16_t>(v) << fixedShift);
@@ -691,7 +691,7 @@ struct FixedPointSymmColumnFilter3N121 {
 
                 // use vqrshrn_n_u32 for shift and satruating cast process
                 // originally ufix16, but shr-ed 2 bit in add (0.25 * a + 0.5 * b + 0.25 * c = ((a+b+b+c) >> 2))
-                int shiftVal = fixedShift_ufix32 - fixedShift + 2;
+                constexpr int shiftVal = fixedShift_ufix32 - fixedShift + 2;
                 uint16x4_t vOutU16_00 = vqrshrn_n_u32(vOut00, shiftVal);
                 uint16x8_t vOutU16_0 = vqrshrn_high_n_u32(vOutU16_00, vOut01, shiftVal);
                 uint16x4_t vOutU16_10 = vqrshrn_n_u32(vOut10, shiftVal);
