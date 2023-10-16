@@ -11,9 +11,6 @@
 #include <vector>
 #include <memory>
 
-#include <concepts>
-#include <type_traits>
-
 namespace ppl::cv::arm {
 
 // Taken from OpenCV
