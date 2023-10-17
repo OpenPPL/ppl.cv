@@ -323,14 +323,14 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
-template <typename T>
-::ppl::common::RetCode YUV2GRAY(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
+// template <typename T>
+// ::ppl::common::RetCode YUV2GRAY(
+//     int32_t height,
+//     int32_t width,
+//     int32_t inWidthStride,
+//     const T* inData,
+//     int32_t outWidthStride,
+//     T* outData);
 
 template <typename T>
 ::ppl::common::RetCode YUYV2GRAY(
@@ -343,6 +343,33 @@ template <typename T>
 
 template <typename T>
 ::ppl::common::RetCode UYVY2GRAY(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+// template <typename T>
+// ::ppl::common::RetCode YUV2BGR(
+//     int32_t height,
+//     int32_t width,
+//     int32_t inWidthStride,
+//     const T* inData,
+//     int32_t outWidthStride,
+//     T* outData);
+
+template <typename T>
+::ppl::common::RetCode YUYV2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+template <typename T>
+::ppl::common::RetCode UYVY2BGR(
     int32_t height,
     int32_t width,
     int32_t inWidthStride,
