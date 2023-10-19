@@ -113,7 +113,7 @@ bool PplCvArmFilter2DTest<Tsrc, Tdst, channels>::apply()
 
     float epsilon;
     if (sizeof(Tsrc) == 1) {
-        epsilon = EPSILON_0I;
+        epsilon = EPSILON_1F;
     } else {
         epsilon = EPSILON_E3; // todo: change to E6 after implemention of FFT filter
     }

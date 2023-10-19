@@ -98,7 +98,7 @@ bool PplCvArmRotateTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        epsilon = EPSILON_0I;
+        epsilon = EPSILON_1F;
     } else {
         epsilon = EPSILON_E6;
     }

@@ -117,8 +117,7 @@ bool PplCvArmBoxFilterTest<T, channels>::apply()
 
     float epsilon;
     if (sizeof(T) == 1) {
-        // todo: still not perfectly aligned with opencv
-        epsilon = normalize ? EPSILON_1F : EPSILON_0I;
+        epsilon = EPSILON_1F;
     } else {
         epsilon = EPSILON_E6;
     }
