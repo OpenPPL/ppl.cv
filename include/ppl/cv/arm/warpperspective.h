@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPL_CV_ARM_WARPPERSPECTIVE_H_
-#define PPL_CV_ARM_WARPPERSPECTIVE_H_
+#ifndef PPL_CV_AARCH64_WARPPERSPECTIVE_H_
+#define PPL_CV_AARCH64_WARPPERSPECTIVE_H_
 #include "ppl/cv/types.h"
 #include "ppl/common/retcode.h"
 
@@ -97,4 +97,4 @@ template <typename T, int32_t numChannels>
 }
 }
 } // namespace ppl::cv::arm
-#endif //! PPL_CV_ARM_WARPPERSPECTIVE_H_
+#endif //! PPL_CV_AARCH64_WARPPERSPECTIVE_H_
