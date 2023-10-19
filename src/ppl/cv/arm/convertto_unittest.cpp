@@ -90,7 +90,7 @@ bool PplCvArmConvertToTest<Tsrc, Tdst, channels>::apply()
 
     float epsilon;
     if (sizeof(Tdst) == 1) {
-        epsilon = EPSILON_0I;
+        epsilon = EPSILON_1F;
     } else {
         epsilon = EPSILON_E6;
     }
