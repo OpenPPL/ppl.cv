@@ -27,7 +27,9 @@
 
 #include "filter_engine.hpp"
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 static std::vector<double> getGaussianKernel_double(float sigma, int32_t n)
 {
@@ -822,25 +824,6 @@ void GaussianBlur_b(int32_t height,
 }
 
 template <>
-::ppl::common::RetCode GaussianBlur<float, 3>(int32_t height,
-                                              int32_t width,
-                                              int32_t inWidthStride,
-                                              const float *inData,
-                                              int32_t kernel_len,
-                                              float sigma,
-                                              int32_t outWidthStride,
-                                              float *outData,
-                                              BorderType border_type)
-{
-    if (nullptr == inData || nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
-    if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
-    GaussianBlur_f<3>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
-    return ppl::common::RC_SUCCESS;
-}
-
-template <>
 ::ppl::common::RetCode GaussianBlur<float, 1>(int32_t height,
                                               int32_t width,
                                               int32_t inWidthStride,
@@ -860,6 +843,26 @@ template <>
 
     return ppl::common::RC_SUCCESS;
 }
+
+template <>
+::ppl::common::RetCode GaussianBlur<float, 3>(int32_t height,
+                                              int32_t width,
+                                              int32_t inWidthStride,
+                                              const float *inData,
+                                              int32_t kernel_len,
+                                              float sigma,
+                                              int32_t outWidthStride,
+                                              float *outData,
+                                              BorderType border_type)
+{
+    if (nullptr == inData || nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
+    if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    GaussianBlur_f<3>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
+    return ppl::common::RC_SUCCESS;
+}
+
 template <>
 ::ppl::common::RetCode GaussianBlur<float, 4>(int32_t height,
                                               int32_t width,
@@ -882,24 +885,6 @@ template <>
 }
 
 template <>
-::ppl::common::RetCode GaussianBlur<uint8_t, 3>(int32_t height,
-                                                int32_t width,
-                                                int32_t inWidthStride,
-                                                const uint8_t *inData,
-                                                int32_t kernel_len,
-                                                float sigma,
-                                                int32_t outWidthStride,
-                                                uint8_t *outData,
-                                                BorderType border_type)
-{
-    if (nullptr == inData || nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
-    if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
-    GaussianBlur_b<3>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
-    return ppl::common::RC_SUCCESS;
-}
-template <>
 ::ppl::common::RetCode GaussianBlur<uint8_t, 1>(int32_t height,
                                                 int32_t width,
                                                 int32_t inWidthStride,
@@ -917,6 +902,26 @@ template <>
     GaussianBlur_b<1>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
     return ppl::common::RC_SUCCESS;
 }
+
+template <>
+::ppl::common::RetCode GaussianBlur<uint8_t, 3>(int32_t height,
+                                                int32_t width,
+                                                int32_t inWidthStride,
+                                                const uint8_t *inData,
+                                                int32_t kernel_len,
+                                                float sigma,
+                                                int32_t outWidthStride,
+                                                uint8_t *outData,
+                                                BorderType border_type)
+{
+    if (nullptr == inData || nullptr == outData) { return ppl::common::RC_INVALID_VALUE; }
+    if (width == 0 || height == 0 || inWidthStride < width || outWidthStride == 0) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    GaussianBlur_b<3>(height, width, inWidthStride, inData, kernel_len, sigma, outWidthStride, outData, border_type);
+    return ppl::common::RC_SUCCESS;
+}
+
 template <>
 ::ppl::common::RetCode GaussianBlur<uint8_t, 4>(int32_t height,
                                                 int32_t width,
@@ -936,4 +941,6 @@ template <>
     return ppl::common::RC_SUCCESS;
 }
 
+}
+}
 } // namespace ppl::cv::arm

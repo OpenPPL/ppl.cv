@@ -24,7 +24,9 @@
 #include "ppl/cv/arm/gaussianblur.h"
 #include "ppl/cv/arm/convertto.h"
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 ::ppl::common::RetCode AdaptiveThreshold(int32_t height,
                                          int32_t width,
@@ -85,4 +87,6 @@ namespace ppl::cv::arm {
     return ppl::common::RC_SUCCESS;
 }
 
+}
+}
 } // namespace ppl::cv::arm

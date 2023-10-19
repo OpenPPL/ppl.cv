@@ -23,7 +23,9 @@
 #include <algorithm>
 #include <cmath>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 ::ppl::common::RetCode mls_f32(int32_t height,
                                int32_t width,
@@ -113,4 +115,6 @@ template <>
     return mls_f32(height, width, 4, inWidthStride0, inData0, inWidthStride1, inData1, outWidthStride, outData);
 }
 
+}
+}
 } // namespace ppl::cv::arm

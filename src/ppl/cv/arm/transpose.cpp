@@ -23,7 +23,9 @@
 
 #include <arm_neon.h>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 // Applies to perfect square blocks only
 template <typename T, int CHANNELS, int OUT_BLOCKDIM_R, int OUT_BLOCKDIM_C>
@@ -390,4 +392,6 @@ template <>
     return transpose<uint8_t, 4, 64, 64>(inData, height, width, inWidthStride, outWidthStride, outData);
 }
 
+}
+}
 } // namespace ppl::cv::arm

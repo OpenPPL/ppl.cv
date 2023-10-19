@@ -23,7 +23,9 @@
 #include <algorithm>
 #include <cmath>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 ::ppl::common::RetCode abs_s8(int32_t height,
                               int32_t width,
@@ -200,4 +202,6 @@ template <>
     return abs_f32(height, width, 4, inWidthStride, inData, outWidthStride, outData);
 }
 
+}
+}
 } // namespace ppl::cv::arm

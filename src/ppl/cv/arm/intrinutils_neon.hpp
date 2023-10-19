@@ -26,7 +26,9 @@
 
 #include <arm_neon.h>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 static inline void neon_transpose_f32_4x4(float32x4_t &va, float32x4_t &vb, float32x4_t &vc, float32x4_t &vd)
 {
@@ -258,5 +260,7 @@ static inline uint16x8_t neon_scan_across_vector_u16x8(uint16x8_t vIn) {
     return vResStep3;
 }
 
+}
+}
 } // namespace ppl::cv::arm
 #endif

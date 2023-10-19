@@ -22,7 +22,9 @@
 #include "intrinutils_neon.hpp"
 #include <arm_neon.h>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 // Applies to perfect square blocks only
 template <typename T, int CHANNELS, int OUT_BLOCKDIM_R, int OUT_BLOCKDIM_C>
@@ -1054,4 +1056,6 @@ template <>
     return ppl::common::RC_SUCCESS;
 }
 
+}
+}
 } // namespace ppl::cv::arm
