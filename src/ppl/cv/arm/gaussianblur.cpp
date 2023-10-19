@@ -73,7 +73,7 @@ enum imageDepth { sense8U = 1, sense32F = 2 };
 
 static int32_t senseRound(float value)
 {
-    return roundeven(value);
+    return lrintf(value);
 }
 
 static void createGaussianKernels(std::vector<float> &k, int32_t ksize, float sigma, imageDepth depth)
@@ -729,7 +729,7 @@ static void getGaussianKernelFixedPoint_ED(std::vector<int64_t> &result,
     int64_t sum = 0;
     for (int i = 0; i < n2_; i++) {
         double adj_v = kernel[i] * fractionMultiplier_d + err;
-        int64_t v0 = roundeven(adj_v);
+        int64_t v0 = lrintf(adj_v);
         err = adj_v - v0;
 
         result[i] = v0;

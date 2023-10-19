@@ -41,7 +41,7 @@ static uint8_t saturate_cast_f32_u8(float val)
         return 0;
     }
 
-    uint8_t ival = static_cast<uint8_t>(roundeven(val));
+    uint8_t ival = static_cast<uint8_t>(lrintf(val));
     return ival;
 }
 
