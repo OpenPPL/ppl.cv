@@ -23,7 +23,9 @@
 
 #include <cmath>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 static uint8_t sat_cast(int32_t data)
 {
@@ -203,4 +205,6 @@ template ppl::common::RetCode Crop<uint8_t, 4>(const int32_t inHeight,
                                                int32_t top,
                                                float scale);
 
+}
+}
 } // namespace ppl::cv::arm

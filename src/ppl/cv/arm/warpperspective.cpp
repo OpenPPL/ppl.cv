@@ -29,7 +29,9 @@
 #define INTER_TABLE_BITS (5)
 #define INTER_TABLE_SIZE (32)
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 static float BilinearTab_f[INTER_TABLE_SIZE * INTER_TABLE_SIZE][2][2];
 static short BilinearTab_i[INTER_TABLE_SIZE * INTER_TABLE_SIZE][2][2];
@@ -933,4 +935,6 @@ template ::ppl::common::RetCode WarpPerspective<uint8_t, 4>(int32_t inHeight,
                                                             BorderType border_type,
                                                             uint8_t border_value);
 
+}
+}
 } // namespace ppl::cv::arm

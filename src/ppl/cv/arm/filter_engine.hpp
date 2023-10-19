@@ -11,7 +11,9 @@
 #include <vector>
 #include <memory>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 // Taken from OpenCV
 inline int borderInterpolate(int p, int len, BorderType border_type)
@@ -416,4 +418,6 @@ void FilterEngine<ST, DT, FilterType>::process(const ST *src, int inWidthStride,
     return;
 }
 
+}
+}
 } // namespace ppl::cv::arm

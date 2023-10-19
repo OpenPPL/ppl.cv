@@ -21,7 +21,9 @@
 #include "common.hpp"
 #include <arm_neon.h>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 template <>
 ::ppl::common::RetCode Split3Channels(int32_t height,
@@ -207,4 +209,6 @@ template <>
     return ppl::common::RC_SUCCESS;
 }
 
+}
+}
 } // namespace ppl::cv::arm

@@ -21,7 +21,9 @@
 #include "common.hpp"
 #include <arm_neon.h>
 #include <cstdio>
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 template <typename T>
 void mergeSOA2AOS_3Channels(int32_t height,
@@ -289,4 +291,6 @@ template ::ppl::common::RetCode Merge4Channels<float>(int32_t height,
                                                       int32_t outWidthStride,
                                                       float* outData);
 
+}
+}
 } // namespace ppl::cv::arm

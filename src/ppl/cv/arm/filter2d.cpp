@@ -31,7 +31,9 @@
 
 #include "filter_engine.hpp"
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 static uint8_t saturate_cast_f32_u8(float val)
 {
@@ -459,4 +461,6 @@ template <>
     return ppl::common::RC_SUCCESS;
 }
 
+}
+}
 } // namespace ppl::cv::arm

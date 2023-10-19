@@ -24,7 +24,9 @@
 #include <arm_neon.h>
 #include <cstdio>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 template <typename TSrc, typename TDst, int32_t channels>
 void IntegralImage(int32_t height,
@@ -495,4 +497,6 @@ template <>
     return ppl::common::RC_SUCCESS;
 }
 
+}
+}
 } // namespace ppl::cv::arm

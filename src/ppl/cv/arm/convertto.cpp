@@ -24,7 +24,9 @@
 #include <cmath>
 #include <algorithm>
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 template <typename TSrc, typename TDst>
 ::ppl::common::RetCode ChangeDataType(int32_t height,
@@ -534,4 +536,6 @@ template <>
         height, width, 4, inWidthStride, inData, outWidthStride, outData, scale, delta);
 }
 
+}
+}
 } // namespace ppl::cv::arm

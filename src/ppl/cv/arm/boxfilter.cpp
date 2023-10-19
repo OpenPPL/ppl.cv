@@ -31,7 +31,9 @@
 
 #include "filter_engine.hpp"
 
-namespace ppl::cv::arm {
+namespace ppl {
+namespace cv {
+namespace arm {
 
 template <typename T, typename ST>
 struct RowSum {
@@ -730,4 +732,6 @@ template <>
     return ppl::common::RC_SUCCESS;
 }
 
+}
+}
 } // namespace ppl::cv::arm
