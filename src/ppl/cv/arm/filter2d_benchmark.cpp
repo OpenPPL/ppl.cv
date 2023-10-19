@@ -113,21 +113,6 @@ RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 17, ppl::cv::BORDER_REPLICATE)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 17, ppl::cv::BORDER_REFLECT)
 RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 17, ppl::cv::BORDER_REFLECT_101)
 
-// todo: too slow, check after implemented in FFT algorithm
-// RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, uint8_t, 25, ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, uint8_t, 25, ppl::cv::BORDER_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, uint8_t, 25, ppl::cv::BORDER_REFLECT_101)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 25, ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 25, ppl::cv::BORDER_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 25, ppl::cv::BORDER_REFLECT_101)
-
-// RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, uint8_t, 31, ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, uint8_t, 31, ppl::cv::BORDER_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(uint8_t, uint8_t, 31, ppl::cv::BORDER_REFLECT_101)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 31, ppl::cv::BORDER_REPLICATE)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 31, ppl::cv::BORDER_REFLECT)
-// RUN_PPL_CV_TYPE_FUNCTIONS(float, float, 31, ppl::cv::BORDER_REFLECT_101)
-
 #ifdef PPLCV_BENCHMARK_OPENCV
 template <typename Tsrc, typename Tdst, int channels, int ksize, ppl::cv::BorderType border_type>
 void BM_Filter2D_opencv_aarch64(benchmark::State &state)
@@ -206,20 +191,5 @@ RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, uint8_t, 17, ppl::cv::BORDER_REFLECT_101)
 RUN_OPENCV_TYPE_FUNCTIONS(float, float, 17, ppl::cv::BORDER_REPLICATE)
 RUN_OPENCV_TYPE_FUNCTIONS(float, float, 17, ppl::cv::BORDER_REFLECT)
 RUN_OPENCV_TYPE_FUNCTIONS(float, float, 17, ppl::cv::BORDER_REFLECT_101)
-
-// todo: too slow, check after implemented in FFT algorithm
-// RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, uint8_t, 25, ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, uint8_t, 25, ppl::cv::BORDER_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, uint8_t, 25, ppl::cv::BORDER_REFLECT_101)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 25, ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 25, ppl::cv::BORDER_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 25, ppl::cv::BORDER_REFLECT_101)
-
-// RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, uint8_t, 31, ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, uint8_t, 31, ppl::cv::BORDER_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(uint8_t, uint8_t, 31, ppl::cv::BORDER_REFLECT_101)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 31, ppl::cv::BORDER_REPLICATE)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 31, ppl::cv::BORDER_REFLECT)
-// RUN_OPENCV_TYPE_FUNCTIONS(float, float, 31, ppl::cv::BORDER_REFLECT_101)
 
 #endif //! PPLCV_BENCHMARK_OPENCV
