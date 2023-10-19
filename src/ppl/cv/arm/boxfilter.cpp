@@ -117,7 +117,7 @@ struct RowSum {
 
 static uint8_t saturate_cast(double val)
 {
-    uint32_t v = roundeven(static_cast<float>(val));
+    uint32_t v = lrintf(static_cast<float>(val));
     if (v > 255)
         return 255;
     else if (v < 0)

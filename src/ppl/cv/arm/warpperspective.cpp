@@ -405,8 +405,8 @@ void WarpPerspective_CoordCompute_Nearest_Line(const double* M,
         W = W ? 1. / W : 0;
         double X = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (X0 + M[0] * jj) * W));
         double Y = std::max((double)SHRT_MIN, std::min((double)SHRT_MAX, (Y0 + M[3] * jj) * W));
-        int16_t Xh = roundeven(X);
-        int16_t Yh = roundeven(Y);
+        int16_t Xh = lrint(X);
+        int16_t Yh = lrint(Y);
 
         coord_map[jj * 2] = Xh;
         coord_map[jj * 2 + 1] = Yh;
@@ -594,8 +594,8 @@ void WarpPerspective_CoordCompute_Linear_Line(const double* M,
         W = W ? INTER_TABLE_SIZE / W : 0;
         double Xd = std::max((double)INT_MIN, std::min((double)INT_MAX, (X0 + M[0] * jj) * W));
         double Yd = std::max((double)INT_MIN, std::min((double)INT_MAX, (Y0 + M[3] * jj) * W));
-        int X = roundeven(Xd);
-        int Y = roundeven(Yd);
+        int X = lrint(Xd);
+        int Y = lrint(Yd);
 
         coord_map[jj * 2] = clip((X >> INTER_TABLE_BITS), SHRT_MIN, SHRT_MAX);
         coord_map[jj * 2 + 1] = clip((Y >> INTER_TABLE_BITS), SHRT_MIN, SHRT_MAX);

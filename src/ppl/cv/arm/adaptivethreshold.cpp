@@ -49,7 +49,7 @@ namespace ppl::cv::arm {
     if (max_value < 0) {
         setted_value = 0;
     } else if (max_value < 255.f) {
-        setted_value = static_cast<uint8_t>(roundeven(max_value));
+        setted_value = static_cast<uint8_t>(lrintf(max_value));
     } else {
         setted_value = 255;
     }
