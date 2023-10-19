@@ -56,7 +56,7 @@ namespace arm {
  * <tr><td>Header files<td> #include &lt;ppl/cv/arm/integral.h&gt;
  * <tr><td>Project<td> ppl.cv
  * @since ppl.cv-v1.0.0
- * ###Example 1 (fastcv mode)
+ * ###Example 1 (input size equal to output size)
  * @code{.cpp}
  * #include <ppl/cv/arm/integral.h>
  * int32_t main(int32_t argc, char** argv) {

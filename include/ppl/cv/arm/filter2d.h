@@ -37,6 +37,7 @@ namespace arm {
 * @param kernel            Store specific data for the kernel
 * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
 * @param outData           output image data
+* @param delta             optional value added to the filtered pixels.
 * @param border_type       ways to deal with border. Only BORDER_REFLECT_101 or BORDER_DEFAULT are supported now.
 * @warning All input parameters must be valid, or undefined behaviour may occur.
 * @remark The following table show which data type and channels are supported.
