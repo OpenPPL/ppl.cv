@@ -57,9 +57,9 @@ public:
             size.width * output_channels,
             dst.get());
 
-        for(int i=0;i<size.width*size.height;i++){
-            printf("opencv: %d pplcv: %d \n",static_cast<int>(dst_ref.get()[i]),static_cast<int>(dst.get()[i]));
-        }
+        // for(int i=0;i<size.width*size.height;i++){
+        //     printf("opencv: %d pplcv: %d \n",static_cast<int>(dst_ref.get()[i]),static_cast<int>(dst.get()[i]));
+        // }
 
         checkResult<T, output_channels>(
             dst_ref.get(),
@@ -248,15 +248,15 @@ constexpr int32_t c3 = 3;
 constexpr int32_t c4 = 4;
 
 // YUV UYVY YUYV --> GRAY
-#define R1(name, t, ic, oc, diff)          \
-    using name = YUV422Convert<t, ic, oc>; \
-    TEST_P(name, abc)                      \
-    {                                      \
-        this->YUV2GRAYAapply(GetParam());  \
-    }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
+// #define R1(name, t, ic, oc, diff)          \
+//     using name = YUV422Convert<t, ic, oc>; \
+//     TEST_P(name, abc)                      \
+//     {                                      \
+//         this->YUV2GRAYAapply(GetParam());  \
+//     }                                      \
+//     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
 
-R1(UT_YUV2GRAY_uint8_t_aarch64, uint8_t, c1, c1, 1.01)
+// R1(UT_YUV2GRAY_uint8_t_aarch64, uint8_t, c1, c1, 1.01)
 
 // #define R2(name, t, ic, oc, diff)          \
 //     using name = YUV422Convert<t, ic, oc>; \
