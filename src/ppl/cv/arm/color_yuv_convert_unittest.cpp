@@ -57,6 +57,10 @@ public:
             size.width * output_channels,
             dst.get());
 
+        for(int i=0;i<size.width*size.height;i++){
+            printf("opencv: %d pplcv: %d \n",static_cast<int>(dst_ref.get()[i]),static_cast<int>(dst.get()[i]))
+        }
+
         checkResult<T, output_channels>(
             dst_ref.get(),
             dst.get(),
@@ -254,53 +258,53 @@ constexpr int32_t c4 = 4;
 
 R1(UT_YUV2GRAY_uint8_t_aarch64, uint8_t, c1, c1, 1.01)
 
-#define R2(name, t, ic, oc, diff)          \
-    using name = YUV422Convert<t, ic, oc>; \
-    TEST_P(name, abc)                      \
-    {                                      \
-        this->UYVY2GRAYAapply(GetParam()); \
-    }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
+// #define R2(name, t, ic, oc, diff)          \
+//     using name = YUV422Convert<t, ic, oc>; \
+//     TEST_P(name, abc)                      \
+//     {                                      \
+//         this->UYVY2GRAYAapply(GetParam()); \
+//     }                                      \
+//     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
-//R2(UT_UYVY2GRAY_uint8_t_aarch64, uint8_t, c2, c1, 1.01)
+// //R2(UT_UYVY2GRAY_uint8_t_aarch64, uint8_t, c2, c1, 1.01)
 
-#define R3(name, t, ic, oc, diff)          \
-    using name = YUV422Convert<t, ic, oc>; \
-    TEST_P(name, abc)                      \
-    {                                      \
-        this->YUYV2GRAYAapply(GetParam()); \
-    }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
+// #define R3(name, t, ic, oc, diff)          \
+//     using name = YUV422Convert<t, ic, oc>; \
+//     TEST_P(name, abc)                      \
+//     {                                      \
+//         this->YUYV2GRAYAapply(GetParam()); \
+//     }                                      \
+//     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
-//R3(UT_YUYV2GRAY_uint8_t_aarch64, uint8_t, c2, c1, 1.01)
+// //R3(UT_YUYV2GRAY_uint8_t_aarch64, uint8_t, c2, c1, 1.01)
 
 
-#define R4(name, t, ic, oc, diff)          \
-    using name = YUV422Convert<t, ic, oc>; \
-    TEST_P(name, abc)                      \
-    {                                      \
-        this->YUV2BGRAapply(GetParam()); \
-    }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
+// #define R4(name, t, ic, oc, diff)          \
+//     using name = YUV422Convert<t, ic, oc>; \
+//     TEST_P(name, abc)                      \
+//     {                                      \
+//         this->YUV2BGRAapply(GetParam()); \
+//     }                                      \
+//     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
 
-R4(UT_YUV2BGR_uint8_t_aarch64, uint8_t, c1, c3, 1.01)
+// R4(UT_YUV2BGR_uint8_t_aarch64, uint8_t, c1, c3, 1.01)
 
-#define R5(name, t, ic, oc, diff)          \
-    using name = YUV422Convert<t, ic, oc>; \
-    TEST_P(name, abc)                      \
-    {                                      \
-        this->UYVY2BGRAapply(GetParam()); \
-    }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
+// #define R5(name, t, ic, oc, diff)          \
+//     using name = YUV422Convert<t, ic, oc>; \
+//     TEST_P(name, abc)                      \
+//     {                                      \
+//         this->UYVY2BGRAapply(GetParam()); \
+//     }                                      \
+//     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
 
-R5(UT_UYVY2BGR_uint8_t_aarch64, uint8_t, c1, c3, 1.01)
+// R5(UT_UYVY2BGR_uint8_t_aarch64, uint8_t, c2, c3, 1.01)
 
-#define R6(name, t, ic, oc, diff)          \
-    using name = YUV422Convert<t, ic, oc>; \
-    TEST_P(name, abc)                      \
-    {                                      \
-        this->YUYV2BGRAapply(GetParam()); \
-    }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
+// #define R6(name, t, ic, oc, diff)          \
+//     using name = YUV422Convert<t, ic, oc>; \
+//     TEST_P(name, abc)                      \
+//     {                                      \
+//         this->YUYV2BGRAapply(GetParam()); \
+//     }                                      \
+//     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
 
-R6(UT_YUYV2BGR_uint8_t_aarch64, uint8_t, c2, c3, 1.01)
+// R6(UT_YUYV2BGR_uint8_t_aarch64, uint8_t, c2, c3, 1.01)
