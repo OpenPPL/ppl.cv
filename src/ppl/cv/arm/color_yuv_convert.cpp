@@ -94,6 +94,7 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
         if (YUV == yuvType) {
             memcpy(dst_ptr,src_ptr,width);
             src_ptr += width;
+            dst_ptr += width;
             // for (; j < width - 8; j += 8) {
             //     uint8x8_t y = vld1_u8(src_ptr);
             //     vst1_u8(dst_ptr, y);
