@@ -38,7 +38,7 @@ public:
         Size size = std::get<0>(param);
         const float diff = std::get<1>(param);
 
-        std::unique_ptr<T[]> src(new T[size.width * size.height * input_channels]);
+        std::unique_ptr<T[]> src(new T[size.width * size.height * input_channels*3/2]);
         std::unique_ptr<T[]> dst_ref(new T[size.width * size.height * output_channels]);
         std::unique_ptr<T[]> dst(new T[size.width * size.height * output_channels]);
 
@@ -134,6 +134,40 @@ public:
             size.width * output_channels,
             diff);
     }
+
+    void YUV2BGRAapply(const YUV422ConvertParam &param)
+    {
+        Size size = std::get<0>(param);
+        const float diff = std::get<1>(param);
+
+        std::unique_ptr<T[]> src(new T[size.width * size.height * input_channels*3/2]);
+        std::unique_ptr<T[]> dst_ref(new T[size.width * size.height * output_channels]);
+        std::unique_ptr<T[]> dst(new T[size.width * size.height * output_channels]);
+
+        ppl::cv::debug::randomFill<T>(src.get(), size.width * size.height * input_channels, 0, 255);
+
+        cv::Mat src_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, input_channels), src.get(), sizeof(T) * size.width * input_channels);
+        cv::Mat dst_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, output_channels), dst_ref.get(), sizeof(T) * size.width * output_channels);
+
+        cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_YUV2BGR_I420);
+
+        ppl::cv::arm::YUV2BGR<T>(
+            size.height,
+            size.width,
+            size.width * input_channels,
+            src.get(),
+            size.width * output_channels,
+            dst.get());
+
+        checkResult<T, output_channels>(
+            dst_ref.get(),
+            dst.get(),
+            size.height,
+            size.width,
+            size.width * output_channels,
+            size.width * output_channels,
+            diff);
+    }
 };
 
 constexpr int32_t c1 = 1;
@@ -171,3 +205,14 @@ R1(UT_YUV2GRAY_uint8_t_aarch64, uint8_t, c1, c1, 1.01)
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
 //R3(UT_YUYV2GRAY_uint8_t_aarch64, uint8_t, c2, c1, 1.01)
+
+
+#define R4(name, t, ic, oc, diff)          \
+    using name = YUV422Convert<t, ic, oc>; \
+    TEST_P(name, abc)                      \
+    {                                      \
+        this->YUYV2BGRAapply(GetParam()); \
+    }                                      \
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
+
+R4(UT_YUV2BGR_uint8_t_aarch64, uint8_t, c1, c3, 1.01)
