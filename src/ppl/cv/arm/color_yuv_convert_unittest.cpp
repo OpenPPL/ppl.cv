@@ -58,7 +58,7 @@ public:
             dst.get());
 
         for(int i=0;i<size.width*size.height;i++){
-            printf("opencv: %d pplcv: %d \n",static_cast<int>(dst_ref.get()[i]),static_cast<int>(dst.get()[i]))
+            printf("opencv: %d pplcv: %d \n",static_cast<int>(dst_ref.get()[i]),static_cast<int>(dst.get()[i]));
         }
 
         checkResult<T, output_channels>(
