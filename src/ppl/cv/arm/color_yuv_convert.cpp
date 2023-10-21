@@ -71,8 +71,8 @@ inline void yuv_to_bgr_vec_op(uint8x8_t& y_vec, uint8x8_t& u_vec, uint8x8_t& v_v
     bgr_vec.val[2] = vqmovun_s16(vcombine_s16(vqmovn_s32(bgr_low_vec.val[2]), vqmovn_s32(bgr_high_vec.val[2])));
 }
 
-// YUV ncSrc == 3
 // UYVY/YUYV ncSrc == 2
+// YUV == I420
 template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
 ::ppl::common::RetCode yuv_to_gray_u8(
     const int32_t height,
@@ -92,21 +92,20 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
     for (int i = 0; i < height; i++) {
         int j = 0;
         if (YUV == yuvType) {
-            for (; j < dstStride - 8; j++) {
-                uint8x8_t y = vld_u8(src_ptr);
-                y1 = yuv.val[0];
-                vst1_u8(dst_ptr, y1);
-                dst_ptr += ncDst * 8;
+            for (; j < width - 8; j += 8) {
+                uint8x8_t y = vld1_u8(src_ptr);
+                vst1_u8(dst_ptr, y);
+                dst_ptr += 1 * 8;
                 src_ptr += 1 * 8;
             }
-            for (; j < dstStride; j++) {
+            for (; j < width; j++) {
                 dst_ptr[j] = src_ptr[0];
-                dst_ptr += ncDst;
+                dst_ptr += 1;
                 src_ptr += 1;
             }
         } else {
             // UYVY YUYV
-            for (; j < dstStride - 16; j++) {
+            for (; j < width - 16; j += 16) {
                 uint8x8x4_t yuv422 = vld4_u8(src_ptr);
                 if (UYVY == yuvType) {
                     y1 = yuv422.val[1];
@@ -115,19 +114,15 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
                     y1 = yuv422.val[0];
                     y2 = yuv422.val[2];
                 }
-                uint8x8x2_t y_resort = vzip_u8(y1,y2);
-                vst1_u8(dst_ptr, y_resort.val[0]);
+                uint8x8x2_t y_double = vzip_u8(y1, y2);
+                vst1_u8(dst_ptr, y_double.val[0]);
                 dst_ptr += ncDst * 8;
-                vst1_u8(dst_ptr, y_resort.val[1]);
-                dst_ptr += ncDst * 16;
+                vst1_u8(dst_ptr, y_double.val[1]);
+                dst_ptr += ncDst * 8;
                 src_ptr += ncSrc * 16;
             }
-            for (; j < dstStride; j++) {
-                if (UYVY == yuvType) {
-                    dst_ptr[j] = src_ptr[1];
-                } else {
-                    dst_ptr[j] = src_ptr[0];
-                }
+            for (; j < width; j++) {
+                dst_ptr[j] = src_ptr[1];
                 dst_ptr += ncDst;
                 src_ptr += ncSrc;
             }
@@ -151,22 +146,23 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
     const uint8_t* src_ptr = src;
     uint8_t* dst_ptr = dst;
     uint8x8_t y1, y2, u, v;
+    const uint8_t *y_ptr{nullptr}, *u_ptr{nullptr}, *v_ptr{nullptr};
     if (YUV == yuvType) {
-        const uint8_t* y_ptr = src_ptr;
-        const uint8_t* u_ptr = src_ptr + height * width;
-        const uint8_t* v_ptr = src_ptr + height * width + height * width / 4;
+        y_ptr = src_ptr;
+        u_ptr = src_ptr + height * width;
+        v_ptr = src_ptr + height * width + height * width / 4;
     }
 
     for (int i = 0; i < height; i++) {
         int j = 0;
         if (YUV == yuvType) {
-            for (; j < dstStride - 32; j++) {
-                y1 = vld_u8(y_ptr);
-                y2 = vld_u8(y_ptr + 8);
-                uint8x8_t y3 = vld_u8(y_ptr + 16);
-                uint8x8_t y4 = vld_u8(y_ptr + 24);
+            for (; j < width - 32; j += 32) {
+                y1 = vld1_u8(y_ptr);
+                y2 = vld1_u8(y_ptr + 8);
+                uint8x8_t y3 = vld1_u8(y_ptr + 16);
+                uint8x8_t y4 = vld1_u8(y_ptr + 24);
                 uint8x8_t u1, u2, u3, u4, v1, v2, v3, v4;
-                u = vld_u8(u_ptr);
+                u = vld1_u8(u_ptr);
                 {
                     uint8x8x2_t u_temp = vzip_u8(u, u);
                     uint8x8x2_t u1_temp = vzip_u8(u_temp.val[0], u_temp.val[0]);
@@ -174,9 +170,9 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
                     u1 = u1_temp.val[0];
                     u2 = u1_temp.val[1];
                     u3 = u2_temp.val[0];
-                    u4 = u1_temp.val[1];
+                    u4 = u2_temp.val[1];
                 }
-                v = vld_u8(v_ptr);
+                v = vld1_u8(v_ptr);
                 {
                     uint8x8x2_t v_temp = vzip_u8(v, v);
                     uint8x8x2_t v1_temp = vzip_u8(v_temp.val[0], v_temp.val[0]);
@@ -184,7 +180,7 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
                     v1 = v1_temp.val[0];
                     v2 = v1_temp.val[1];
                     v3 = v2_temp.val[0];
-                    v4 = v1_temp.val[1];
+                    v4 = v2_temp.val[1];
                 }
 
                 uint8x8x3_t dst_bgr_vec;
@@ -206,7 +202,7 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
                 v_ptr += 8;
             }
             int32_t uv_flag{0};
-            for (; j < dstStride; j++) {
+            for (; j < width; j++) {
                 uint8_t y_data = y_ptr[0], u_data = u_ptr[0], v_data = v_ptr[0];
                 yuv_to_bgr_op(y_data, u_data, v_data, dst_ptr);
                 y_ptr += 1;
@@ -221,7 +217,7 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
             }
         } else {
             // UYVY YUYV
-            for (; j < dstStride - 16; j++) {
+            for (; j < width - 16; j += 16) {
                 uint8x8x4_t yuv422 = vld4_u8(src_ptr);
                 if (UYVY == yuvType) {
                     u = yuv422.val[0];
@@ -246,7 +242,7 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
                 dst_ptr += ncDst * 8;
                 src_ptr += ncSrc * 16;
             }
-            for (; j < dstStride; j++) {
+            for (; j < width; j += 2) {
                 uint8_t y1_data, y2_data, u_data, v_data;
                 if (UYVY == yuvType) {
                     u_data = src_ptr[0];
@@ -270,18 +266,18 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
     return ppl::common::RC_SUCCESS;
 }
 
-// YUV422
-// template <>
-// ::ppl::common::RetCode YUV2GRAY<uint8_t>(
-//     int32_t height,
-//     int32_t width,
-//     int32_t inWidthStride,
-//     const uint8_t* inData,
-//     int32_t outWidthStride,
-//     uint8_t* outData)
-// {
-//     return yuv_to_gray_u8<YUV, 3, 1>(height, width, inWidthStride, inData, outWidthStride, outData);
-// }
+//YUV422
+template <>
+::ppl::common::RetCode YUV2GRAY<uint8_t>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outWidthStride,
+    uint8_t* outData)
+{
+    return yuv_to_gray_u8<YUV, 3, 1>(height, width, inWidthStride, inData, outWidthStride, outData);
+}
 
 template <>
 ::ppl::common::RetCode YUYV2GRAY<uint8_t>(
@@ -307,17 +303,17 @@ template <>
     return yuv_to_gray_u8<UYVY, 2, 1>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 
-// template <>
-// ::ppl::common::RetCode YUV2BGR<uint8_t>(
-//     int32_t height,
-//     int32_t width,
-//     int32_t inWidthStride,
-//     const uint8_t* inData,
-//     int32_t outWidthStride,
-//     uint8_t* outData)
-// {
-//     return yuv_to_bgr_u8<YUV, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
-// }
+template <>
+::ppl::common::RetCode YUV2BGR<uint8_t>(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const uint8_t* inData,
+    int32_t outWidthStride,
+    uint8_t* outData)
+{
+    return yuv_to_bgr_u8<YUV, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+}
 
 template <>
 ::ppl::common::RetCode YUYV2BGR<uint8_t>(

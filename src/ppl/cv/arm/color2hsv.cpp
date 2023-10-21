@@ -177,13 +177,13 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             float32x4_t vg_h = vaddq_f32(fast_op(b, r, vDiff), vdupq_n_f32(120.0f));
             float32x4_t vr_h = fast_op(g, b, vDiff);
             // h
-            for (int ii = 0; i < 4; i++) {
-                if (vgetq_lane_f32(vMax, i) == vgetq_lane_f32(b, i)) {
-                    vsetq_lane_f32(vgetq_lane_f32(vb_h, i), v_dst.val[0], i);
-                } else if (vgetq_lane_f32(vMax, i) == vgetq_lane_f32(g, i)) {
-                    vsetq_lane_f32(vgetq_lane_f32(vg_h, i), v_dst.val[0], i);
+            for (int ii = 0; ii < 4; ii++) {
+                if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(b, ii)) {
+                    vsetq_lane_f32(vgetq_lane_f32(vb_h, ii), v_dst.val[0], ii);
+                } else if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(g, ii)) {
+                    vsetq_lane_f32(vgetq_lane_f32(vg_h, ii), v_dst.val[0], ii);
                 } else {
-                    vsetq_lane_f32(vgetq_lane_f32(vr_h, i), v_dst.val[0], i);
+                    vsetq_lane_f32(vgetq_lane_f32(vr_h, ii), v_dst.val[0], ii);
                 }
             }
             vst3q_f32(dstPtr, v_dst);
