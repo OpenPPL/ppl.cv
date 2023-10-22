@@ -100,13 +100,25 @@ template <YCRCB_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
                 r = vreinterpretq_s16_u16(vmovl_u8(v_src.val[2]));
             }
 
-            int16x8_t y = vrshrq_n_s16(vaddq_s16(vaddq_s16(vaddq_s16(vmulq_n_s16(r, kR2YIntCoeff), vmulq_n_s16(g, kG2YIntCoeff)), vmulq_n_s16(b, kB2YIntCoeff)), vdupq_n_s16(1 << 13)), 14);
-            int16x8_t cr = vshrq_n_s16(vaddq_s16(vaddq_s16(vmulq_n_s16(vsubq_s16(r, y), kCRIntCoeff), vdupq_n_s16(kShift14IntDelta)), vdupq_n_s16(1 << 14 - 1)), 14);
-            int16x8_t cb = vshrq_n_s16(vaddq_s16(vaddq_s16(vmulq_n_s16(vsubq_s16(b, y), kCBIntCoeff), vdupq_n_s16(kShift14IntDelta)), vdupq_n_s16(1 << 14 - 1)), 14);
+            int32x4_t y_low = vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(r)), kR2YIntCoeff), vmulq_n_s32(vmovl_s16(vget_low_s16(g)), kG2YIntCoeff)), vmulq_n_s32(vmovl_s16(vget_low_s16(b)), kB2YIntCoeff));
+            y_low = vrshrq_n_s32(vaddq_s32(y_low, vdupq_n_s32((1 << 14) - 1)), 14);
+            int32x4_t y_high = vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(r)), kR2YIntCoeff), vmulq_n_s32(vmovl_s16(vget_high_s16(g)), kG2YIntCoeff)), vmulq_n_s32(vmovl_s16(vget_high_s16(b)), kB2YIntCoeff));
+            y_high = vrshrq_n_s32(vaddq_s32(y_high, vdupq_n_s32((1 << 14) - 1)), 14);
+            int16x8_t y = vcombine_s16(vqmovn_s32(y_low), vqmovn_s32(y_high));
+
+            int32x4_t cr_low = vmulq_n_s32(vsubq_s32(vmovl_s16(vget_low_s16(r)), vmovl_s16(vget_low_s16(y))), kCRIntCoeff);
+            cr_low = vshrq_n_s32(vaddq_s32(vaddq_s32(cr_low, vdupq_n_s32(1 << 21)), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t cr_high = vmulq_n_s32(vsubq_s32(vmovl_s16(vget_high_s16(r)), vmovl_s16(vget_high_s16(y))), kCRIntCoeff);
+            cr_high = vshrq_n_s32(vaddq_s32(vaddq_s32(cr_high, vdupq_n_s32(1 << 21)), vdupq_n_s32(1 << 14 - 1)), 14);
+
+            int32x4_t cb_low = vmulq_n_s32(vsubq_s32(vmovl_s16(vget_low_s16(b)), vmovl_s16(vget_low_s16(y))), kCBIntCoeff);
+            cb_low = vshrq_n_s32(vaddq_s32(vaddq_s32(cb_low, vdupq_n_s32(1 << 21)), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t cb_high = vmulq_n_s32(vsubq_s32(vmovl_s16(vget_high_s16(b)), vmovl_s16(vget_high_s16(y))), kCBIntCoeff);
+            cb_high = vshrq_n_s32(vaddq_s32(vaddq_s32(cb_high, vdupq_n_s32(1 << 21)), vdupq_n_s32(1 << 14 - 1)), 14);
 
             v_dst.val[0] = vqmovun_s16(y);
-            v_dst.val[1] = vqmovun_s16(cr);
-            v_dst.val[2] = vqmovun_s16(cb);
+            v_dst.val[1] = vqmovun_s16(vcombine_s16(vqmovn_s32(cr_low), vqmovn_s32(cr_high)));
+            v_dst.val[2] = vqmovun_s16(vcombine_s16(vqmovn_s32(cb_low), vqmovn_s32(cb_high)));
 
             vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * i, v_dst);
         }
@@ -124,13 +136,13 @@ template <YCRCB_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
                 r = srcPtr[ncSrc * i + 2];
             }
 
-            uint8_t y = (r * kR2YIntCoeff + g * kG2YIntCoeff + b * kB2YIntCoeff + (1 << 13)) >> 14;
-            uint8_t Cr = ((r - y) * kCRIntCoeff + kShift14IntDelta + ((1 << 14) - 1)) >> 14;
-            uint8_t Cb = ((b - y) * kCBIntCoeff + kShift14IntDelta + ((1 << 14) - 1)) >> 14;
+            uint8_t y = (r * kR2YIntCoeff + g * kG2YIntCoeff + b * kB2YIntCoeff + ((1 << 14) - 1)) >> 14;
+            uint8_t Cr = ((r - y) * kCRIntCoeff + (1 << 21) + ((1 << 14) - 1)) >> 14;
+            uint8_t Cb = ((b - y) * kCBIntCoeff + (1 << 21) + ((1 << 14) - 1)) >> 14;
 
-            dstPtr[ncDst * i] = y;
-            dstPtr[ncDst * i + 1] = Cr;
-            dstPtr[ncDst * i + 2] = Cb;
+            dstPtr[ncDst * i] = (y);
+            dstPtr[ncDst * i + 1] = (Cr);
+            dstPtr[ncDst * i + 2] = (Cb);
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -237,12 +249,20 @@ template <YCRCB_CONVERT_RGB_TYPE dstColorType, int32_t ncSrc, int32_t ncDst>
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * i);
             int16x8_t y = vreinterpretq_s16_u16(vmovl_u8(v_src.val[0]));
-            int16x8_t cr = vreinterpretq_s16_u16(vmovl_u8(v_src.val[1]));
-            int16x8_t cb = vreinterpretq_s16_u16(vmovl_u8(v_src.val[2]));
+            int16x8_t cr = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(v_src.val[1])), vdupq_n_s16(128));
+            int16x8_t cb = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(v_src.val[2])), vdupq_n_s16(128));
 
-            int16x8_t r = vaddq_s16(y, vshrq_n_s16(vaddq_s16(vmulq_n_s16(cr, kCr2RIntCoeff), vdupq_n_s16(1 << 14 - 1)), 14));
-            int16x8_t g = vaddq_s16(y, vshrq_n_s16(vaddq_s16(vaddq_s16(vmulq_n_s16(cr, kY2GCrIntCoeff), vmulq_n_s16(cb, kY2GCbIntCoeff)), vdupq_n_s16(1 << 14 - 1)), 14));
-            int16x8_t b = vaddq_s16(y, vshrq_n_s16(vaddq_s16(vmulq_n_s16(cb, kCb2BIntCoeff), vdupq_n_s16(1 << 14 - 1)), 14));
+            int32x4_t r_low = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cr)), kCr2RIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t r_high = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cr)), kCr2RIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int16x8_t r = vaddq_s16(y, vcombine_s16(vqmovn_s32(r_low), vqmovn_s32(r_high)));
+
+            int32x4_t g_low = vshrq_n_s32(vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cr)), kY2GCrIntCoeff), vmulq_n_s32(vmovl_s16(vget_low_s16(cb)), kY2GCbIntCoeff)), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t g_high = vshrq_n_s32(vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cr)), kY2GCrIntCoeff), vmulq_n_s32(vmovl_s16(vget_high_s16(cb)), kY2GCbIntCoeff)), vdupq_n_s32(1 << 14 - 1)), 14);
+            int16x8_t g = vaddq_s16(y, vcombine_s16(vqmovn_s32(g_low), vqmovn_s32(g_high)));
+
+            int32x4_t b_low = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cb)), kCb2BIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t b_high = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cb)), kCb2BIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int16x8_t b = vaddq_s16(y, vcombine_s16(vqmovn_s32(b_low), vqmovn_s32(b_high)));
 
             if (RGB == dstColorType || RGBA == dstColorType) {
                 v_dst.val[0] = vqmovun_s16(r);
@@ -258,11 +278,11 @@ template <YCRCB_CONVERT_RGB_TYPE dstColorType, int32_t ncSrc, int32_t ncDst>
         }
 
         for (; i < width; i++) {
-            int16_t y = srcPtr[ncSrc * i], cr = srcPtr[ncSrc * i + 1], cb = srcPtr[ncSrc * i + 2];
+            int32_t y = srcPtr[ncSrc * i], cr = srcPtr[ncSrc * i + 1] - 128, cb = srcPtr[ncSrc * i + 2] - 128;
 
-            int16_t r = y + ((cr * kCr2RIntCoeff + (1 << 14) - 1) >> 14);
-            int16_t g = y + ((cr * kY2GCrIntCoeff + cb * kY2GCbIntCoeff + (1 << 14) - 1) >> 14);
-            int16_t b = y + ((cb * kCb2BIntCoeff + (1 << 14) - 1) >> 14);
+            int32_t r = y + ((cr * kCr2RIntCoeff + (1 << 14) - 1) >> 14);
+            int32_t g = y + ((cr * kY2GCrIntCoeff + cb * kY2GCbIntCoeff + (1 << 14) - 1) >> 14);
+            int32_t b = y + ((cb * kCb2BIntCoeff + (1 << 14) - 1) >> 14);
 
             if (RGB == dstColorType || RGBA == dstColorType) {
                 dstPtr[ncDst * i] = r > 255 ? 255 : (r < 0 ? 0 : r);
@@ -313,6 +333,8 @@ template <YCRCB_CONVERT_RGB_TYPE dstColorType, int32_t ncSrc, int32_t ncDst>
             srcType v_src = vldx_u8_f32<ncSrc, float32_t, srcType>(srcPtr + ncSrc * i);
 
             float32x4_t y = v_src.val[0], cr = v_src.val[1], cb = v_src.val[2];
+            cr = vsubq_f32(cr, vdupq_n_f32(0.5f));
+            cb = vsubq_f32(cb, vdupq_n_f32(0.5f));
             float32x4_t r = vaddq_f32(y, vmulq_n_f32(cr, kCr2RFloatCoeff));
             float32x4_t g = vaddq_f32(vaddq_f32(y, vmulq_n_f32(cr, kY2GCrFloatCoeff)), vmulq_n_f32(cb, kY2GCbFloatCoeff));
             float32x4_t b = vaddq_f32(y, vmulq_n_f32(cb, kCb2BFloatCoeff));
@@ -332,7 +354,7 @@ template <YCRCB_CONVERT_RGB_TYPE dstColorType, int32_t ncSrc, int32_t ncDst>
         }
 
         for (; i < width; i++) {
-            float32_t y = srcPtr[ncSrc * i], cr = srcPtr[ncSrc * i + 1], cb = srcPtr[ncSrc * i + 2];
+            float32_t y = srcPtr[ncSrc * i], cr = srcPtr[ncSrc * i + 1] - 0.5f, cb = srcPtr[ncSrc * i + 2] - 0.5f;
 
             float32_t r = y + cr * kCr2RFloatCoeff;
             float32_t g = y + cr * kY2GCrFloatCoeff + cb * kY2GCbFloatCoeff;
