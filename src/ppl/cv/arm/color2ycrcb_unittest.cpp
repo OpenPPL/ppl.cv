@@ -22,9 +22,9 @@
 #include "ppl/cv/arm/test.h"
 
 template <typename T, int32_t input_channels, int32_t output_channels>
-class RGB2YCRCB : public ::testing::TestWithParam<std::tuple<Size, float>> {
+class RGB2YCRCB : public ::testing::TestWithParam<std::tuple<Size, float, int32_t>> {
 public:
-    using RGB2YCRCBParam = std::tuple<Size, float>;
+    using RGB2YCRCBParam = std::tuple<Size, float, int32_t>;
     RGB2YCRCB()
     {
     }
@@ -36,8 +36,8 @@ public:
     void RGB2YCRCRAapply(const RGB2YCRCBParam &param)
     {
         Size size = std::get<0>(param);
-        int32_t mode     = std::get<1>(param);
-        const float diff = std::get<2>(param);
+        const float diff = std::get<1>(param);
+        int32_t mode = std::get<2>(param);
 
         std::unique_ptr<T[]> src(new T[size.width * size.height * input_channels]);
         std::unique_ptr<T[]> dst_ref(new T[size.width * size.height * output_channels]);
@@ -48,7 +48,7 @@ public:
         cv::Mat src_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, input_channels), src.get(), sizeof(T) * size.width * input_channels);
         cv::Mat dst_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, output_channels), dst_ref.get(), sizeof(T) * size.width * output_channels);
 
-        if(1 == mode){
+        if (1 == mode) {
             cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_RGB2YCrCb);
 
             ppl::cv::arm::RGB2YCrCb<T>(
@@ -58,7 +58,6 @@ public:
                 src.get(),
                 size.width * output_channels,
                 dst.get());
-
             checkResult<T, output_channels>(
                 dst_ref.get(),
                 dst.get(),
@@ -67,8 +66,8 @@ public:
                 size.width * output_channels,
                 size.width * output_channels,
                 diff);
-        }else{
-            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_RGB2YCrCb);
+        } else {
+            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_BGR2YCrCb);
 
             ppl::cv::arm::BGR2YCrCb<T>(
                 size.height,
@@ -89,7 +88,61 @@ public:
         }
     }
 
+    void YCRCB2RGBAapply(const RGB2YCRCBParam &param)
+    {
+        Size size = std::get<0>(param);
+        const float diff = std::get<1>(param);
+        int32_t mode = std::get<2>(param);
 
+        std::unique_ptr<T[]> src(new T[size.width * size.height * input_channels]);
+        std::unique_ptr<T[]> dst_ref(new T[size.width * size.height * output_channels]);
+        std::unique_ptr<T[]> dst(new T[size.width * size.height * output_channels]);
+
+        ppl::cv::debug::randomFill<T>(src.get(), size.width * size.height * input_channels, 0, 255);
+
+        cv::Mat src_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, input_channels), src.get(), sizeof(T) * size.width * input_channels);
+        cv::Mat dst_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, output_channels), dst_ref.get(), sizeof(T) * size.width * output_channels);
+
+        if (1 == mode) {
+            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_YCrCb2RGB);
+
+            ppl::cv::arm::YCrCb2RGB<T>(
+                size.height,
+                size.width,
+                size.width * input_channels,
+                src.get(),
+                size.width * output_channels,
+                dst.get());
+                
+            checkResult<T, output_channels>(
+                dst_ref.get(),
+                dst.get(),
+                size.height,
+                size.width,
+                size.width * output_channels,
+                size.width * output_channels,
+                diff);
+        } else {
+            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_YCrCb2BGR);
+
+            ppl::cv::arm::YCrCb2BGR<T>(
+                size.height,
+                size.width,
+                size.width * input_channels,
+                src.get(),
+                size.width * output_channels,
+                dst.get());
+
+            checkResult<T, output_channels>(
+                dst_ref.get(),
+                dst.get(),
+                size.height,
+                size.width,
+                size.width * output_channels,
+                size.width * output_channels,
+                diff);
+        }
+    }
 };
 
 constexpr int32_t c1 = 1;
@@ -97,13 +150,30 @@ constexpr int32_t c2 = 2;
 constexpr int32_t c3 = 3;
 constexpr int32_t c4 = 4;
 
-// 
-#define R1(name, t, ic, oc, diff)          \
-    using name = RGB2YCRCB<t, ic, oc>; \
+#define R1(name, t, ic, oc, diff, mode)    \
+    using name = RGB2YCRCB<t, ic, oc>;     \
     TEST_P(name, abc)                      \
     {                                      \
-        this->RGB2YCRCRAapply(GetParam());  \
+        this->RGB2YCRCRAapply(GetParam()); \
     }                                      \
-    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 240}, Size{720, 480}), ::testing::Values(diff)));
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff), ::testing::Values(mode)));
 
-R1(UT_RGB2YCRCB_uint8_t_aarch64, uint8_t, c3, c3, 1,1.01)
+R1(UT_RGB2YCRCB_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 1)
+R1(UT_RGB2YCRCB_float32_t_aarch64, float32_t, c3, c3, 1e-4, 1)
+
+R1(UT_BGR2YCRCB_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 2)
+R1(UT_BGR2YCRCB_float32_t_aarch64, float32_t, c3, c3, 1e-4, 2)
+
+#define R2(name, t, ic, oc, diff, mode)    \
+    using name = RGB2YCRCB<t, ic, oc>;     \
+    TEST_P(name, abc)                      \
+    {                                      \
+        this->YCRCB2RGBAapply(GetParam()); \
+    }                                      \
+    INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff), ::testing::Values(mode)));
+
+R2(UT_YCRCB2RGB_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 1)
+R2(UT_YCRCB2RGB_float32_t_aarch64, float32_t, c3, c3, 1e-4, 1)
+
+R2(UT_YCRCB2BGR_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 2)
+R2(UT_YCRCB2BGR_float32_t_aarch64, float32_t, c3, c3, 1e-4, 2)
