@@ -113,7 +113,7 @@ public:
                 src.get(),
                 size.width * output_channels,
                 dst.get());
-                
+
             checkResult<T, output_channels>(
                 dst_ref.get(),
                 dst.get(),

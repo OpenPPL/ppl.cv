@@ -249,20 +249,20 @@ template <YCRCB_CONVERT_RGB_TYPE dstColorType, int32_t ncSrc, int32_t ncDst>
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * i);
             int16x8_t y = vreinterpretq_s16_u16(vmovl_u8(v_src.val[0]));
-            int16x8_t cr = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(v_src.val[1])),vdupq_n_s16(128));
-            int16x8_t cb = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(v_src.val[2])),vdupq_n_s16(128));
+            int16x8_t cr = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(v_src.val[1])), vdupq_n_s16(128));
+            int16x8_t cb = vsubq_s16(vreinterpretq_s16_u16(vmovl_u8(v_src.val[2])), vdupq_n_s16(128));
 
-            int32_t r_low = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cr)), kCr2RIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
-            int32_t r_high = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cr)), kCr2RIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
-            int16x8_t r = vaddq_s16(y,vcombine_s16(vqmovn_s32(r_low), vqmovn_s32(r_high)));
+            int32x4_t r_low = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cr)), kCr2RIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t r_high = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cr)), kCr2RIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int16x8_t r = vaddq_s16(y, vcombine_s16(vqmovn_s32(r_low), vqmovn_s32(r_high)));
 
-            int32_t g_low = vshrq_n_s32(vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cr)), kY2GCrIntCoeff),vmulq_n_s32(vmovl_s16(vget_low_s16(cb)), kY2GCbIntCoeff)), vdupq_n_s32(1 << 14 - 1)), 14);
-            int32_t g_high = vshrq_n_s32(vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cr)), kY2GCrIntCoeff),vmulq_n_s32(vmovl_s16(vget_high_s16(cb)), kY2GCbIntCoeff)), vdupq_n_s32(1 << 14 - 1)), 14);
-            int16x8_t g = vaddq_s16(y,vcombine_s16(vqmovn_s32(g_low), vqmovn_s32(g_high)));
+            int32x4_t g_low = vshrq_n_s32(vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cr)), kY2GCrIntCoeff), vmulq_n_s32(vmovl_s16(vget_low_s16(cb)), kY2GCbIntCoeff)), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t g_high = vshrq_n_s32(vaddq_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cr)), kY2GCrIntCoeff), vmulq_n_s32(vmovl_s16(vget_high_s16(cb)), kY2GCbIntCoeff)), vdupq_n_s32(1 << 14 - 1)), 14);
+            int16x8_t g = vaddq_s16(y, vcombine_s16(vqmovn_s32(g_low), vqmovn_s32(g_high)));
 
-            int32_t b_low = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cb)), kCb2BIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
-            int32_t b_high = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cb)), kCb2BIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
-            int16x8_t b = vaddq_s16(y,vcombine_s16(vqmovn_s32(b_low), vqmovn_s32(b_high)));
+            int32x4_t b_low = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_low_s16(cb)), kCb2BIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int32x4_t b_high = vshrq_n_s32(vaddq_s32(vmulq_n_s32(vmovl_s16(vget_high_s16(cb)), kCb2BIntCoeff), vdupq_n_s32(1 << 14 - 1)), 14);
+            int16x8_t b = vaddq_s16(y, vcombine_s16(vqmovn_s32(b_low), vqmovn_s32(b_high)));
 
             if (RGB == dstColorType || RGBA == dstColorType) {
                 v_dst.val[0] = vqmovun_s16(r);
