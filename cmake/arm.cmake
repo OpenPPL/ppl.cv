@@ -1,6 +1,7 @@
 # PPL CV AARCH64 source cmake script
 
 set(PPLCV_USE_ARM ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 
 file(GLOB PPLCV_AARCH64_PUBLIC_HEADERS src/ppl/cv/arm/*.h)
 install(FILES ${PPLCV_AARCH64_PUBLIC_HEADERS}
