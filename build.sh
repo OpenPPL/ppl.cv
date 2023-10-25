@@ -40,7 +40,9 @@ function BuildAarch64() {
     arch=$(uname -m)
     case "$arch" in
         "x86_64")
-            extra_options="-DCMAKE_TOOLCHAIN_FILE=${workdir}/cmake/toolchains/aarch64-linux-gnu.cmake"
+            if [["$options" != *android-ndk*]] ; then
+                extra_options="-DCMAKE_TOOLCHAIN_FILE=${workdir}/cmake/toolchains/aarch64-linux-gnu.cmake"
+            fi
             ;;
         "aarch64")
             ;;
@@ -52,7 +54,7 @@ function BuildAarch64() {
 
     mkdir ${aarch64_build_dir}
     cd ${aarch64_build_dir}
-    cmd="cmake $options ${extra_options} -DPPLCV_USE_AARCH64=ON -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
+    cmd="cmake -DPPLCV_USE_AARCH64=ON -DCMAKE_INSTALL_PREFIX=${aarch64_build_dir}/install $options ${extra_options} -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
     eval "$cmd"
 }
