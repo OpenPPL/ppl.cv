@@ -63,19 +63,19 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
 
     const int Lscale = (116 * 255 + 50) / 100;
     const int Lshift = -((16 * 255 * (1 << kLabShift2) + 50) / 100);
-    for (int32_t k = 0; k < height; k++, srcPtr += src_step, dstPtr += dst_step) {
+    for (int32_t k = 0; k < height; k++) {
         int32_t i = 0;
         // todo: 向量化计算
         for (; i < width; i++) {
-            uint8_t R, G, B;
-            if (COLOR_LAB_RGB_TYPE::RGB == rgbType) {
-                R = srcPtr[ncSrc * i], G = srcPtr[ncSrc * i + 1], B = srcPtr[ncSrc * i + 2];
-            } else if (COLOR_LAB_RGB_TYPE::RGBA == rgbType) {
-                R = srcPtr[ncSrc * i], G = srcPtr[ncSrc * i + 1], B = srcPtr[ncSrc * i + 2];
-            } else if (COLOR_LAB_RGB_TYPE::BGR == rgbType) {
-                B = srcPtr[ncSrc * i], G = srcPtr[ncSrc * i + 1], R = srcPtr[ncSrc * i + 2];
-            } else if (COLOR_LAB_RGB_TYPE::BGRA == rgbType) {
-                B = srcPtr[ncSrc * i], G = srcPtr[ncSrc * i + 1], R = srcPtr[ncSrc * i + 2];
+            int32_t R, G, B;
+            if (COLOR_LAB_RGB_TYPE::RGB == rgbType || COLOR_LAB_RGB_TYPE::RGBA == rgbType) {
+                R = static_cast<int32_t>(srcPtr[0]);
+                G = static_cast<int32_t>(srcPtr[1]);
+                B = static_cast<int32_t>(srcPtr[2]);
+            } else {
+                B = static_cast<int32_t>(srcPtr[0]);
+                G = static_cast<int32_t>(srcPtr[1]);
+                R = static_cast<int32_t>(srcPtr[2]);
             }
 
             // process R G B ---> lab
@@ -87,11 +87,11 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
             int divideUp1_Y = (B * 296 + G * 2929 + R * 871 + (1 << (kLabShift - 1))) >> kLabShift;
             int divideUp1_Z = (B * 3575 + G * 448 + R * 73 + (1 << (kLabShift - 1))) >> kLabShift;
 
-            float tmp_x = divideUp1_X * (1.f / (255.f * (1 << kGammaShift)));
+            float32_t tmp_x = divideUp1_X * (1.f / (255.f * (1 << kGammaShift)));
             int fX = (1 << kLabShift2) * (tmp_x < 0.008856f ? tmp_x * 7.787f + 0.13793103448275862f : std::cbrtf(tmp_x));
-            float tmp_y = divideUp1_Y * (1.f / (255.f * (1 << kGammaShift)));
+            float32_t tmp_y = divideUp1_Y * (1.f / (255.f * (1 << kGammaShift)));
             int fY = (1 << kLabShift2) * (tmp_y < 0.008856f ? tmp_y * 7.787f + 0.13793103448275862f : std::cbrtf(tmp_y));
-            float tmp_z = divideUp1_Z * (1.f / (255.f * (1 << kGammaShift)));
+            float32_t tmp_z = divideUp1_Z * (1.f / (255.f * (1 << kGammaShift)));
             int fZ = (1 << kLabShift2) * (tmp_z < 0.008856f ? tmp_z * 7.787f + 0.13793103448275862f : std::cbrtf(tmp_z));
 
             int L = (Lscale * fY + Lshift + (1 << (kLabShift2 - 1))) >> kLabShift2;
@@ -99,9 +99,11 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
             int b = (200 * (fY - fZ) + 128 * (1 << kLabShift2) + (1 << (kLabShift2 - 1))) >> kLabShift2;
 
             // write lab to dst
-            dstPtr[ncDst * i] = L;
-            dstPtr[ncDst * i + 1] = a;
-            dstPtr[ncDst * i + 2] = b;
+            dstPtr[0] = static_cast<uint8_t>(L);
+            dstPtr[1] = static_cast<uint8_t>(a);
+            dstPtr[2] = static_cast<uint8_t>(b);
+            dstPtr += ncDst*1;
+            srcPtr += ncSrc*1;
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -120,25 +122,25 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    float _16_116 = 0.137931034f; // 16.0f / 116.0f;
-    float lThresh = 7.9996248f; // 0.008856f * 903.3f;
-    float fThresh = 0.206892706f; // 0.008856f * 7.787f + _16_116;
+    float32_t _16_116 = 0.137931034f; // 16.0f / 116.0f;
+    float32_t lThresh = 7.9996248f; // 0.008856f * 903.3f;
+    float32_t fThresh = 0.206892706f; // 0.008856f * 7.787f + _16_116;
 
     const uint8_t* srcPtr = src;
     uint8_t* dstPtr = dst;
 
     const int32_t src_step = srcStride;
     const int32_t dst_step = dstStride;
-    for (int32_t k = 0; k < height; k++, srcPtr += src_step, dstPtr += dst_step) {
+    for (int32_t k = 0; k < height; k++) {
         int32_t i = 0;
         // todo: 向量化计算
         for (; i < width; i++) {
-            float L, a, b;
-            L = srcPtr[ncSrc * i] * 0.392156863f; // (100.f / 255.f);
-            a = srcPtr[ncSrc * i + 1] - 128;
-            b = srcPtr[ncSrc * i + 2] - 128;
+            float32_t L, a, b;
+            L = static_cast<float32_t>(srcPtr[0]) * 0.392156863f; // (100.f / 255.f);
+            a = static_cast<float32_t>(srcPtr[1]) - 128;
+            b = static_cast<float32_t>(srcPtr[2]) - 128;
 
-            float Y, fy;
+            float32_t Y, fy;
 
             if (L <= lThresh) {
                 Y = L / 903.3f;
@@ -148,8 +150,8 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
                 Y = fy * fy * fy;
             }
 
-            float X = a / 500.0f + fy;
-            float Z = fy - b / 200.0f;
+            float32_t X = a / 500.0f + fy;
+            float32_t Z = fy - b / 200.0f;
 
             if (X <= fThresh) {
                 X = (X - _16_116) / 7.787f;
@@ -163,9 +165,9 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
                 Z = Z * Z * Z;
             }
 
-            uint8_t R = 3.079933f * X - 1.537150f * Y - 0.542782f * Z;
-            uint8_t G = -0.921235f * X + 1.875991f * Y + 0.045244f * Z;
-            uint8_t B = 0.052891f * X - 0.204043f * Y + 1.151152f * Z;
+            float32_t R = 3.079933f * X - 1.537150f * Y - 0.542782f * Z;
+            float32_t G = -0.921235f * X + 1.875991f * Y + 0.045244f * Z;
+            float32_t B = 0.052891f * X - 0.204043f * Y + 1.151152f * Z;
 
             R = (R > 0.00304f) ? (1.055f * ::powf(R, 0.41667f) - 0.055f) : 12.92f * R;
             G = (G > 0.00304f) ? (1.055f * ::powf(G, 0.41667f) - 0.055f) : 12.92f * G;
@@ -177,24 +179,26 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
 
             // write RGB to dst
             if (COLOR_LAB_RGB_TYPE::RGB == rgbType) {
-                dstPtr[ncDst * i] = R;
-                dstPtr[ncDst * i + 1] = G;
-                dstPtr[ncDst * i + 2] = B;
+                dstPtr[0] = static_cast<uint8_t>(R);
+                dstPtr[1] = static_cast<uint8_t>(G);
+                dstPtr[2] = static_cast<uint8_t>(B);
             } else if (COLOR_LAB_RGB_TYPE::RGBA == rgbType) {
-                dstPtr[ncDst * i] = R;
-                dstPtr[ncDst * i + 1] = G;
-                dstPtr[ncDst * i + 2] = B;
-                dstPtr[ncDst * i + 3] = 255;
+                dstPtr[0] = static_cast<uint8_t>(R);
+                dstPtr[1] = static_cast<uint8_t>(G);
+                dstPtr[2] = static_cast<uint8_t>(B);
+                dstPtr[3] = 255;
             } else if (COLOR_LAB_RGB_TYPE::BGR == rgbType) {
-                dstPtr[ncDst * i] = B;
-                dstPtr[ncDst * i + 1] = G;
-                dstPtr[ncDst * i + 2] = R;
+                dstPtr[0] = static_cast<uint8_t>(B);
+                dstPtr[1] = static_cast<uint8_t>(G);
+                dstPtr[2] = static_cast<uint8_t>(R);
             } else if (COLOR_LAB_RGB_TYPE::BGRA == rgbType) {
-                dstPtr[ncDst * i] = B;
-                dstPtr[ncDst * i + 1] = G;
-                dstPtr[ncDst * i + 2] = R;
-                dstPtr[ncDst * i + 3] = 255;
+                dstPtr[0] = static_cast<uint8_t>(B);
+                dstPtr[1] = static_cast<uint8_t>(G);
+                dstPtr[2] = static_cast<uint8_t>(R);
+                dstPtr[3] = 255;
             }
+            dstPtr += ncDst*1;
+            srcPtr += ncSrc*1;
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -221,7 +225,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return rgb_to_lab_u8<RGBA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return rgb_to_lab_u8<RGBA, 4, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 
 template <>
@@ -245,7 +249,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return rgb_to_lab_u8<BGRA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return rgb_to_lab_u8<BGRA, 4, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 // fzx
 template <>
@@ -269,7 +273,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return lab_to_rgb_u8<RGBA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return lab_to_rgb_u8<RGBA, 3, 4>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 
 template <>
@@ -293,7 +297,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return lab_to_rgb_u8<BGRA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return lab_to_rgb_u8<BGRA, 3, 4>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 
 }
