@@ -62,7 +62,7 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
     const int32_t dst_step = dstStride;
     for (int32_t k = 0; k < height; k++, srcPtr += src_step, dstPtr += dst_step) {
         dstType v_dst;
-        uint32_t i;
+        uint32_t i = 0;
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * i);
             uint16x8_t r, g, b;
@@ -79,22 +79,24 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             uint16x8_t vMax = vmaxq_u16(vmaxq_u16(r, g), b);
             uint16x8_t vMin = vminq_u16(vminq_u16(r, g), b);
             uint16x8_t vDiff = vsubq_u16(vMax, vMin);
-            int16x8_t vr = vmulq_n_s16(vreinterpretq_s16_u16(vceqq_u16(vMax, r)), -1);
-            int16x8_t vg = vmulq_n_s16(vreinterpretq_s16_u16(vceqq_u16(vMax, g)), -1);
+            int16x8_t vr = vandq_s16(vreinterpretq_s16_u16(vceqq_u16(vMax, r)), vdupq_n_s16(-1));
+            int16x8_t vg = vandq_s16(vreinterpretq_s16_u16(vceqq_u16(vMax, g)), vdupq_n_s16(-1));
 
             int32x4_t c_HsvDiv_vec_low{c_HsvDivTable[vgetq_lane_u16(vMax, 0)], c_HsvDivTable[vgetq_lane_u16(vMax, 1)], c_HsvDivTable[vgetq_lane_u16(vMax, 2)], c_HsvDivTable[vgetq_lane_u16(vMax, 3)]};
             int32x4_t c_HsvDiv_vec_high{c_HsvDivTable[vgetq_lane_u16(vMax, 4)], c_HsvDivTable[vgetq_lane_u16(vMax, 5)], c_HsvDivTable[vgetq_lane_u16(vMax, 6)], c_HsvDivTable[vgetq_lane_u16(vMax, 7)]};
             int32x4_t hsv_offset = vshlq_n_s32(vdupq_n_s32(1), kHSVSift - 1);
             int32x4_t s_low = vshrq_n_s32(vaddq_s32(vmulq_s32(vmovl_s16(vreinterpret_s16_u16(vget_low_u16(vDiff))), c_HsvDiv_vec_low), hsv_offset), kHSVSift);
             int32x4_t s_high = vshrq_n_s32(vaddq_s32(vmulq_s32(vmovl_s16(vreinterpret_s16_u16(vget_high_u16(vDiff))), c_HsvDiv_vec_high), hsv_offset), kHSVSift);
-            uint8x8_t s = vqmovun_s16(vcombine_s16(vmovn_s32(s_high), vmovn_s32(s_low)));
+            uint8x8_t s = vqmovun_s16(vcombine_s16(vmovn_s32(s_low), vmovn_s32(s_high)));
 
             int16x8_t h_temp = vaddq_s16(vandq_s16(vreinterpretq_s16_u16(vsubq_u16(g, b)), vr), vandq_s16(vmvnq_s16(vr), vaddq_s16(vandq_s16(vg, vaddq_s16(vreinterpretq_s16_u16(vsubq_u16(b, r)), vreinterpretq_s16_u16(vmulq_n_u16(vDiff, 2)))), vandq_s16(vmvnq_s16(vg), vaddq_s16(vreinterpretq_s16_u16(vsubq_u16(r, g)), vreinterpretq_s16_u16(vmulq_n_u16(vDiff, 4)))))));
             int32x4_t c_HsvDiv180_vec_low{c_HsvDivTable180[vgetq_lane_u16(vDiff, 0)], c_HsvDivTable180[vgetq_lane_u16(vDiff, 1)], c_HsvDivTable180[vgetq_lane_u16(vDiff, 2)], c_HsvDivTable180[vgetq_lane_u16(vDiff, 3)]};
             int32x4_t c_HsvDiv180_vec_high{c_HsvDivTable180[vgetq_lane_u16(vDiff, 4)], c_HsvDivTable180[vgetq_lane_u16(vDiff, 5)], c_HsvDivTable180[vgetq_lane_u16(vDiff, 6)], c_HsvDivTable180[vgetq_lane_u16(vDiff, 7)]};
             int32x4_t h_low = vshrq_n_s32(vaddq_s32(vmulq_s32(vmovl_s16(vget_low_s16(h_temp)), c_HsvDiv180_vec_low), hsv_offset), kHSVSift);
+            h_low = vaddq_s32(h_low, vandq_s32(vreinterpretq_s32_u32(vcltq_s32(h_low, vdupq_n_s32(0))), vdupq_n_s32(180)));
             int32x4_t h_high = vshrq_n_s32(vaddq_s32(vmulq_s32(vmovl_s16(vget_high_s16(h_temp)), c_HsvDiv180_vec_high), hsv_offset), kHSVSift);
-            uint8x8_t h = vqmovun_s16(vcombine_s16(vmovn_s32(h_high), vmovn_s32(h_low)));
+            h_high = vaddq_s32(h_high, vandq_s32(vreinterpretq_s32_u32(vcltq_s32(h_high, vdupq_n_s32(0))), vdupq_n_s32(180)));
+            uint8x8_t h = vqmovun_s16(vcombine_s16(vmovn_s32(h_low), vmovn_s32(h_high)));
 
             v_dst.val[0] = h;
             v_dst.val[1] = s;
@@ -109,20 +111,14 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             uint8_t v = std::max(std::max(r, g), b);
             uint8_t vDiff = v - std::min(std::min(r, g), b);
             int32_t vr = (v == r) ? (-1) : 0;
-            int32_t vg = (v == r) ? (-1) : 0;
+            int32_t vg = (v == g) ? (-1) : 0;
 
             int32_t s = (vDiff * c_HsvDivTable[v] + (1 << (kHSVSift - 1))) >> kHSVSift;
             int32_t h = (vr & (g - b)) + (~vr & ((vg & (b - r + 2 * vDiff)) + ((~vg) & (r - g + 4 * vDiff))));
             h = (h * c_HsvDivTable180[vDiff] + (1 << (kHSVSift - 1))) >> kHSVSift;
             h += (h < 0) * 180;
-            if (h > 359) {
-                h -= 360;
-            }
-            if (h < 0) {
-                h += 360;
-            }
 
-            dstPtr[ncDst * i] = h;
+            dstPtr[ncDst * i] = static_cast<uint8_t>(h);
             dstPtr[ncDst * i + 1] = s;
             dstPtr[ncDst * i + 2] = v;
         }
@@ -151,7 +147,7 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
         dstType v_dst;
         uint32_t i;
         for (i = 0; i <= width - 4; i += 4) {
-            srcType v_src = vldx_u8_f32<ncSrc, float32_t, srcType>(srcPtr + ncSrc * i * 4);
+            srcType v_src = vldx_u8_f32<ncSrc, float32_t, srcType>(srcPtr);
             float32x4_t r, g, b;
             if (RGB == srcColorType || RGBA == srcColorType) {
                 r = v_src.val[0];
@@ -167,28 +163,41 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             float32x4_t vMin = vminq_f32(vminq_f32(r, g), b);
             float32x4_t vDiff = vsubq_f32(vMax, vMin);
             v_dst.val[2] = vMax; // v
-            v_dst.val[1] = vdivq_f32(vdupq_n_f32(60.0f), vaddq_f32(vDiff, vdupq_n_f32(FLT_EPSILON))); // s
+            v_dst.val[1] = vdivq_f32(vDiff,vaddq_f32(vMax, vdupq_n_f32(FLT_EPSILON)));
+            vDiff = vdivq_f32(vdupq_n_f32(60.0f), vaddq_f32(vDiff, vdupq_n_f32(FLT_EPSILON))); // s
             // float32x4_t vb = vceqq_f32(vMax, b);
             // fast_op is (a-b)*c
-            auto fast_op = [](float32x4_t a_vec, float32x4_t b_vec, float32x4_t c_vec) {
+            auto fast_op = [](float32x4_t& a_vec, float32x4_t& b_vec, float32x4_t& c_vec) {
                 return vmulq_f32(vsubq_f32(a_vec, b_vec), c_vec);
             };
+
             float32x4_t vb_h = vaddq_f32(fast_op(r, g, vDiff), vdupq_n_f32(240.0f));
             float32x4_t vg_h = vaddq_f32(fast_op(b, r, vDiff), vdupq_n_f32(120.0f));
             float32x4_t vr_h = fast_op(g, b, vDiff);
+
             // h
-            for (int ii = 0; ii < 4; ii++) {
+            auto clac_h = [&vMax, &b, &g, &vb_h, &vg_h, &vr_h](const int ii, float32x4_t& dst_vec) {
                 if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(b, ii)) {
-                    vsetq_lane_f32(vgetq_lane_f32(vb_h, ii), v_dst.val[0], ii);
+                    // std::cout << "case1 " << ii << " src_data: " << vgetq_lane_f32(vb_h, ii) << " dst_data: ";
+                    dst_vec = vsetq_lane_f32(vgetq_lane_f32(vb_h, ii), dst_vec, ii);
                 } else if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(g, ii)) {
-                    vsetq_lane_f32(vgetq_lane_f32(vg_h, ii), v_dst.val[0], ii);
+                    // std::cout << "case2 " << ii << " src_data: " << vgetq_lane_f32(vg_h, ii) << " dst_data: ";
+                    dst_vec = vsetq_lane_f32(vgetq_lane_f32(vg_h, ii), dst_vec, ii);
                 } else {
-                    vsetq_lane_f32(vgetq_lane_f32(vr_h, ii), v_dst.val[0], ii);
+                    // std::cout << "case3 " << ii << " src_data: " << vgetq_lane_f32(vr_h, ii) << " dst_data: ";
+                    dst_vec = vsetq_lane_f32(vgetq_lane_f32(vr_h, ii), dst_vec, ii);
                 }
-            }
+                // std::cout << vgetq_lane_f32(dst_vec, ii) << std::endl;
+            };
+            clac_h(0, (v_dst.val[0]));
+            clac_h(1, (v_dst.val[0]));
+            clac_h(2, (v_dst.val[0]));
+            clac_h(3, (v_dst.val[0]));
+            v_dst.val[0] = vaddq_f32(v_dst.val[0], vcvtq_f32_u32(vandq_u32(vcltq_f32(v_dst.val[0], vdupq_n_f32(0)), vdupq_n_u32(360))));
+            // std::cout << std::endl;
             vst3q_f32(dstPtr, v_dst);
-            srcPtr += 4 * ncSrc * sizeof(float32_t);
-            dstPtr += 4 * ncDst * sizeof(float32_t);
+            srcPtr += 4 * ncSrc;
+            dstPtr += 4 * ncDst;
         }
         for (; i < width; i++) {
             float32_t r, g, b;
@@ -222,8 +231,8 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             dstPtr[0] = h;
             dstPtr[1] = s;
             dstPtr[2] = v;
-            dstPtr += ncSrc * 1 * sizeof(float32_t);
-            srcPtr += ncSrc * 1 * sizeof(float32_t);
+            dstPtr += ncSrc * 1;
+            srcPtr += ncDst * 1;
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -250,9 +259,9 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
         //  for (; j < width - 8; j += 8) {
         //  }
         for (; j < width; j++) {
-            float32_t h = static_cast<float32_t>(srcPtr[j]);
-            float32_t s = static_cast<float32_t>(srcPtr[j + 1]);
-            float32_t v = static_cast<float32_t>(srcPtr[j + 2]);
+            float32_t h = static_cast<float32_t>(srcPtr[0]);
+            float32_t s = static_cast<float32_t>(srcPtr[ 1]);
+            float32_t v = static_cast<float32_t>(srcPtr[ 2]);
             s *= (1.f / 255.f);
             v *= (1.f / 255.f);
             float32_t b, g, r;
@@ -289,22 +298,23 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             g = tab[c_HsvSectorData[sector][1]];
             r = tab[c_HsvSectorData[sector][2]];
             if (RGB == srcColorType || RGBA == srcColorType) {
-                dstPtr[0] = (uint8_t)r;
-                dstPtr[1] = (uint8_t)g;
-                dstPtr[2] = (uint8_t)b;
+                dstPtr[0] = (uint8_t)(r*255.f);
+                dstPtr[1] = (uint8_t)(g*255.f);
+                dstPtr[2] = (uint8_t)(b*255.f);
                 if (RGBA == srcColorType) {
                     dstPtr[4] = 255;
                 }
             } else {
                 // BGR BGRA
-                dstPtr[2] = (uint8_t)r;
-                dstPtr[1] = (uint8_t)g;
-                dstPtr[0] = (uint8_t)b;
+                dstPtr[2] = (uint8_t)(r*255.f);
+                dstPtr[1] = (uint8_t)(g*255.f);
+                dstPtr[0] = (uint8_t)(b*255.f);
                 if (BGRA == srcColorType) {
                     dstPtr[4] = 255;
                 }
             }
             dstPtr += ncDst;
+            srcPtr += ncSrc;
         }
     }
 
@@ -390,8 +400,8 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
                 }
             }
 
-            srcPtr += ncSrc * sizeof(float32_t);
-            dstPtr += ncDst * sizeof(float32_t);
+            srcPtr += ncSrc * 1;
+            dstPtr += ncDst * 1;
         }
     }
 
@@ -418,7 +428,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return rgb_to_hsv_u8<RGBA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return rgb_to_hsv_u8<RGBA, 4, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 template <>
 ::ppl::common::RetCode BGR2HSV<uint8_t>(
@@ -440,7 +450,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return rgb_to_hsv_u8<BGRA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return rgb_to_hsv_u8<BGRA, 4, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 template <>
 ::ppl::common::RetCode HSV2RGB<uint8_t>(
@@ -462,7 +472,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return hsv_to_rgb_u8<RGBA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return hsv_to_rgb_u8<RGBA, 3, 4>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 template <>
 ::ppl::common::RetCode HSV2BGR<uint8_t>(
@@ -484,7 +494,7 @@ template <>
     int32_t outWidthStride,
     uint8_t* outData)
 {
-    return hsv_to_rgb_u8<BGRA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return hsv_to_rgb_u8<BGRA, 3, 4>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 
 template <>
@@ -507,7 +517,7 @@ template <>
     int32_t outWidthStride,
     float* outData)
 {
-    return rgb_to_hsv_f32<RGBA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return rgb_to_hsv_f32<RGBA, 4, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 template <>
 ::ppl::common::RetCode BGR2HSV<float>(
@@ -529,7 +539,7 @@ template <>
     int32_t outWidthStride,
     float* outData)
 {
-    return rgb_to_hsv_f32<BGRA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return rgb_to_hsv_f32<BGRA, 4, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 template <>
 ::ppl::common::RetCode HSV2RGB<float>(
@@ -551,7 +561,7 @@ template <>
     int32_t outWidthStride,
     float* outData)
 {
-    return hsv_to_rgb_f32<RGBA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return hsv_to_rgb_f32<RGBA, 3, 4>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 template <>
 ::ppl::common::RetCode HSV2BGR<float>(
@@ -573,7 +583,7 @@ template <>
     int32_t outWidthStride,
     float* outData)
 {
-    return hsv_to_rgb_f32<BGRA, 3, 3>(height, width, inWidthStride, inData, outWidthStride, outData);
+    return hsv_to_rgb_f32<BGRA, 3, 4>(height, width, inWidthStride, inData, outWidthStride, outData);
 }
 
 }

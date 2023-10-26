@@ -22,18 +22,18 @@
 #include "ppl/cv/arm/test.h"
 
 template <typename T, int32_t input_channels, int32_t output_channels>
-class RGB2YCRCB : public ::testing::TestWithParam<std::tuple<Size, float, int32_t>> {
+class RGB2HSV : public ::testing::TestWithParam<std::tuple<Size, float, int32_t>> {
 public:
-    using RGB2YCRCBParam = std::tuple<Size, float, int32_t>;
-    RGB2YCRCB()
+    using RGB2HSVParam = std::tuple<Size, float, int32_t>;
+    RGB2HSV()
     {
     }
 
-    ~RGB2YCRCB()
+    ~RGB2HSV()
     {
     }
 
-    void RGB2YCRCBAapply(const RGB2YCRCBParam &param)
+    void RGB2HSVAapply(const RGB2HSVParam &param)
     {
         Size size = std::get<0>(param);
         const float diff = std::get<1>(param);
@@ -49,15 +49,26 @@ public:
         cv::Mat dst_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, output_channels), dst_ref.get(), sizeof(T) * size.width * output_channels);
 
         if (1 == mode) {
-            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_RGB2YCrCb);
+            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_RGB2HSV);
 
-            ppl::cv::arm::RGB2YCrCb<T>(
+            ppl::cv::arm::RGB2HSV<T>(
                 size.height,
                 size.width,
                 size.width * input_channels,
                 src.get(),
                 size.width * output_channels,
                 dst.get());
+            // for (int i = 0; i < size.height * size.width; i++) {
+            //     if (std::abs(dst.get()[i * 3] - dst_ref.get()[i * 3]) > 0.1 ||
+            //         std::abs(dst.get()[i * 3 + 1] - dst_ref.get()[i * 3 + 2]) > 0.1 ||
+            //         std::abs(dst.get()[i * 3 + 1] - dst_ref.get()[i * 3 + 2]) > 0.1) {
+            //         // printf("pplcv: h: %d s: %d v: %d \n",static_cast<int>(dst.get()[i*3]),static_cast<int>(dst.get()[i*3+1]),static_cast<int>(dst.get()[i*3+2]));
+            //         // printf("opencv: h: %d s: %d v: %d \n",static_cast<int>(dst_ref.get()[i*3]),static_cast<int>(dst_ref.get()[i*3+1]),static_cast<int>(dst_ref.get()[i*3+2]));
+            //         printf("pplcv: h: %f s: %f v: %f \n", dst.get()[i * 3], (dst.get()[i * 3 + 1]), (dst.get()[i * 3 + 2]));
+            //         printf("opencv: h: %f s: %f v: %f \n", dst_ref.get()[i * 3], (dst_ref.get()[i * 3 + 1]), (dst_ref.get()[i * 3 + 2]));
+            //         printf("\n");
+            //     }
+            // }
             checkResult<T, output_channels>(
                 dst_ref.get(),
                 dst.get(),
@@ -67,9 +78,9 @@ public:
                 size.width * output_channels,
                 diff);
         } else {
-            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_BGR2YCrCb);
+            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_BGR2HSV);
 
-            ppl::cv::arm::BGR2YCrCb<T>(
+            ppl::cv::arm::BGR2HSV<T>(
                 size.height,
                 size.width,
                 size.width * input_channels,
@@ -88,7 +99,7 @@ public:
         }
     }
 
-    void YCRCB2RGBAapply(const RGB2YCRCBParam &param)
+    void HSV2RGBAapply(const RGB2HSVParam &param)
     {
         Size size = std::get<0>(param);
         const float diff = std::get<1>(param);
@@ -104,16 +115,26 @@ public:
         cv::Mat dst_opencv(size.height, size.width, CV_MAKETYPE(cv::DataType<T>::depth, output_channels), dst_ref.get(), sizeof(T) * size.width * output_channels);
 
         if (1 == mode) {
-            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_YCrCb2RGB);
+            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_HSV2RGB);
 
-            ppl::cv::arm::YCrCb2RGB<T>(
+            ppl::cv::arm::HSV2RGB<T>(
                 size.height,
                 size.width,
                 size.width * input_channels,
                 src.get(),
                 size.width * output_channels,
                 dst.get());
-
+            // for (int i = 0; i < size.height * size.width; i++) {
+            //     if (std::abs(dst.get()[i * 3] - dst_ref.get()[i * 3]) > 0.001 ||
+            //         std::abs(dst.get()[i * 3 + 1] - dst_ref.get()[i * 3 + 1]) > 0.001 ||
+            //         std::abs(dst.get()[i * 3 + 2] - dst_ref.get()[i * 3 + 2]) > 0.001) {
+            //         // printf("pplcv: h: %d s: %d v: %d \n",static_cast<int>(dst.get()[i*3]),static_cast<int>(dst.get()[i*3+1]),static_cast<int>(dst.get()[i*3+2]));
+            //         // printf("opencv: h: %d s: %d v: %d \n",static_cast<int>(dst_ref.get()[i*3]),static_cast<int>(dst_ref.get()[i*3+1]),static_cast<int>(dst_ref.get()[i*3+2]));
+            //         printf("pplcv: h: %f s: %f v: %f \n", dst.get()[i * 3], (dst.get()[i * 3 + 1]), (dst.get()[i * 3 + 2]));
+            //         printf("opencv: h: %f s: %f v: %f \n", dst_ref.get()[i * 3], (dst_ref.get()[i * 3 + 1]), (dst_ref.get()[i * 3 + 2]));
+            //         printf("\n");
+            //     }
+            // }
             checkResult<T, output_channels>(
                 dst_ref.get(),
                 dst.get(),
@@ -123,9 +144,9 @@ public:
                 size.width * output_channels,
                 diff);
         } else {
-            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_YCrCb2BGR);
+            cv::cvtColor(src_opencv, dst_opencv, cv::COLOR_HSV2BGR);
 
-            ppl::cv::arm::YCrCb2BGR<T>(
+            ppl::cv::arm::HSV2BGR<T>(
                 size.height,
                 size.width,
                 size.width * input_channels,
@@ -151,29 +172,29 @@ constexpr int32_t c3 = 3;
 constexpr int32_t c4 = 4;
 
 #define R1(name, t, ic, oc, diff, mode)    \
-    using name = RGB2YCRCB<t, ic, oc>;     \
+    using name = RGB2HSV<t, ic, oc>;     \
     TEST_P(name, abc)                      \
     {                                      \
-        this->RGB2YCRCBAapply(GetParam()); \
+        this->RGB2HSVAapply(GetParam()); \
     }                                      \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff), ::testing::Values(mode)));
 
-R1(UT_RGB2YCRCB_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 1)
-R1(UT_RGB2YCRCB_float32_t_aarch64, float32_t, c3, c3, 1e-4, 1)
+R1(UT_RGB2HSV_uint8_t_aarch64, uint8_t, c3, c3, 1.01, 1)
+R1(UT_RGB2HSV_float32_t_aarch64, float32_t, c3, c3, 1e-4, 1)
 
-R1(UT_BGR2YCRCB_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 2)
-R1(UT_BGR2YCRCB_float32_t_aarch64, float32_t, c3, c3, 1e-4, 2)
+R1(UT_BGR2HSV_uint8_t_aarch64, uint8_t, c3, c3, 1.01, 2)
+R1(UT_BGR2HSV_float32_t_aarch64, float32_t, c3, c3, 1e-4, 2)
 
 #define R2(name, t, ic, oc, diff, mode)    \
-    using name = RGB2YCRCB<t, ic, oc>;     \
+    using name = RGB2HSV<t, ic, oc>;     \
     TEST_P(name, abc)                      \
     {                                      \
-        this->YCRCB2RGBAapply(GetParam()); \
+        this->HSV2RGBAapply(GetParam()); \
     }                                      \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff), ::testing::Values(mode)));
 
-R2(UT_YCRCB2RGB_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 1)
-R2(UT_YCRCB2RGB_float32_t_aarch64, float32_t, c3, c3, 1e-4, 1)
+R2(UT_HSV2RGB_uint8_t_aarch64, uint8_t, c3, c3, 1.01, 1)
+R2(UT_HSV2RGB_float32_t_aarch64, float32_t, c3, c3, 1e-2, 1)
 
-R2(UT_YCRCB2BGR_uint8_t_aarch64, uint8_t, c3, c3, 2.01, 2)
-R2(UT_YCRCB2BGR_float32_t_aarch64, float32_t, c3, c3, 1e-4, 2)
+R2(UT_HSV2BGR_uint8_t_aarch64, uint8_t, c3, c3, 1.01, 2)
+R2(UT_HSV2BGR_float32_t_aarch64, float32_t, c3, c3, 1e-2, 2)
