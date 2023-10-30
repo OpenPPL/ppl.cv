@@ -25,7 +25,50 @@ namespace ppl {
 namespace cv {
 namespace arm {
 
-//fzx add
+/**
+ * @brief Convert BGR images to RGB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGR2RGB<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGR2RGB(
     int32_t height,
@@ -34,7 +77,50 @@ template <typename T>
     const T* inData,
     int32_t outWidthStride,
     T* outData);
-
+/**
+ * @brief Convert BGRA images to RGB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGRA2RGB<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGRA2RGB(
     int32_t height,
@@ -44,6 +130,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGR images to RGBA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGR2RGBA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGR2RGBA(
     int32_t height,
@@ -53,6 +183,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGRA images to RGBA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>4
+ * <tr><td>float<td>4<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGRA2RGBA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGRA2RGBA(
     int32_t height,
@@ -61,6 +235,51 @@ template <typename T>
     const T* inData,
     int32_t outWidthStride,
     T* outData);
+
+/**
+ * @brief Convert RGB images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGB2BGR<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGB2BGR(
     int32_t height,
@@ -70,6 +289,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGBA images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGBA2BGR<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGBA2BGR(
     int32_t height,
@@ -79,6 +342,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGB images to BGRA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * ncSrc`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * ncDst`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGB2BGRA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGB2BGRA(
     int32_t height,
@@ -88,6 +395,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGBA images to BGRA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>4
+ * <tr><td>float<td>4<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGBA2BGRA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGBA2BGRA(
     int32_t height,
@@ -97,6 +448,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGB images to RGBA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGB2RGBA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGB2RGBA(
     int32_t height,
@@ -106,6 +501,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGBA images to RGB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGBA2RGB<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGBA2RGB(
     int32_t height,
@@ -115,6 +554,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGR images to BGRA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGR2BGRA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGR2BGRA(
     int32_t height,
@@ -124,6 +607,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGRA images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGRA2BGR<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGRA2BGR(
     int32_t height,
@@ -133,7 +660,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
-
+/**
+ * @brief Convert RGB images to YCrCb images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGB2YCrCb<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGB2YCrCb(
     int32_t height,
@@ -143,6 +713,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGBA images to YCrCb images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGBA2YCrCb<float, 4, 3>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGBA2YCrCb(
     int32_t height,
@@ -152,6 +766,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGR images to YCrCb images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGR2YCrCb<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGR2YCrCb(
     int32_t height,
@@ -161,6 +819,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGRA images to YCrCb images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGRA2YCrCb<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGRA2YCrCb(
     int32_t height,
@@ -170,6 +872,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert YCrCb images to RGB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::YCrCb2RGB<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YCrCb2RGB(
     int32_t height,
@@ -179,6 +925,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert YCrCb images to RGBA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::YCrCb2RGBA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YCrCb2RGBA(
     int32_t height,
@@ -188,6 +978,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert YCrCb images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::YCrCb2BGR<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YCrCb2BGR(
     int32_t height,
@@ -197,6 +1031,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert YCrCb images to BGRA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::YCrCb2BGRA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YCrCb2BGRA(
     int32_t height,
@@ -206,6 +1084,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGB images to HSV images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGB2HSV<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGB2HSV(
     int32_t height,
@@ -215,6 +1137,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert RGBA images to HSV images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGBA2HSV<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode RGBA2HSV(
     int32_t height,
@@ -224,6 +1190,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGR images to HSV images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGR2HSV<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGR2HSV(
     int32_t height,
@@ -233,6 +1243,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert BGRA images to HSV images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGRA2HSV<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode BGRA2HSV(
     int32_t height,
@@ -242,6 +1296,51 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 template <typename T>
+
+/**
+ * @brief Convert HSV images to RGB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::HSV2RGB<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 ::ppl::common::RetCode HSV2RGB(
     int32_t height,
     int32_t width,
@@ -250,6 +1349,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert HSV images to RGBA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::HSV2RGBA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode HSV2RGBA(
     int32_t height,
@@ -259,6 +1402,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert HSV images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::HSV2BGR<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode HSV2BGR(
     int32_t height,
@@ -268,6 +1455,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert HSV images to BGRA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t and \a float are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::HSV2BGRA<float>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode HSV2BGRA(
     int32_t height,
@@ -276,8 +1507,488 @@ template <typename T>
     const T* inData,
     int32_t outWidthStride,
     T* outData);
-//need to add 
 
+/**
+ * @brief Convert RGB images to LAB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t  are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::RGB2LAB<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode RGB2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+/**
+ * @brief Convert RGBA images to LAB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::RGBA2LAB<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode RGBA2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+/**
+ * @brief Convert BGR images to LAB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t  are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::BGR2LAB<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode BGR2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+/**
+ * @brief Convert BGRA images to LAB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t are supported.
+ * @tparam ncSrc The number of channels of input image, 4 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>4<td>3
+ * <tr><td>float<td>4<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 4;
+ *     const int output_channels = 3;
+ *     float* dev_iImage = (float*)malloc(W * H * input_channels * sizeof(float));
+ *     float* dev_oImage = (float*)malloc(W * H * output_channels * sizeof(float));
+ *     
+ *     ppl::cv::arm::BGRA2LAB<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode BGRA2LAB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+/**
+ * @brief Convert LAB images to RGB images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::LAB2RGB<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode LAB2RGB(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+
+/**
+ * @brief Convert LAB images to RGBA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::LAB2RGBA<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode LAB2RGBA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+/**
+ * @brief Convert LAB images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>3
+ * <tr><td>float<td>3<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 3;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::LAB2BGR<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode LAB2BGR(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData);
+
+/**
+ * @brief Convert LAB images to BGRA images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t are supported.
+ * @tparam ncSrc The number of channels of input image, 3 is supported.
+ * @tparam ncDst The number of channels of output image, 4 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>3<td>4
+ * <tr><td>float<td>3<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 3;
+ *     const int output_channels = 4;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::LAB2BGRA<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
+template <typename T>
+::ppl::common::RetCode LAB2BGRA(
+    int32_t height,
+    int32_t width,
+    int32_t inWidthStride,
+    const T* inData,
+    int32_t outWidthStride,
+    T* outData); 
+
+
+/**
+ * @brief Convert NV21 images to I420 images,format: YYYYVUUVUVUV -> YYYYUUUUVVVV
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inYStride         input image's Y stride, usually it equals to `width`
+ * @param inY               input image Y data
+ * @param inUVStride        input image's UV stride, usually it equals to `width`
+ * @param inUV              input image UV data
+ * @param outYStride        output Y stride, usually it equals to `width`
+ * @param outY              output Y
+ * @param outUStride        output U stride, usually it equals to `width / 2`
+ * @param outU              output U
+ * @param outVStride        output V stride, usually it equals to `width / 2`
+ * @param outV              output V
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_iImage_uv = (uint8_t*)malloc(W * H / 2 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_u = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_v = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ * 
+ *     ppl::cv::arm::NV122I420<uint8_t>(H, W, W, dev_iImage_y, W, dev_iImage_uv, W, dev_oImage_y, W / 2, dev_oImage_u, W / 2, dev_oImage_v);
+ *
+ *     free(dev_iImage_y);
+ *     free(dev_iImage_u);
+ *     free(dev_iImage_v);
+ *     free(dev_oImage_y);
+ *     free(dev_oImage_uv);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode NV122I420(
     int32_t height,
@@ -287,6 +1998,61 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert NV21 images to I420 images,format: YYYYVUVUVUVU -> YYYYUUUUVVVV
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inYStride         the width stride of input Y, usually it equals to `width`
+ * @param inY               input Y
+ * @param inVUStride        the width stride of input VU, usually it equals to `width`
+ * @param inVU              input VU
+ * @param outYStride        output Y stride, usually it equals to `width`
+ * @param outY              output Y
+ * @param outUStride        output U stride, usually it equals to `width / 2`
+ * @param outU              output U
+ * @param outVStride        output V stride, usually it equals to `width / 2`
+ * @param outV              output V
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_iImage_vu = (uint8_t*)malloc(W * H / 2 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_u = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_v = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ * 
+ *     ppl::cv::arm::NV212I420<uint8_t>(H, W, W, dev_iImage_y, W, dev_iImage_vu, W, dev_oImage_y, W / 2, dev_oImage_u, W / 2, dev_oImage_v);
+ *
+ *     free(dev_iImage_y);
+ *     free(dev_iImage_u);
+ *     free(dev_iImage_v);
+ *     free(dev_oImage_y);
+ *     free(dev_oImage_vu);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode NV212I420(
     int32_t height,
@@ -296,6 +2062,61 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert NV21 images to I420 images,format: YYYYVUVUVUVU -> YYYYUUUUVVVV
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inYStride         the width stride of input Y, usually it equals to `width`
+ * @param inY               input Y
+ * @param inVUStride        the width stride of input VU, usually it equals to `width`
+ * @param inVU              input VU
+ * @param outYStride        output Y stride, usually it equals to `width`
+ * @param outY              output Y
+ * @param outUStride        output U stride, usually it equals to `width / 2`
+ * @param outU              output U
+ * @param outVStride        output V stride, usually it equals to `width / 2`
+ * @param outV              output V
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_iImage_vu = (uint8_t*)malloc(W * H / 2 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_u = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_v = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ * 
+ *     ppl::cv::arm::NV212I420<uint8_t>(H, W, W, dev_iImage_y, W, dev_iImage_vu, W, dev_oImage_y, W / 2, dev_oImage_u, W / 2, dev_oImage_v);
+ *
+ *     free(dev_iImage_y);
+ *     free(dev_iImage_u);
+ *     free(dev_iImage_v);
+ *     free(dev_oImage_y);
+ *     free(dev_oImage_vu);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode NV212I420(
     int32_t height,
@@ -305,6 +2126,61 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert I420 images to NV21 images,format: YYYYUUUUVVVV -> YYYYVUVUVUVU
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inYStride         stride of y dimension, usually it equals to `width`
+ * @param inY               input image data of y
+ * @param inUStride         stride of u dimension, usually it equals to `width / 2`
+ * @param inU               input image data of u
+ * @param inVStride         stride of v dimension, usually it equals to `width / 2`
+ * @param inv               input image data of v
+ * @param outYStride        the width stride of output Y, usually it equals to `width`
+ * @param outY              output Y
+ * @param outVUStride       the width stride of output VU, usually it equals to `width`
+ * @param outVU             output VU
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_iImage_u = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ *     uint8_t* dev_iImage_v = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_vu = (uint8_t*)malloc(W * H / 2 * sizeof(uint8_t));
+ *
+ *     ppl::cv::arm::I4202NV21<uint8_t>(H, W, W, dev_iImage_y, W / 2, dev_iImage_u, W / 2, dev_iImage_v, W, dev_oImage_y, W, dev_oImage_vu);
+ *
+ *     free(dev_iImage_y);
+ *     free(dev_iImage_u);
+ *     free(dev_iImage_v);
+ *     free(dev_oImage_y);
+ *     free(dev_oImage_vu);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode I4202NV21(
     int32_t height,
@@ -323,6 +2199,49 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert YUV images to GRAY images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            gray image's height
+ * @param width             gray image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::YUV2GRAY<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YUV2GRAY(
     int32_t height,
@@ -332,6 +2251,49 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert YUYV images to GRAY images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            gray image's height
+ * @param width             gray image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::YUYV2GRAY<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YUYV2GRAY(
     int32_t height,
@@ -341,6 +2303,49 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert UYVY images to GRAY images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            gray image's height
+ * @param width             gray image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::UYVY2GRAY<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode UYVY2GRAY(
     int32_t height,
@@ -350,6 +2355,50 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+
+/**
+ * @brief Convert YUV images to GRAY images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            gray image's height
+ * @param width             gray image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(W * H * input_channels * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(W * H * output_channels * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::YUV2BGR<uint8_t>(H, W, W * input_channels, dev_iImage, W * output_channels, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YUV2BGR(
     int32_t height,
@@ -359,6 +2408,51 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert YUYV images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 2 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * channels`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * channels`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>2<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 2;
+ *     const int output_channels= 3;
+ *     const int inWidthStride  = W * input_channels;
+ *     const int outWidthStride = W * output_channels;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(inWidthStride * H * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(outWidthStride * H * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::YUYV2BGR<uint8_t>(H, W, inWidthStride, dev_iImage, outWidthStride, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode YUYV2BGR(
     int32_t height,
@@ -368,6 +2462,51 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert UYVY images to BGR images
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 2 is supported.
+ * @tparam ncDst The number of channels of output image, 3 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inWidthStride     input image's width stride, usually it equals to `width * ncSrc`
+ * @param inData            input image data
+ * @param outWidthStride    the width stride of output image, usually it equals to `width * ncDst`
+ * @param outData           output image data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>2<td>3
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 2;
+ *     const int output_channels= 3;
+ *     const int inWidthStride  = W * input_channels;
+ *     const int outWidthStride = W * output_channels;
+ *     uint8_t* dev_iImage = (uint8_t*)malloc(inWidthStride * H * sizeof(uint8_t));
+ *     uint8_t* dev_oImage = (uint8_t*)malloc(outWidthStride * H * sizeof(uint8_t));
+ *     
+ *     ppl::cv::arm::UYVY2BGR<uint8_t>(H, W, inWidthStride, dev_iImage, outWidthStride, dev_oImage);
+ *
+ *     free(dev_iImage);
+ *     free(dev_oImage);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode UYVY2BGR(
     int32_t height,
@@ -376,80 +2515,6 @@ template <typename T>
     const T* inData,
     int32_t outWidthStride,
     T* outData);
-
-template <typename T>
-::ppl::common::RetCode RGB2LAB(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-template <typename T>
-::ppl::common::RetCode RGBA2LAB(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-template <typename T>
-::ppl::common::RetCode BGR2LAB(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-template <typename T>
-::ppl::common::RetCode BGRA2LAB(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-template <typename T>
-::ppl::common::RetCode LAB2RGB(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-template <typename T>
-::ppl::common::RetCode LAB2RGBA(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-template <typename T>
-::ppl::common::RetCode LAB2BGR(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-template <typename T>
-::ppl::common::RetCode LAB2BGRA(
-    int32_t height,
-    int32_t width,
-    int32_t inWidthStride,
-    const T* inData,
-    int32_t outWidthStride,
-    T* outData);
-
-//fzx end
 
 
 /**

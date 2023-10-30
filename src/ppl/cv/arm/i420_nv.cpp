@@ -37,18 +37,22 @@ void nv_to_i420_uchar_video_range(
     int32_t i420Stride,
     uint8_t* i420_ptr)
 {
-    int32_t remain = w >= 15 ? w - 15 : 0;
+    // int32_t remain = w >= 15 ? w - 15 : 0;
     const uint8_t* yptr = y_ptr;
-    for (int32_t i = 0; i < h; i += 2) {
-        uint8_t* dst_y_ptr = i420_ptr + i * i420Stride;
-        uint8_t* dst_u_ptr = dst_y_ptr + i420Stride * h;
-        uint8_t* dst_v_ptr = dst_y_ptr + i420Stride * h + i420Stride * h / 4;
+    uint8_t* dst_y_ptr = i420_ptr;
+    uint8_t* dst_u_ptr = dst_y_ptr + w * h;
+    uint8_t* dst_v_ptr = dst_y_ptr + w * h + w * h / 4;
+    int32_t uv_w = w / 2;
+
+    for (int32_t i = 0; i < h; i++) {
         // process y
-        memcpy(dst_y_ptr, yptr, yStride * h * 2);
+        memcpy(dst_y_ptr, yptr, w);
+        yptr += w;
+        dst_y_ptr += w;
         // process u v
         const uint8_t* uvptr = (nullptr == u_ptr) ? v_ptr : u_ptr;
         int j = 0;
-        for (; j < remain; j += 16) {
+        for (; j < (uv_w - 16); j += 16) {
             typedef typename DT<2, uint8_t>::vec_DT srcType;
             // nv12 uvuv; nv21 vuvu
             if (YUV_NV12 == yuvType) {
@@ -64,7 +68,7 @@ void nv_to_i420_uchar_video_range(
             dst_u_ptr += 8;
             dst_v_ptr += 8;
         }
-        for (; j + 2 < w; j += 2) {
+        for (; j < uv_w - 2; j += 2) {
             uint8_t u, v;
             if (YUV_NV12 == yuvType) {
                 u = uvptr[0];
@@ -79,7 +83,6 @@ void nv_to_i420_uchar_video_range(
             dst_u_ptr += 1;
             dst_v_ptr += 1;
         }
-        yptr += 2 * yStride;
     }
 }
 
@@ -96,18 +99,22 @@ void i420_to_nv_uchar_video_range(
     int32_t nv_Stride,
     uint8_t* nv_ptr)
 {
-    int32_t remain = w >= 15 ? w - 15 : 0;
+    // int32_t remain = w >= 15 ? w - 15 : 0;
     const uint8_t* yptr = y_ptr;
     const uint8_t* uptr = u_ptr;
     const uint8_t* vptr = v_ptr;
-    for (int32_t i = 0; i < h; i += 2) {
-        uint8_t* dst_y_ptr = nv_ptr + i * nv_Stride;
-        uint8_t* dst_uv_ptr = nv_ptr + nv_Stride * h;
+    uint8_t* dst_y_ptr = nv_ptr;
+    uint8_t* dst_uv_ptr = nv_ptr + w * h;
+    int32_t uv_w = w / 4;
+
+    for (int32_t i = 0; i < h; i ++) {
         // process y
-        memcpy(dst_y_ptr, yptr, yStride * h * 2);
+        memcpy(dst_y_ptr, yptr, w);
+        dst_y_ptr += w;
+        yptr += w;
         // process u v
         int j = 0;
-        for (; j < remain; j += 16) {
+        for (; j < uv_w - 8; j += 8) {
             uint8x8_t u_src = vld1_u8(uptr);
             uint8x8_t v_src = vld1_u8(vptr);
             // nv12 uvuv; nv21 vuvu
@@ -126,7 +133,7 @@ void i420_to_nv_uchar_video_range(
             uptr += 8;
             vptr += 8;
         }
-        for (; j + 2 < w; j += 2) {
+        for (; j < uv_w; j ++) {
             uint8_t u = uptr[0], v = vptr[0];
             if (YUV_NV12 == yuvType) {
                 dst_uv_ptr[0] = u;
@@ -139,7 +146,6 @@ void i420_to_nv_uchar_video_range(
             uptr += 1;
             vptr += 1;
         }
-        yptr += 2 * yStride;
     }
 }
 

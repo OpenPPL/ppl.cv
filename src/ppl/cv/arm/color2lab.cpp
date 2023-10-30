@@ -40,6 +40,13 @@ enum LABShifts {
 };
 
 const ushort c_sRGBGammaTab_b[] = {0, 1, 1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 8, 8, 9, 10, 11, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 24, 25, 26, 28, 29, 31, 33, 34, 36, 38, 40, 41, 43, 45, 47, 49, 51, 54, 56, 58, 60, 63, 65, 68, 70, 73, 75, 78, 81, 83, 86, 89, 92, 95, 98, 101, 105, 108, 111, 115, 118, 121, 125, 129, 132, 136, 140, 144, 147, 151, 155, 160, 164, 168, 172, 176, 181, 185, 190, 194, 199, 204, 209, 213, 218, 223, 228, 233, 239, 244, 249, 255, 260, 265, 271, 277, 282, 288, 294, 300, 306, 312, 318, 324, 331, 337, 343, 350, 356, 363, 370, 376, 383, 390, 397, 404, 411, 418, 426, 433, 440, 448, 455, 463, 471, 478, 486, 494, 502, 510, 518, 527, 535, 543, 552, 560, 569, 578, 586, 595, 604, 613, 622, 631, 641, 650, 659, 669, 678, 688, 698, 707, 717, 727, 737, 747, 757, 768, 778, 788, 799, 809, 820, 831, 842, 852, 863, 875, 886, 897, 908, 920, 931, 943, 954, 966, 978, 990, 1002, 1014, 1026, 1038, 1050, 1063, 1075, 1088, 1101, 1113, 1126, 1139, 1152, 1165, 1178, 1192, 1205, 1218, 1232, 1245, 1259, 1273, 1287, 1301, 1315, 1329, 1343, 1357, 1372, 1386, 1401, 1415, 1430, 1445, 1460, 1475, 1490, 1505, 1521, 1536, 1551, 1567, 1583, 1598, 1614, 1630, 1646, 1662, 1678, 1695, 1711, 1728, 1744, 1761, 1778, 1794, 1811, 1828, 1846, 1863, 1880, 1897, 1915, 1933, 1950, 1968, 1986, 2004, 2022, 2040};
+
+template <typename T>
+inline const uint8_t sat_cast_u8(T data)
+{
+    return data > 255 ? 255 : (data < 0 ? 0 : data);
+}
+
 } // namespace
 
 template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
@@ -99,9 +106,9 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
             int b = (200 * (fY - fZ) + 128 * (1 << kLabShift2) + (1 << (kLabShift2 - 1))) >> kLabShift2;
 
             // write lab to dst
-            dstPtr[0] = static_cast<uint8_t>(L);
-            dstPtr[1] = static_cast<uint8_t>(a);
-            dstPtr[2] = static_cast<uint8_t>(b);
+            dstPtr[0] = sat_cast_u8(L);
+            dstPtr[1] = sat_cast_u8(a);
+            dstPtr[2] = sat_cast_u8(b);
             dstPtr += ncDst*1;
             srcPtr += ncSrc*1;
         }
@@ -179,22 +186,22 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
 
             // write RGB to dst
             if (COLOR_LAB_RGB_TYPE::RGB == rgbType) {
-                dstPtr[0] = static_cast<uint8_t>(R);
-                dstPtr[1] = static_cast<uint8_t>(G);
-                dstPtr[2] = static_cast<uint8_t>(B);
+                dstPtr[0] = sat_cast_u8(R);
+                dstPtr[1] = sat_cast_u8(G);
+                dstPtr[2] = sat_cast_u8(B);
             } else if (COLOR_LAB_RGB_TYPE::RGBA == rgbType) {
-                dstPtr[0] = static_cast<uint8_t>(R);
-                dstPtr[1] = static_cast<uint8_t>(G);
-                dstPtr[2] = static_cast<uint8_t>(B);
+                dstPtr[0] = sat_cast_u8(R);
+                dstPtr[1] = sat_cast_u8(G);
+                dstPtr[2] = sat_cast_u8(B);
                 dstPtr[3] = 255;
             } else if (COLOR_LAB_RGB_TYPE::BGR == rgbType) {
-                dstPtr[0] = static_cast<uint8_t>(B);
-                dstPtr[1] = static_cast<uint8_t>(G);
-                dstPtr[2] = static_cast<uint8_t>(R);
+                dstPtr[0] = sat_cast_u8(B);
+                dstPtr[1] = sat_cast_u8(G);
+                dstPtr[2] = sat_cast_u8(R);
             } else if (COLOR_LAB_RGB_TYPE::BGRA == rgbType) {
-                dstPtr[0] = static_cast<uint8_t>(B);
-                dstPtr[1] = static_cast<uint8_t>(G);
-                dstPtr[2] = static_cast<uint8_t>(R);
+                dstPtr[0] = sat_cast_u8(B);
+                dstPtr[1] = sat_cast_u8(G);
+                dstPtr[2] = sat_cast_u8(R);
                 dstPtr[3] = 255;
             }
             dstPtr += ncDst*1;
