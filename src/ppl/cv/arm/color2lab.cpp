@@ -109,8 +109,8 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
             dstPtr[0] = sat_cast_u8(L);
             dstPtr[1] = sat_cast_u8(a);
             dstPtr[2] = sat_cast_u8(b);
-            dstPtr += ncDst*1;
-            srcPtr += ncSrc*1;
+            dstPtr += ncDst * 1;
+            srcPtr += ncSrc * 1;
         }
     }
     return ppl::common::RC_SUCCESS;
@@ -204,8 +204,8 @@ template <COLOR_LAB_RGB_TYPE rgbType, int32_t ncSrc, int32_t ncDst>
                 dstPtr[2] = sat_cast_u8(R);
                 dstPtr[3] = 255;
             }
-            dstPtr += ncDst*1;
-            srcPtr += ncSrc*1;
+            dstPtr += ncDst * 1;
+            srcPtr += ncSrc * 1;
         }
     }
     return ppl::common::RC_SUCCESS;

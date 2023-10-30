@@ -57,7 +57,7 @@ public:
             src.get(),
             size.width * output_channels,
             dst.get());
-            
+
         checkResult<T, output_channels>(
             dst_ref.get(),
             dst.get(),
@@ -447,7 +447,7 @@ constexpr int32_t c4 = 4;
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->RGB2RGBAapply(GetParam());    \
+        this->RGB2RGBAapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -458,7 +458,7 @@ R1(UT_RGB2RGBA_uint8_t_aarch64, uint8_t, c3, c4, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->RGB2BGRapply(GetParam());     \
+        this->RGB2BGRapply(GetParam());      \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -469,7 +469,7 @@ R2(UT_RGB2BGR_uint8_t_aarch64, uint8_t, c3, c3, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->RGB2BGRAapply(GetParam());    \
+        this->RGB2BGRAapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -481,7 +481,7 @@ R3(UT_RGB2BGRA_uint8_t_aarch64, uint8_t, c3, c4, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->RGBA2RGBapply(GetParam());    \
+        this->RGBA2RGBapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -492,7 +492,7 @@ R4(UT_RGBA2RGB_uint8_t_aarch64, uint8_t, c4, c3, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->RGBA2BGRapply(GetParam());    \
+        this->RGBA2BGRapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -503,7 +503,7 @@ R5(UT_RGBA2BGR_uint8_t_aarch64, uint8_t, c4, c3, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->RGBA2BGRAapply(GetParam());   \
+        this->RGBA2BGRAapply(GetParam());    \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -515,7 +515,7 @@ R6(UT_RGBA2BGRA_uint8_t_aarch64, uint8_t, c4, c4, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->BGR2RGBapply(GetParam());     \
+        this->BGR2RGBapply(GetParam());      \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -526,7 +526,7 @@ R7(UT_BGR2RGB_uint8_t_aarch64, uint8_t, c3, c3, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->BGR2RGBAapply(GetParam());    \
+        this->BGR2RGBAapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -537,7 +537,7 @@ R8(UT_BGR2RGBA_uint8_t_aarch64, uint8_t, c3, c4, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->BGR2BGRAapply(GetParam());    \
+        this->BGR2BGRAapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -549,7 +549,7 @@ R9(UT_BGR2BGRA_uint8_t_aarch64, uint8_t, c3, c4, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->BGRA2RGBapply(GetParam());    \
+        this->BGRA2RGBapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -560,7 +560,7 @@ R10(UT_BGRA2RGB_uint8_t_aarch64, uint8_t, c4, c3, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->BGRA2RGBAapply(GetParam());   \
+        this->BGRA2RGBAapply(GetParam());    \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 
@@ -571,7 +571,7 @@ R11(UT_BGRA2RGBA_uint8_t_aarch64, uint8_t, c4, c4, 1.01)
     using name = RGBInnerConvert<t, ic, oc>; \
     TEST_P(name, abc)                        \
     {                                        \
-        this->BGRA2BGRapply(GetParam());    \
+        this->BGRA2BGRapply(GetParam());     \
     }                                        \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff)));
 

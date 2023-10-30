@@ -58,17 +58,6 @@ public:
                 src.get(),
                 size.width * output_channels,
                 dst.get());
-            // for (int i = 0; i < size.height * size.width; i++) {
-            //     if (std::abs(dst.get()[i * 3] - dst_ref.get()[i * 3]) > 0.1 ||
-            //         std::abs(dst.get()[i * 3 + 1] - dst_ref.get()[i * 3 + 2]) > 0.1 ||
-            //         std::abs(dst.get()[i * 3 + 1] - dst_ref.get()[i * 3 + 2]) > 0.1) {
-            //         // printf("pplcv: h: %d s: %d v: %d \n",static_cast<int>(dst.get()[i*3]),static_cast<int>(dst.get()[i*3+1]),static_cast<int>(dst.get()[i*3+2]));
-            //         // printf("opencv: h: %d s: %d v: %d \n",static_cast<int>(dst_ref.get()[i*3]),static_cast<int>(dst_ref.get()[i*3+1]),static_cast<int>(dst_ref.get()[i*3+2]));
-            //         printf("pplcv: h: %f s: %f v: %f \n", dst.get()[i * 3], (dst.get()[i * 3 + 1]), (dst.get()[i * 3 + 2]));
-            //         printf("opencv: h: %f s: %f v: %f \n", dst_ref.get()[i * 3], (dst_ref.get()[i * 3 + 1]), (dst_ref.get()[i * 3 + 2]));
-            //         printf("\n");
-            //     }
-            // }
             checkResult<T, output_channels>(
                 dst_ref.get(),
                 dst.get(),
@@ -124,17 +113,6 @@ public:
                 src.get(),
                 size.width * output_channels,
                 dst.get());
-            // for (int i = 0; i < size.height * size.width; i++) {
-            //     if (std::abs(dst.get()[i * 3] - dst_ref.get()[i * 3]) > 0.001 ||
-            //         std::abs(dst.get()[i * 3 + 1] - dst_ref.get()[i * 3 + 1]) > 0.001 ||
-            //         std::abs(dst.get()[i * 3 + 2] - dst_ref.get()[i * 3 + 2]) > 0.001) {
-            //         // printf("pplcv: h: %d s: %d v: %d \n",static_cast<int>(dst.get()[i*3]),static_cast<int>(dst.get()[i*3+1]),static_cast<int>(dst.get()[i*3+2]));
-            //         // printf("opencv: h: %d s: %d v: %d \n",static_cast<int>(dst_ref.get()[i*3]),static_cast<int>(dst_ref.get()[i*3+1]),static_cast<int>(dst_ref.get()[i*3+2]));
-            //         printf("pplcv: h: %f s: %f v: %f \n", dst.get()[i * 3], (dst.get()[i * 3 + 1]), (dst.get()[i * 3 + 2]));
-            //         printf("opencv: h: %f s: %f v: %f \n", dst_ref.get()[i * 3], (dst_ref.get()[i * 3 + 1]), (dst_ref.get()[i * 3 + 2]));
-            //         printf("\n");
-            //     }
-            // }
             checkResult<T, output_channels>(
                 dst_ref.get(),
                 dst.get(),
@@ -171,12 +149,12 @@ constexpr int32_t c2 = 2;
 constexpr int32_t c3 = 3;
 constexpr int32_t c4 = 4;
 
-#define R1(name, t, ic, oc, diff, mode)    \
+#define R1(name, t, ic, oc, diff, mode)  \
     using name = RGB2HSV<t, ic, oc>;     \
-    TEST_P(name, abc)                      \
-    {                                      \
+    TEST_P(name, abc)                    \
+    {                                    \
         this->RGB2HSVAapply(GetParam()); \
-    }                                      \
+    }                                    \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff), ::testing::Values(mode)));
 
 R1(UT_RGB2HSV_uint8_t_aarch64, uint8_t, c3, c3, 1.01, 1)
@@ -185,12 +163,12 @@ R1(UT_RGB2HSV_float32_t_aarch64, float32_t, c3, c3, 1e-4, 1)
 R1(UT_BGR2HSV_uint8_t_aarch64, uint8_t, c3, c3, 1.01, 2)
 R1(UT_BGR2HSV_float32_t_aarch64, float32_t, c3, c3, 1e-4, 2)
 
-#define R2(name, t, ic, oc, diff, mode)    \
+#define R2(name, t, ic, oc, diff, mode)  \
     using name = RGB2HSV<t, ic, oc>;     \
-    TEST_P(name, abc)                      \
-    {                                      \
+    TEST_P(name, abc)                    \
+    {                                    \
         this->HSV2RGBAapply(GetParam()); \
-    }                                      \
+    }                                    \
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff), ::testing::Values(mode)));
 
 R2(UT_HSV2RGB_uint8_t_aarch64, uint8_t, c3, c3, 1.01, 1)
