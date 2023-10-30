@@ -72,10 +72,6 @@ namespace arm {
 //     return ppl::common::RC_SUCCESS;
 // }
 
-// float rgb -> bgr
-// float rgb -> bgra
-// float rgba -> bgr
-// float rgba -> bgra
 template <int32_t ncSrc, int32_t ncDst>
 ::ppl::common::RetCode cvt_color_rgb2bgr_f32(
     const int32_t height,
@@ -208,10 +204,6 @@ template <int32_t ncSrc, int32_t ncDst>
     return ppl::common::RC_SUCCESS;
 }
 
-// float bgr -> rgb
-// float bgr -> rgba
-// float bgra -> rgb
-// float bgra -> rgba
 template <int32_t ncSrc, int32_t ncDst>
 ::ppl::common::RetCode cvt_color_bgr2rgb_f32(
     const int32_t height,
@@ -344,10 +336,6 @@ template <int32_t ncSrc, int32_t ncDst>
     return ppl::common::RC_SUCCESS;
 }
 
-// float bgr -> bgra
-// float bgra -> bgr
-// float rgb -> rgba
-// float rgba -> rgb
 template <int32_t ncSrc, int32_t ncDst>
 ::ppl::common::RetCode cvt_color_rgb2rgb_f32(
     const int32_t height,
@@ -435,17 +423,12 @@ template <int32_t ncSrc, int32_t ncDst>
 
         for (i = 0; i <= width - 8; i += 8) {
             srcType v_src0 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * i);
-            // srcType v_src1 = vldx_u8_f32<ncSrc, uint8_t, srcType>(srcPtr + ncSrc * (i + 4));
 
             v_dst0.val[0] = v_src0.val[0];
             v_dst0.val[1] = v_src0.val[1];
             v_dst0.val[2] = v_src0.val[2];
-            // v_dst1.val[0] = v_src1.val[0];
-            // v_dst1.val[1] = v_src1.val[1];
-            // v_dst1.val[2] = v_src1.val[2];
 
             vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * i, v_dst0);
-            // vstx_u8_f32<ncDst, uint8_t, dstType>(dstPtr + ncDst * (i + 4), v_dst1);
         }
 
         for (; i < width; i++) {

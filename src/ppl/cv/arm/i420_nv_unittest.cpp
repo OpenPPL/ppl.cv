@@ -350,10 +350,8 @@ constexpr int32_t c4 = 4;
     INSTANTIATE_TEST_CASE_P(standard, name, ::testing::Combine(::testing::Values(Size{320, 256}, Size{720, 480}), ::testing::Values(diff), ::testing::Values(mode)));
 
 R1(UT_NV122I420_uint8_t_aarch64, uint8_t, c1, c1, 1.01, 1)
-// R1(UT_NV2I420_float32_t_aarch64, float32_t, c3, c3, 1e-4, 1)
 
 R1(UT_NV212I420_uint8_t_aarch64, uint8_t, c1, c1, 1.01, 2)
-// R1(UT_BGR2YCRCB_float32_t_aarch64, float32_t, c3, c3, 1e-4, 2)
 
 #define R2(name, t, ic, oc, diff, mode)  \
     using name = NV2I420<t, ic, oc>;     \

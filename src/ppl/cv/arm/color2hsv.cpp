@@ -163,9 +163,8 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             float32x4_t vMin = vminq_f32(vminq_f32(r, g), b);
             float32x4_t vDiff = vsubq_f32(vMax, vMin);
             v_dst.val[2] = vMax; // v
-            v_dst.val[1] = vdivq_f32(vDiff,vaddq_f32(vMax, vdupq_n_f32(FLT_EPSILON)));
+            v_dst.val[1] = vdivq_f32(vDiff, vaddq_f32(vMax, vdupq_n_f32(FLT_EPSILON)));
             vDiff = vdivq_f32(vdupq_n_f32(60.0f), vaddq_f32(vDiff, vdupq_n_f32(FLT_EPSILON))); // s
-            // float32x4_t vb = vceqq_f32(vMax, b);
             // fast_op is (a-b)*c
             auto fast_op = [](float32x4_t& a_vec, float32x4_t& b_vec, float32x4_t& c_vec) {
                 return vmulq_f32(vsubq_f32(a_vec, b_vec), c_vec);
@@ -178,23 +177,18 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             // h
             auto clac_h = [&vMax, &b, &g, &vb_h, &vg_h, &vr_h](const int ii, float32x4_t& dst_vec) {
                 if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(b, ii)) {
-                    // std::cout << "case1 " << ii << " src_data: " << vgetq_lane_f32(vb_h, ii) << " dst_data: ";
                     dst_vec = vsetq_lane_f32(vgetq_lane_f32(vb_h, ii), dst_vec, ii);
                 } else if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(g, ii)) {
-                    // std::cout << "case2 " << ii << " src_data: " << vgetq_lane_f32(vg_h, ii) << " dst_data: ";
                     dst_vec = vsetq_lane_f32(vgetq_lane_f32(vg_h, ii), dst_vec, ii);
                 } else {
-                    // std::cout << "case3 " << ii << " src_data: " << vgetq_lane_f32(vr_h, ii) << " dst_data: ";
                     dst_vec = vsetq_lane_f32(vgetq_lane_f32(vr_h, ii), dst_vec, ii);
                 }
-                // std::cout << vgetq_lane_f32(dst_vec, ii) << std::endl;
             };
             clac_h(0, (v_dst.val[0]));
             clac_h(1, (v_dst.val[0]));
             clac_h(2, (v_dst.val[0]));
             clac_h(3, (v_dst.val[0]));
             v_dst.val[0] = vaddq_f32(v_dst.val[0], vcvtq_f32_u32(vandq_u32(vcltq_f32(v_dst.val[0], vdupq_n_f32(0)), vdupq_n_u32(360))));
-            // std::cout << std::endl;
             vst3q_f32(dstPtr, v_dst);
             srcPtr += 4 * ncSrc;
             dstPtr += 4 * ncDst;
@@ -260,8 +254,8 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
         //  }
         for (; j < width; j++) {
             float32_t h = static_cast<float32_t>(srcPtr[0]);
-            float32_t s = static_cast<float32_t>(srcPtr[ 1]);
-            float32_t v = static_cast<float32_t>(srcPtr[ 2]);
+            float32_t s = static_cast<float32_t>(srcPtr[1]);
+            float32_t v = static_cast<float32_t>(srcPtr[2]);
             s *= (1.f / 255.f);
             v *= (1.f / 255.f);
             float32_t b, g, r;
@@ -298,17 +292,17 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             g = tab[c_HsvSectorData[sector][1]];
             r = tab[c_HsvSectorData[sector][2]];
             if (RGB == srcColorType || RGBA == srcColorType) {
-                dstPtr[0] = (uint8_t)(r*255.f);
-                dstPtr[1] = (uint8_t)(g*255.f);
-                dstPtr[2] = (uint8_t)(b*255.f);
+                dstPtr[0] = (uint8_t)(r * 255.f);
+                dstPtr[1] = (uint8_t)(g * 255.f);
+                dstPtr[2] = (uint8_t)(b * 255.f);
                 if (RGBA == srcColorType) {
                     dstPtr[4] = 255;
                 }
             } else {
                 // BGR BGRA
-                dstPtr[2] = (uint8_t)(r*255.f);
-                dstPtr[1] = (uint8_t)(g*255.f);
-                dstPtr[0] = (uint8_t)(b*255.f);
+                dstPtr[2] = (uint8_t)(r * 255.f);
+                dstPtr[1] = (uint8_t)(g * 255.f);
+                dstPtr[0] = (uint8_t)(b * 255.f);
                 if (BGRA == srcColorType) {
                     dstPtr[4] = 255;
                 }
