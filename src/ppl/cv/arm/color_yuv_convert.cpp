@@ -31,7 +31,7 @@ enum COLOR_YUV_TYPE {
 };
 inline void yuv_to_bgr_op(uint8_t y, uint8_t u, uint8_t v, uint8_t* bgr_dst)
 {
-    int32_t yy = std::max(0,(static_cast<int32_t>(y) - 16)) * ITUR_BT_601_CY;
+    int32_t yy = std::max(0, (static_cast<int32_t>(y) - 16)) * ITUR_BT_601_CY;
     int32_t uu = static_cast<int32_t>(u) - 128;
     int32_t vv = static_cast<int32_t>(v) - 128;
 
@@ -46,7 +46,7 @@ inline void yuv_to_bgr_vec_op(uint8x8_t& y_vec, uint8x8_t& u_vec, uint8x8_t& v_v
         // R = (1220542(Y - 16) + 1673527(V - 128)                  + (1 << 19)) >> 20
         // G = (1220542(Y - 16) - 852492(V - 128) - 409993(U - 128) + (1 << 19)) >> 20
         // B = (1220542(Y - 16)                  + 2116026(U - 128) + (1 << 19)) >> 20
-        auto yy = vmulq_s32(vdupq_n_s32(ITUR_BT_601_CY), vmaxq_s32(vdupq_n_s32(0),vsubq_s32(y_half_vec, vdupq_n_s32(16))));
+        auto yy = vmulq_s32(vdupq_n_s32(ITUR_BT_601_CY), vmaxq_s32(vdupq_n_s32(0), vsubq_s32(y_half_vec, vdupq_n_s32(16))));
         auto uu = vsubq_s32(u_half_vec, vdupq_n_s32(128));
         auto vv = vsubq_s32(v_half_vec, vdupq_n_s32(128));
 
@@ -88,25 +88,13 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
     const uint8_t* src_ptr = src;
     uint8_t* dst_ptr = dst;
     uint8x8_t y1, y2, u, v;
-    
+
     for (int i = 0; i < height; i++) {
         int j = 0;
         if (YUV == yuvType) {
-            memcpy(dst_ptr,src_ptr,width);
+            memcpy(dst_ptr, src_ptr, width);
             src_ptr += width;
             dst_ptr += width;
-            
-            // for (; j < width - 8; j += 8) {
-            //     uint8x8_t y = vld1_u8(src_ptr);
-            //     vst1_u8(dst_ptr, y);
-            //     dst_ptr += 1 * 8;
-            //     src_ptr += 1 * 8;
-            // }
-            // for (; j < width; j++) {
-            //     dst_ptr[j] = src_ptr[0];
-            //     dst_ptr += 1;
-            //     src_ptr += 1;
-            // }
         } else {
             // UYVY YUYV
             for (; j < width - 16; j += 16) {
@@ -126,9 +114,9 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
                 src_ptr += ncSrc * 16;
             }
             for (; j < width; j++) {
-                if(UYVY == yuvType){
+                if (UYVY == yuvType) {
                     dst_ptr[0] = src_ptr[1];
-                }else{
+                } else {
                     dst_ptr[0] = src_ptr[0];
                 }
                 dst_ptr += ncDst;
@@ -164,31 +152,29 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
     for (int i = 0; i < height; i++) {
         int j = 0;
         if (YUV == yuvType) {
-            for (; j < width - 32; j += 32) {
+            // process two row
+            y_ptr = src_ptr + i * width;
+            const uint8_t* y_next_row_ptr = y_ptr + width;
+            dst_ptr = dst + i * width * 3;
+            uint8_t* dst_next_row_ptr = dst_ptr + width * ncDst;
+
+            for (; j < width - 16; j += 16) {
                 y1 = vld1_u8(y_ptr);
                 y2 = vld1_u8(y_ptr + 8);
-                uint8x8_t y3 = vld1_u8(y_ptr + 16);
-                uint8x8_t y4 = vld1_u8(y_ptr + 24);
-                uint8x8_t u1, u2, u3, u4, v1, v2, v3, v4;
+                uint8x8_t y3 = vld1_u8(y_next_row_ptr);
+                uint8x8_t y4 = vld1_u8(y_next_row_ptr + 8);
+                uint8x8_t u1, u2, v1, v2;
                 u = vld1_u8(u_ptr);
                 {
                     uint8x8x2_t u_temp = vzip_u8(u, u);
-                    uint8x8x2_t u1_temp = vzip_u8(u_temp.val[0], u_temp.val[0]);
-                    uint8x8x2_t u2_temp = vzip_u8(u_temp.val[1], u_temp.val[1]);
-                    u1 = u1_temp.val[0];
-                    u2 = u1_temp.val[1];
-                    u3 = u2_temp.val[0];
-                    u4 = u2_temp.val[1];
+                    u1 = u_temp.val[0];
+                    u2 = u_temp.val[1];
                 }
                 v = vld1_u8(v_ptr);
                 {
                     uint8x8x2_t v_temp = vzip_u8(v, v);
-                    uint8x8x2_t v1_temp = vzip_u8(v_temp.val[0], v_temp.val[0]);
-                    uint8x8x2_t v2_temp = vzip_u8(v_temp.val[1], v_temp.val[1]);
-                    v1 = v1_temp.val[0];
-                    v2 = v1_temp.val[1];
-                    v3 = v2_temp.val[0];
-                    v4 = v2_temp.val[1];
+                    v1 = v_temp.val[0];
+                    v2 = v_temp.val[1];
                 }
 
                 uint8x8x3_t dst_bgr_vec;
@@ -198,31 +184,40 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
                 yuv_to_bgr_vec_op(y2, u2, v2, dst_bgr_vec);
                 vst3_u8(dst_ptr, dst_bgr_vec);
                 dst_ptr += ncDst * 8;
-                yuv_to_bgr_vec_op(y3, u3, v3, dst_bgr_vec);
-                vst3_u8(dst_ptr, dst_bgr_vec);
-                dst_ptr += ncDst * 8;
-                yuv_to_bgr_vec_op(y4, u4, v4, dst_bgr_vec);
-                vst3_u8(dst_ptr, dst_bgr_vec);
-                dst_ptr += ncDst * 8;
+                yuv_to_bgr_vec_op(y3, u1, v1, dst_bgr_vec);
+                vst3_u8(dst_next_row_ptr, dst_bgr_vec);
+                dst_next_row_ptr += ncDst * 8;
+                yuv_to_bgr_vec_op(y4, u2, v2, dst_bgr_vec);
+                vst3_u8(dst_next_row_ptr, dst_bgr_vec);
+                dst_next_row_ptr += ncDst * 8;
 
-                y_ptr += 32;
+                y_ptr += 16;
+                y_next_row_ptr += 16;
                 u_ptr += 8;
                 v_ptr += 8;
             }
-            int32_t uv_flag{0};
-            for (; j < width; j++) {
-                uint8_t y_data = y_ptr[0], u_data = u_ptr[0], v_data = v_ptr[0];
-                yuv_to_bgr_op(y_data, u_data, v_data, dst_ptr);
-                y_ptr += 1;
-                if (4 == uv_flag) {
-                    u_ptr += 1;
-                    v_ptr += 1;
-                    uv_flag = 0;
-                } else {
-                    uv_flag++;
-                }
+
+            for (; j < width; j += 2) {
+                uint8_t y00_data = y_ptr[0];
+                uint8_t y01_data = y_ptr[1];
+                uint8_t y10_data = y_next_row_ptr[0];
+                uint8_t y11_data = y_next_row_ptr[1];
+                uint8_t u_data = u_ptr[0];
+                uint8_t v_data = v_ptr[0];
+                yuv_to_bgr_op(y00_data, u_data, v_data, dst_ptr);
                 dst_ptr += ncDst;
+                yuv_to_bgr_op(y01_data, u_data, v_data, dst_ptr);
+                dst_ptr += ncDst;
+                yuv_to_bgr_op(y10_data, u_data, v_data, dst_next_row_ptr);
+                dst_next_row_ptr += ncDst;
+                yuv_to_bgr_op(y11_data, u_data, v_data, dst_next_row_ptr);
+                dst_next_row_ptr += ncDst;
+                y_ptr += 2;
+                y_next_row_ptr += 2;
+                u_ptr++;
+                v_ptr++;
             }
+            i++;
         } else {
             // UYVY YUYV
             for (; j < width - 16; j += 16) {
@@ -274,7 +269,7 @@ template <COLOR_YUV_TYPE yuvType, int32_t ncSrc, int32_t ncDst>
     return ppl::common::RC_SUCCESS;
 }
 
-//YUV420
+// YUV420
 template <>
 ::ppl::common::RetCode YUV2GRAY<uint8_t>(
     int32_t height,
