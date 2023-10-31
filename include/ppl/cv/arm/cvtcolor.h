@@ -2190,6 +2190,61 @@ template <typename T>
     int32_t outWidthStride,
     T* outData);
 
+/**
+ * @brief Convert I420 images to NV12 images,format: YYYYUUUUVVVV -> YYYYUVUVUVUV
+ * @tparam T The data type, used for both input image and output image, currently only \a uint8_t is supported.
+ * @tparam ncSrc The number of channels of input image, 1 is supported.
+ * @tparam ncDst The number of channels of output image, 1 is supported.
+ * @param height            input image's height
+ * @param width             input image's width need to be processed
+ * @param inYStride         stride of y dimension, usually it equals to `width`
+ * @param inY               input image data of y
+ * @param inUStride         stride of u dimension, usually it equals to `width / 2`
+ * @param inU               input image data of u
+ * @param inVStride         stride of v dimension, usually it equals to `width / 2`
+ * @param inv               input image data of v
+ * @param outYStride        the width stride of output Y image, usually it equals to `width`
+ * @param outY              output Y data
+ * @param outUVStride       the width stride of output UV image, usually it equals to `width`
+ * @param outUV             output UV data
+ * @warning All input parameters must be valid, or undefined behaviour may occur.
+ * @remark The following table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>ncSrc<th>ncDst
+ * <tr><td>uint8_t(uchar)<td>1<td>1
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td> ARM platforms supported<td> armv7 armv8
+ * <tr><td> Header files<td> #include &lt;ppl/cv/arm/cvtcolor.h&gt;
+ * <tr><td> Project<td> ppl.cv
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include <ppl/cv/arm/cvtcolor.h>
+ * #include <stdlib.h>
+ * int main(int argc, char** argv) {
+ *     const int W = 640;
+ *     const int H = 480;
+ *     const int input_channels = 1;
+ *     const int output_channels = 1;
+ *     uint8_t* dev_iImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_iImage_u = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ *     uint8_t* dev_iImage_v = (uint8_t*)malloc(W * H / 4 * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_y = (uint8_t*)malloc(W * H * sizeof(uint8_t));
+ *     uint8_t* dev_oImage_uv = (uint8_t*)malloc(W * H / 2 * sizeof(uint8_t));
+ *
+ *     ppl::cv::arm::I4202NV12<uint8_t, 1, 1>(H, W, W, dev_iImage_y, W / 2, dev_iImage_u, W / 2, dev_iImage_v, W, dev_oImage_y, W, dev_oImage_uv);
+ *
+ *     free(dev_iImage_y);
+ *     free(dev_iImage_u);
+ *     free(dev_iImage_v);
+ *     free(dev_oImage_y);
+ *     free(dev_oImage_uv);
+ *     return 0;
+ * }
+ * @endcode
+ ****************************************************************************************************/
 template <typename T>
 ::ppl::common::RetCode I4202NV12(
     int32_t height,

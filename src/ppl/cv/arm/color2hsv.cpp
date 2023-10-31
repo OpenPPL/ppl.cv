@@ -249,9 +249,7 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
     uint8_t* dstPtr = dst;
     for (int32_t i = 0; i < height; i++) {
         int32_t j = 0;
-        // need 向量化加速
-        //  for (; j < width - 8; j += 8) {
-        //  }
+        
         for (; j < width; j++) {
             float32_t h = static_cast<float32_t>(srcPtr[0]);
             float32_t s = static_cast<float32_t>(srcPtr[1]);
@@ -334,11 +332,7 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
     for (int32_t k = 0; k < height; k++) {
         dstType v_dst;
         int32_t i{0};
-        // need 向量化加速
-        //  for (i = 0; i <= width - 4; i += 4) {
-        //      srcType v_src = vldx_u8_f32<ncSrc, float32_t, srcType>(srcPtr + ncSrc * i * 4);
-        //      float32x4_t h, s, v;
-        //  }
+        
         for (; i < width; i++) {
             float32_t h = srcPtr[0], s = srcPtr[1], v = srcPtr[2];
             float32_t _1_60 = 1.f / 60.f;
