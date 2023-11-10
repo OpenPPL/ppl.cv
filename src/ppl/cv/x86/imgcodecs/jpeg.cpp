@@ -111,7 +111,7 @@ static const uint8_t dezigzag_indices[64 + 15] = {
     63, 63, 63, 63, 63, 63, 63
 };
 
-// (1 << n) - 1
+// replaced with (1 << n) - 1 ?
 static const uint32_t bit_mask[17] = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511,
     1023, 2047, 4095, 8191, 16383, 32767, 65535};
 // bias[n] = (-1<<n) + 1
@@ -448,6 +448,184 @@ static void YCbCr2BGRSse(uint8_t *out, uint8_t const *y, uint8_t const *pcb,
     }
 }
 
+/* static uint8_t *resampleRowHV2(uint8_t *out, uint8_t *in_near, uint8_t *in_far,
+                               int32_t width, int32_t hs) {
+    // need to generate 2x2 samples for every one in input
+    int32_t i, t0, t1;
+    if (width == 1) {
+        out[0] = out[1] = DIVIDE4(3 * in_near[0] + in_far[0] + 2);
+        return out;
+    }
+
+    t1 = 3 * in_near[0] + in_far[0];
+    out[0] = DIVIDE4(t1 + 2);
+
+    __m128i packed3 = _mm_set_epi16(3, 3, 3, 3, 3, 3, 3, 3);
+    __m128i packed8 = _mm_set_epi16(8, 8, 8, 8, 8, 8, 8, 8);
+    __m128i order   = _mm_set_epi8(15, 7, 14, 6, 13, 5, 12, 4, 11, 3, 10, 2, 9,
+                                   1, 8, 0);
+    __m128i value_near, value_far;
+    __m128i value0, value1, value2, value3, value4, sum0, sum1;
+
+    uint8_t* src0 = in_near;
+    uint8_t* src1 = in_far;
+    uint8_t* dst = out + 1;
+    for (i = 0; i <= width - 8; i += 8) {
+        value_near = _mm_loadu_si128((__m128i const*)src0);
+        value_far  = _mm_loadu_si128((__m128i const*)src1);
+
+        // process the first 8 elements.
+        // t0 = 3 * in_near[i - 1] + in_far[i - 1];
+        value0 = _mm_cvtepu8_epi16(value_near);
+        value1 = _mm_mullo_epi16(value0, packed3);
+        value2 = _mm_cvtepu8_epi16(value_far);
+        sum0 = _mm_add_epi16(value1, value2);
+
+        // t1 = 3 * in_near[i] + in_far[i];
+        value3 = _mm_srli_si128(value_near, 1);
+        value4 = _mm_srli_si128(value_far, 1);
+        value0 = _mm_cvtepu8_epi16(value3);
+        value1 = _mm_mullo_epi16(value0, packed3);
+        value2 = _mm_cvtepu8_epi16(value4);
+        sum1 = _mm_add_epi16(value1, value2);
+
+        // out[i * 2 - 1] = DIVIDE16(3 * t0 + t1 + 8);
+        value0 = _mm_mullo_epi16(sum0, packed3);
+        value1 = _mm_add_epi16(sum1, packed8);
+        value2 = _mm_add_epi16(value0, value1);
+        value3 = _mm_srli_epi16(value2, 4);
+        // out[i * 2]     = DIVIDE16(3 * t1 + t0 + 8);
+        value0 = _mm_mullo_epi16(sum1, packed3);
+        value1 = _mm_add_epi16(sum0, packed8);
+        value2 = _mm_add_epi16(value0, value1);
+        value4 = _mm_srli_epi16(value2, 4);
+
+        // store: i * 2 + 1
+        value0 = _mm_packus_epi16(value3, value4);
+        value1 = _mm_shuffle_epi8(value0, order);
+        _mm_storeu_si128((__m128i*)dst, value1);
+
+        src0 += 8;
+        src1 += 8;
+        dst += 16;
+    }
+
+    t1 = 3 * in_near[i - 1] + in_far[i - 1];
+    for (; i < width; ++i) {
+        t0 = t1;
+        t1 = 3 * in_near[i] + in_far[i];
+        out[i * 2 - 1] = DIVIDE16(3 * t0 + t1 + 8);
+        out[i * 2]     = DIVIDE16(3 * t1 + t0 + 8);
+    }
+    out[width * 2 - 1] = DIVIDE4(t1 + 2);
+
+    return out;
+} */
+
+static uint8_t *resampleRowHV2(uint8_t *out, uint8_t *in_near, uint8_t *in_far,
+                               int32_t width, int32_t hs) {
+    // need to generate 2x2 samples for every one in input
+    int32_t i, t0, t1;
+    if (width == 1) {
+        out[0] = out[1] = DIVIDE4(3 * in_near[0] + in_far[0] + 2);
+        return out;
+    }
+
+    t1 = 3 * in_near[0] + in_far[0];
+    out[0] = DIVIDE4(t1 + 2);
+
+    __m128i packed3 = _mm_set_epi16(3, 3, 3, 3, 3, 3, 3, 3);
+    __m128i packed8 = _mm_set_epi16(8, 8, 8, 8, 8, 8, 8, 8);
+    __m128i order   = _mm_set_epi8(15, 7, 14, 6, 13, 5, 12, 4, 11, 3, 10, 2, 9,
+                                   1, 8, 0);
+    __m128i value_near, value_far, result0, result1;
+    __m128i value0, value1, value2, value3, value4, sum0, sum1;
+
+    uint8_t* src0 = in_near;
+    uint8_t* src1 = in_far;
+    uint8_t* dst = out + 1;
+    for (i = 0; i <= width - 16; i += 15) {
+        value_near = _mm_loadu_si128((__m128i const*)src0);
+        value_far  = _mm_loadu_si128((__m128i const*)src1);
+
+        // process the first 8 elements.
+        // t0 = 3 * in_near[i - 1] + in_far[i - 1];
+        value0 = _mm_cvtepu8_epi16(value_near);
+        value1 = _mm_mullo_epi16(value0, packed3);
+        value2 = _mm_cvtepu8_epi16(value_far);
+        sum0 = _mm_add_epi16(value1, value2);
+
+        // t1 = 3 * in_near[i] + in_far[i];
+        value3 = _mm_srli_si128(value_near, 1);
+        value4 = _mm_srli_si128(value_far, 1);
+        value0 = _mm_cvtepu8_epi16(value3);
+        value1 = _mm_mullo_epi16(value0, packed3);
+        value2 = _mm_cvtepu8_epi16(value4);
+        sum1 = _mm_add_epi16(value1, value2);
+
+        // out[i * 2 - 1] = DIVIDE16(3 * t0 + t1 + 8);
+        value0 = _mm_mullo_epi16(sum0, packed3);
+        value1 = _mm_add_epi16(sum1, packed8);
+        value2 = _mm_add_epi16(value0, value1);
+        value3 = _mm_srli_epi16(value2, 4);
+        // out[i * 2]     = DIVIDE16(3 * t1 + t0 + 8);
+        value0 = _mm_mullo_epi16(sum1, packed3);
+        value1 = _mm_add_epi16(sum0, packed8);
+        value2 = _mm_add_epi16(value0, value1);
+        value4 = _mm_srli_epi16(value2, 4);
+
+        // store: i * 2 + 1
+        value0 = _mm_packus_epi16(value3, value4);
+        value1 = _mm_shuffle_epi8(value0, order);
+        _mm_storeu_si128((__m128i*)dst, value1);
+        dst += 16;
+
+        // process the last 7 elements.
+        value_near = _mm_srli_si128(value_near, 8);
+        value_far  = _mm_srli_si128(value_far, 8);
+        value0 = _mm_cvtepu8_epi16(value_near);
+        value1 = _mm_mullo_epi16(value0, packed3);
+        value2 = _mm_cvtepu8_epi16(value_far);
+        sum0 = _mm_add_epi16(value1, value2);
+
+        value3 = _mm_srli_si128(value_near, 1);
+        value4 = _mm_srli_si128(value_far, 1);
+        value0 = _mm_cvtepu8_epi16(value3);
+        value1 = _mm_mullo_epi16(value0, packed3);
+        value2 = _mm_cvtepu8_epi16(value4);
+        sum1 = _mm_add_epi16(value1, value2);
+
+        value0 = _mm_mullo_epi16(sum0, packed3);
+        value1 = _mm_add_epi16(sum1, packed8);
+        value2 = _mm_add_epi16(value0, value1);
+        value3 = _mm_srli_epi16(value2, 4);
+        value0 = _mm_mullo_epi16(sum1, packed3);
+        value1 = _mm_add_epi16(sum0, packed8);
+        value2 = _mm_add_epi16(value0, value1);
+        value4 = _mm_srli_epi16(value2, 4);
+
+        value0 = _mm_packus_epi16(value3, value4);
+        value1 = _mm_shuffle_epi8(value0, order);
+        _mm_storeu_si128((__m128i*)dst, value1);
+
+        src0 += 15;
+        src1 += 15;
+        dst += 14;
+    }
+
+    t1 = 3 * in_near[i - 1] + in_far[i - 1];
+    for (; i < width; ++i) {
+        t0 = t1;
+        t1 = 3 * in_near[i] + in_far[i];
+        out[i * 2 - 1] = DIVIDE16(3 * t0 + t1 + 8);
+        out[i * 2]     = DIVIDE16(3 * t1 + t0 + 8);
+    }
+    out[width * 2 - 1] = DIVIDE4(t1 + 2);
+
+    return out;
+}
+
+/*
 static uint8_t *resampleRowHV2(uint8_t *out, uint8_t *in_near, uint8_t *in_far,
                                int32_t width, int32_t hs) {
     // need to generate 2x2 samples for every one in input
@@ -468,7 +646,7 @@ static uint8_t *resampleRowHV2(uint8_t *out, uint8_t *in_near, uint8_t *in_far,
     out[width * 2 - 1] = DIVIDE4(t1 + 2);
 
     return out;
-}
+} */
 
 static uint8_t *resampleRow1(uint8_t *out, uint8_t *in_near, uint8_t *in_far,
                              int32_t width, int32_t hs) {
@@ -530,6 +708,56 @@ static uint8_t blinn8x8(uint8_t x, uint8_t y) {
 
 static uint8_t computeY(int32_t r, int32_t g, int32_t b) {
     return (uint8_t)((r * 77 + g * 150 + 29 * b) >> 8);
+}
+
+static void RGB2YSSE(uint8_t* input0, uint8_t* input1, uint8_t* input2,
+                     uint8_t* output, uint32_t width) {
+    __m128i rs, gs, bs, rs0, rs1, gs0, gs1, bs0, bs1;
+    __m128i sum0, sum1, value0, value1, packed_output;
+    __m128i packed77  = _mm_set_epi16(77, 77, 77, 77, 77, 77, 77, 77);
+    __m128i packed150 = _mm_set_epi16(150, 150, 150, 150, 150, 150, 150, 150);
+    __m128i packed29  = _mm_set_epi16(29, 29, 29, 29, 29, 29, 29, 29);
+
+    int32_t index = 0;
+    for (; index <= width - 32; index += 32) {
+        rs = _mm_loadu_si128((__m128i const*)input0);
+        gs = _mm_loadu_si128((__m128i const*)input1);
+        bs = _mm_loadu_si128((__m128i const*)input2);
+        rs0 = _mm_cvtepu8_epi16(rs);
+        gs0 = _mm_cvtepu8_epi16(gs);
+        bs0 = _mm_cvtepu8_epi16(bs);
+        rs = _mm_srli_si128(rs, 8);
+        gs = _mm_srli_si128(gs, 8);
+        bs = _mm_srli_si128(bs, 8);
+        rs1 = _mm_cvtepu8_epi16(rs);
+        gs1 = _mm_cvtepu8_epi16(gs);
+        bs1 = _mm_cvtepu8_epi16(bs);
+
+        rs = _mm_mullo_epi16(rs0, packed77);
+        gs = _mm_mullo_epi16(gs0, packed150);
+        bs = _mm_mullo_epi16(bs0, packed29);
+        sum0 = _mm_add_epi16(rs, gs);
+        sum1 = _mm_add_epi16(sum0, bs);
+        value0 = _mm_srli_epi16(sum1, 8);
+
+        rs = _mm_mullo_epi16(rs1, packed77);
+        gs = _mm_mullo_epi16(gs1, packed150);
+        bs = _mm_mullo_epi16(bs1, packed29);
+        sum0 = _mm_add_epi16(rs, gs);
+        sum1 = _mm_add_epi16(sum0, bs);
+        value1 = _mm_srli_epi16(sum1, 8);
+
+        packed_output = _mm_packus_epi16(value0, value1);
+        _mm_storeu_si128((__m128i*)output, packed_output);
+        input0 += 32;
+        input1 += 32;
+        input2 += 32;
+        output += 32;
+    }
+
+    for (; index < width; ++index) {
+        output[index] = computeY(input0[index], input1[index], input2[index]);
+    }
 }
 
 JpegDecoder::JpegDecoder(BytesReader& file_data) {
@@ -2041,7 +2269,7 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
     return true;
 }
 
-// decode one 64-entry block.
+// decode a 8x8 block from huffman encoding + zigzag ordering + quantization.
 bool JpegDecoder::decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
                               HuffmanLookupTable *huffman_dc,
                               HuffmanLookupTable *huffman_ac,
@@ -2134,7 +2362,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                 }
             }
             return true;
-        } else {  // interleaved
+        } else {  // n components
             // std::cout << "before decodeBlock, scan_n: " << jpeg->scan_n << std::endl;
             int32_t i, j, k, x, y;
             SIMD_ALIGN16(int16_t, data[64]);
@@ -2215,7 +2443,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                 }
             }
             return true;
-        } else {  // interleaved
+        } else {  // n components
             int32_t i, j, k, x, y;
             for (j = 0; j < jpeg->mcus_y; ++j) {
                 for (i = 0; i < jpeg->mcus_x; ++i) {
@@ -2270,8 +2498,8 @@ bool JpegDecoder::sampleConvertColor(int32_t stride, uint8_t* image) {
     }
     else {
         decode_n = jpeg_->components;
-    // std::cout << std::dec << "decode_n: " << decode_n << std::endl;
     }
+    // std::cout << std::dec << "decode_n: " << decode_n << std::endl;
 
     // resample and color-convert
     uint32_t k, i, j;
@@ -2388,10 +2616,11 @@ bool JpegDecoder::sampleConvertColor(int32_t stride, uint8_t* image) {
         } else {  // n == 1
             if (is_rgb) {
                 if (n == 1) {
-                    for (i=0; i < width_; ++i) {
-                        *out++ = computeY(coutput[0][i], coutput[1][i],
-                                          coutput[2][i]);
-                    }
+                    // for (i = 0; i < width_; ++i) {
+                    //     *out++ = computeY(coutput[0][i], coutput[1][i],
+                    //                       coutput[2][i]);
+                    // }
+                    RGB2YSSE(coutput[0], coutput[1], coutput[2], out, width_);
                 }
                 else {
                     for (i = 0; i < width_; ++i, out += 2) {
@@ -2422,9 +2651,7 @@ bool JpegDecoder::sampleConvertColor(int32_t stride, uint8_t* image) {
                 // std::cout << "come in 1 channel." << std::endl;
                 uint8_t *y = coutput[0];
                 if (n == 1) {
-                    for (i = 0; i < width_; ++i) {
-                        out[i] = y[i];
-                    }
+                    memcpy(out, y, width_);
                 }
                 else {
                     for (i = 0; i < width_; ++i) {
