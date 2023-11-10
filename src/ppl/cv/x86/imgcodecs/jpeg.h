@@ -30,16 +30,8 @@ namespace cv {
 namespace x86 {
 
 // huffman decoding acceleration
-// #define FAST_BITS 9  // larger handles more cases; smaller stomps less cache
 #define BUFFER_BYTES 8
 #define BUFFER_BITS 64
-// #define BUFFER_BYTES 4
-// #define BUFFER_BITS 32
-// #define SHIFT_BYTES 3
-// #define JPEG_SHIFT_SIZE 24
-// #define BUFFER_BITS 64
-// #define JPEG_SHIFT_SIZE 56
-
 #define MAX_BITS 16
 #define LOOKAHEAD_BITS 9
 
@@ -94,7 +86,6 @@ typedef struct {
     } img_comp[4];
 
     uint64_t code_buffer; // jpeg entropy-coded buffer
-    // uint32_t code_buffer; // jpeg entropy-coded buffer
     int32_t code_bits;    // number of valid bits
     uint8_t marker;       // marker seen while filling entropy buffer
     int32_t nomore;       // flag if we saw a marker so must stop

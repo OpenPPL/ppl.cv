@@ -491,12 +491,12 @@ bool PplCvX86ImreadJpegTest::apply() {
     // std::cout << "test: " << test << std::endl;
 
     free(image);
-    if (identity == true) {
+    // if (identity == true) {
     int code = remove(file_name.c_str());
     if (code != 0) {
         std::cout << "failed to delete test.jpeg." << std::endl;
     }
-    }
+    // }
 
     // std::cout << "uint64_t: " << sizeof(uint64_t) << std::endl;
     // }
@@ -545,7 +545,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadJpegTest,
 // INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadJpegTest,
 //     ::testing::Combine(
 //         ::testing::Values(1),
-//         ::testing::Values(cv::Size{320, 240})),
+//         ::testing::Values(cv::Size{1920, 1080})),
 //     [](const testing::TestParamInfo<PplCvX86ImreadJpegTest::ParamType>& info) {
 //         return convertToStringJpeg(info.param);
 //     }

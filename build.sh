@@ -16,6 +16,7 @@ else
 fi
 
 build_type='Release'
+# build_type='RelWithDebInfo'
 options="-DCMAKE_BUILD_TYPE=${build_type}"
 
 # --------------------------------------------------------------------------- #
@@ -31,6 +32,7 @@ function BuildCuda() {
 function BuildX86_64() {
     mkdir ${x86_64_build_dir}
     cd ${x86_64_build_dir}
+    # cmd="cmake $options -DPPLCV_USE_X86_64=ON -DCMAKE_INSTALL_PREFIX=${x86_64_build_dir}/install .. && make VERBOSE=1 && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     cmd="cmake $options -DPPLCV_USE_X86_64=ON -DCMAKE_INSTALL_PREFIX=${x86_64_build_dir}/install .. && cmake --build . -j ${processor_num} --config ${build_type} && cmake --build . --target install -j ${processor_num} --config ${build_type}"
     echo "cmd -> $cmd"
     eval "$cmd"
