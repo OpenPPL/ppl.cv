@@ -25,6 +25,30 @@ namespace cv {
 namespace arm {
 
 namespace {
+template <int lane>
+inline float vgetq_lane_f32_indire(float32x4_t& a)
+{
+    return vgetq_lane_f32(a, lane);
+}
+
+template <int lane>
+inline float32x4_t vsetq_lane_f32_indire(float val, float32x4_t& b)
+{
+    return vsetq_lane_f32(val, b, lane);
+}
+
+template <int ii>
+void rgb_to_hsv_f32_clac_h(float32x4_t& vMax, float32x4_t& b, float32x4_t& g, float32x4_t& vb_h, float32x4_t& vg_h, float32x4_t& vr_h, float32x4_t& dst_vec)
+{
+    if (vgetq_lane_f32_indire<ii>(vMax) == vgetq_lane_f32_indire<ii>(b)) {
+        dst_vec = vsetq_lane_f32_indire<ii>(vgetq_lane_f32_indire<ii>(vb_h), dst_vec);
+    } else if (vgetq_lane_f32_indire<ii>(vMax) == vgetq_lane_f32_indire<ii>(g)) {
+        dst_vec = vsetq_lane_f32_indire<ii>(vgetq_lane_f32_indire<ii>(vg_h), dst_vec);
+    } else {
+        dst_vec = vsetq_lane_f32_indire<ii>(vgetq_lane_f32_indire<ii>(vr_h), dst_vec);
+    }
+}
+
 enum HSV_CONVERT_RGB_TYPE {
     RGB = 0,
     RGBA,
@@ -175,19 +199,10 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             float32x4_t vr_h = fast_op(g, b, vDiff);
 
             // h
-            auto clac_h = [&vMax, &b, &g, &vb_h, &vg_h, &vr_h](const int ii, float32x4_t& dst_vec) {
-                if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(b, ii)) {
-                    dst_vec = vsetq_lane_f32(vgetq_lane_f32(vb_h, ii), dst_vec, ii);
-                } else if (vgetq_lane_f32(vMax, ii) == vgetq_lane_f32(g, ii)) {
-                    dst_vec = vsetq_lane_f32(vgetq_lane_f32(vg_h, ii), dst_vec, ii);
-                } else {
-                    dst_vec = vsetq_lane_f32(vgetq_lane_f32(vr_h, ii), dst_vec, ii);
-                }
-            };
-            clac_h(0, (v_dst.val[0]));
-            clac_h(1, (v_dst.val[0]));
-            clac_h(2, (v_dst.val[0]));
-            clac_h(3, (v_dst.val[0]));
+            rgb_to_hsv_f32_clac_h<0>(vMax, b, g, vb_h, vg_h, vr_h, v_dst.val[0]);
+            rgb_to_hsv_f32_clac_h<1>(vMax, b, g, vb_h, vg_h, vr_h, v_dst.val[0]);
+            rgb_to_hsv_f32_clac_h<2>(vMax, b, g, vb_h, vg_h, vr_h, v_dst.val[0]);
+            rgb_to_hsv_f32_clac_h<3>(vMax, b, g, vb_h, vg_h, vr_h, v_dst.val[0]);
             v_dst.val[0] = vaddq_f32(v_dst.val[0], vcvtq_f32_u32(vandq_u32(vcltq_f32(v_dst.val[0], vdupq_n_f32(0)), vdupq_n_u32(360))));
             vst3q_f32(dstPtr, v_dst);
             srcPtr += 4 * ncSrc;
@@ -275,7 +290,7 @@ template <HSV_CONVERT_RGB_TYPE srcColorType, int32_t ncSrc, int32_t ncDst>
             int32_t sector = static_cast<int32_t>(h);
             h -= sector;
 
-            if ((unsigned int32_t)sector >= 6u) {
+            if ((unsigned int)sector >= 6u) {
                 sector = 0;
                 h = 0.f;
             }
