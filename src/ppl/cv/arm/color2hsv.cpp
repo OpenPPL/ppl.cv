@@ -25,27 +25,16 @@ namespace cv {
 namespace arm {
 
 namespace {
-template <int lane>
-inline float vgetq_lane_f32_indire(float32x4_t& a)
-{
-    return vgetq_lane_f32(a, lane);
-}
 
 template <int lane>
-inline float32x4_t vsetq_lane_f32_indire(float val, float32x4_t& b)
-{
-    return vsetq_lane_f32(val, b, lane);
-}
-
-template <int ii>
 void rgb_to_hsv_f32_clac_h(float32x4_t& vMax, float32x4_t& b, float32x4_t& g, float32x4_t& vb_h, float32x4_t& vg_h, float32x4_t& vr_h, float32x4_t& dst_vec)
 {
-    if (vgetq_lane_f32_indire<ii>(vMax) == vgetq_lane_f32_indire<ii>(b)) {
-        dst_vec = vsetq_lane_f32_indire<ii>(vgetq_lane_f32_indire<ii>(vb_h), dst_vec);
-    } else if (vgetq_lane_f32_indire<ii>(vMax) == vgetq_lane_f32_indire<ii>(g)) {
-        dst_vec = vsetq_lane_f32_indire<ii>(vgetq_lane_f32_indire<ii>(vg_h), dst_vec);
+    if (vgetq_lane_f32(vMax, lane) == vgetq_lane_f32(b, lane)) {
+        dst_vec = vsetq_lane_f32(vgetq_lane_f32(vb_h, lane), dst_vec, lane);
+    } else if (vgetq_lane_f32(vMax, lane) == vgetq_lane_f32(g, lane)) {
+        dst_vec = vsetq_lane_f32(vgetq_lane_f32(vg_h, lane), dst_vec, lane);
     } else {
-        dst_vec = vsetq_lane_f32_indire<ii>(vgetq_lane_f32_indire<ii>(vr_h), dst_vec);
+        dst_vec = vsetq_lane_f32(vgetq_lane_f32(vr_h, lane), dst_vec, lane);
     }
 }
 
