@@ -33,7 +33,7 @@
 #include <time.h>  // debug
 #include <sys/time.h>  // debug
 #include <iostream>  // debug
-#include <gperftools/profiler.h>  // profiling
+// #include <gperftools/profiler.h>  // profiling
 
 using namespace ppl::common;
 
@@ -113,6 +113,8 @@ static const uint8_t dezigzag_indices[64 + 15] = {
 
 // replaced with (1 << n) - 1 ?
 static const uint32_t bit_mask[17] = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511,
+    1023, 2047, 4095, 8191, 16383, 32767, 65535};
+static const uint64_t bit_mask1[17] = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511,
     1023, 2047, 4095, 8191, 16383, 32767, 65535};
 // bias[n] = (-1<<n) + 1
 static const int32_t jbias[16] = {0, -1, -3, -7, -15, -31, -63, -127, -255,
@@ -767,6 +769,7 @@ JpegDecoder::JpegDecoder(BytesReader& file_data) {
     if (jpeg_ == nullptr) {
        LOG(ERROR) << "No enough memory to initialize JpegDecoder.";
     }
+    jpeg_->marker = NULL_MARKER;
 }
 
 JpegDecoder::~JpegDecoder() {
@@ -852,6 +855,7 @@ bool JpegDecoder::buildHuffmanTable(HuffmanLookupTable *huffman_table,
     for (bit_number = 1; bit_number <= MAX_BITS; ++bit_number) {
         // compute delta to add to code to compute symbol id
         huffman_table->delta[bit_number] = index - code;
+        // std::cout << "huff delta: " << huffman_table->delta[bit_number] << std::endl;
         if (bit_lengths[index] == bit_number) {
             while (bit_lengths[index] == bit_number) {
                 codes[index++] = (uint16_t)(code++);
@@ -863,6 +867,7 @@ bool JpegDecoder::buildHuffmanTable(HuffmanLookupTable *huffman_table,
         }
         // compute largest code + 1 for this size, preshifted as needed later
         huffman_table->max_codes[bit_number] = code << (MAX_BITS - bit_number);
+        // std::cout << "huff maxcode: " << huffman_table->max_codes[bit_number] << std::endl;
         code <<= 1;
     }
     huffman_table->max_codes[bit_number] = 0xFFFF;
@@ -880,6 +885,7 @@ bool JpegDecoder::buildHuffmanTable(HuffmanLookupTable *huffman_table,
             for (i = 0; i < count; ++i) {
                 huffman_table->lookups[code++] = (bit_length << 8) |
                                                     huffman_table->symbols[index];
+                // std::cout << "huff lookup " << i << ": " << index << std::endl;
             }
             // memset(huffman_table->fast_indices + code, index, count);
         }
@@ -890,12 +896,14 @@ bool JpegDecoder::buildHuffmanTable(HuffmanLookupTable *huffman_table,
 
 bool JpegDecoder::parseAPP0(JpegDecodeData *jpeg) {
     int32_t length = file_data_->getWordBigEndian();
+    std::cout << "  length: " << length << std::endl;
     if (length < 16) {
         LOG(ERROR) << "bad JFIF APP0 segment length, corrupt JPEG.";
         return false;
     }
 
-    uint8_t tag[5] = {'J','F','I','F','\0'};
+    // uint8_t tag[5] = {'J','F','I','F','\0'};
+    uint8_t tag[5] = {0x4A, 0x46, 0x49, 0x46, 0x0};
     int32_t i = 0;
     uint8_t value;
     for (; i < 5; ++i) {
@@ -910,12 +918,14 @@ bool JpegDecoder::parseAPP0(JpegDecodeData *jpeg) {
         jpeg->jfif = 0;
     }
     file_data_->skip(length - 7);
+    std::cout << "parseAPP0 is done." << std::endl;
 
     return true;
 }
 
 bool JpegDecoder::parseAPP14(JpegDecodeData *jpeg) {
     int32_t length = file_data_->getWordBigEndian();
+    std::cout << "  length: " << length << std::endl;
     if (length < 8) {
         LOG(ERROR) << "bad Adobe APP14 segment length, corrupt JPEG.";
         return false;
@@ -935,12 +945,14 @@ bool JpegDecoder::parseAPP14(JpegDecodeData *jpeg) {
         length -= 6;
     }
     file_data_->skip(length - 8);
+    std::cout << "parseAPP14 is done." << std::endl;
 
     return true;
 }
 
 bool JpegDecoder::parseSOF(JpegDecodeData *jpeg) {
     int32_t length = file_data_->getWordBigEndian();
+    std::cout << "  length: " << length << std::endl;
     if (length < 11) {
         LOG(ERROR) << "Invalid SOF length: " << length
                    << ", correct value: not less than 11.";
@@ -952,6 +964,7 @@ bool JpegDecoder::parseSOF(JpegDecodeData *jpeg) {
                    << ", correct value: 8 (bit).";
         return false;
     }
+    std::cout << "  precision bit: " << value << std::endl;
 
     height_ = file_data_->getWordBigEndian();
     width_  = file_data_->getWordBigEndian();
@@ -960,6 +973,7 @@ bool JpegDecoder::parseSOF(JpegDecodeData *jpeg) {
                    << width_;
         return false;
     }
+    std::cout << "  height_: " << height_ << ", width_: " << width_ << std::endl;
 
     jpeg->components = file_data_->getByte();  // Gray(1), YCbCr/YIQ(3), CMYK(4)
     channels_ = jpeg->components >= 3 ? 3 : 1;
@@ -978,6 +992,7 @@ bool JpegDecoder::parseSOF(JpegDecodeData *jpeg) {
                    << 8 + 3 * jpeg->components;
         return false;
     }
+    std::cout << "  jpeg->components: " << jpeg->components << std::endl;
 
     int32_t i = 0;
     for (; i < jpeg->components; i++) {
@@ -1030,6 +1045,10 @@ bool JpegDecoder::parseSOF(JpegDecodeData *jpeg) {
         if (jpeg->img_comp[i].vsampling > v_max) {
             v_max = jpeg->img_comp[i].vsampling;
         }
+        std::cout << "  comp id: " << jpeg->img_comp[i].id << std::endl;
+        std::cout << "  hsampling: " << jpeg->img_comp[i].hsampling << std::endl;
+        std::cout << "  vsampling: " << jpeg->img_comp[i].vsampling << std::endl;
+        std::cout << "  quant_id: " << jpeg->img_comp[i].quant_id << std::endl;
     }
 
     for (i = 0; i < jpeg->components; ++i) {
@@ -1103,6 +1122,7 @@ bool JpegDecoder::parseSOF(JpegDecodeData *jpeg) {
 
 bool JpegDecoder::parseSOS(JpegDecodeData *jpeg) {
     int32_t length = file_data_->getWordBigEndian();
+    std::cout << "  length: " << length << std::endl;
     int32_t components = file_data_->getByte();
     if (!(components == 1 || components == 3 || components == 4)) {
         LOG(ERROR) << "Invalid SOS component count: " << components
@@ -1115,22 +1135,26 @@ bool JpegDecoder::parseSOS(JpegDecodeData *jpeg) {
                    << 6 + 2 * components;
         return false;
     }
+    std::cout << "  components: " << components << std::endl;
 
     int32_t component_id, table_ids, index;
     for (int32_t i = 0; i < components; i++) {
         component_id = file_data_->getByte();
         table_ids = file_data_->getByte();
+        std::cout << "  component_id: " << component_id << std::endl;
         for (index = 0; index < jpeg->components; index++) {
             if (jpeg->img_comp[index].id == component_id) break;
         }
         if (index == jpeg->components) return false;
         jpeg->img_comp[index].dc_id = table_ids >> 4;
+        std::cout << "  dc id: " << (table_ids >> 4) << std::endl;
         if (jpeg->img_comp[index].dc_id > 3) {
             LOG(ERROR) << "Invalid table id of DC: "
                        << jpeg->img_comp[index].dc_id << ", valid value: 0-3.";
             return false;
         }
         jpeg->img_comp[index].ac_id = table_ids & 15;
+        std::cout << "  ac id: " << (table_ids & 15) << std::endl;
         if (jpeg->img_comp[index].ac_id > 3) {
             LOG(ERROR) << "Invalid table id of AC: "
                        << jpeg->img_comp[index].ac_id << ", valid value: 0-3.";
@@ -1139,20 +1163,25 @@ bool JpegDecoder::parseSOS(JpegDecodeData *jpeg) {
         jpeg->order[i] = index;
     }
 
-    jpeg->spec_start = file_data_->getByte();  // 0x00?
-    jpeg->spec_end   = file_data_->getByte();  // 0x3F? should be 63, but might be 0
+    jpeg->index_start = file_data_->getByte();  // 0x00?
+    jpeg->index_end   = file_data_->getByte();  // 0x3F? should be 63, but might be 0
     int32_t value = file_data_->getByte();     // 0x00?
     jpeg->succ_high = (value >> 4);
     jpeg->succ_low  = (value & 15);
+    std::cout << "  jpeg->index_start: " << jpeg->index_start << std::endl;
+    std::cout << "  jpeg->index_end: " << jpeg->index_end << std::endl;
+    std::cout << "  jpeg->succ_high: " << jpeg->succ_high << std::endl;
+    std::cout << "  jpeg->succ_low: " << jpeg->succ_low << std::endl;
+
     if (jpeg->progressive) {
-        if (jpeg->spec_start > 63 || jpeg->spec_end > 63  ||
-            jpeg->spec_start > jpeg->spec_end || jpeg->succ_high > 13 ||
+        if (jpeg->index_start > 63 || jpeg->index_end > 63  ||
+            jpeg->index_start > jpeg->index_end || jpeg->succ_high > 13 ||
             jpeg->succ_low > 13) {
             LOG(ERROR) << "bad SOS, corrupt JPEG";
             return false;
         }
     } else {
-        if (jpeg->spec_start != 0) {
+        if (jpeg->index_start != 0) {
             LOG(ERROR) << "bad SOS, corrupt JPEG";
             return false;
         }
@@ -1160,7 +1189,7 @@ bool JpegDecoder::parseSOS(JpegDecodeData *jpeg) {
             LOG(ERROR) << "bad SOS, corrupt JPEG";
             return false;
         }
-        jpeg->spec_end = 63;
+        jpeg->index_end = 63;
     }
 
     return true;
@@ -1169,12 +1198,15 @@ bool JpegDecoder::parseSOS(JpegDecodeData *jpeg) {
 // 两种量化表：亮度量化值和色差量化值
 bool JpegDecoder::parseDQT(JpegDecodeData *jpeg) {
     int32_t length = file_data_->getWordBigEndian();
+    std::cout << "  length: " << length << std::endl;
 
     length -= 2;
     while (length > 0) {
         int32_t value = file_data_->getByte();
         int32_t precision = value >> 4;
         int32_t table_id  = value & 15;
+        std::cout << "  precision bit: " << precision << std::endl;
+        std::cout << "  table_id: " << table_id << std::endl;
         if (precision != 0 && precision != 1) {
             LOG(ERROR) << "Invalid quantization table precision type: "
                        << precision
@@ -1209,16 +1241,32 @@ bool JpegDecoder::parseDQT(JpegDecodeData *jpeg) {
 
 bool JpegDecoder::parseDHT(JpegDecodeData *jpeg) {
     int32_t length = file_data_->getWordBigEndian();
+    std::cout << "  length: " << std::hex << length << std::endl;
     if (length <= 19) {
         LOG(ERROR) << "bad DHT table length, corrupt JPEG.";
         return false;
     }
+    // uchar* buffer = file_data_->data();
+    // int position = file_data_->getPosition();
+    // buffer += position;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-4] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-3] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-2] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-1] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[0] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[1] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[2] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[3] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[4] << std::endl;
+    // std::cout << std::dec << std::noshowbase << std::endl;
 
     length -= 2;
+    // std::cout << "parseDHT, " << std::endl;
     while (length > 0) {
         int32_t value = file_data_->getByte();
         int32_t type = value >> 4;  // 0(DC table), 1(AC table)
         int32_t table_id = value & 15;  // 0~3
+        std::cout << "  type: " << type << ", table_id: " << table_id << std::endl;
         if (type > 1) {
             LOG(ERROR) << "bad DHT type, corrupt JPEG.";
             return false;
@@ -1232,6 +1280,7 @@ bool JpegDecoder::parseDHT(JpegDecodeData *jpeg) {
         for (int32_t i = 0; i < 16; ++i) {
             symbol_counts[i] = file_data_->getByte();
             count += symbol_counts[i];
+            // std::cout << "symbol count " << i << ": " << symbol_counts[i] << std::endl;
         }
 
         uint8_t *symbol;
@@ -1239,6 +1288,7 @@ bool JpegDecoder::parseDHT(JpegDecodeData *jpeg) {
             symbol = jpeg->huff_dc[table_id].symbols;
             for (int32_t i = 0; i < count; ++i) {
                 symbol[i] = file_data_->getByte();
+                // std::cout << "dc, symbol " << i << ": " << (int)symbol[i] << std::endl;
             }
             if (!buildHuffmanTable(jpeg->huff_dc + table_id, symbol_counts)) {
                 return false;
@@ -1248,6 +1298,7 @@ bool JpegDecoder::parseDHT(JpegDecodeData *jpeg) {
             symbol = jpeg->huff_ac[table_id].symbols;
             for (int32_t i = 0; i < count; ++i) {
                 symbol[i] = file_data_->getByte();
+                // std::cout << "ac, symbol " << i << ": " << (int)symbol[i] << std::endl;
             }
             if (!buildHuffmanTable(jpeg->huff_ac + table_id, symbol_counts)) {
                 return false;
@@ -1259,6 +1310,7 @@ bool JpegDecoder::parseDHT(JpegDecodeData *jpeg) {
 
         length -= (17 + count);
     }
+    std::cout << "after building huffman tables" << std::endl;
 
     return (length == 0);
 }
@@ -1324,36 +1376,47 @@ bool JpegDecoder::processSegments(JpegDecodeData *jpeg, uint8_t marker) {
     switch (marker) {
         // case 0xE1~0xEF: optional segments, APP1 for exif, APP14 for adobe.
         case 0xE0:  // JFIF
+            std::cout << "parseAPP0:" << std::endl;
             succeeded = parseAPP0(jpeg);
             break;
         case 0xE1:  // Exif, APP1
+            LOG(ERROR) << "EXIF JPEG is not supported.";
             succeeded = false;
             break;
         case 0xEE:  // Adobe APP14
+            std::cout << "parseAPP14:" << std::endl;
             succeeded = parseAPP14(jpeg);
             break;
         case 0xDB:  // define quantization table
+            std::cout << "parseDQT:" << std::endl;
             succeeded = parseDQT(jpeg);
             break;
         // case 0xC0~0xCF: optional segments.
         case 0xC0:  // start of frame0, baseline DCT-based JPEG
         case 0xC2:  // start of frame2, progressive DCT-based JPEG
             if (marker == 0xC2) jpeg_->progressive = 1;
+            std::cout << "parseSOF:" << std::endl;
+            if (jpeg_->progressive == 1) std::cout << "  progressive jpeg." << std::endl;
             succeeded = parseSOF(jpeg);
             break;
         case 0xC4:  // define huffman table
+            std::cout << "parseDHT:" << std::endl;
             succeeded = parseDHT(jpeg);
             break;
         case 0xDD:  // define restart interval
+            std::cout << "parseDRI:" << std::endl;
             succeeded = parseDRI(jpeg);
             break;
         case 0xFE:  // comment
+            std::cout << "parseCOM:" << std::endl;
             succeeded = parseCOM();
             break;
         case 0xDC:  // define number of lines
+            std::cout << "parseDNL:" << std::endl;
             succeeded = parseDNL();
             break;
         default:
+            std::cout << "processOtherSegments:" << std::endl;
             succeeded = processOtherSegments(marker);
     }
 
@@ -1662,7 +1725,8 @@ inline void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
         }
         file_data->skip(valid_bytes);
         // std::cout << "growBitBuffer 0, after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
-        // std::cout << "growBitBuffer 0, valid_bytes: " << valid_bytes << std::endl;
+        // std::cout << "growBitBuffer 0, valid_bytes: " << std::dec << valid_bytes << std::endl;
+        // std::cout << std::noshowbase;
     }
     else {
         uint32_t index = 0, processed_bytes = 0, ff00_index = 0;
@@ -1959,8 +2023,10 @@ inline void growBitBuffer(BytesReader* file_data, JpegDecodeData *jpeg) {
         processed_bytes -= invalid_bytes;
         file_data->skip(processed_bytes);
         // std::cout << "growBitBuffer 1, after, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
-        // std::cout << "growBitBuffer 1, processed_bytes: " << processed_bytes << std::endl;
+        // std::cout << "growBitBuffer 1, processed_bytes: " << std::dec << processed_bytes << std::endl;
+        // std::cout << std::noshowbase;
     }
+    // std::cout << std::dec << std::noshowbase;
 }
 
 // if there's a pending marker from the entropy stream, return that
@@ -1985,6 +2051,7 @@ uint8_t JpegDecoder::getMarker(JpegDecodeData *jpeg) {
     }
     while (marker == 0xFF) {
         marker = file_data_->getByte();
+        // std::cout << "in while, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
     }
     // std::cout << "end, marker: " << std::hex << (int)marker << std::noshowbase << std::dec << std::endl;
 
@@ -2021,20 +2088,21 @@ uint8_t JpegDecoder::getMarker1(JpegDecodeData *jpeg) {
 // get some unsigned bits
 inline int32_t getBits(JpegDecodeData *jpeg, BytesReader* file_data,
                        int32_t bit_length) {
-    uint32_t k;
-    if (jpeg->code_bits < bit_length) {
+    // uint32_t k;
+    uint64_t k;
+    if (jpeg->marker == NULL_MARKER && jpeg->code_bits < bit_length) {
         // std::cout << "before growBitBuffer in getbits" << std::endl;
         growBitBuffer(file_data, jpeg);
     }
     k = ROTATE_BITS(jpeg->code_buffer, bit_length);
-    jpeg->code_buffer = k & ~bit_mask[bit_length];
-    k &= bit_mask[bit_length];
+    jpeg->code_buffer = k & ~bit_mask1[bit_length];
+    k &= bit_mask1[bit_length];
     jpeg->code_bits -= bit_length;
-    return k;
+    return (int32_t)k;
 }
 
 inline int32_t getBit(JpegDecodeData *jpeg, BytesReader* file_data) {
-    size_t value;
+    uint64_t value;
     if (jpeg->code_bits < 1) {
         // std::cout << "before growBitBuffer in getbit" << std::endl;
         growBitBuffer(file_data, jpeg);
@@ -2042,8 +2110,15 @@ inline int32_t getBit(JpegDecodeData *jpeg, BytesReader* file_data) {
     value = jpeg->code_buffer;
     jpeg->code_buffer <<= 1;
     --jpeg->code_bits;
+    // std::cout << "getBit, value: " << std::hex << value << std::endl;
+    // std::cout << std::noshowbase;
 
-    return value & (1 << (BUFFER_BITS - 1));
+    int32_t result = (value & ((uint64_t)1 << (BUFFER_BITS - 1))) >> 32;
+    // std::cout << "getBit, result: " << std::hex << result << std::endl;
+    // std::cout << std::noshowbase;
+
+    return result;
+    // return (value & (1 << (BUFFER_BITS - 1)));
     // return value & 0x8000000000000000;
 }
 
@@ -2051,9 +2126,12 @@ inline int32_t getBit(JpegDecodeData *jpeg, BytesReader* file_data) {
 // always extends everything it receives.
 inline int32_t extendReceive(JpegDecodeData *jpeg, BytesReader* file_data,
                              int32_t bit_length) {
-    if (jpeg->code_bits < bit_length) {
+    if (jpeg->marker == NULL_MARKER && jpeg->code_bits < bit_length) {
+        // std::cout << "in extendreceive(), if (jpeg->code_bits < bit_length)" << std::endl;
         growBitBuffer(file_data, jpeg);
     }
+    // std::cout << "in extendreceive(), jpeg->code_bits: " << jpeg->code_bits
+    //   << ", bit_length: " << bit_length << std::endl;
 
     int32_t sign = jpeg->code_buffer >> (BUFFER_BITS - 1); // sign bit always in MSB; 0 if MSB clear (positive), 1 if MSB set (negative)
     uint64_t value = ROTATE_BITS(jpeg->code_buffer, bit_length);
@@ -2063,6 +2141,7 @@ inline int32_t extendReceive(JpegDecodeData *jpeg, BytesReader* file_data,
 
     jpeg->code_buffer <<= bit_length;
     jpeg->code_bits -= bit_length;
+    // std::cout << "in extendreceive(), jpeg->code_bits: " << jpeg->code_bits << std::endl;
 
     return value;
 }
@@ -2074,7 +2153,7 @@ inline int32_t extendReceive(JpegDecodeData *jpeg, BytesReader* file_data,
 inline
 int32_t JpegDecoder::decodeHuffmanData(JpegDecodeData *jpeg,
                                        HuffmanLookupTable *huffman_table) {
-    if (jpeg->code_bits < LOOKAHEAD_BITS) {
+    if (jpeg_->marker == NULL_MARKER && jpeg->code_bits < LOOKAHEAD_BITS) {
         growBitBuffer(file_data_, jpeg);
     }
 
@@ -2091,7 +2170,7 @@ int32_t JpegDecoder::decodeHuffmanData(JpegDecodeData *jpeg,
         return (value & 0xFF);
     }
 
-    if (jpeg->code_bits < MAX_BITS) {
+    if (jpeg_->marker == NULL_MARKER && jpeg->code_bits < MAX_BITS) {
         growBitBuffer(file_data_, jpeg);
     }
 
@@ -2119,7 +2198,7 @@ bool JpegDecoder::decodeProgressiveDCBlock(JpegDecodeData *jpeg,
                                            int16_t decoded_data[64],
                                            HuffmanLookupTable *huffman_dc,
                                            int32_t component_id) {
-    if (jpeg->spec_end != 0) {
+    if (jpeg->index_end != 0) {
         LOG(ERROR) << "can't merge DC and AC, Corrupt JPEG";
         return false;
     }
@@ -2137,11 +2216,18 @@ bool JpegDecoder::decodeProgressiveDCBlock(JpegDecodeData *jpeg,
         int32_t dc_value = jpeg->img_comp[component_id].dc_pred + value_diff;
         jpeg->img_comp[component_id].dc_pred = dc_value;
         decoded_data[0] = (int16_t)(dc_value * (1 << jpeg->succ_low));
+        // std::cout << "dc_value: " << dc_value << std::endl;
     } else {  // refinement scan for DC coefficient.
         if (getBit(jpeg, file_data_)) {
             decoded_data[0] += (int16_t)(1 << jpeg->succ_low);
         }
     }
+    // std::cout << "  decoded_data[0]: " << std::dec << (int)decoded_data[0] << std::endl;
+    // std::cout << "  jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::showbase;
+    // std::cout << "  buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << std::dec;
+    // std::cout << std::noshowbase;
 
     return true;
 }
@@ -2149,31 +2235,58 @@ bool JpegDecoder::decodeProgressiveDCBlock(JpegDecodeData *jpeg,
 bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
                                            int16_t decoded_data[64],
                                            HuffmanLookupTable *huffman_ac) {
-    if (jpeg->spec_start == 0) {
+    if (jpeg->index_start == 0) {
        LOG(ERROR) << "can't merge dc and ac, Corrupt JPEG";
        return false;
     }
+    // std::cout << "come in decodeProgressiveACBlock" << std::endl;
+    // std::cout << "XXX buffer: " << std::hex << jpeg->code_buffer << std::endl;
 
     int32_t combined_value, zeroes, bit_length, ac_index;
     if (jpeg->succ_high == 0) {
+        // std::cout << "first scan ac." << std::endl;
         int32_t shift = jpeg->succ_low;
 
         if (jpeg->eob_run) {
             --jpeg->eob_run;
+            // std::cout << "return from if (jpeg->eob_run)" << std::endl;
             return true;
         }
 
         int32_t zig_index, value;
-        ac_index = jpeg->spec_start;
+        ac_index = jpeg->index_start;
         do {
+            // std::cout << "before decodeHuffmanData(), jpeg->code_bits: " << jpeg->code_bits << std::endl;
+            // std::cout << "before decodeHuffmanData, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::showbase;
+    // std::cout << "before decodeHuffmanData, buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << std::noshowbase;
             combined_value = decodeHuffmanData(jpeg, huffman_ac);
-            zeroes = combined_value >> 4;
+            // std::cout << "after decodeHuffmanData, jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::showbase;
+    // std::cout << "after decodeHuffmanData, buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << std::noshowbase;
+            // std::cout << "  huff decoded value: " << combined_value << std::endl;
+            // std::cout << "after decodeHuffmanData(), jpeg->code_bits: " << jpeg->code_bits << std::endl;
+            zeroes = (combined_value >> 4) & 15;
             bit_length = combined_value & 15;
+            // std::cout << "zeros: " << std::dec << zeroes << ", bit_length: "
+            // << std::dec << bit_length << std::endl;
+    // std::cout << "  jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::showbase;
+    // std::cout << "  buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << std::noshowbase;
             if (bit_length == 0) {
                 if (zeroes < 15) {
                     jpeg->eob_run = (1 << zeroes);
+                    // std::cout << "jpeg->eob_run: " << jpeg->eob_run << std::endl;
                     if (zeroes) {
+                        // std::cout << "before getBits, jpeg->code_bits: " << jpeg->code_bits << std::endl;
+                        // std::cout << "before getBits, buffer: " << std::hex << jpeg->code_buffer << std::endl;
                         jpeg->eob_run += getBits(jpeg, file_data_, zeroes);
+                        // std::cout << "after getBits, jpeg->code_bits: " << jpeg->code_bits << std::endl;
+                        // std::cout << "after getBits, buffer: " << std::hex << jpeg->code_buffer << std::endl;
+                        // std::cout << "jpeg->eob_run: " << jpeg->eob_run << std::endl;
                     }
                     --jpeg->eob_run;
                     break;
@@ -2185,15 +2298,21 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
                 value = extendReceive(jpeg, file_data_, bit_length) *
                         (1 << shift);
                 decoded_data[zig_index] = (int16_t)value;
+                // std::cout << "ac_index: " << ac_index << ", decoded_data[zig_index]: "
+                //         << decoded_data[zig_index] << std::endl;
             }
-        } while (ac_index <= jpeg->spec_end);
+            // std::cout << "ac_index: " << ac_index << ", decoded_data[zig_index]: "
+            //           << decoded_data[zig_index] << std::endl;
+        // std::cout << "while, buffer: " << std::hex << jpeg->code_buffer << std::endl;
+        } while (ac_index <= jpeg->index_end);
     } else {
+        // std::cout << "refinement scan ac." << std::endl;
         // refinement scan for these AC coefficients
         int16_t bit = (int16_t)(1 << jpeg->succ_low);
 
         if (jpeg->eob_run) {
             --jpeg->eob_run;
-            for (ac_index = jpeg->spec_start; ac_index <= jpeg->spec_end;
+            for (ac_index = jpeg->index_start; ac_index <= jpeg->index_end;
                  ++ac_index) {
                 int16_t *data = &decoded_data[dezigzag_indices[ac_index]];
                 if (*data != 0) {
@@ -2208,13 +2327,21 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
                         }
                     }
                 }
+                // std::cout << "ac_index0: " << ac_index << ", decoded_data[zig_index]: "
+                //         << (*data) << std::endl;
             }
         } else {
-            ac_index = jpeg->spec_start;
+            ac_index = jpeg->index_start;
             do {
                 combined_value = decodeHuffmanData(jpeg, huffman_ac);
                 zeroes = combined_value >> 4;
                 bit_length = combined_value & 15;
+            // std::cout << "zeros: " << std::dec << zeroes << ", bit_length: "
+            // << std::dec << bit_length << std::endl;
+    // std::cout << "  jpeg->code_bits: " << std::dec << jpeg->code_bits << std::endl;
+    // std::cout << std::showbase;
+    // std::cout << "  buffer: " << std::hex << jpeg->code_buffer << std::endl;
+    // std::cout << std::noshowbase;
                 if (bit_length == 0) {
                     if (zeroes < 15) {
                         jpeg->eob_run = (1 << zeroes) - 1;
@@ -2240,11 +2367,15 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
                     }
                 }
 
+                // std::cout << "zeros: " << zeroes << std::endl;
                 // advance by zeroes
-                while (ac_index <= jpeg->spec_end) {
+                while (ac_index <= jpeg->index_end) {
                     int16_t *data = &decoded_data[dezigzag_indices[ac_index++]];
+                    // std::cout << "*data: " << (*data) << std::endl;
+                    // std::cout << "bit: " << (bit) << std::endl;
                     if (*data != 0) {
                         if (getBit(jpeg, file_data_)) {
+                            // std::cout << "if (getBit(jpeg, file_data_))" << std::endl;
                             if ((*data & bit)==0) {
                                 if (*data > 0) {
                                     *data += bit;
@@ -2261,8 +2392,10 @@ bool JpegDecoder::decodeProgressiveACBlock(JpegDecodeData *jpeg,
                         }
                         --zeroes;
                     }
+                    // std::cout << "ac_index1: " << ac_index << ", decoded_data[zig_index]: "
+                    //     << (*data) << std::endl;
                 }
-            } while (ac_index <= jpeg->spec_end);
+            } while (ac_index <= jpeg->index_end);
         }
     }
 
@@ -2285,7 +2418,7 @@ bool JpegDecoder::decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
                     extendReceive(jpeg, file_data_, bit_length) : 0;
     int32_t dc_value = jpeg->img_comp[component_id].dc_pred + value;
     jpeg->img_comp[component_id].dc_pred = dc_value;
-    memset(decoded_data, 0, 64 * sizeof(int16_t));
+    // memset(decoded_data, 0, 64 * sizeof(int16_t));
     decoded_data[0] = (int16_t)(dc_value * dequant_table[0]);
 
     // decode AC components.
@@ -2313,122 +2446,189 @@ bool JpegDecoder::decodeBlock(JpegDecodeData *jpeg, int16_t decoded_data[64],
     return true;
 }
 
+void JpegDecoder::idctprocess(JpegDecodeData *jpeg, int16_t* buffer, uint8_t* output,
+        int32_t width, int32_t height_begin, int32_t height_end, int32_t w2) {
+    buffer += height_begin * width * 64;
+    for (int32_t i = height_begin; i < height_end; i++) {
+        uint8_t* result = output + w2 * i * 8;
+        for (int32_t j = 0; j < width; j++) {
+            jpeg->idctBlockKernel(result, w2, buffer);
+            buffer += 64;
+            result += 8;
+        }
+    }
+}
+
 bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
     bool succeeded;
     resetJpegDecoder(jpeg);
     // initializeBitbuffer(file_data_, jpeg);
-    // std::cout << "come in parseEntropyCodedData(). " << std::endl;
-    // std::cout << "jpeg->todo: " << jpeg->todo << std::endl;
     if (!jpeg->progressive) {
-        // std::cout << "come in non progressive processing." << std::endl;
-        if (jpeg->scan_n == 1) {
-            // std::cout << "before decodeBlock, scan_n: " << jpeg->scan_n << std::endl;
-            int32_t i, j;
-            SIMD_ALIGN16(int16_t, data[64]);
+        int hardware_threads = std::thread::hardware_concurrency();
+        hardware_threads = hardware_threads == 0 ? 1 : hardware_threads;
+        hardware_threads = hardware_threads > 4 ? 4 : hardware_threads;
+        HuffmanLookupTable *huffman_dc, *huffman_ac;
+        uint16_t *dequant_table;
+        if (jpeg->scan_n == 1) {  // 1 components, a data block in a mcu.
             int32_t comp_id = jpeg->order[0];
-            // non-interleaved data, we just need to process one block at a time,
-            // in trivial scanline order
-            // number of blocks to do just depends on how many actual "pixels" this
-            // component has, independent of interleaved MCU blocking and such
-            int32_t width = (jpeg->img_comp[comp_id].x + 7) >> 3;
             int32_t height = (jpeg->img_comp[comp_id].y + 7) >> 3;
-            // std::cout << "width: " << width << ", height: " << height << std::endl;
-            for (j = 0; j < height; ++j) {
-                for (i = 0; i < width; ++i) {
-                    int32_t ac_id = jpeg->img_comp[comp_id].ac_id;
-                    HuffmanLookupTable *huffman_dc = jpeg->huff_dc +
-                        jpeg->img_comp[comp_id].dc_id;
-                    HuffmanLookupTable *huffman_ac = jpeg->huff_ac + ac_id;
-                    uint16_t *dequant_table =
-                        jpeg->dequant[jpeg->img_comp[comp_id].quant_id];
+            int32_t width  = (jpeg->img_comp[comp_id].x + 7) >> 3;
+            size_t size = height * width * 64;
+            int16_t* buffer = new int16_t[size];
+            memset(buffer, 0, size * sizeof(int16_t));
+            int16_t* data = buffer;
+            huffman_dc = jpeg->huff_dc + jpeg->img_comp[comp_id].dc_id;
+            huffman_ac = jpeg->huff_ac + jpeg->img_comp[comp_id].ac_id;
+            dequant_table = jpeg->dequant[jpeg->img_comp[comp_id].quant_id];
+            for (int32_t i = 0; i < height; ++i) {
+                for (int32_t j = 0; j < width; ++j) {
                     succeeded = decodeBlock(jpeg, data, huffman_dc, huffman_ac,
                                             comp_id, dequant_table);
                     if (!succeeded) return false;
-                    // std::cout << "after decodeBlock" << std::endl;
-                    uint8_t *output = jpeg->img_comp[comp_id].data +
-                        jpeg->img_comp[comp_id].w2 * j * 8 + i * 8;
-                    jpeg->idctBlockKernel(output, jpeg->img_comp[comp_id].w2, data);
 
                     // every data block is an MCU, so countdown the restart interval
                     if (--jpeg->todo <= 0) {
-                        // if it's NOT a restart, then just bail, so we get corrupt data
-                        // rather than no data
                         if (!DRI_RESTART(jpeg->marker)) {
-                            return true;
+                            // return true;
+                            return false;
                         }
                         resetJpegDecoder(jpeg);
                         // initializeBitbuffer(file_data_, jpeg);
                     }
+                    data += 64;
                 }
             }
+
+            uint8_t* output = jpeg->img_comp[comp_id].data;
+            int32_t width2 = jpeg->img_comp[comp_id].w2;
+            std::vector<std::thread> threads;
+            int32_t interval = (height + hardware_threads - 1) /
+                               hardware_threads;
+            for (int32_t index = 0; index < height; index += interval) {
+                int32_t index_end = index + interval < height ?
+                                    index + interval : height;
+                threads.push_back(std::thread(&JpegDecoder::idctprocess, this,
+                                  jpeg, buffer, output, width, index, index_end,
+                                  width2));
+            }
+
+            for (auto &worker: threads) {
+                worker.join();
+            }
+            delete [] buffer;
+
             return true;
-        } else {  // n components
-            // std::cout << "before decodeBlock, scan_n: " << jpeg->scan_n << std::endl;
+        } else {  // n components, interleaved data blocks in a mcu.
             int32_t i, j, k, x, y;
-            SIMD_ALIGN16(int16_t, data[64]);
-            for (j = 0; j < jpeg->mcus_y; ++j) {
-                for (i = 0; i < jpeg->mcus_x; ++i) {
-                    // scan an interleaved mcu... process scan_n components in order
+            int16_t** buffer = new int16_t*[jpeg->scan_n];
+            for (i = 0; i < jpeg->scan_n; i++) {
+                size_t size = jpeg->img_comp[i].h2 * jpeg->img_comp[i].w2;
+                buffer[i] = new int16_t[size];
+                memset(buffer[i], 0, size * sizeof(int16_t));
+            }
+            int16_t* data_ptr;
+
+            for (int32_t i = 0; i < jpeg->mcus_y; ++i) {
+                for (j = 0; j < jpeg->mcus_x; ++j) {
+                    // process scan_n components in order
                     for (k = 0; k < jpeg->scan_n; ++k) {
                         int32_t comp_id = jpeg->order[k];
-                        // scan out an mcu's worth of this component; that's just determined
-                        // by the basic H and V specified for the component
+                        huffman_dc = jpeg->huff_dc +
+                                     jpeg->img_comp[comp_id].dc_id;
+                        huffman_ac = jpeg->huff_ac +
+                                     jpeg->img_comp[comp_id].ac_id;
+                        dequant_table =
+                                jpeg->dequant[jpeg->img_comp[comp_id].quant_id];
+                        int32_t mcu_width = jpeg->mcus_x *
+                                jpeg->img_comp[comp_id].hsampling;
+                        int32_t y2 = i * jpeg->img_comp[comp_id].vsampling;
+                        int32_t x2 = j * jpeg->img_comp[comp_id].hsampling;
                         for (y = 0; y < jpeg->img_comp[comp_id].vsampling; ++y) {
                             for (x = 0; x < jpeg->img_comp[comp_id].hsampling; ++x) {
-                                int32_t x2 = (i * jpeg->img_comp[comp_id].hsampling +
-                                              x) * 8;
-                                int32_t y2 = (j * jpeg->img_comp[comp_id].vsampling +
-                                              y) * 8;
-                                int32_t ac_id = jpeg->img_comp[comp_id].ac_id;
-                                HuffmanLookupTable *huffman_dc = jpeg->huff_dc
-                                    + jpeg->img_comp[comp_id].dc_id;
-                                HuffmanLookupTable *huffman_ac = jpeg->huff_ac
-                                    + ac_id;
-                                uint16_t *dequant_table =
-                                    jpeg->dequant[jpeg->img_comp[comp_id].quant_id];
-                                succeeded = decodeBlock(jpeg, data, huffman_dc,
+                                data_ptr = buffer[k] + ((y2 + y) * mcu_width + x2 + x) * 64;
+                                succeeded = decodeBlock(jpeg, data_ptr, huffman_dc,
                                     huffman_ac, comp_id, dequant_table);
                                 if (!succeeded) return false;
-                                uint8_t *output = jpeg->img_comp[comp_id].data +
-                                    jpeg->img_comp[comp_id].w2 * y2 + x2;
-                                jpeg->idctBlockKernel(output,
-                                    jpeg->img_comp[comp_id].w2, data);
                             }
                         }
                     }
                     // after all interleaved components, that's an interleaved MCU,
                     // so now count down the restart interval
                     if (--jpeg->todo <= 0) {
-                        if (!DRI_RESTART(jpeg->marker)) return true;
+                        if (!DRI_RESTART(jpeg->marker)) {
+                            // return true;
+                            return false;
+                        }
                         resetJpegDecoder(jpeg);
                         // initializeBitbuffer(file_data_, jpeg);
                     }
                 }
             }
+
+            for (i = 0; i < jpeg->scan_n; i++) {
+                int32_t comp_id = jpeg->order[i];
+                int32_t height = jpeg->mcus_y * jpeg->img_comp[comp_id].vsampling;
+                int32_t width = jpeg->mcus_x * jpeg->img_comp[comp_id].hsampling;
+                uint8_t* output = jpeg->img_comp[comp_id].data;
+                int32_t width2 = jpeg->img_comp[comp_id].w2;
+                std::vector<std::thread> threads;
+                uint32_t interval = (height + hardware_threads - 1) /
+                                    hardware_threads;
+                for (int32_t index = 0; index < height; index += interval) {
+                    threads.push_back(std::thread(&JpegDecoder::idctprocess, this,
+                                    jpeg, buffer[i], output, width, index,
+                    (index + interval < height ? index + interval : height), width2));
+                }
+
+                for (auto &worker: threads) {
+                    worker.join();
+                }
+            }
+
+            for (i = 0; i < jpeg->scan_n; i++) {
+                delete [] buffer[i];
+            }
+            delete [] buffer;
+
             return true;
         }
     } else {
-        // std::cout << "come in progressive processing." << std::endl;
         if (jpeg->scan_n == 1) {
+            std::cout << "come in progressive processing, scan_n 1." << std::endl;
+            if (jpeg->index_start == 0) {
+                std::cout << "  decodeProgressiveDCBlock" << std::endl;
+            } else {
+                std::cout << "  decodeProgressiveACBlock" << std::endl;
+                if (jpeg->succ_high == 0)
+                    std::cout << "first scan ac." << std::endl;
+                else
+                    std::cout << "refinement scan ac." << std::endl;
+            }
             int32_t i, j;
             int32_t comp_id = jpeg->order[0];
+            // std::cout << "huff ac id: " << jpeg->img_comp[comp_id].ac_id << std::endl;
             // non-interleaved data, we just need to process one block at a time,
             // in trivial scanline order
             // number of blocks to do just depends on how many actual "pixels" this
             // component has, independent of interleaved MCU blocking and such
-            int32_t width = (jpeg->img_comp[comp_id].x + 7) >> 3;
             int32_t height = (jpeg->img_comp[comp_id].y + 7) >> 3;
+            int32_t width  = (jpeg->img_comp[comp_id].x + 7) >> 3;
+            // std::cout << "  rows: " << jpeg->img_comp[comp_id].y << ", cols: "
+            //           << jpeg->img_comp[comp_id].x << std::endl;
             for (j = 0; j < height; ++j) {
                 for (i = 0; i < width; ++i) {
+                    // std::cout << "  row: " << j << ", col: " << i << std::endl;
                     int16_t *data = jpeg->img_comp[comp_id].coeff +
                         64 * (i + j * jpeg->img_comp[comp_id].coeff_w);
-                    if (jpeg->spec_start == 0) {
+                    if (jpeg->index_start == 0) {
+                        // std::cout << "  decodeProgressiveDCBlock" << std::endl;
                         HuffmanLookupTable *huffman_dc =
                             &jpeg->huff_dc[jpeg->img_comp[comp_id].dc_id];
                         succeeded = decodeProgressiveDCBlock(jpeg, data,
                                                              huffman_dc, comp_id);
                         if (!succeeded) return false;
                     } else {
+                        // std::cout << "  decodeProgressiveACBlock" << std::endl;
                         int32_t ac_id = jpeg->img_comp[comp_id].ac_id;
                         succeeded = decodeProgressiveACBlock(jpeg, data,
                                       &jpeg->huff_ac[ac_id]);
@@ -2440,20 +2640,27 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                         resetJpegDecoder(jpeg);
                         // initializeBitbuffer(file_data_, jpeg);
                     }
+                    // std::cout << "jpeg->code_bits: " << jpeg->code_bits << std::endl;
                 }
             }
+            std::cout << "after progressive 1 channels." << std::endl;
             return true;
         } else {  // n components
+            std::cout << "come in progressive processing, scan_n n" << std::endl;
+            std::cout << "  decodeProgressiveDCBlock" << std::endl;
             int32_t i, j, k, x, y;
             for (j = 0; j < jpeg->mcus_y; ++j) {
                 for (i = 0; i < jpeg->mcus_x; ++i) {
+                    // std::cout << "  row: " << j << ", col: " << i << std::endl;
                     // scan an interleaved mcu... process scan_n components in order
                     for (k = 0; k < jpeg->scan_n; ++k) {
+                        // std::cout << "  comp id: " << k << std::endl;
                         int32_t comp_id = jpeg->order[k];
                         // scan out an mcu's worth of this component; that's just determined
                         // by the basic H and V specified for the component
                         for (y = 0; y < jpeg->img_comp[comp_id].vsampling; ++y) {
                             for (x = 0; x < jpeg->img_comp[comp_id].hsampling; ++x) {
+                                // std::cout << "  vsampling: " << y << ", hsampling: " << x << std::endl;
                                 int32_t x2 = (i*jpeg->img_comp[comp_id].hsampling +
                                               x);
                                 int32_t y2 = (j*jpeg->img_comp[comp_id].vsampling +
@@ -2477,6 +2684,7 @@ bool JpegDecoder::parseEntropyCodedData(JpegDecodeData *jpeg) {
                     }
                 }
             }
+            std::cout << "return from n components." << std::endl;
             return true;
         }
     }
@@ -2698,10 +2906,7 @@ void JpegDecoder::finishProgressiveJpeg(JpegDecodeData *jpeg) {
 }
 
 bool JpegDecoder::readHeader() {
-    // struct timeval start, end;
-    // gettimeofday(&start, NULL);
-
-    for (int32_t i = 0; i < 4; i++) {
+    for (uint32_t i = 0; i < 4; i++) {
         jpeg_->img_comp[i].raw_data  = nullptr;
         jpeg_->img_comp[i].raw_coeff = nullptr;
     }
@@ -2710,6 +2915,7 @@ bool JpegDecoder::readHeader() {
     // valid values are 0(Unknown, 3->RGB, 4->CMYK), 1(YCbCr), 2(YCCK)
     jpeg_->app14_color_transform = -1;
     jpeg_->progressive = 0;
+    std::cout << "come in readheader()" << std::endl;
 
     bool succeeded;
     file_data_->skip(2);
@@ -2732,51 +2938,47 @@ bool JpegDecoder::readHeader() {
         LOG(ERROR) << "No image data is datected.";
         return false;
     }
-
-    // gettimeofday(&end, NULL);
-    // int time = (end.tv_sec * 1000000 + end.tv_usec) -
-    //             (start.tv_sec * 1000000 + start.tv_usec);
-    // std::cout << "readHeader time: " << time << " us." << std::endl;
+    std::cout << "return from readheader()" << std::endl;
 
     return true;
 }
 
 bool JpegDecoder::decodeData(uint32_t stride, uint8_t* image) {
-    // struct timeval start, end;
-    // struct timeval start1, end1;
-    // struct timeval start2, end2;
-    // gettimeofday(&start, NULL);
-    // ProfilerStart("jpeg_perf.prof");  // profiling
-    // shortcode = 0;
-    // longcode = 0;
-    // fastcode = 0;
-    // std::cout << "come in decodeData()." << std::endl;
-
     setJpegFunctions(jpeg_);
 
     bool succeeded;
     uint8_t marker = getMarker(jpeg_);
-    // std::cout << "in decodeData(), getmarker0." << std::endl;
+    std::cout << "in decodeData(), getmarker0." << std::endl;
     while (marker != 0xD9) {  // end of image
         if (marker == 0xDA) {  // start of scan
+            std::cout << "parseSOS: " << std::endl;
             succeeded = parseSOS(jpeg_);
             if (!succeeded) {
                 freeComponents(jpeg_, jpeg_->components);
                 return false;
             }
 
-            // gettimeofday(&start1, NULL);
             succeeded = parseEntropyCodedData(jpeg_);
-            // std::cout << "after parseEntropyCodedData." << std::endl;
+            std::cout << "after parseEntropyCodedData." << std::endl;
+    // uchar* buffer = file_data_->data();
+    // int position = file_data_->getPosition();
+    // buffer += position;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-4] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-3] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-2] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-1] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[0] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[1] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[2] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[3] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[4] << std::endl;
+    // std::cout << std::dec << std::noshowbase << std::endl;
+
             if (!succeeded) {
                 freeComponents(jpeg_, jpeg_->components);
                 LOG(ERROR) << "Failed to decode the compressed data.";
                 return false;
             }
-            // gettimeofday(&end1, NULL);
-            // int time = (end1.tv_sec * 1000000 + end1.tv_usec) -
-            //             (start1.tv_sec * 1000000 + start1.tv_usec);
-            // std::cout << "parseEntropyCodedData time: " << time << " us." << std::endl;
         }
         else {
             succeeded = processSegments(jpeg_, marker);
@@ -2798,35 +3000,33 @@ bool JpegDecoder::decodeData(uint32_t stride, uint8_t* image) {
         // std::cout << "in decodeData(), marker: " << std::hex << (int)marker << std::endl;
         // std::cout << "in decodeData(), byte after marker: " << (int)file_data_->getByte() << std::endl;
         // std::cout << "in decodeData(), getmarker1." << std::endl;
+        // std::cout << std::dec << std::noshowbase << std::endl;
+    // uchar* buffer = file_data_->data();
+    // int position = file_data_->getPosition();
+    // buffer += position;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-4] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-3] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-2] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[-1] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[0] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[1] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[2] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[3] << std::endl;
+    // std::cout << "  in parseDHT(), data: " << std::hex << (int)buffer[4] << std::endl;
+    // std::cout << std::dec << std::noshowbase << std::endl;
     }
 
     if (jpeg_->progressive) {
         finishProgressiveJpeg(jpeg_);
     }
 
-    // gettimeofday(&start2, NULL);
     succeeded = sampleConvertColor(stride, image);
-    // gettimeofday(&end2, NULL);
-    // int time2 = (end2.tv_sec * 1000000 + end2.tv_usec) -
-    //             (start2.tv_sec * 1000000 + start2.tv_usec);
-    // std::cout << "sampleConvertColor time: " << time2 << " us." << std::endl;
     freeComponents(jpeg_, jpeg_->components);
     if (!succeeded) {
         LOG(ERROR) << "Failed to sample and convert YCrCb data to the target"
                    << " color format.";
         return false;
     }
-
-    // std::cout << "growbuffer_count: " << growbuffer_count << ", huffman_count: " << huffman_count << std::endl;
-    // std::cout << "sizeof(size_t): " << sizeof(size_t) << ", sizeof(long long)" << sizeof(long long) << std::endl;
-    // ProfilerStop();  // profiling
-    // gettimeofday(&end, NULL);
-    // int time = (end.tv_sec * 1000000 + end.tv_usec) -
-    //             (start.tv_sec * 1000000 + start.tv_usec);
-    // std::cout << "decodeData time: " << time << " us." << std::endl;
-    // // std::cout << "shortcode: " << shortcode << std::endl;
-    // // std::cout << "longcode: " << longcode << std::endl;
-    // std::cout << "fastcode: " << fastcode << std::endl;
 
     return true;
 }

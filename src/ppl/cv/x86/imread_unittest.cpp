@@ -435,15 +435,15 @@ inline std::string convertToStringJpeg(const Parameters1& parameters) {
     return formatted.str();
 }
 
-class PplCvX86ImreadJpegTest : public ::testing::TestWithParam<Parameters1> {
+class PplCvX86ImreadJpegTest0 : public ::testing::TestWithParam<Parameters1> {
   public:
-    PplCvX86ImreadJpegTest() {
+    PplCvX86ImreadJpegTest0() {
         const Parameters1& parameters = GetParam();
         channels = std::get<0>(parameters);
         size     = std::get<1>(parameters);
     }
 
-    ~PplCvX86ImreadJpegTest() {
+    ~PplCvX86ImreadJpegTest0() {
     }
 
     bool apply();
@@ -453,8 +453,7 @@ class PplCvX86ImreadJpegTest : public ::testing::TestWithParam<Parameters1> {
     cv::Size size;
 };
 
-bool PplCvX86ImreadJpegTest::apply() {
-    // for (int i = 0; i < 100; i++) {
+bool PplCvX86ImreadJpegTest0::apply() {
     cv::Mat src = createSourceImage(size.height, size.width,
                                     CV_MAKETYPE(cv::DataType<uchar>::depth,
                                     channels));
@@ -462,94 +461,119 @@ bool PplCvX86ImreadJpegTest::apply() {
               << ", channels: " << channels << std::endl;
 
     std::string file_name("test.jpeg");
-    // std::string index = std::to_string(i);
-    // std::string file_name = index + "test.jpeg";
     bool succeeded = cv::imwrite(file_name.c_str(), src);
     if (succeeded == false) {
         std::cout << "failed to write the image to test.jpeg." << std::endl;
         return false;
     }
 
-    std::string progressive_jpeg("/home/sensetime/Downloads/progressjpeg1.jpg");
     cv::Mat cv_dst = cv::imread(file_name, cv::IMREAD_UNCHANGED);
     std::cout << "dst, width: " << cv_dst.cols << ", height: " << cv_dst.rows
               << ", channels: " << cv_dst.channels() << std::endl;
 
     int height, width, channels, stride;
     uchar* image;
-    // for (int i = 0; i < 100; i++) {
     ppl::cv::x86::Imread(file_name.c_str(), &height, &width, &channels, &stride,
                          &image);
-    // }
     std::cout << std::dec << "stride: " << stride << std::endl;
 
     float epsilon = EPSILON_3F;
     bool identity = checkDataIdentity<uchar>(cv_dst.data, image, height, width,
                                              channels, cv_dst.step, stride,
                                              epsilon);
-    // int test = -11 & 63;
-    // std::cout << "test: " << test << std::endl;
 
     free(image);
-    // if (identity == true) {
     int code = remove(file_name.c_str());
     if (code != 0) {
         std::cout << "failed to delete test.jpeg." << std::endl;
     }
-    // }
 
-    // std::cout << "uint64_t: " << sizeof(uint64_t) << std::endl;
-    // }
     return identity;
-    // return true;
 }
-// bool PplCvX86ImreadJpegTest::apply() {
-//     std::string file_name("71test.jpeg");
-//     cv::Mat cv_dst = cv::imread(file_name, cv::IMREAD_UNCHANGED);
-//     std::cout << "dst, width: " << cv_dst.cols << ", height: " << cv_dst.rows
-//               << ", channels: " << cv_dst.channels() << std::endl;
 
-//     int height, width, channels, stride;
-//     uchar* image;
-//     ppl::cv::x86::Imread(file_name.c_str(), &height, &width, &channels, &stride,
-//                          &image);
-//     std::cout << std::dec << "stride: " << stride << std::endl;
-
-//     float epsilon = EPSILON_3F;
-//     bool identity = checkDataIdentity<uchar>(cv_dst.data, image, height, width,
-//                                              channels, cv_dst.step, stride,
-//                                              epsilon);
-
-//     free(image);
-
-//     return true;
-// }
-
-TEST_P(PplCvX86ImreadJpegTest, Standard) {
+TEST_P(PplCvX86ImreadJpegTest0, Standard) {
     bool identity = this->apply();
     EXPECT_TRUE(identity);
 }
 
-INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadJpegTest,
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadJpegTest0,
     ::testing::Combine(
         ::testing::Values(1, 3),
         ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},
                           cv::Size{1283, 720}, cv::Size{1976, 1080},
                           cv::Size{320, 240}, cv::Size{640, 480},
                           cv::Size{1280, 720}, cv::Size{1920, 1080})),
-    [](const testing::TestParamInfo<PplCvX86ImreadJpegTest::ParamType>& info) {
+    [](const testing::TestParamInfo<PplCvX86ImreadJpegTest0::ParamType>& info) {
         return convertToStringJpeg(info.param);
     }
 );
 
-// INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadJpegTest,
-//     ::testing::Combine(
-//         ::testing::Values(1),
-//         ::testing::Values(cv::Size{1920, 1080})),
-//     [](const testing::TestParamInfo<PplCvX86ImreadJpegTest::ParamType>& info) {
-//         return convertToStringJpeg(info.param);
-//     }
-// );
+class PplCvX86ImreadJpegTest1 : public ::testing::TestWithParam<Parameters1> {
+  public:
+    PplCvX86ImreadJpegTest1() {
+        const Parameters1& parameters = GetParam();
+        channels = std::get<0>(parameters);
+        size     = std::get<1>(parameters);
+    }
+
+    ~PplCvX86ImreadJpegTest1() {
+    }
+
+    bool apply();
+
+  private:
+    int channels;
+    cv::Size size;
+};
+
+bool PplCvX86ImreadJpegTest1::apply() {
+    int height, width, channels, stride;
+    uchar* image = nullptr;
+    bool identity = true;
+    for (int i = 0; i < 11; i++) {
+        // std::cout << "processing image " << i << std::endl;
+        std::cout << "****************************** processing image " << i
+                  << " *****************************" << std::endl;
+        std::string jpeg_image = "data/jpegs/progressive" + std::to_string(i) + ".jpg";
+        // std::string jpeg_image = "/home/sensetime/Downloads/jpegs/progressive" + std::to_string(i) + ".jpg";
+        // std::string jpeg_image = "/home/sensetime/Downloads/jpegs/new10.jpg";
+        // std::string jpeg_image = "data/jpegs/progressive3.jpg";
+        cv::Mat cv_dst = cv::imread(jpeg_image, cv::IMREAD_UNCHANGED);
+        ppl::cv::x86::Imread(jpeg_image.c_str(), &height, &width, &channels,
+                             &stride, &image);
+
+        float epsilon = EPSILON_3F;
+        identity = checkDataIdentity<uchar>(cv_dst.data, image, height, width,
+                                        channels, cv_dst.step, stride,
+                                        epsilon);
+        if (image != nullptr) {
+            free(image);
+            image = nullptr;
+        }
+
+        if (!identity) return false;
+    }
+
+    return true;
+}
+
+#define JPEG_UNITTEST1()                                                       \
+TEST_P(PplCvX86ImreadJpegTest1, Standard) {                                    \
+    bool identity = this->apply();                                             \
+    EXPECT_TRUE(identity);                                                     \
+}                                                                              \
+                                                                               \
+INSTANTIATE_TEST_CASE_P(IsEqual, PplCvX86ImreadJpegTest1,                      \
+    ::testing::Combine(                                                        \
+        ::testing::Values(1),                                                  \
+        ::testing::Values(cv::Size{1, 1})),                                    \
+    [](const testing::TestParamInfo<PplCvX86ImreadJpegTest1::ParamType>&       \
+        info) {                                                                \
+        return convertToStringJpeg(info.param);                                \
+    }                                                                          \
+);
+
+JPEG_UNITTEST1()
 
 /***************************** Png unittest *****************************/
 
