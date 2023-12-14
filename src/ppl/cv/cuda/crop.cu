@@ -110,7 +110,6 @@ RetCode crop(const uchar* src, int src_rows, int src_cols, int channels,
     code = cudaMemcpy2DAsync(dst, dst_stride, src_start, src_stride,
                         dst_cols * channels * sizeof(uchar), dst_rows,
                         cudaMemcpyDeviceToDevice, stream);
-    cudaStreamSynchronize(stream);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
@@ -158,7 +157,6 @@ RetCode crop(const float* src, int src_rows, int src_cols, int channels,
     code = cudaMemcpy2DAsync(dst, dst_stride, src_start, src_stride,
                         dst_cols * channels * sizeof(float), dst_rows,
                         cudaMemcpyDeviceToDevice, stream);
-    cudaStreamSynchronize(stream);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
