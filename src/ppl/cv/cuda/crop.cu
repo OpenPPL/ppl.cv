@@ -107,9 +107,10 @@ RetCode crop(const uchar* src, int src_rows, int src_cols, int channels,
   if (scale == 1.f) {
     uchar* src_start = (uchar*)src + top * src_stride +
                        left * channels * sizeof(uchar);
-    code = cudaMemcpy2D(dst, dst_stride, src_start, src_stride,
+    code = cudaMemcpy2DAsync(dst, dst_stride, src_start, src_stride,
                         dst_cols * channels * sizeof(uchar), dst_rows,
-                        cudaMemcpyDeviceToDevice);
+                        cudaMemcpyDeviceToDevice, stream);
+    cudaStreamSynchronize(stream);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
@@ -154,9 +155,10 @@ RetCode crop(const float* src, int src_rows, int src_cols, int channels,
   if (scale == 1.f) {
     float* src_start = (float*)((uchar*)src + top * src_stride +
                        left * channels * sizeof(float));
-    code = cudaMemcpy2D(dst, dst_stride, src_start, src_stride,
+    code = cudaMemcpy2DAsync(dst, dst_stride, src_start, src_stride,
                         dst_cols * channels * sizeof(float), dst_rows,
-                        cudaMemcpyDeviceToDevice);
+                        cudaMemcpyDeviceToDevice, stream);
+    cudaStreamSynchronize(stream);
     if (code != cudaSuccess) {
       LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
       return RC_DEVICE_MEMORY_ERROR;
