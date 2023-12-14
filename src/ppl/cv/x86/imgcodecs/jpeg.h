@@ -57,11 +57,11 @@ typedef struct {
 } HuffmanLookupTable;
 
 typedef struct {
-    HuffmanLookupTable huff_dc[2];       // 2 huffman dc tables for YCrCb
-    HuffmanLookupTable huff_ac[2];       // 2 huffman ac tables for YCrCb
+    HuffmanLookupTable huff_dc[4];       // 2 huffman dc tables for YCrCb
+    HuffmanLookupTable huff_ac[4];       // 2 huffman ac tables for YCrCb
     // HuffmanLookupTable* huff_dc;       // 2 huffman dc tables for YCrCb
     // HuffmanLookupTable* huff_ac;       // 2 huffman ac tables for YCrCb
-    uint16_t dequant[2][64];             // 2 quantization tables for YCrCb
+    uint16_t dequant[4][64];             // 2 quantization tables for YCrCb
     // uint16_t* dequant[4];             // 2 quantization tables for YCrCb
 
     // sizes for components, interleaved MCUs
@@ -91,8 +91,8 @@ typedef struct {
     int32_t nomore;       // flag if we saw a marker so must stop
 
     int32_t progressive;
-    int32_t spec_start;
-    int32_t spec_end;
+    int32_t index_start;
+    int32_t index_end;
     int32_t succ_high;
     int32_t succ_low;
     int32_t eob_run;
@@ -188,6 +188,8 @@ class JpegDecoder : public ImageDecoder {
     bool sampleConvertColor(int32_t stride, uint8_t* image);
     void dequantizeData(int16_t *data, uint16_t *dequant_table);
     void finishProgressiveJpeg(JpegDecodeData *jpeg);
+    void idctprocess(JpegDecodeData *jpeg, int16_t* buffer, uint8_t* output,
+        int32_t width, int32_t height_begin, int32_t height_end, int32_t w2);
 
   private:
     BytesReader* file_data_;
@@ -203,4 +205,3 @@ class JpegDecoder : public ImageDecoder {
 } //! namespace ppl
 
 #endif //! __ST_HPC_PPL_CV_X86_IMGCODECS_JPEG_H_
-
