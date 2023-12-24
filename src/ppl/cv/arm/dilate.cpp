@@ -24,6 +24,7 @@
 #include <arm_neon.h>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <float.h>
 
 namespace ppl {
