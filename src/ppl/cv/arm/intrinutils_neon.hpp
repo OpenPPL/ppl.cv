@@ -155,20 +155,26 @@ static inline uint32x4_t neon_reverse_u32x4(uint32x4_t va)
 
 static inline void neon_rotate90_f32_4x4(float32x4_t &va, float32x4_t &vb, float32x4_t &vc, float32x4_t &vd)
 {
-    neon_transpose_f32_4x4(va, vb, vc, vd);
-    va = neon_reverse_f32x4(va);
-    vb = neon_reverse_f32x4(vb);
-    vc = neon_reverse_f32x4(vc);
-    vd = neon_reverse_f32x4(vd);
+    float32x4_t v20_0 = vzip1q_f32(vc, va);
+    float32x4_t v31_0 = vzip1q_f32(vd, vb);
+    float32x4_t v20_2 = vzip2q_f32(vc, va);
+    float32x4_t v31_2 = vzip2q_f32(vd, vb);
+    va = vzip1q_f32(v31_0, v20_0);
+    vb = vzip2q_f32(v31_0, v20_0);
+    vc = vzip1q_f32(v31_2, v20_2);
+    vd = vzip2q_f32(v31_2, v20_2);
 }
 
 static inline void neon_rotate90_u32_4x4(uint32x4_t &va, uint32x4_t &vb, uint32x4_t &vc, uint32x4_t &vd)
 {
-    neon_transpose_u32_4x4(va, vb, vc, vd);
-    va = neon_reverse_u32x4(va);
-    vb = neon_reverse_u32x4(vb);
-    vc = neon_reverse_u32x4(vc);
-    vd = neon_reverse_u32x4(vd);
+    uint32x4_t v20_0 = vzip1q_u32(vc, va);
+    uint32x4_t v31_0 = vzip1q_u32(vd, vb);
+    uint32x4_t v20_2 = vzip2q_u32(vc, va);
+    uint32x4_t v31_2 = vzip2q_u32(vd, vb);
+    va = vzip1q_u32(v31_0, v20_0);
+    vb = vzip2q_u32(v31_0, v20_0);
+    vc = vzip1q_u32(v31_2, v20_2);
+    vd = vzip2q_u32(v31_2, v20_2);
 }
 
 static inline void neon_rotate270_f32_4x4(float32x4_t &va, float32x4_t &vb, float32x4_t &vc, float32x4_t &vd)
@@ -194,15 +200,32 @@ static inline void neon_rotate90_u8_8x8(uint8x8_t &va,
                                         uint8x8_t &vg,
                                         uint8x8_t &vh)
 {
-    neon_transpose_u8_8x8(va, vb, vc, vd, ve, vf, vg, vh);
-    va = neon_reverse_u8x8(va);
-    vb = neon_reverse_u8x8(vb);
-    vc = neon_reverse_u8x8(vc);
-    vd = neon_reverse_u8x8(vd);
-    ve = neon_reverse_u8x8(ve);
-    vf = neon_reverse_u8x8(vf);
-    vg = neon_reverse_u8x8(vg);
-    vh = neon_reverse_u8x8(vh);
+    uint8x8_t v40_0 = vzip1_u8(ve, va);
+    uint8x8_t v51_0 = vzip1_u8(vf, vb);
+    uint8x8_t v62_0 = vzip1_u8(vg, vc);
+    uint8x8_t v73_0 = vzip1_u8(vh, vd);
+    uint8x8_t v40_4 = vzip2_u8(ve, va);
+    uint8x8_t v51_4 = vzip2_u8(vf, vb);
+    uint8x8_t v62_4 = vzip2_u8(vg, vc);
+    uint8x8_t v73_4 = vzip2_u8(vh, vd);
+
+    uint8x8_t v6420_0 = vzip1_u8(v62_0, v40_0);
+    uint8x8_t v7531_0 = vzip1_u8(v73_0, v51_0);
+    uint8x8_t v6420_2 = vzip2_u8(v62_0, v40_0);
+    uint8x8_t v7531_2 = vzip2_u8(v73_0, v51_0);
+    uint8x8_t v6420_4 = vzip1_u8(v62_4, v40_4);
+    uint8x8_t v7531_4 = vzip1_u8(v73_4, v51_4);
+    uint8x8_t v6420_6 = vzip2_u8(v62_4, v40_4);
+    uint8x8_t v7531_6 = vzip2_u8(v73_4, v51_4);
+
+    va = vzip1_u8(v7531_0, v6420_0);
+    vb = vzip2_u8(v7531_0, v6420_0);
+    vc = vzip1_u8(v7531_2, v6420_2);
+    vd = vzip2_u8(v7531_2, v6420_2);
+    ve = vzip1_u8(v7531_4, v6420_4);
+    vf = vzip2_u8(v7531_4, v6420_4);
+    vg = vzip1_u8(v7531_6, v6420_6);
+    vh = vzip2_u8(v7531_6, v6420_6);
 }
 
 static inline void neon_rotate270_u8_8x8(uint8x8_t &va,
