@@ -260,7 +260,7 @@ uchar* BmpDecoder::fillGrayRow8(uchar* data, uchar* indices, int length,
 }
 
 uchar* BmpDecoder::fillUniColor(uchar* data, uchar*& line_end, int step,
-                                int width3, int& y, int height, int count3,
+                                uint width3, uint& y, uint height, int count3,
                                 PaletteEntry color) {
     do {
         uchar* end = data + count3;
@@ -288,7 +288,7 @@ uchar* BmpDecoder::fillUniColor(uchar* data, uchar*& line_end, int step,
 }
 
 uchar* BmpDecoder::fillUniGray(uchar* data, uchar*& line_end, int step,
-                               int width, int& y, int height, int count,
+                               uint width, uint& y, uint height, int count,
                                uchar color) {
     do {
         uchar* end = data + count;
@@ -332,30 +332,32 @@ bool BmpDecoder::readHeader() {
     bool result = false;
     bool colorful = false;
 
-    file_data_->skip(10);
-    data_offset_ = file_data_->getDWord();
+    file_data_->skipBytes(10);
+    data_offset_ = file_data_->getDWordLittleEndian();
 
-    int size = file_data_->getDWord();
+    int size = file_data_->getDWordLittleEndian();
     assert(size > 0);
 
+    int width = 0;
+    int height = 0;
     if (size >= 36) {
-        width_  = file_data_->getDWord();
-        height_ = file_data_->getDWord();
-        bits_per_pixel_ = file_data_->getDWord() >> 16;
-        int bmp_compression = file_data_->getDWord();
+        width  = file_data_->getDWordLittleEndian();
+        height = file_data_->getDWordLittleEndian();
+        bits_per_pixel_ = file_data_->getDWordLittleEndian() >> 16;
+        int bmp_compression = file_data_->getDWordLittleEndian();
         assert(bmp_compression >= 0 && bmp_compression <= BMP_BITFIELDS);
         compression_type_ = (BmpCompression)bmp_compression;
-        file_data_->skip(12);
-        used_colors_ = file_data_->getDWord();
+        file_data_->skipBytes(12);
+        used_colors_ = file_data_->getDWordLittleEndian();
 
         if (bits_per_pixel_ == 32 && compression_type_ == BMP_BITFIELDS &&
             size >= 56) {
-            file_data_->skip(4);  //important colors
+            file_data_->skipBytes(4);  //important colors
 
             memset(rgba_mask_, 0, sizeof(rgba_mask_));
             memset(rgba_bit_offset_, -1, sizeof(rgba_bit_offset_));
             for (int index_rgba = 0; index_rgba < 4; ++index_rgba) {
-                uint mask = file_data_->getDWord();
+                uint mask = file_data_->getDWordLittleEndian();
                 rgba_mask_[index_rgba] = mask;
                 if (mask != 0) {
                     int bit_count = 0;
@@ -366,13 +368,13 @@ bool BmpDecoder::readHeader() {
                     rgba_bit_offset_[index_rgba] = bit_count;
                 }
             }
-            file_data_->skip(size - 56);
+            file_data_->skipBytes(size - 56);
         }
         else {
-            file_data_->skip(size - 36);
+            file_data_->skipBytes(size - 36);
         }
 
-        if (width_ > 0 && height_ != 0 && (((bits_per_pixel_ == 1 ||
+        if (width > 0 && height != 0 && (((bits_per_pixel_ == 1 ||
             bits_per_pixel_ == 4 || bits_per_pixel_ == 8 ||
             bits_per_pixel_ == 24 || bits_per_pixel_ == 32) &&
             compression_type_ == BMP_RGB) || ((bits_per_pixel_ == 16 ||
@@ -386,16 +388,16 @@ bool BmpDecoder::readHeader() {
             if (bits_per_pixel_ <= 8) {
                 assert(used_colors_ >= 0 && used_colors_ <= 256);
                 memset(color_palette_, 0, sizeof(color_palette_));
-                int number = (used_colors_ == 0 ? 1 << bits_per_pixel_ :
+                int number = (used_colors_ == 0 ? (1 << bits_per_pixel_) :
                               used_colors_) * 4;
                 file_data_->getBytes(color_palette_, number);
                 colorful = checkPaletteColor(color_palette_, bits_per_pixel_);
             }
             else if (bits_per_pixel_ == 16 &&
                      compression_type_ == BMP_BITFIELDS) {
-                int red_mask   = file_data_->getDWord();
-                int green_mask = file_data_->getDWord();
-                int blue_mask  = file_data_->getDWord();
+                int red_mask   = file_data_->getDWordLittleEndian();
+                int green_mask = file_data_->getDWordLittleEndian();
+                int blue_mask  = file_data_->getDWordLittleEndian();
 
                 if (blue_mask == 0x1f && green_mask == 0x3e0 &&
                     red_mask == 0x7c00) {
@@ -417,12 +419,12 @@ bool BmpDecoder::readHeader() {
         }
     }
     else if (size == 12) {
-        width_  = file_data_->getWord();
-        height_ = file_data_->getWord();
-        bits_per_pixel_ = file_data_->getDWord() >> 16;
+        width  = file_data_->getWordLittleEndian();
+        height = file_data_->getWordLittleEndian();
+        bits_per_pixel_ = file_data_->getDWordLittleEndian() >> 16;
         compression_type_ = BMP_RGB;
 
-        if (width_ > 0 && height_ != 0 && (bits_per_pixel_ == 1 ||
+        if (width > 0 && height != 0 && (bits_per_pixel_ == 1 ||
             bits_per_pixel_ == 4 || bits_per_pixel_ == 8 ||
             bits_per_pixel_ == 24 || bits_per_pixel_ == 32)) {
             if (bits_per_pixel_ <= 8) {
@@ -440,13 +442,14 @@ bool BmpDecoder::readHeader() {
     }
 
     channels_ = colorful ? (bits_per_pixel_ == 32 ? 4 : 3) : 1;
-    origin_ = height_ > 0 ? ORIGIN_BL : ORIGIN_TL;
-    height_ = abs(height_);
+    origin_ = height > 0 ? ORIGIN_BL : ORIGIN_TL;
+    width_  = abs(width);
+    height_ = abs(height);
 
     if (!result) {
         data_offset_ = -1;
-        width_  = -1;
-        height_ = -1;
+        width_  = 0;
+        height_ = 0;
     }
 
     return result;
@@ -469,7 +472,7 @@ bool BmpDecoder::decodeData(uint32_t stride, uint8_t* image) {
     int src_pitch = ((width_ * (bits_per_pixel_ != 15 ? bits_per_pixel_ : 16)
                      + 31) >> 5) << 2;
     int channels = colorful ? 3 : 1;
-    int row, width3 = width_ * channels;
+    uint row, width3 = width_ * channels;
 
     size_t src_size = src_pitch + 32;
     uchar* src = new uchar[src_size];
@@ -481,14 +484,15 @@ bool BmpDecoder::decodeData(uint32_t stride, uint8_t* image) {
     }
 
     file_data_->setPosition(data_offset_);
+    int bmp_stride = 0;
     if (origin_ == ORIGIN_BL) {
         image += (height_ - 1) * (size_t)stride;
-        stride = -stride;
+        bmp_stride = -stride;
     }
 
     switch (bits_per_pixel_) {
     case 1:  // 1 BPP
-        for (row = 0; row < height_; row++, image += stride) {
+        for (row = 0; row < height_; row++, image += bmp_stride) {
             file_data_->getBytes(src, src_pitch);
             if (colorful) {
                 fillColorRow1(image, src, width_, color_palette_);
@@ -502,7 +506,7 @@ bool BmpDecoder::decodeData(uint32_t stride, uint8_t* image) {
 
     case 4:  // 4 BPP
         if (compression_type_ == BMP_RGB) {
-            for (row = 0; row < height_; row++, image += stride) {
+            for (row = 0; row < height_; row++, image += bmp_stride) {
                 file_data_->getBytes(src, src_pitch);
                 if (colorful) {
                     fillColorRow4(image, src, width_, color_palette_);
@@ -518,7 +522,7 @@ bool BmpDecoder::decodeData(uint32_t stride, uint8_t* image) {
             row = 0;
 
             for(;;) {
-                int code = file_data_->getWord();
+                int code = file_data_->getWordLittleEndian();
                 int length = code & 255;
                 code >>= 8;
                 if (length != 0) {  // encoded mode
@@ -568,12 +572,12 @@ bool BmpDecoder::decodeData(uint32_t stride, uint8_t* image) {
                     }
 
                     if (colorful) {
-                        image = fillUniColor(image, line_end, stride, width3,
+                        image = fillUniColor(image, line_end, bmp_stride, width3,
                                              row, height_, x_shift3,
                                              color_palette_[0]);
                     }
                     else {
-                        image = fillUniGray(image, line_end, stride, width3,
+                        image = fillUniGray(image, line_end, bmp_stride, width3,
                                             row, height_, x_shift3,
                                             gray_palette[0]);
                     }
@@ -591,7 +595,7 @@ decode_rle4_bad: ;
 
     case 8:  // 8 BPP
         if (compression_type_ == BMP_RGB) {
-            for (row = 0; row < height_; row++, image += stride) {
+            for (row = 0; row < height_; row++, image += bmp_stride) {
                 file_data_->getBytes(src, src_pitch);
                 if (colorful) {
                     fillColorRow8(image, src, width_, color_palette_);
@@ -608,7 +612,7 @@ decode_rle4_bad: ;
             row = 0;
 
             for (;;) {
-                int code = file_data_->getWord();
+                int code = file_data_->getWordLittleEndian();
                 int length = code & 255;
                 code >>= 8;
                 if (length != 0) {  // encoded mode
@@ -620,12 +624,12 @@ decode_rle4_bad: ;
                     }
 
                     if (colorful) {
-                        image = fillUniColor(image, line_end, stride, width3,
+                        image = fillUniColor(image, line_end, bmp_stride, width3,
                                              row, height_, length,
                                              color_palette_[code]);
                     }
                     else {
-                        image = fillUniGray(image, line_end, stride, width3,
+                        image = fillUniGray(image, line_end, bmp_stride, width3,
                                             row, height_, length,
                                             gray_palette[code]);
                     }
@@ -659,7 +663,7 @@ decode_rle4_bad: ;
                     int x_shift3 = (int)(line_end - image);
                     int y_shift = height_ - row;
 
-                    if (code || !line_end_flag || x_shift3 < width3) {
+                    if (code || !line_end_flag || x_shift3 < (int)width3) {
                         if (code == 2) {
                             x_shift3 = file_data_->getByte() * channels;
                             y_shift = file_data_->getByte();
@@ -672,12 +676,12 @@ decode_rle4_bad: ;
                         }
 
                         if (colorful) {
-                            image = fillUniColor(image, line_end, stride,
+                            image = fillUniColor(image, line_end, bmp_stride,
                                                  width3, row, height_, x_shift3,
                                                  color_palette_[0]);
                         }
                         else {
-                            image = fillUniGray(image, line_end, stride, width3,
+                            image = fillUniGray(image, line_end, bmp_stride, width3,
                                                 row, height_, x_shift3,
                                                 gray_palette[0]);
                         }
@@ -699,7 +703,7 @@ decode_rle8_bad: ;
         }
         break;
     case 15:  // 15 BPP
-        for (row = 0; row < height_; row++, image += stride) {
+        for (row = 0; row < height_; row++, image += bmp_stride) {
             file_data_->getBytes(src, src_pitch);
             if (!colorful) {
                 BGR5552Gray(src, image, width_);
@@ -711,7 +715,7 @@ decode_rle8_bad: ;
         result = true;
         break;
     case 16:   // 16 BPP
-        for (row = 0; row < height_; row++, image += stride) {
+        for (row = 0; row < height_; row++, image += bmp_stride) {
             file_data_->getBytes(src, src_pitch);
             if (!colorful) {
                 BGR5652Gray(src, image, width_);
@@ -723,7 +727,7 @@ decode_rle8_bad: ;
         result = true;
         break;
     case 24:  // 24 BPP
-        for (row = 0; row < height_; row++, image += stride) {
+        for (row = 0; row < height_; row++, image += bmp_stride) {
             file_data_->getBytes(src, src_pitch);
             if (!colorful) {
                 BGR2Gray(src, image, width_);
@@ -736,7 +740,7 @@ decode_rle8_bad: ;
         result = true;
         break;
     case 32:  // 32 BPP
-        for (row = 0; row < height_; row++, image += stride) {
+        for (row = 0; row < height_; row++, image += bmp_stride) {
             file_data_->getBytes(src, src_pitch);
 
             if (!colorful) {

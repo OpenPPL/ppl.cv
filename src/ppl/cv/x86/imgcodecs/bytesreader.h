@@ -31,39 +31,32 @@ namespace x86 {
 class BytesReader {
   public:
     BytesReader(FILE* fp);
-    ~BytesReader() {
-        delete [] start_;
-    }
+    ~BytesReader();
 
-    uchar* data() const;
-    int getPosition();
-    void setPosition(int position);
-    void skip(int bytes) {current_ += bytes;}
+    uint8_t* data() const;
+    uint32_t getPosition();
+    void setPosition(uint32_t position);
+    uint8_t* getCurrentPosition() const {return current_;}
+    bool skipBytes(uint32_t size);
     void readBlock();
-    int getByte();
-    // uint32_t getpreviousByte();
-    int getBytes(void* buffer, int count);
-    int getWord();
+    int32_t getByte();
     int32_t getWordLittleEndian();
-    // int getWordBigEndian();
     int32_t getWordBigEndian();
-    int getDWord();
     int32_t getDWordLittleEndian();
-    // int getDWordBigEndian();
     int32_t getDWordBigEndian();
-    uchar* getCurrentPosition() const {return current_;}
+    void getBytes(void* buffer, int32_t count);
     uint32_t getValidSize() const;
     void setCrcChecking(Crc32* crc);
     void unsetCrcChecking();
 
   private:
     FILE* fp_;
-    Crc32* crc_;
-    uchar* start_;
-    uchar* end_;
-    uchar* current_;
-    int block_position_;
+    uint8_t* start_;
+    uint8_t* end_;
+    uint8_t* current_;
+    uint32_t block_position_;
     bool is_last_block_;
+    Crc32* crc_;
 };
 
 } //! namespace x86

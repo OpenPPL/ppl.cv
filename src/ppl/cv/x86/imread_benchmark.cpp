@@ -64,6 +64,8 @@ void fillGrayPalette(ppl::cv::x86::PaletteEntry* palette, int bits_per_pixel,
     }
 }
 
+/***************************** Bmp benchmark *****************************/
+
 bool createBmpTestFile(cv::Mat& image, EncodeType& encode_type, FILE* fp) {
     int file_step = ((image.cols * (encode_type.bits_per_pixel != 15 ?
                       encode_type.bits_per_pixel : 16) + 31) >> 5) << 2;
@@ -344,19 +346,20 @@ BENCHMARK_TEMPLATE(BM_ImreadBmp_opencv_x86, channels, bits_per_pixel,          \
 BENCHMARK_TEMPLATE(BM_ImreadBmp_ppl_x86, channels, bits_per_pixel,             \
                    compression)->Args({1920, 1080});
 
-// RUN_BMP_BENCHMARK(1, 1, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(3, 1, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(1, 4, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(3, 4, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(1, 8, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(3, 8, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(3, 16, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(3, 24, ppl::cv::x86::BMP_RGB)
-// RUN_BMP_BENCHMARK(4, 32, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(1, 1, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(3, 1, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(1, 4, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(3, 4, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(1, 8, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(3, 8, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(3, 16, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(3, 24, ppl::cv::x86::BMP_RGB)
+RUN_BMP_BENCHMARK(4, 32, ppl::cv::x86::BMP_RGB)
 
+/***************************** Jpeg benchmark *****************************/
 
 template <int channels>
-void BM_ImreadJPEG_ppl_x86(benchmark::State &state) {
+void BM_ImreadJPEG0_ppl_x86(benchmark::State &state) {
     int width  = state.range(0);
     int height = state.range(1);
 
@@ -393,7 +396,7 @@ void BM_ImreadJPEG_ppl_x86(benchmark::State &state) {
 }
 
 template <int channels>
-void BM_ImreadJPEG_opencv_x86(benchmark::State &state) {
+void BM_ImreadJPEG0_opencv_x86(benchmark::State &state) {
     int width  = state.range(0);
     int height = state.range(1);
 
@@ -425,37 +428,93 @@ void BM_ImreadJPEG_opencv_x86(benchmark::State &state) {
     }
 }
 
-#define RUN_JPEG_BENCHMARK(channels)                                           \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({320, 240})->     \
+#define RUN_JPEG_BENCHMARK0(channels)                                          \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_opencv_x86, channels)->Args({320, 240})->    \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({320, 240})->        \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_ppl_x86, channels)->Args({320, 240})->       \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({640, 480})->     \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_opencv_x86, channels)->Args({640, 480})->    \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({640, 480})->        \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_ppl_x86, channels)->Args({640, 480})->       \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({1280, 720})->    \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_opencv_x86, channels)->Args({1280, 720})->   \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({1280, 720})->       \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_ppl_x86, channels)->Args({1280, 720})->      \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({1920, 1080})->   \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_opencv_x86, channels)->Args({1920, 1080})->  \
                    UseManualTime();                                            \
-BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({1920, 1080})->      \
+BENCHMARK_TEMPLATE(BM_ImreadJPEG0_ppl_x86, channels)->Args({1920, 1080})->     \
                    UseManualTime();
 
-// #define RUN_JPEG_BENCHMARK(channels)                                           \
-// BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({320, 240})->     \
-//                    UseManualTime();                                            \
-// BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({320, 240})->        \
-//                    UseManualTime();                                            \
-// BENCHMARK_TEMPLATE(BM_ImreadJPEG_opencv_x86, channels)->Args({640, 480})->     \
-//                    UseManualTime();                                            \
-// BENCHMARK_TEMPLATE(BM_ImreadJPEG_ppl_x86, channels)->Args({640, 480})->        \
-//                    UseManualTime();
+RUN_JPEG_BENCHMARK0(1)
+RUN_JPEG_BENCHMARK0(3)
 
-RUN_JPEG_BENCHMARK(1)
-RUN_JPEG_BENCHMARK(3)
+void BM_ImreadJPEG1_ppl_x86(benchmark::State &state) {
+    int index = state.range(0);
+    std::string file_name = "data/jpegs/progressive" + std::to_string(index) +
+                            ".jpg";
 
+    struct timeval start, end;
+    int height, width, channels, stride;
+    uchar* image;
+    for (auto _ : state) {
+        gettimeofday(&start, NULL);
+        ppl::cv::x86::Imread(file_name.c_str(), &height, &width, &channels,
+                             &stride, &image);
+        gettimeofday(&end, NULL);
+        int time = (end.tv_sec * 1000000 + end.tv_usec) -
+                   (start.tv_sec * 1000000 + start.tv_usec);
+        state.SetIterationTime(time * 1e-6);
+
+        free(image);
+    }
+    state.SetItemsProcessed(state.iterations() * 1);
+}
+
+void BM_ImreadJPEG1_opencv_x86(benchmark::State &state) {
+    int index = state.range(0);
+    std::string file_name = "data/jpegs/progressive" + std::to_string(index) +
+                            ".jpg";
+
+    struct timeval start, end;
+    for (auto _ : state) {
+        gettimeofday(&start, NULL);
+        cv::Mat dst = cv::imread(file_name, cv::IMREAD_UNCHANGED);
+        gettimeofday(&end, NULL);
+        int time = (end.tv_sec * 1000000 + end.tv_usec) -
+                   (start.tv_sec * 1000000 + start.tv_usec);
+        state.SetIterationTime(time * 1e-6);
+    }
+    state.SetItemsProcessed(state.iterations() * 1);
+}
+
+#define RUN_JPEG_BENCHMARK1()                                                  \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(0)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(0)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(1)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(1)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(2)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(2)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(3)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(3)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(4)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(4)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(5)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(5)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(6)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(6)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(7)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(7)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(8)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(8)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(9)->UseManualTime();                 \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(9)->UseManualTime();                    \
+BENCHMARK(BM_ImreadJPEG1_opencv_x86)->Arg(10)->UseManualTime();                \
+BENCHMARK(BM_ImreadJPEG1_ppl_x86)->Arg(10)->UseManualTime();
+
+RUN_JPEG_BENCHMARK1()
+
+/***************************** Png benchmark *****************************/
 
 template <typename T>
 void BM_ImreadPNG_ppl_x86(benchmark::State &state) {

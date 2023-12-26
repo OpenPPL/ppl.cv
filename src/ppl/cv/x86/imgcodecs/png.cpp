@@ -265,7 +265,7 @@ bool PngDecoder::parsetIME(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(7);
+    file_data_->skipBytes(7);
     // LOG(INFO) << "The tIME chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -285,7 +285,7 @@ bool PngDecoder::parsezTXt(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     // LOG(INFO) << "A zTXt chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -305,7 +305,7 @@ bool PngDecoder::parsetEXt(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     // LOG(INFO) << "A tEXt chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -325,7 +325,7 @@ bool PngDecoder::parseiTXt(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     // LOG(INFO) << "A iTXt chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -345,7 +345,7 @@ bool PngDecoder::parsepHYs(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(9);
+    file_data_->skipBytes(9);
     // LOG(INFO) << "The pHYs chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -365,7 +365,7 @@ bool PngDecoder::parsesPLT(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     // LOG(INFO) << "A sPLT chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -396,7 +396,7 @@ bool PngDecoder::parseiCCP(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_iCCP;
     // LOG(INFO) << "The iCCP chunk is skipped.";
 
@@ -428,7 +428,7 @@ bool PngDecoder::parsesRGB(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(1);
+    file_data_->skipBytes(1);
     png_info.chunk_status |= HAVE_sRGB;
     // LOG(INFO) << "The sRGB chunk is skipped.";
 
@@ -477,7 +477,7 @@ bool PngDecoder::parsesBIT(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     // LOG(INFO) << "The sBIT chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -502,7 +502,7 @@ bool PngDecoder::parsegAMA(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(4);
+    file_data_->skipBytes(4);
     // LOG(INFO) << "The gAMA chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -527,7 +527,7 @@ bool PngDecoder::parsecHRM(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(32);
+    file_data_->skipBytes(32);
     // LOG(INFO) << "The cHRM chunk is skipped.";
 
     png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -684,7 +684,7 @@ bool PngDecoder::parsehIST(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     // LOG(INFO) << "The hIST chunk is skipped.";
     png_info.chunk_status |= HAVE_hIST;
 
@@ -722,7 +722,7 @@ bool PngDecoder::parsebKGD(PngInfo& png_info) {
     bool succeeded = setCrc32();
     if (!succeeded) return false;
 
-    file_data_->skip(png_info.current_chunk.length);
+    file_data_->skipBytes(png_info.current_chunk.length);
     png_info.chunk_status |= HAVE_bKGD;
     // LOG(INFO) << "The bKGD chunk is skipped.";
 
@@ -756,7 +756,7 @@ bool PngDecoder::parseIDATs(PngInfo& png_info, uint8_t* image,
     if (!succeeded) return false;
     // skipping 32 bits of the optional ADLER32 checksum in zlib data stream.
     if (png_info.current_chunk.type == png_IDAT) {
-        file_data_->skip(png_info.current_chunk.length);
+        file_data_->skipBytes(png_info.current_chunk.length);
     }
 
     // process crc of the current or the last IDAT chunk.
@@ -803,7 +803,7 @@ bool PngDecoder::parsetUnknownChunk(PngInfo& png_info) {
         bool succeeded = setCrc32();
         if (!succeeded) return false;
 
-        file_data_->skip(png_info.current_chunk.length);
+        file_data_->skipBytes(png_info.current_chunk.length);
         // LOG(INFO) << "Encountering an unknown ancillary chunk: " << chunk_name;
 
         png_info.current_chunk.crc = file_data_->getDWordBigEndian();
@@ -900,7 +900,7 @@ bool PngDecoder::fillBits(ZlibBuffer *zlib_buffer) {
 
         zlib_buffer->code_buffer |= segment << zlib_buffer->bit_number;
         int32_t shift = 7 - ((zlib_buffer->bit_number >> 3) & 7);
-        file_data_->skip(shift);
+        file_data_->skipBytes(shift);
         png_info_.current_chunk.length -= shift;
         zlib_buffer->bit_number |= 56;
 
