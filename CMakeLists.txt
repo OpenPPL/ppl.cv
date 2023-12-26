@@ -101,8 +101,7 @@ else()
         $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
         ${PPLCV_INCLUDE_DIRECTORIES})
 endif()
-# target_link_libraries(pplcv_static PUBLIC pplcommon_static ${PPLCV_LINK_LIBRARIES})
-target_link_libraries(pplcv_static PUBLIC pplcommon_static profiler unwind ${PPLCV_LINK_LIBRARIES})
+target_link_libraries(pplcv_static PUBLIC pplcommon_static ${PPLCV_LINK_LIBRARIES})
 target_compile_definitions(pplcv_static PUBLIC
     ${PPLCV_COMPILE_DEFINITIONS}
     PPLCV_VERSION_MAJOR=${PPLCV_VERSION_MAJOR}

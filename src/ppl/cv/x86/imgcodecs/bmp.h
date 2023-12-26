@@ -73,10 +73,10 @@ class BmpDecoder : public ImageDecoder {
                         uchar* palette);
     uchar* fillGrayRow8(uchar* data, uchar* indices, int length,
                         uchar* palette);
-    uchar* fillUniColor(uchar* data, uchar*& line_end, int step, int width3,
-                        int& y, int height, int count3, PaletteEntry color);
-    uchar* fillUniGray(uchar* data, uchar*& line_end, int step, int width,
-                       int& y, int height, int count, uchar color);
+    uchar* fillUniColor(uchar* data, uchar*& line_end, int step, uint width3,
+                        uint& y, uint height, int count3, PaletteEntry color);
+    uchar* fillUniGray(uchar* data, uchar*& line_end, int step, uint width,
+                       uint& y, uint height, int count, uchar color);
     void maskBGRA(uchar* dst, uchar* src, int number);
 
   private:

@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <iostream> // debug
 
 #include "ppl/common/log.h"
 
@@ -39,7 +38,6 @@ namespace x86 {
 bool detectFormat(BytesReader& file_data, ImageFormats* image_format) {
     const char* bmp_signature  = "BM";
     const char* jpeg_signature = "\xFF\xD8\xFF";
-    // const char* png_signature  = "\x89\x50\x4e\x47\xd\xa\x1a\xa";
     const char png_signature[] = {(int8_t)0x89, (int8_t)0x50, (int8_t)0x4E,
                                   (int8_t)0x47, (int8_t)0x0D, (int8_t)0x0A,
                                   (int8_t)0x1A, (int8_t)0x0A};
@@ -50,20 +48,17 @@ bool detectFormat(BytesReader& file_data, ImageFormats* image_format) {
     matched = memcmp(bmp_signature, file_signature, 2);
     if (matched == 0) {
         *image_format = BMP;
-        // file_data.skip(2);
         return true;
     }
     matched = memcmp(jpeg_signature, file_signature, 3);
     if (matched == 0) {
         *image_format = JPEG;
-        // file_data.skip(3);
-        // std::cout << "JPEG file." << std::endl;
         return true;
     }
     matched = memcmp(png_signature, file_signature, 8);
     if (matched == 0) {
         *image_format = PNG;
-        file_data.skip(8);
+        file_data.skipBytes(8);
         return true;
     }
 
@@ -132,8 +127,11 @@ RetCode Imread(const char* file_name, int* height, int* width, int* channels,
     size_t size = (*stride) * (*height);
     assert(size < MAX_IMAGE_SIZE);
     (*image) = (uchar*)malloc(size);
-    // std::cout << "Detected file info: " << /* std::dec << */ *height << ", " << *width << ", "
-    //           << *channels << ", " << decoder->depth() << ", " << *stride << std::endl;
+    if (*image == nullptr) {
+        LOG(ERROR) << "failed to allocate memory for the image.";
+        fclose(fp);
+        return RC_OUT_OF_MEMORY;
+    }
 
     succeeded = decoder->decodeData(*stride, (*image));
     if (succeeded == false) {
