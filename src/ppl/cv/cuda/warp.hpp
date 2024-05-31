@@ -22,14 +22,10 @@ namespace cuda {
 
 #define TEXTURE_ALIGNMENT 32
 
-static texture<uchar, cudaTextureType2D,
-               cudaReadModeNormalizedFloat> uchar_c1_ref;
-static texture<uchar4, cudaTextureType2D,
-               cudaReadModeNormalizedFloat> uchar_c4_ref;
-static texture<float, cudaTextureType2D,
-               cudaReadModeElementType> float_c1_ref;
-static texture<float4, cudaTextureType2D,
-               cudaReadModeElementType> float_c4_ref;
+static cudaTextureObject_t uchar_c1_tex = 0;
+static cudaTextureObject_t uchar_c4_tex = 0;
+static cudaTextureObject_t float_c1_tex = 0;
+static cudaTextureObject_t float_c4_tex = 0;
 
 template <typename Transform>
 __global__
@@ -37,6 +33,10 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
                          int channels, int src_stride, Transform transform,
                          uchar* dst, int dst_rows, int dst_cols, int dst_stride,
                          BorderType border_type, uchar border_value) {
+  static cudaTextureObject_t uchar_c1_tex = 0;
+  static cudaTextureObject_t uchar_c4_tex = 0;
+  static cudaTextureObject_t float_c1_tex = 0;
+  static cudaTextureObject_t float_c4_tex = 0;
   int element_x = (blockIdx.x << kBlockShiftX0) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY0) + threadIdx.y;
   if (element_x >= dst_cols || element_y >= dst_rows) {
@@ -66,7 +66,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
 
     if (channels == 1) {
       if (flag0 && flag1 && flag2 && flag3) {
-        float value = tex2D(uchar_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+        float value = tex2D<float>(uchar_c1_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
         value *= 255.0f;
 
         uchar* output = (uchar*)(dst + element_y * dst_stride);
@@ -96,7 +96,7 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
     }
     else {  // channels == 4
       if (flag0 && flag1 && flag2 && flag3) {
-        float4 value = tex2D(uchar_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+        float4 value = tex2D<float4>(uchar_c4_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
         value.x *= 255.0f;
         value.y *= 255.0f;
         value.z *= 255.0f;
@@ -132,14 +132,14 @@ void warpLinearTexKernel(const uchar* src, int src_rows, int src_cols,
   }
   else if (border_type == BORDER_REPLICATE) {
     if (channels == 1) {
-      float value = tex2D(uchar_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+      float value = tex2D<float>(uchar_c1_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
       value *= 255.0f;
 
       uchar* output = (uchar*)(dst + element_y * dst_stride);
       output[element_x] = saturateCast(value);
     }
     else {  // channels == 4
-      float4 value = tex2D(uchar_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+      float4 value = tex2D<float4>(uchar_c4_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
       value.x *= 255.0f;
       value.y *= 255.0f;
       value.z *= 255.0f;
@@ -159,6 +159,10 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
                          int channels, int src_stride, Transform transform,
                          float* dst, int dst_rows, int dst_cols, int dst_stride,
                          BorderType border_type, float border_value) {
+  static cudaTextureObject_t uchar_c1_tex = 0;
+  static cudaTextureObject_t uchar_c4_tex = 0;
+  static cudaTextureObject_t float_c1_tex = 0;
+  static cudaTextureObject_t float_c4_tex = 0;
   int element_x = (blockIdx.x << kBlockShiftX1) + threadIdx.x;
   int element_y = (blockIdx.y << kBlockShiftY1) + threadIdx.y;
   if (element_x >= dst_cols || element_y >= dst_rows) {
@@ -188,7 +192,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
 
     if (channels == 1) {
       if (flag0 && flag1 && flag2 && flag3) {
-        float value = tex2D(float_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+        float value = tex2D<float>(float_c1_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
         float* output = (float*)((uchar*)dst + element_y * dst_stride);
         output[element_x] = value;
@@ -217,7 +221,7 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
     }
     else {  // channels == 4
       if (flag0 && flag1 && flag2 && flag3) {
-        float4 value = tex2D(float_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+        float4 value = tex2D<float4>(float_c4_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
         float4* output = (float4*)((uchar*)dst + element_y * dst_stride);
         output[element_x] = value;
@@ -249,13 +253,13 @@ void warpLinearTexKernel(const float* src, int src_rows, int src_cols,
   }
   else if (border_type == BORDER_REPLICATE) {
     if (channels == 1) {
-      float value = tex2D(float_c1_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+      float value = tex2D<float>(float_c1_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
       float* output = (float*)((uchar*)dst + element_y * dst_stride);
       output[element_x] = value;
     }
     else {  // channels == 4
-      float4 value = tex2D(float_c4_ref, src_xy.x + 0.5f, src_xy.y + 0.5f);
+      float4 value = tex2D<float4>(float_c4_tex, src_xy.x + 0.5f, src_xy.y + 0.5f);
 
       float4* output = (float4*)((uchar*)dst + element_y * dst_stride);
       output[element_x] = value;

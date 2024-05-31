@@ -80,22 +80,54 @@ RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
   if (interpolation == INTERPOLATION_LINEAR) {
     if (channels != 3 && (src_stride & (TEXTURE_ALIGNMENT - 1)) == 0) {
       if (channels == 1) {
-        cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar>();
-        uchar_c1_ref.normalized = false;
-        uchar_c1_ref.filterMode = cudaFilterModeLinear;
-        uchar_c1_ref.addressMode[0] = cudaAddressModeClamp;
-        uchar_c1_ref.addressMode[1] = cudaAddressModeClamp;
-        code = cudaBindTexture2D(0, uchar_c1_ref, src, desc, src_cols, src_rows,
-                                 (size_t)src_stride);
+        cudaResourceDesc resDesc;
+        cudaTextureDesc texDesc;
+        memset(&resDesc, 0, sizeof(resDesc));
+        resDesc.resType = cudaResourceTypePitch2D;
+        resDesc.res.pitch2D.devPtr = (void*)src;
+        resDesc.res.pitch2D.desc = cudaCreateChannelDesc<uchar>();
+        resDesc.res.pitch2D.width = src_cols;
+        resDesc.res.pitch2D.height = src_rows;
+        resDesc.res.pitch2D.pitchInBytes = src_stride;
+
+        memset(&texDesc, 0, sizeof(texDesc));
+        texDesc.addressMode[0] = cudaAddressModeClamp;
+        texDesc.addressMode[1] = cudaAddressModeClamp;
+        texDesc.filterMode = cudaFilterModeLinear;
+        texDesc.readMode = cudaReadModeNormalizedFloat;
+        texDesc.normalizedCoords = false;
+
+        cudaTextureObject_t uchar_c1_tex = 0;
+        code = cudaCreateTextureObject(&uchar_c1_tex, &resDesc, &texDesc, nullptr);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return RC_DEVICE_RUNTIME_ERROR;
+        }
       }
       else {  // channels == 4
-        cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar4>();
-        uchar_c4_ref.normalized = false;
-        uchar_c4_ref.filterMode = cudaFilterModeLinear;
-        uchar_c4_ref.addressMode[0] = cudaAddressModeClamp;
-        uchar_c4_ref.addressMode[1] = cudaAddressModeClamp;
-        code = cudaBindTexture2D(0, uchar_c4_ref, src, desc, src_cols, src_rows,
-                                 (size_t)src_stride);
+        cudaResourceDesc resDesc;
+        cudaTextureDesc texDesc;
+        memset(&resDesc, 0, sizeof(resDesc));
+        resDesc.resType = cudaResourceTypePitch2D;
+        resDesc.res.pitch2D.devPtr = (void*)src;
+        resDesc.res.pitch2D.desc = cudaCreateChannelDesc<uchar4>();
+        resDesc.res.pitch2D.width = src_cols;
+        resDesc.res.pitch2D.height = src_rows;
+        resDesc.res.pitch2D.pitchInBytes = src_stride;
+
+        memset(&texDesc, 0, sizeof(texDesc));
+        texDesc.addressMode[0] = cudaAddressModeClamp;
+        texDesc.addressMode[1] = cudaAddressModeClamp;
+        texDesc.filterMode = cudaFilterModeLinear;
+        texDesc.readMode = cudaReadModeNormalizedFloat;
+        texDesc.normalizedCoords = false;
+
+        cudaTextureObject_t uchar_c4_tex = 0;
+        code = cudaCreateTextureObject(&uchar_c4_tex, &resDesc, &texDesc, nullptr);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return RC_DEVICE_RUNTIME_ERROR;
+        }
       }
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
@@ -107,10 +139,10 @@ RetCode warpAffine(const uchar* src, int src_rows, int src_cols, int channels,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
 
       if (channels == 1) {
-        cudaUnbindTexture(uchar_c1_ref);
+        cudaDestroyTextureObject(uchar_c1_tex);
       }
       else {
-        cudaUnbindTexture(uchar_c4_ref);
+        cudaDestroyTextureObject(uchar_c4_tex);
       }
     }
     else {
@@ -187,22 +219,54 @@ RetCode warpAffine(const float* src, int src_rows, int src_cols, int channels,
   if (interpolation == INTERPOLATION_LINEAR) {
     if (channels != 3 && (src_stride & (TEXTURE_ALIGNMENT - 1)) == 0) {
       if (channels == 1) {
-        cudaChannelFormatDesc desc = cudaCreateChannelDesc<float>();
-        float_c1_ref.normalized = false;
-        float_c1_ref.filterMode = cudaFilterModeLinear;
-        float_c1_ref.addressMode[0] = cudaAddressModeClamp;
-        float_c1_ref.addressMode[1] = cudaAddressModeClamp;
-        code = cudaBindTexture2D(0, float_c1_ref, src, desc, src_cols, src_rows,
-                                 (size_t)src_stride);
+        cudaResourceDesc resDesc;
+        cudaTextureDesc texDesc;
+        memset(&resDesc, 0, sizeof(resDesc));
+        resDesc.resType = cudaResourceTypePitch2D;
+        resDesc.res.pitch2D.devPtr = (void*)src;
+        resDesc.res.pitch2D.desc = cudaCreateChannelDesc<float>();
+        resDesc.res.pitch2D.width = src_cols;
+        resDesc.res.pitch2D.height = src_rows;
+        resDesc.res.pitch2D.pitchInBytes = src_stride * sizeof(float);
+
+        memset(&texDesc, 0, sizeof(texDesc));
+        texDesc.addressMode[0] = cudaAddressModeClamp;
+        texDesc.addressMode[1] = cudaAddressModeClamp;
+        texDesc.filterMode = cudaFilterModeLinear;
+        texDesc.readMode = cudaReadModeElementType;
+        texDesc.normalizedCoords = false;
+
+        cudaTextureObject_t float_c1_tex = 0;
+        code = cudaCreateTextureObject(&float_c1_tex, &resDesc, &texDesc, nullptr);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return RC_DEVICE_RUNTIME_ERROR;
+        }
       }
       else {  // channels == 4
-        cudaChannelFormatDesc desc = cudaCreateChannelDesc<float4>();
-        float_c4_ref.normalized = false;
-        float_c4_ref.filterMode = cudaFilterModeLinear;
-        float_c4_ref.addressMode[0] = cudaAddressModeClamp;
-        float_c4_ref.addressMode[1] = cudaAddressModeClamp;
-        code = cudaBindTexture2D(0, float_c4_ref, src, desc, src_cols, src_rows,
-                                 (size_t)src_stride);
+        cudaResourceDesc resDesc;
+        cudaTextureDesc texDesc;
+        memset(&resDesc, 0, sizeof(resDesc));
+        resDesc.resType = cudaResourceTypePitch2D;
+        resDesc.res.pitch2D.devPtr = (void*)src;
+        resDesc.res.pitch2D.desc = cudaCreateChannelDesc<float4>();
+        resDesc.res.pitch2D.width = src_cols;
+        resDesc.res.pitch2D.height = src_rows;
+        resDesc.res.pitch2D.pitchInBytes = src_stride * sizeof(float);
+
+        memset(&texDesc, 0, sizeof(texDesc));
+        texDesc.addressMode[0] = cudaAddressModeClamp;
+        texDesc.addressMode[1] = cudaAddressModeClamp;
+        texDesc.filterMode = cudaFilterModeLinear;
+        texDesc.readMode = cudaReadModeElementType;
+        texDesc.normalizedCoords = false;
+
+        cudaTextureObject_t float_c4_tex = 0;
+        code = cudaCreateTextureObject(&float_c4_tex, &resDesc, &texDesc, nullptr);
+        if (code != cudaSuccess) {
+          LOG(ERROR) << "CUDA error: " << cudaGetErrorString(code);
+          return RC_DEVICE_RUNTIME_ERROR;
+        }
       }
       if (code != cudaSuccess) {
         LOG(ERROR) << "CUDA texture error: " << cudaGetErrorString(code);
@@ -214,10 +278,10 @@ RetCode warpAffine(const float* src, int src_rows, int src_cols, int channels,
           dst_rows, dst_cols, dst_stride, border_type, border_value);
 
       if (channels == 1) {
-        cudaUnbindTexture(float_c1_ref);
+        cudaDestroyTextureObject(float_c1_tex);
       }
       else {
-        cudaUnbindTexture(float_c4_ref);
+        cudaDestroyTextureObject(float_c4_tex);
       }
     }
     else {
