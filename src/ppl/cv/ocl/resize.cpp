@@ -62,7 +62,7 @@ RetCode resizeU8(const cl_mem src, int src_rows, int src_cols, int channels,
     return RC_SUCCESS;
   }
 
-  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+  size_t local_size[] = {kBlockDimX0, kBlockDimY0};
   size_t global_size[] = {(size_t)dst_cols, (size_t)dst_rows};
 
   float col_scale = (double)src_cols / dst_cols;
@@ -73,8 +73,8 @@ RetCode resizeU8(const cl_mem src, int src_rows, int src_cols, int channels,
   if (interpolation == INTERPOLATION_LINEAR) {
     frame_chain->setCompileOptions("-D RESIZE_LINEAR_U8");
     runOclKernel(frame_chain, "resizeLinearU8Kernel", 2, global_size,
-                 local_size, src, src_rows, src_cols, channels, src_stride,
-                 dst, dst_rows, dst_cols, dst_stride, col_scale, row_scale);
+                 local_size, src, src_rows, src_cols, channels, src_stride, dst,
+                 dst_rows, dst_cols, dst_stride, col_scale, row_scale);
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     frame_chain->setCompileOptions("-D RESIZE_NP_U8");
@@ -145,7 +145,7 @@ RetCode resizeF32(const cl_mem src, int src_rows, int src_cols, int channels,
     return RC_SUCCESS;
   }
 
-  size_t local_size[]  = {kBlockDimX0, kBlockDimY0};
+  size_t local_size[] = {kBlockDimX0, kBlockDimY0};
   size_t global_size[] = {(size_t)dst_cols, (size_t)dst_rows};
 
   float col_scale = (double)src_cols / dst_cols;
@@ -156,8 +156,8 @@ RetCode resizeF32(const cl_mem src, int src_rows, int src_cols, int channels,
   if (interpolation == INTERPOLATION_LINEAR) {
     frame_chain->setCompileOptions("-D RESIZE_LINEAR_F32");
     runOclKernel(frame_chain, "resizeLinearF32Kernel", 2, global_size,
-                 local_size, src, src_rows, src_cols, channels, src_stride,
-                 dst, dst_rows, dst_cols, dst_stride, col_scale, row_scale);
+                 local_size, src, src_rows, src_cols, channels, src_stride, dst,
+                 dst_rows, dst_cols, dst_stride, col_scale, row_scale);
   }
   else if (interpolation == INTERPOLATION_NEAREST_POINT) {
     frame_chain->setCompileOptions("-D RESIZE_NP_F32");

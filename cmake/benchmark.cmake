@@ -3,6 +3,8 @@ hpcc_populate_dep(benchmark)
 
 if(PPLCV_USE_OPENCL)
     add_executable(pplcv_benchmark src/ppl/cv/ocl/utility/infrastructure.cpp
+                   src/ppl/cv/ocl/utility/memory_pool.cpp
+                   src/ppl/cv/ocl/utility/use_memory_pool.cpp
                    ${PPLCV_BENCHMARK_SRC}
                    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/cv/benchmark_main.cc)
 else()

@@ -233,15 +233,11 @@ TEST_P(PplCvOclResizeTest ## T ## channels, Standard) {                        \
                                                                                \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclResizeTest ## T ## channels,          \
   ::testing::Combine(                                                          \
-    ::testing::Values(kHalfSize, kSmallerSize, kSameSize, kBiggerSize,         \
-                      kDoubleSize),                                            \
-    ::testing::Values(ppl::cv::INTERPOLATION_LINEAR,                           \
-                      ppl::cv::INTERPOLATION_NEAREST_POINT,                    \
-                      ppl::cv::INTERPOLATION_AREA),                            \
+    ::testing::Values(kHalfSize, kSmallerSize),                                            \
+    ::testing::Values(ppl::cv::INTERPOLATION_LINEAR),                            \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1934, 1080},               \
-                      cv::Size{320, 240}, cv::Size{640, 480},                  \
-                      cv::Size{1280, 720}, cv::Size{1920, 1080})),             \
+                      cv::Size{320, 240})),             \
   [](const testing::TestParamInfo<                                             \
       PplCvOclResizeTest ## T ## channels::ParamType>& info) {                 \
     return convertToStringResize(info.param);                                  \

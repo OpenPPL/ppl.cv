@@ -655,3 +655,252 @@ void divF32Kernel1(global const float* src0, int rows, int cols,
   }
 }
 #endif
+
+/**************************** Mla operation *****************************/
+
+#if defined(MLA_U81D) || defined(ALL_KERNELS)
+__kernel void mlaU8Kernel0(global const uchar* src0, int cols,
+                           global const uchar* src1, global uchar* dst) {
+  int element_x = get_global_id(0);
+  int index_x = element_x << 2;
+  if (index_x >= cols) {
+    return;
+  }
+
+  uchar4 input_value0 = vload4(element_x, src0);
+  uchar4 input_value1 = vload4(element_x, src1);
+  uchar4 input_value  = vload4(element_x, dst);
+  input_value = add_sat(input_value, convert_uchar4_sat(convert_ushort4(input_value0) *
+                                      convert_ushort4(input_value1)));
+
+  if (index_x < cols - 3) {
+    vstore4(input_value, element_x, dst);
+  }
+  else {
+    dst[index_x] = input_value.x;
+    if (index_x < cols - 1) {
+      dst[index_x + 1] = input_value.y;
+    }
+    if ((index_x < cols - 2)) {
+      dst[index_x + 2] = input_value.z;
+    }
+  }
+}
+#endif
+
+#if defined(MLA_U82D) || defined(ALL_KERNELS)
+__kernel
+void mlaU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
+                  global const uchar* src1, int src1_stride,
+                  global uchar* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  int index_x = element_x << 2;
+  if (element_y >= rows || index_x >= cols) {
+    return;
+  }
+
+  global uchar* data = src0 + mul24(element_y, src0_stride);
+  uchar4 input_value0 = vload4(element_x, data);
+  data = src1 + mul24(element_y, src1_stride);
+  uchar4 input_value1 = vload4(element_x, data);
+  data = dst + mul24(element_y, dst_stride);
+  uchar4 input_value = vload4(element_x, data);
+  input_value = add_sat(input_value, convert_uchar4_sat(convert_ushort4(input_value0) *
+                                      convert_ushort4(input_value1)));
+
+  if (index_x < cols - 3) {
+    vstore4(input_value, element_x, data);
+  }
+  else {
+    data[index_x] = input_value.x;
+    if (index_x < cols - 1) {
+      data[index_x + 1] = input_value.y;
+    }
+    if ((index_x < cols - 2)) {
+      data[index_x + 2] = input_value.z;
+    }
+  }
+}
+#endif
+
+
+#if defined(MLA_F32ALIGNED) || defined(ALL_KERNELS)
+__kernel
+void mlaF32Kernel0(global const float* src0, int rows, int cols,
+                   int src0_stride, global const float* src1, int src1_stride,
+                   global float* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  global float* data = (global float*)((global uchar*)src0 +
+                        mul24(element_y, src0_stride));
+  float2 input_value0 = vload2(element_x, data);
+  data = (global float*)((global uchar*)src1 + mul24(element_y, src1_stride));
+  float2 input_value1 = vload2(element_x, data);
+  data = (global float*)((global uchar*)dst + mul24(element_y, dst_stride));
+  float2 input_value = vload2(element_x, data);
+  input_value += input_value0 * input_value1;
+
+  vstore2(input_value, element_x, data);
+}
+#endif
+
+
+#if defined(MLA_F32UNALIGNED) || defined(ALL_KERNELS)
+__kernel
+void mlaF32Kernel1(global const float* src0, int rows, int cols,
+                   int src0_stride, global const float* src1, int src1_stride,
+                   global float* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  int index_x = element_x << 1;
+  if (element_y >= rows || index_x >= cols) {
+    return;
+  }
+
+  global float* data = (global float*)((global uchar*)src0 +
+                        mul24(element_y, src0_stride));
+  float2 input_value0 = vload2(element_x, data);
+  data = (global float*)((global uchar*)src1 + mul24(element_y, src1_stride));
+  float2 input_value1 = vload2(element_x, data);
+  data = (global float*)((global uchar*)dst + mul24(element_y, dst_stride));
+  float2 input_value = vload2(element_x, data);
+  input_value += input_value0 * input_value1;
+
+  if (index_x < cols - 1) {
+    vstore2(input_value, element_x, data);
+  }
+  else {
+    data[index_x] = input_value.x;
+  }
+}
+#endif
+
+
+/**************************** Mls operation *****************************/
+
+#if defined(MLS_U81D) || defined(ALL_KERNELS)
+__kernel void mlsU8Kernel0(global const uchar* src0, int cols,
+                           global const uchar* src1, global uchar* dst) {
+  int element_x = get_global_id(0);
+  int index_x = element_x << 2;
+  if (index_x >= cols) {
+    return;
+  }
+
+  uchar4 input_value0 = vload4(element_x, src0);
+  uchar4 input_value1 = vload4(element_x, src1);
+  uchar4 input_value  = vload4(element_x, dst);
+  input_value = sub_sat(input_value, convert_uchar4_sat(convert_ushort4(input_value0) *
+                                      convert_ushort4(input_value1)));
+
+  if (index_x < cols - 3) {
+    vstore4(input_value, element_x, dst);
+  }
+  else {
+    dst[index_x] = input_value.x;
+    if (index_x < cols - 1) {
+      dst[index_x + 1] = input_value.y;
+    }
+    if ((index_x < cols - 2)) {
+      dst[index_x + 2] = input_value.z;
+    }
+  }
+}
+#endif
+
+#if defined(MLS_U82D) || defined(ALL_KERNELS)
+__kernel
+void mlsU8Kernel1(global const uchar* src0, int rows, int cols, int src0_stride,
+                  global const uchar* src1, int src1_stride,
+                  global uchar* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  int index_x = element_x << 2;
+  if (element_y >= rows || index_x >= cols) {
+    return;
+  }
+
+  global uchar* data = src0 + mul24(element_y, src0_stride);
+  uchar4 input_value0 = vload4(element_x, data);
+  data = src1 + mul24(element_y, src1_stride);
+  uchar4 input_value1 = vload4(element_x, data);
+  data = dst + mul24(element_y, dst_stride);
+  uchar4 input_value = vload4(element_x, data);
+  input_value = sub_sat(input_value, convert_uchar4_sat(convert_ushort4(input_value0) *
+                                      convert_ushort4(input_value1)));
+
+  if (index_x < cols - 3) {
+    vstore4(input_value, element_x, data);
+  }
+  else {
+    data[index_x] = input_value.x;
+    if (index_x < cols - 1) {
+      data[index_x + 1] = input_value.y;
+    }
+    if ((index_x < cols - 2)) {
+      data[index_x + 2] = input_value.z;
+    }
+  }
+}
+#endif
+
+
+#if defined(MLS_F32ALIGNED) || defined(ALL_KERNELS)
+__kernel
+void mlsF32Kernel0(global const float* src0, int rows, int cols,
+                   int src0_stride, global const float* src1, int src1_stride,
+                   global float* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  if (element_y >= rows || element_x >= cols) {
+    return;
+  }
+
+  global float* data = (global float*)((global uchar*)src0 +
+                        mul24(element_y, src0_stride));
+  float2 input_value0 = vload2(element_x, data);
+  data = (global float*)((global uchar*)src1 + mul24(element_y, src1_stride));
+  float2 input_value1 = vload2(element_x, data);
+  data = (global float*)((global uchar*)dst + mul24(element_y, dst_stride));
+  float2 input_value = vload2(element_x, data);
+  input_value -= input_value0 * input_value1;
+
+  vstore2(input_value, element_x, data);
+}
+#endif
+
+
+#if defined(MLS_F32UNALIGNED) || defined(ALL_KERNELS)
+__kernel
+void mlsF32Kernel1(global const float* src0, int rows, int cols,
+                   int src0_stride, global const float* src1, int src1_stride,
+                   global float* dst, int dst_stride) {
+  int element_x = get_global_id(0);
+  int element_y = get_global_id(1);
+  int index_x = element_x << 1;
+  if (element_y >= rows || index_x >= cols) {
+    return;
+  }
+
+  global float* data = (global float*)((global uchar*)src0 +
+                        mul24(element_y, src0_stride));
+  float2 input_value0 = vload2(element_x, data);
+  data = (global float*)((global uchar*)src1 + mul24(element_y, src1_stride));
+  float2 input_value1 = vload2(element_x, data);
+  data = (global float*)((global uchar*)dst + mul24(element_y, dst_stride));
+  float2 input_value = vload2(element_x, data);
+  input_value -= input_value0 * input_value1;
+
+  if (index_x < cols - 1) {
+    vstore2(input_value, element_x, data);
+  }
+  else {
+    data[index_x] = input_value.x;
+  }
+}
+#endif

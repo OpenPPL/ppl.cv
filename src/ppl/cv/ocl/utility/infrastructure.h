@@ -27,6 +27,7 @@
 #define EPSILON_2F 2.1f
 #define EPSILON_3F 3.1f
 #define EPSILON_4F 4.1f
+#define EPSILON_5F 5.1f
 #define EPSILON_E1 1e-1
 #define EPSILON_E2 1e-2
 #define EPSILON_E3 0.002
@@ -39,6 +40,11 @@ if (!(expression)) {                                                           \
   LOG(ERROR) << "Infrastructure assertion failed: " << #expression;            \
   exit(-1);                                                                    \
 }
+
+enum MaskType {
+  kUnmasked,
+  kMasked,
+};
 
 cv::Mat createSourceImage(int rows, int cols, int type);
 cv::Mat createSourceImage(int rows, int cols, int type, float begin,

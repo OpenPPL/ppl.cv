@@ -2,7 +2,10 @@ hpcc_populate_dep(googletest)
 
 if(PPLCV_USE_OPENCL)
     add_executable(pplcv_unittest ${PPLCV_UNITTEST_SRC}
-                   src/ppl/cv/ocl/utility/infrastructure.cpp)
+                   src/ppl/cv/ocl/utility/infrastructure.cpp
+                   src/ppl/cv/ocl/utility/memory_pool.cpp
+                   src/ppl/cv/ocl/utility/use_memory_pool.cpp
+                   )
 else()
     add_executable(pplcv_unittest ${PPLCV_UNITTEST_SRC})
 endif()

@@ -480,3 +480,8 @@ template
 bool checkMatricesIdentity(const float* src0, int rows, int cols, int channels,
                            int src0_stride, const float* src1, int src1_stride,
                            float epsilon, bool display);
+
+template
+bool checkMatricesIdentity(const int* src0, int rows, int cols, int channels,
+                           int src0_stride, const int* src1, int src1_stride,
+                           float epsilon, bool display);

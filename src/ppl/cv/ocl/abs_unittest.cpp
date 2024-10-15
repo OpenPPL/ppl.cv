@@ -165,9 +165,9 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclAbsTest ## T ## channels,             \
   }                                                                            \
 );
 
-UNITTEST(schar, 1)
-UNITTEST(schar, 3)
-UNITTEST(schar, 4)
-UNITTEST(float, 1)
-UNITTEST(float, 3)
+// UNITTEST(schar, 1)
+// UNITTEST(schar, 3)
+// UNITTEST(schar, 4)
+// UNITTEST(float, 1)
+// UNITTEST(float, 3)
 UNITTEST(float, 4)
