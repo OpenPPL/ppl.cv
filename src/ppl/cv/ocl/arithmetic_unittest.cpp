@@ -33,6 +33,8 @@ enum ArithFunctions {
   kMUL1,
   kDIV0,
   kDIV1,
+  kMLA,
+  kMLS,
 };
 
 using Parameters = std::tuple<ArithFunctions, cv::Size>;
@@ -60,6 +62,12 @@ inline std::string convertToStringArith(const Parameters& parameters) {
   }
   else if (function == kDIV1) {
     formatted << "Div1" << "_";
+  }
+  else if (function == kMLA) {
+    formatted << "Mla" << "_";
+  }
+  else if (function == kMLS) {
+    formatted << "Mls" << "_";
   }
   else {
   }
@@ -128,7 +136,7 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
                                    src_bytes, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
   cl_mem gpu_dst = clCreateBuffer(context,
-                                  CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY,
+                                  CL_MEM_READ_WRITE,
                                   dst_bytes, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
   error_code = clEnqueueWriteBuffer(queue, gpu_src0, CL_FALSE, 0, src_bytes,
@@ -136,6 +144,9 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
   CHECK_ERROR(error_code, clEnqueueWriteBuffer);
   error_code = clEnqueueWriteBuffer(queue, gpu_src1, CL_FALSE, 0, src_bytes,
                                     src1.data, 0, NULL, NULL);
+  CHECK_ERROR(error_code, clEnqueueWriteBuffer);
+  error_code = clEnqueueWriteBuffer(queue, gpu_dst, CL_FALSE, 0, src_bytes,
+                                    src0.data, 0, NULL, NULL);
   CHECK_ERROR(error_code, clEnqueueWriteBuffer);
 
   int data_size = size.height * size.width * channels * sizeof(T);
@@ -148,7 +159,7 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
                                      data_size, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
   cl_mem gpu_output = clCreateBuffer(context,
-                                     CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,
+                                     CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                                      data_size, NULL, &error_code);
   CHECK_ERROR(error_code, clCreateBuffer);
   T* input0 = (T*)clEnqueueMapBuffer(queue, gpu_input0, CL_TRUE, CL_MAP_WRITE,
@@ -157,12 +168,20 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
   T* input1 = (T*)clEnqueueMapBuffer(queue, gpu_input1, CL_TRUE, CL_MAP_WRITE,
                                      0, data_size, 0, NULL, NULL, &error_code);
   CHECK_ERROR(error_code, clEnqueueMapBuffer);
+  T* output0 = (T*)clEnqueueMapBuffer(queue, gpu_output, CL_TRUE, CL_MAP_WRITE,
+                                     0, data_size, 0, NULL, NULL, &error_code);
+  CHECK_ERROR(error_code, clEnqueueMapBuffer);
+
   copyMatToArray(src0, input0);
   copyMatToArray(src1, input1);
+  copyMatToArray(src0, output0);
   error_code = clEnqueueUnmapMemObject(queue, gpu_input0, input0, 0, NULL,
                                        NULL);
   CHECK_ERROR(error_code, clEnqueueUnmapMemObject);
   error_code = clEnqueueUnmapMemObject(queue, gpu_input1, input1, 0, NULL,
+                                       NULL);
+  CHECK_ERROR(error_code, clEnqueueUnmapMemObject);
+  error_code = clEnqueueUnmapMemObject(queue, gpu_output, output0, 0, NULL,
                                        NULL);
   CHECK_ERROR(error_code, clEnqueueUnmapMemObject);
 
@@ -247,6 +266,34 @@ bool PplCvOclArithmeticTest<T, channels>::apply() {
         size.width * channels, gpu_input0, size.width * channels, gpu_input1,
         size.width * channels, gpu_output, scale);
   }
+  else if (function == kMLA) {
+    cv::Mat temp0(size.height, size.width,
+                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::multiply(src0, src1, temp0);
+    cv::add(cv_dst, temp0, cv_dst);
+
+    ppl::cv::ocl::Mla<T, channels>(queue, src0.rows, src0.cols,
+        src0.step / sizeof(T), gpu_src0, src1.step / sizeof(T), gpu_src1,
+        dst.step / sizeof(T), gpu_dst);
+      
+    ppl::cv::ocl::Mla<T, channels>(queue, size.height, size.width,
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output);
+  }
+  else if (function == kMLS) {
+    cv::Mat temp0(size.height, size.width,
+                  CV_MAKETYPE(cv::DataType<T>::depth, channels));
+    cv::multiply(src0, src1, temp0);
+    cv::subtract(cv_dst, temp0, cv_dst);
+
+    ppl::cv::ocl::Mls<T, channels>(queue, src0.rows, src0.cols,
+        src0.step / sizeof(T), gpu_src0, src1.step / sizeof(T), gpu_src1,
+        dst.step / sizeof(T), gpu_dst);
+      
+    ppl::cv::ocl::Mls<T, channels>(queue, size.height, size.width,
+        size.width * channels, gpu_input0, size.width * channels, gpu_input1,
+        size.width * channels, gpu_output);
+  }
   error_code = clEnqueueReadBuffer(queue, gpu_dst, CL_TRUE, 0, dst_bytes,
                                    dst.data, 0, NULL, NULL);
   CHECK_ERROR(error_code, clEnqueueReadBuffer);
@@ -297,7 +344,7 @@ TEST_P(PplCvOclArithmeticTest ## T ## channels, Standard) {                    \
 INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclArithmeticTest ## T ## channels,      \
   ::testing::Combine(                                                          \
     ::testing::Values(kADD, kADDWEITHTED, kSUBTRACT, kMUL0, kMUL1, kDIV0,      \
-                      kDIV1),                                                  \
+                      kDIV1, kMLS, kMLA),                                      \
     ::testing::Values(cv::Size{321, 240}, cv::Size{642, 480},                  \
                       cv::Size{1283, 720}, cv::Size{1976, 1080},               \
                       cv::Size{320, 240}, cv::Size{640, 480},                  \
@@ -311,6 +358,7 @@ INSTANTIATE_TEST_CASE_P(IsEqual, PplCvOclArithmeticTest ## T ## channels,      \
 UNITTEST(uchar, 1)
 UNITTEST(uchar, 3)
 UNITTEST(uchar, 4)
+
 UNITTEST(float, 1)
 UNITTEST(float, 3)
 UNITTEST(float, 4)

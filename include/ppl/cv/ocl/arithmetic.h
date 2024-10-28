@@ -522,6 +522,205 @@ ppl::common::RetCode Div(cl_command_queue queue,
                          cl_mem outData,
                          float scale = 1.f);
 
+
+/**
+ * @brief Calculates the multiplication-addition of two matrices.
+ * @tparam T The data type, used for both input and output image, currently only
+ *         uint8_t(uchar) and float are supported.
+ * @tparam channels The number of channels of input image, 1, 3 and 4 are
+ *         supported.
+ * @param queue          opencl command queue.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
+ * @param inWidthStride0 first input image's width stride, which is not less
+ *                       than `width * channels`.
+ * @param inData0        first input image data.
+ * @param inWidthStride1 second input image's width stride, similar to
+ *                       inWidthStride0.
+ * @param inData1        second input image data.
+ * @param outWidthStride the width stride of output image, similar to
+ *                       inWidthStride0.
+ * @param outData        output image data.
+ * @param scale          optional scale factor.
+ * @return The execution status, succeeds or fails with an error code.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
+ * @warning All parameters must be valid, or undefined behaviour may occur.
+ * @remark The fllowing table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>channels
+ * <tr><td>uint8_t(uchar)<td>1
+ * <tr><td>uint8_t(uchar)<td>3
+ * <tr><td>uint8_t(uchar)<td>4
+ * <tr><td>float<td>1
+ * <tr><td>float<td>3
+ * <tr><td>float<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
+ * <tr><td>Header files <td>#include "ppl/cv/ocl/arithmetic.h"
+ * <tr><td>Project      <td>ppl.cv
+ * </table>
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include "ppl/cv/ocl/arithmetic.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
+ * using namespace ppl::cv::ocl;
+ *
+ * int main(int argc, char** argv) {
+ *   int width    = 640;
+ *   int height   = 480;
+ *   int channels = 3;
+ *
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
+ *
+ *   cl_int error_code = 0;
+ *   int data_size = height * width * channels * sizeof(float);
+ *   float* input  = (float*)malloc(data_size);
+ *   float* output = (float*)malloc(data_size);
+ *   cl_mem gpu_input0 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_input1 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_output = = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
+ *                                        NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input0, CL_FALSE, 0,
+ *                                     data_size, input, 0, NULL, NULL);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input1, CL_FALSE, 0,
+ *                                     data_size, input, 0, NULL, NULL);
+ *
+ *   Div<float, 3>(queue, height, width, width * channels, gpu_input0,
+ *                 width * channels, gpu_input1, width * channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input0);
+ *   clReleaseMemObject(gpu_input1);
+ *   clReleaseMemObject(gpu_output);
+ *
+ *   return 0;
+ * }
+ * @endcode
+ */
+template <typename T, int channels>
+ppl::common::RetCode Mla(cl_command_queue queue,
+                         int height,
+                         int width,
+                         int inWidthStride0,
+                         const cl_mem inData0,
+                         int inWidthStride1,
+                         const cl_mem inData1,
+                         int outWidthStride,
+                         cl_mem outData);
+
+
+/**
+ * @brief Calculates the multiplication-subtraction of two matrices.
+ * @tparam T The data type, used for both input and output image, currently only
+ *         uint8_t(uchar) and float are supported.
+ * @tparam channels The number of channels of input image, 1, 3 and 4 are
+ *         supported.
+ * @param queue          opencl command queue.
+ * @param height         input&output image's height.
+ * @param width          input&output image's width.
+ * @param inWidthStride0 first input image's width stride, which is not less
+ *                       than `width * channels`.
+ * @param inData0        first input image data.
+ * @param inWidthStride1 second input image's width stride, similar to
+ *                       inWidthStride0.
+ * @param inData1        second input image data.
+ * @param outWidthStride the width stride of output image, similar to
+ *                       inWidthStride0.
+ * @param outData        output image data.
+ * @param scale          optional scale factor.
+ * @return The execution status, succeeds or fails with an error code.
+ * @note For best performance, rows of input&output aligned with 64 bits are
+ *       recommended.
+ * @warning All parameters must be valid, or undefined behaviour may occur.
+ * @remark The fllowing table show which data type and channels are supported.
+ * <table>
+ * <tr><th>Data type(T)<th>channels
+ * <tr><td>uint8_t(uchar)<td>1
+ * <tr><td>uint8_t(uchar)<td>3
+ * <tr><td>uint8_t(uchar)<td>4
+ * <tr><td>float<td>1
+ * <tr><td>float<td>3
+ * <tr><td>float<td>4
+ * </table>
+ * <table>
+ * <caption align="left">Requirements</caption>
+ * <tr><td>OpenCL platforms supported <td>OpenCL 1.2
+ * <tr><td>Header files <td>#include "ppl/cv/ocl/arithmetic.h"
+ * <tr><td>Project      <td>ppl.cv
+ * </table>
+ * @since ppl.cv-v1.0.0
+ * ###Example
+ * @code{.cpp}
+ * #include "ppl/cv/ocl/arithmetic.h"
+ * #include "ppl/common/oclcommon.h"
+ *
+ * using namespace ppl::common::ocl;
+ * using namespace ppl::cv::ocl;
+ *
+ * int main(int argc, char** argv) {
+ *   int width    = 640;
+ *   int height   = 480;
+ *   int channels = 3;
+ *
+ *   createSharedFrameChain(false);
+ *   cl_context context = getSharedFrameChain()->getContext();
+ *   cl_command_queue queue = getSharedFrameChain()->getQueue();
+ *
+ *   cl_int error_code = 0;
+ *   int data_size = height * width * channels * sizeof(float);
+ *   float* input  = (float*)malloc(data_size);
+ *   float* output = (float*)malloc(data_size);
+ *   cl_mem gpu_input0 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_input1 = clCreateBuffer(context, CL_MEM_READ_ONLY, data_size,
+ *                                      NULL, &error_code);
+ *   cl_mem gpu_output = = clCreateBuffer(context, CL_MEM_WRITE_ONLY, data_size,
+ *                                        NULL, &error_code);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input0, CL_FALSE, 0,
+ *                                     data_size, input, 0, NULL, NULL);
+ *   error_code = clEnqueueWriteBuffer(queue, gpu_input1, CL_FALSE, 0,
+ *                                     data_size, input, 0, NULL, NULL);
+ *
+ *   Div<float, 3>(queue, height, width, width * channels, gpu_input0,
+ *                 width * channels, gpu_input1, width * channels, gpu_output);
+ *   error_code = clEnqueueReadBuffer(queue, gpu_output, CL_TRUE, 0, data_size,
+ *                                    output, 0, NULL, NULL);
+ *
+ *   free(input);
+ *   free(output);
+ *   clReleaseMemObject(gpu_input0);
+ *   clReleaseMemObject(gpu_input1);
+ *   clReleaseMemObject(gpu_output);
+ *
+ *   return 0;
+ * }
+ * @endcode
+ */
+template <typename T, int channels>
+ppl::common::RetCode Mls(cl_command_queue queue,
+                         int height,
+                         int width,
+                         int inWidthStride0,
+                         const cl_mem inData0,
+                         int inWidthStride1,
+                         const cl_mem inData1,
+                         int outWidthStride,
+                         cl_mem outData);
+
+
 }  // namespace ocl
 }  // namespace cv
 }  // namespace ppl
