@@ -40,6 +40,8 @@ enum ArithFunctions {
   kMUL1,
   kDIV0,
   kDIV1,
+  kMLA,
+  kMLS,
 };
 
 template <typename T, int channels, ArithFunctions function>
@@ -120,6 +122,16 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
           src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
           dst.step / sizeof(T), gpu_dst, falpha);
     }
+    else if (function == kMLA) {
+      ppl::cv::ocl::Mla<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+          dst.step / sizeof(T), gpu_dst);
+    }
+    else if (function == kMLS) {
+      ppl::cv::ocl::Mls<T, channels>(queue, src0.rows, src0.cols,
+          src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+          dst.step / sizeof(T), gpu_dst);
+    }
     else {
     }
   }
@@ -163,6 +175,16 @@ void BM_Arith_ppl_ocl(benchmark::State &state) {
             src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
             dst.step / sizeof(T), gpu_dst, falpha);
       }
+      else if (function == kMLA) {
+        ppl::cv::ocl::Mla<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+            dst.step / sizeof(T), gpu_dst);
+      }
+      else if (function == kMLS) {
+        ppl::cv::ocl::Mls<T, channels>(queue, src0.rows, src0.cols,
+            src0.step / sizeof(T), gpu_src0, src0.step / sizeof(T), gpu_src1,
+            dst.step / sizeof(T), gpu_dst);
+      }
       else {
       }
     }
@@ -188,6 +210,10 @@ void BM_Arith_opencv_ocl(benchmark::State &state) {
                            channels));
   src1 = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
                            channels));
+  dst = createSourceImage(height, width, CV_MAKETYPE(cv::DataType<T>::depth,
+                          channels));
+  cv::Mat temp0(height, width,
+                CV_MAKETYPE(cv::DataType<T>::depth, channels));
 
   for (auto _ : state) {
     if (function == kADD) {
@@ -210,6 +236,14 @@ void BM_Arith_opencv_ocl(benchmark::State &state) {
     }
     else if (function == kDIV1) {
       cv::divide(src0, src1, dst, falpha);
+    }
+    else if (function == kMLA) {
+      cv::multiply(src0, src1, temp0);
+      cv::add(dst, temp0, dst);
+    }
+    else if (function == kMLS) {
+      cv::multiply(src0, src1, temp0);
+      cv::subtract(dst, temp0, dst);
     }
     else {
     }
@@ -310,6 +344,30 @@ RUN_BENCHMARK(c4, kDIV1, 640, 480)
 RUN_BENCHMARK(c1, kDIV1, 1920, 1080)
 RUN_BENCHMARK(c3, kDIV1, 1920, 1080)
 RUN_BENCHMARK(c4, kDIV1, 1920, 1080)
+
+RUN_BENCHMARK(c1, kMLA, 320, 240)
+RUN_BENCHMARK(c3, kMLA, 320, 240)
+RUN_BENCHMARK(c4, kMLA, 320, 240)
+
+RUN_BENCHMARK(c1, kMLA, 640, 480)
+RUN_BENCHMARK(c3, kMLA, 640, 480)
+RUN_BENCHMARK(c4, kMLA, 640, 480)
+
+RUN_BENCHMARK(c1, kMLA, 1920, 1080)
+RUN_BENCHMARK(c3, kMLA, 1920, 1080)
+RUN_BENCHMARK(c4, kMLA, 1920, 1080)
+
+RUN_BENCHMARK(c1, kMLS, 320, 240)
+RUN_BENCHMARK(c3, kMLS, 320, 240)
+RUN_BENCHMARK(c4, kMLS, 320, 240)
+
+RUN_BENCHMARK(c1, kMLS, 640, 480)
+RUN_BENCHMARK(c3, kMLS, 640, 480)
+RUN_BENCHMARK(c4, kMLS, 640, 480)
+
+RUN_BENCHMARK(c1, kMLS, 1920, 1080)
+RUN_BENCHMARK(c3, kMLS, 1920, 1080)
+RUN_BENCHMARK(c4, kMLS, 1920, 1080)
 
 #define RUN_OPENCV_FUNCTIONS(type, function)                                   \
 BENCHMARK_TEMPLATE(BM_Arith_opencv_ocl, type, c1, function)->Args({320, 240}); \
